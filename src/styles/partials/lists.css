@@ -1,0 +1,77 @@
+@layer utilities {
+  .ProseMirror ol {
+    @apply list-decimal;
+  }
+
+  .ProseMirror ul {
+    @apply list-disc;
+  }
+
+  .ProseMirror ul,
+  .ProseMirror ol {
+    @apply px-8 py-0 my-6;
+  }
+
+  .ProseMirror ul:first-child,
+  .ProseMirror ol:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror ul:last-child,
+  .ProseMirror ol:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror ul ul,
+  .ProseMirror ul ol,
+  .ProseMirror ul li,
+  .ProseMirror ol ul,
+  .ProseMirror ol ol,
+  .ProseMirror ol li {
+    @apply my-1;
+  }
+
+  .ProseMirror ul p,
+  .ProseMirror ol p {
+    @apply mt-0 mb-1;
+  }
+
+  .ProseMirror > ul,
+  .ProseMirror > ol {
+    @apply my-8;
+  }
+
+  .ProseMirror > ul:first-child,
+  .ProseMirror > ol:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror > ul:last-child,
+  .ProseMirror > ol:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] {
+    @apply list-none p-0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] p {
+    @apply m-0;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li {
+    @apply flex;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li > label {
+    @apply grow-0 shrink-0 flex-auto mt-1 mr-2 select-none;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li > div {
+    @apply flex-auto;
+  }
+
+  .ProseMirror ul[data-type='taskList'] li[data-checked='true'] {
+    @apply line-through;
+  }
+}

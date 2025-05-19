@@ -1,0 +1,55 @@
+/* Styles for drag & drop functionality */
+
+.drag-image {
+  border: 2px dashed #999;
+  background-color: rgba(200, 200, 200, 0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  pointer-events: none;
+}
+
+.draggable-block-wrapper {
+  position: relative;
+  margin: 10px 0;
+}
+
+.draggable-block {
+  margin-left: -24px;
+  margin-right: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  border-radius: 4px;
+  background-color: #e2e8f0;
+  transition: background-color 0.2s;
+}
+
+.draggable-block:hover {
+  background-color: #94a3b8;
+}
+
+.draggable-block:active {
+  cursor: grabbing;
+  background-color: #64748b;
+}
+
+/* Editor drag-over state */
+.ProseMirror.drag-over {
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 2px dashed rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+/* Adjust position of the drag handle */
+[data-drag-handle] {
+  cursor: grab;
+}
+
+[data-drag-handle]:active {
+  cursor: grabbing;
+}

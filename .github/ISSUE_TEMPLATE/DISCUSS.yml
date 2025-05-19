@@ -1,0 +1,23 @@
+name: '💬 Discussion'
+description: Start a discussion
+title: '[Discuss]: Discussion Title'
+labels: [discussion]
+assignees: []
+body:
+  - type: textarea
+    id: topic
+    attributes:
+      label: Discussion Topic
+      description: 'Please provide a clear and concise topic for discussion.'
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: 'If applicable, add screenshots to help explain your topic.'
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: 'Include any relevant links that could provide more context for the discussion.'

@@ -1,0 +1,77 @@
+@layer utilities {
+  .ProseMirror code {
+    @apply caret-white text-white bg-neutral-900 rounded-sm shadow-lg font-mono;
+  }
+
+  .ProseMirror code::selection {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .ProseMirror pre {
+    @apply caret-white bg-neutral-700 text-white rounded my-12 p-4 border border-black;
+  }
+
+  .dark .ProseMirror pre {
+    @apply bg-neutral-900 border-neutral-800;
+  }
+
+  .ProseMirror pre *::selection {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .ProseMirror pre code {
+    @apply bg-inherit text-inherit p-0 shadow-none;
+  }
+
+  /* highlight.js syntax theme */
+  .ProseMirror pre .hljs-comment,
+  .ProseMirror pre .hljs-quote {
+    @apply text-neutral-400;
+  }
+
+  .ProseMirror pre .hljs-variable,
+  .ProseMirror pre .hljs-template-variable,
+  .ProseMirror pre .hljs-attribute,
+  .ProseMirror pre .hljs-tag,
+  .ProseMirror pre .hljs-name,
+  .ProseMirror pre .hljs-regexp,
+  .ProseMirror pre .hljs-link,
+  .ProseMirror pre .hljs-selector-id,
+  .ProseMirror pre .hljs-selector-class {
+    @apply text-red-300;
+  }
+
+  .ProseMirror pre .hljs-number,
+  .ProseMirror pre .hljs-meta,
+  .ProseMirror pre .hljs-built_in,
+  .ProseMirror pre .hljs-builtin-name,
+  .ProseMirror pre .hljs-literal,
+  .ProseMirror pre .hljs-type,
+  .ProseMirror pre .hljs-params {
+    @apply text-orange-300;
+  }
+
+  .ProseMirror pre .hljs-string,
+  .ProseMirror pre .hljs-symbol,
+  .ProseMirror pre .hljs-bullet {
+    @apply text-lime-300;
+  }
+
+  .ProseMirror pre .hljs-title,
+  .ProseMirror pre .hljs-section {
+    @apply text-yellow-300;
+  }
+
+  .ProseMirror pre .hljs-keyword,
+  .ProseMirror pre .hljs-selector-tag {
+    @apply text-teal-300;
+  }
+
+  .ProseMirror pre .hljs-emphasis {
+    font-style: italic;
+  }
+
+  .ProseMirror pre .hljs-strong {
+    font-weight: 700;
+  }
+}

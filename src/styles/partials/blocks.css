@@ -1,0 +1,91 @@
+@layer utilities {
+  /* Image Block */
+  .ProseMirror figure[data-type='imageBlock'] {
+    @apply m-0;
+  }
+
+  .ProseMirror figure[data-type='imageBlock'] img {
+    @apply rounded block w-full;
+  }
+
+  /* Block Quote */
+  .ProseMirror figure[data-type='blockquoteFigure'] {
+    @apply my-14 text-black;
+  }
+
+  .dark .ProseMirror figure[data-type='blockquoteFigure'] {
+    @apply text-white;
+  }
+
+  .ProseMirror > blockquote blockquote,
+  .ProseMirror [data-type='blockquoteFigure'] blockquote {
+    @apply m-0;
+  }
+
+  .ProseMirror > blockquote blockquote > *,
+  .ProseMirror [data-type='blockquoteFigure'] blockquote > * {
+    @apply first:mt-0 last:mb-0;
+  }
+
+  /* Columns */
+  .ProseMirror [data-type='columns'] {
+    @apply grid gap-4 mt-14 mb-12;
+  }
+
+  .ProseMirror [data-type='columns'].layout-sidebar-left {
+    grid-template-columns: 40fr 60fr;
+  }
+
+  .ProseMirror [data-type='columns'].layout-sidebar-right {
+    grid-template-columns: 60fr 40fr;
+  }
+
+  .ProseMirror [data-type='columns'].layout-two-column {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ProseMirror [data-type='column'] {
+    @apply overflow-auto;
+  }
+
+  /* Details Block */
+  .ProseMirror [data-type='details'] {
+    @apply flex gap-1 my-6 mx-auto p-2 border border-gray-300 rounded;
+  }
+
+  .ProseMirror [data-type='details'] summary {
+    @apply font-bold block;
+  }
+
+  .ProseMirror [data-type='details'] > button {
+    @apply bg-transparent border-none cursor-pointer flex items-center justify-center rounded text-xs h-5 w-5;
+  }
+
+  .ProseMirror [data-type='details'] > button:hover {
+    @apply bg-gray-300;
+  }
+
+  .dark .ProseMirror [data-type='details'] > button:hover {
+    @apply bg-gray-800;
+  }
+
+  .ProseMirror [data-type='details'] > button::before {
+    content: '\25B6';
+  }
+
+  .ProseMirror [data-type='details'].is-open > button::before {
+    @apply rotate-90;
+  }
+
+  .ProseMirror [data-type='details'] > div {
+    @apply flex flex-col gap-4 w-full;
+  }
+
+  .ProseMirror [data-type='details'] > div > [data-type='detailsContent'] > :last-child {
+    @apply mb-2;
+  }
+
+  .ProseMirror [data-type='details'] [data-type='details'] {
+    @apply my-2 mx-0;
+  }
+}

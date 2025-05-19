@@ -1,0 +1,134 @@
+@layer utilities {
+  .ProseMirror p {
+    @apply leading-relaxed my-3;
+  }
+
+  .ProseMirror p:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror p:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror > p {
+    @apply my-6;
+  }
+
+  .ProseMirror > p:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror > p:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror h1 {
+    @apply text-3xl font-bold mt-12;
+  }
+
+  .ProseMirror h2 {
+    @apply text-2xl font-bold mt-12;
+  }
+
+  .ProseMirror h3 {
+    @apply text-xl font-bold mt-12;
+  }
+
+  .ProseMirror h4 {
+    @apply text-lg font-bold mt-8;
+  }
+
+  .ProseMirror h5 {
+    @apply text-base font-bold mt-8;
+  }
+
+  .ProseMirror h6 {
+    @apply text-sm font-bold mt-8;
+  }
+
+  .ProseMirror h1:first-child,
+  .ProseMirror h2:first-child,
+  .ProseMirror h3:first-child,
+  .ProseMirror h4:first-child,
+  .ProseMirror h5:first-child,
+  .ProseMirror h6:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror h1:last-child,
+  .ProseMirror h2:last-child,
+  .ProseMirror h3:last-child,
+  .ProseMirror h4:last-child,
+  .ProseMirror h5:last-child,
+  .ProseMirror h6:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror a.link {
+    @apply text-blue-500 font-extrabold;
+  }
+
+  .dark .ProseMirror a.link {
+    @apply text-blue-400;
+  }
+
+  .ProseMirror mark {
+    @apply bg-red-500 rounded-sm decoration-clone text-inherit py-1 px-0;
+  }
+
+  .dark .ProseMirror mark {
+    @apply bg-red-400;
+  }
+
+  .ProseMirror img {
+    @apply h-auto w-full max-w-full;
+  }
+
+  .ProseMirror [data-type='horizontalRule'] {
+    @apply my-8 py-4 transition-all duration-100 ease-in-out cursor-pointer;
+  }
+
+  .ProseMirror [data-type='horizontalRule'].ProseMirror-selectednode {
+    @apply bg-black/5;
+  }
+
+  .dark .ProseMirror [data-type='horizontalRule'].ProseMirror-selectednode {
+    @apply bg-white/10;
+  }
+
+  .ProseMirror [data-type='horizontalRule']:hover:not(.ProseMirror-selectednode) {
+    @apply bg-black/5;
+  }
+
+  .dark .ProseMirror [data-type='horizontalRule']:hover:not(.ProseMirror-selectednode) {
+    @apply bg-white/10;
+  }
+
+  .ProseMirror [data-type='horizontalRule'] hr {
+    @apply border-0 border-t border-black/20 bg-black/80;
+  }
+
+  .dark .ProseMirror [data-type='horizontalRule'] hr {
+    @apply border-white/20 bg-white/80;
+  }
+
+  .ProseMirror [data-type='horizontalRule'].ProseMirror-selectednode hr {
+    border-top-color: rgb(0 0 0 / 0.3);
+  }
+
+  .dark .ProseMirror [data-type='horizontalRule'].ProseMirror-selectednode hr {
+    border-top-color: rgb(255 255 255 / 0.3);
+  }
+
+  .ProseMirror [data-type='emoji'] {
+    display: inline-block;
+  }
+
+  .ProseMirror [data-type='emoji'] img {
+    width: 1em;
+    height: 1em;
+    object-fit: cover;
+    display: block;
+  }
+}

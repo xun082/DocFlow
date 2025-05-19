@@ -1,0 +1,130 @@
+@import 'tailwindcss';
+@import './partials/animations.css';
+@import './partials/blocks.css';
+@import './partials/code.css';
+@import './partials/collab.css';
+@import './partials/lists.css';
+@import './partials/placeholder.css';
+@import './partials/table.css';
+@import './partials/typography.css';
+@import './partials/draggable.css';
+
+@layer utilities {
+  .ProseMirror {
+    @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-2xl;
+  }
+
+  .dark .ProseMirror {
+    @apply caret-neutral-400;
+  }
+
+  .ProseMirror .selection {
+    @apply inline;
+  }
+
+  .ProseMirror *::selection,
+  .ProseMirror ::selection,
+  .ProseMirror .selection {
+    background-color: rgba(0, 100, 255, 0.2) !important;
+    color: inherit !important;
+    font-weight: inherit !important;
+    font-style: inherit !important;
+    text-decoration: inherit !important;
+    display: inline !important;
+  }
+
+  .dark .ProseMirror *::selection,
+  .dark .ProseMirror ::selection,
+  .dark .ProseMirror .selection {
+    background-color: rgba(100, 150, 255, 0.3) !important;
+  }
+
+  .ProseMirror.is-all-selected *::selection {
+    background-color: rgba(0, 100, 255, 0.2) !important;
+    color: inherit !important;
+    font-weight: inherit !important;
+    font-style: inherit !important;
+    text-decoration: inherit !important;
+  }
+
+  .dark .ProseMirror.is-all-selected *::selection {
+    background-color: rgba(100, 150, 255, 0.3) !important;
+  }
+
+  .ProseMirror strong::selection,
+  .ProseMirror strong *::selection,
+  .ProseMirror b::selection,
+  .ProseMirror b *::selection {
+    font-weight: bold !important;
+  }
+
+  .ProseMirror em::selection,
+  .ProseMirror em *::selection,
+  .ProseMirror i::selection,
+  .ProseMirror i *::selection {
+    font-style: italic !important;
+  }
+
+  .ProseMirror u::selection,
+  .ProseMirror u *::selection {
+    text-decoration: underline !important;
+  }
+
+  .ProseMirror s::selection,
+  .ProseMirror s *::selection,
+  .ProseMirror strike::selection,
+  .ProseMirror strike *::selection {
+    text-decoration: line-through !important;
+  }
+
+  .ProseMirror > .react-renderer {
+    @apply my-12;
+  }
+
+  .ProseMirror > .react-renderer:first-child {
+    @apply mt-0;
+  }
+
+  .ProseMirror > .react-renderer:last-child {
+    @apply mb-0;
+  }
+
+  .ProseMirror.resize-cursor {
+    @apply cursor-col-resize;
+  }
+
+  .ProseMirror .ProseMirror-gapcursor {
+    @apply relative w-full max-w-2xl mx-auto;
+  }
+
+  .ProseMirror .ProseMirror-gapcursor::after {
+    content: '';
+    display: block;
+    border-top: 1px solid rgb(0 0 0 / 0.4);
+    width: 100%;
+    max-width: 42rem; /* match max-w-2xl */
+    position: relative;
+    top: -1.5em;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .dark .ProseMirror .ProseMirror-gapcursor::after {
+    border-top-color: rgb(255 255 255 / 0.4);
+  }
+
+  /* Add custom cursor styles to make it more visible */
+  .ProseMirror.ProseMirror-focused {
+    @apply caret-black;
+  }
+
+  .dark .ProseMirror.ProseMirror-focused {
+    @apply caret-black;
+  }
+
+  [data-theme='slash-command'] {
+    width: 1000vw;
+  }
+}

@@ -1,0 +1,7 @@
+## To encourage contributors to use issue templates, we don't allow blank issues
+blank_issues_enabled: false
+
+contact_links:
+  - name: "\u2753 Discord Community of Create-Neat"
+    url: 'https://raw.githubusercontent.com/xun082/md/main/blogs.images20240307173700.png'
+    about: 'Please ask support questions or discuss suggestions/enhancements here.'

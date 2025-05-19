@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "调试图片处理脚本",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/scripts/image.js",
+      "args": ["./src/content"],
+      "console": "integratedTerminal",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--inspect-brk"]
+    }
+  ]
+}

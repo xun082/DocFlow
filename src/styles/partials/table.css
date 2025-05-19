@@ -1,0 +1,162 @@
+@layer utilities {
+  .ProseMirror .tableWrapper {
+    @apply my-12;
+  }
+
+  .ProseMirror table {
+    @apply border-collapse rounded box-border w-full border border-black/10;
+  }
+
+  .dark .ProseMirror table {
+    @apply border-white/20;
+  }
+
+  .ProseMirror table td,
+  .ProseMirror table th {
+    @apply border border-black/10 min-w-[100px] p-2 relative text-left align-top;
+  }
+
+  .dark .ProseMirror table td,
+  .dark .ProseMirror table th {
+    @apply border-white/20;
+  }
+
+  .ProseMirror table th {
+    @apply font-bold;
+  }
+
+  .ProseMirror table td:first-of-type:not(a) {
+    @apply mt-0;
+  }
+
+  .ProseMirror table td p {
+    @apply m-0;
+  }
+
+  .ProseMirror table td p + p {
+    @apply mt-3;
+  }
+
+  .ProseMirror table .column-resize-handle {
+    @apply absolute -right-1 top-0 -bottom-[2px] w-2 flex pointer-events-none;
+  }
+
+  .ProseMirror table .column-resize-handle::before {
+    content: '';
+    @apply h-full w-[1px] ml-2 bg-black/20;
+  }
+
+  .dark .ProseMirror table .column-resize-handle::before {
+    @apply bg-white/20;
+  }
+
+  .ProseMirror table .selectedCell {
+    @apply bg-black/5 border-black/20 border-double;
+  }
+
+  .dark .ProseMirror table .selectedCell {
+    @apply bg-white/10 border-white/20;
+  }
+
+  .ProseMirror table .grip-column,
+  .ProseMirror table .grip-row {
+    @apply absolute z-10 flex justify-center items-center cursor-pointer bg-black/5;
+  }
+
+  .dark .ProseMirror table .grip-column,
+  .dark .ProseMirror table .grip-row {
+    @apply bg-white/10;
+  }
+
+  .ProseMirror table .grip-column {
+    @apply w-[calc(100%+1px)] h-3 -top-3 left-0 -ml-[1px] border-l border-black/20;
+  }
+
+  .dark .ProseMirror table .grip-column {
+    @apply border-white/20;
+  }
+
+  .ProseMirror table .grip-column:hover {
+    @apply bg-black/10;
+  }
+
+  .dark .ProseMirror table .grip-column:hover {
+    @apply bg-white/20;
+  }
+
+  .ProseMirror table .grip-column:hover::before {
+    content: '';
+    @apply w-2.5 border-b-2 border-dotted border-black/60;
+  }
+
+  .dark .ProseMirror table .grip-column:hover::before {
+    @apply border-white/60;
+  }
+
+  .ProseMirror table .grip-column.selected {
+    @apply bg-black/30 border-black/30 shadow-sm;
+  }
+
+  .dark .ProseMirror table .grip-column.selected {
+    @apply bg-white/30 border-white/30;
+  }
+
+  .ProseMirror table .grip-column.selected::before {
+    content: '';
+    @apply border-b-2 border-dotted;
+  }
+
+  .ProseMirror table .grip-column.first {
+    @apply border-transparent rounded-tl-sm;
+  }
+
+  .ProseMirror table .grip-column.last {
+    @apply rounded-tr-sm;
+  }
+
+  .ProseMirror table .grip-row {
+    @apply h-[calc(100%+1px)] w-3 top-0 -left-3 -mt-[1px] border-t border-black/20;
+  }
+
+  .dark .ProseMirror table .grip-row {
+    @apply border-white/20;
+  }
+
+  .ProseMirror table .grip-row:hover {
+    @apply bg-black/10;
+  }
+
+  .dark .ProseMirror table .grip-row:hover {
+    @apply bg-white/20;
+  }
+
+  .ProseMirror table .grip-row:hover::before {
+    content: '';
+    @apply h-2.5 border-l-2 border-dotted border-black/60;
+  }
+
+  .dark .ProseMirror table .grip-row:hover::before {
+    @apply border-white/60;
+  }
+
+  .ProseMirror table .grip-row.selected {
+    @apply bg-black/30 border-black/30 shadow-sm;
+  }
+
+  .dark .ProseMirror table .grip-row.selected {
+    @apply bg-white/30 border-white/30;
+  }
+
+  .ProseMirror table .grip-row.selected::before {
+    content: '';
+    @apply border-l-2 border-dotted;
+  }
+
+  .ProseMirror table .grip-row.first {
+    @apply border-transparent rounded-tl-sm;
+  }
+
+  .ProseMirror table .grip-row.last {
+    @apply rounded-bl-sm;
+  }
+}
