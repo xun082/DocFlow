@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@antv/hierarchy':
+        specifier: ^0.6.14
+        version: 0.6.14
+      '@antv/x6':
+        specifier: ^2.18.1
+        version: 2.18.1
       '@fontsource/inter':
         specifier: ^5.2.5
         version: 5.2.5
@@ -179,12 +185,21 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      echarts:
+        specifier: ^5.6.0
+        version: 5.6.0
+      framer-motion:
+        specifier: ^12.12.1
+        version: 12.12.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.1.0)
+      motion:
+        specifier: ^12.12.1
+        version: 12.12.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       nanoid:
         specifier: ^5.1.5
         version: 5.1.5
@@ -358,6 +373,18 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
+
+  '@antv/hierarchy@0.6.14':
+    resolution: {integrity: sha512-V3uknf7bhynOqQDw2sg+9r9DwZ9pc6k/EcqyTFdfXB1+ydr7urisP0MipIuimucvQKN+Qkd+d6w601r1UIroqQ==}
+
+  '@antv/x6-common@2.0.17':
+    resolution: {integrity: sha512-37g7vmRkNdYzZPdwjaMSZEGv/MMH0S4r70/Jwoab1mioycmuIBN73iyziX8m56BvJSDucZ3J/6DU07otWqzS6A==}
+
+  '@antv/x6-geometry@2.0.5':
+    resolution: {integrity: sha512-MId6riEQkxphBpVeTcL4ZNXL4lScyvDEPLyIafvWMcWNTGK0jgkK7N20XSzqt8ltJb0mGUso5s56mrk8ysHu2A==}
+
+  '@antv/x6@2.18.1':
+    resolution: {integrity: sha512-FkWdbLOpN9J7dfJ+kiBxzowSx2N6syBily13NMVdMs+wqC6Eo5sLXWCZjQHateTFWgFw7ZGi2y9o3Pmdov1sXw==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -3221,6 +3248,9 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
+  echarts@5.6.0:
+    resolution: {integrity: sha512-oTbVTsXfKuEhxftHqL5xprgLoc0k7uScAwtryCgWF6hPYFLRwOUHiFmHGCBKP5NPFNkDVopOieyUqYGH8Fa3kA==}
+
   electron-to-chromium@1.5.155:
     resolution: {integrity: sha512-ps5KcGGmwL8VaeJlvlDlu4fORQpv3+GIcF5I3f9tUKUlJ/wsysh6HU8P5L1XWRYeXfA0oJd4PyM8ds8zTFf6Ng==}
 
@@ -3574,6 +3604,20 @@ packages:
 
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
+
+  framer-motion@12.12.1:
+    resolution: {integrity: sha512-PFw4/GCREHI2suK/NlPSUxd+x6Rkp80uQsfCRFSOQNrm5pZif7eGtmG1VaD/UF1fW9tRBy5AaS77StatB3OJDg==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   fs-extra@9.1.0:
     resolution: {integrity: sha512-hcg3ZmepS30/7BSFqRvoo3DOMQu7IjqxO5nCDt+zM9XWjb33Wg7ziNT+Qvqbuc3+gWpzO02JubVyk2G4Zvo1OQ==}
@@ -4158,6 +4202,9 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
 
@@ -4319,6 +4366,26 @@ packages:
     resolution: {integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==}
     engines: {node: '>=10'}
     hasBin: true
+
+  motion-dom@12.12.1:
+    resolution: {integrity: sha512-GXq/uUbZBEiFFE+K1Z/sxdPdadMdfJ/jmBALDfIuHGi0NmtealLOfH9FqT+6aNPgVx8ilq0DtYmyQlo6Uj9LKQ==}
+
+  motion-utils@12.12.1:
+    resolution: {integrity: sha512-f9qiqUHm7hWSLlNW8gS9pisnsN7CRFRD58vNjptKdsqFLpkVnX00TNeD6Q0d27V9KzT7ySFyK1TZ/DShfVOv6w==}
+
+  motion@12.12.1:
+    resolution: {integrity: sha512-vN/3p++Ix0lVt9NH0ZqPrAy8QRTkff27t5z3z5+4BJ3cXPxtOia2EBZS4snM+JUTfl7J0JXP/5ERqu9GT/8IgA==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
@@ -5136,6 +5203,9 @@ packages:
   tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
 
+  tslib@2.3.0:
+    resolution: {integrity: sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg==}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -5241,6 +5311,10 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  utility-types@3.11.0:
+    resolution: {integrity: sha512-6Z7Ma2aVEWisaL6TvBCy7P8rm2LQoPv6dJ7ecIaIixHcwfbJ0x7mWdbcwlIM5IGQxPZSFYeqRCqlOOeKoJYMkw==}
+    engines: {node: '>= 4'}
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
@@ -5471,6 +5545,9 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
+  zrender@5.6.1:
+    resolution: {integrity: sha512-OFXkDJKcrlx5su2XbzJvj/34Q3m6PvyCZkVPHGYpcCJ52ek4U/ymZyfuV1nKE23AyBJ51E/6Yr0mhZ7xGTO4ag==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -5479,6 +5556,21 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
+
+  '@antv/hierarchy@0.6.14': {}
+
+  '@antv/x6-common@2.0.17':
+    dependencies:
+      lodash-es: 4.17.21
+      utility-types: 3.11.0
+
+  '@antv/x6-geometry@2.0.5': {}
+
+  '@antv/x6@2.18.1':
+    dependencies:
+      '@antv/x6-common': 2.0.17
+      '@antv/x6-geometry': 2.0.5
+      utility-types: 3.11.0
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -8461,6 +8553,11 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
+  echarts@5.6.0:
+    dependencies:
+      tslib: 2.3.0
+      zrender: 5.6.1
+
   electron-to-chromium@1.5.155: {}
 
   emoji-regex@10.4.0: {}
@@ -8978,6 +9075,15 @@ snapshots:
       signal-exit: 4.1.0
 
   fraction.js@4.3.7: {}
+
+  framer-motion@12.12.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      motion-dom: 12.12.1
+      motion-utils: 12.12.1
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   fs-extra@9.1.0:
     dependencies:
@@ -9547,6 +9653,8 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
+  lodash-es@4.17.21: {}
+
   lodash.camelcase@4.3.0: {}
 
   lodash.castarray@4.4.0: {}
@@ -9685,6 +9793,20 @@ snapshots:
       minipass: 7.1.2
 
   mkdirp@3.0.1: {}
+
+  motion-dom@12.12.1:
+    dependencies:
+      motion-utils: 12.12.1
+
+  motion-utils@12.12.1: {}
+
+  motion@12.12.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      framer-motion: 12.12.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   mrmime@2.0.1: {}
 
@@ -10624,6 +10746,8 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
+  tslib@2.3.0: {}
+
   tslib@2.8.1: {}
 
   type-check@0.4.0:
@@ -10745,6 +10869,8 @@ snapshots:
       react: 19.1.0
 
   util-deprecate@1.0.2: {}
+
+  utility-types@3.11.0: {}
 
   uuid@10.0.0: {}
 
@@ -10973,3 +11099,7 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yocto-queue@1.2.1: {}
+
+  zrender@5.6.1:
+    dependencies:
+      tslib: 2.3.0

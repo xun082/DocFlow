@@ -7,7 +7,6 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
-import { initialContent } from '@/utils/data/initialContent';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import authApi from '@/services/auth';
 import { getCookie } from '@/utils/cookie';
@@ -19,6 +18,11 @@ export interface CollaborationUser {
   color: string;
   avatar: string;
 }
+
+export type AuthErrorType = {
+  status: boolean;
+  reason: string;
+};
 
 export function useCollaborativeEditor(roomId: string) {
   const [isEditable, setIsEditable] = useState(true);
@@ -32,6 +36,7 @@ export function useCollaborativeEditor(roomId: string) {
   const hasUnsyncedChangesRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
+  const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
 
   // 客户端挂载后初始化Y.Doc
   useEffect(() => {
@@ -133,6 +138,8 @@ export function useCollaborativeEditor(roomId: string) {
       });
 
       if (response?.data) {
+        console.log(response?.data);
+
         const userData: CollaborationUser = {
           id: response.data.id.toString(),
           name: response.data.name,
@@ -149,7 +156,7 @@ export function useCollaborativeEditor(roomId: string) {
   useEffect(() => {
     if (!isMounted || !doc || isOffline || !authToken) return;
 
-    console.log('初始化 hocuspocus provider');
+    console.log('初始化 hocuspocus provider', authToken);
 
     const hocuspocusProvider = new HocuspocusProvider({
       url: process.env.NEXT_PUBLIC_WEBSOCKET_URL as string,
@@ -167,6 +174,22 @@ export function useCollaborativeEditor(roomId: string) {
             console.log('设置用户awareness:', currentUser);
           }
         });
+      },
+
+      onAuthenticationFailed: (data) => {
+        console.error('认证失败:', data, 11111);
+
+        // 设置认证错误状态
+        setAuthError({
+          status: true,
+          reason: data.reason || 'permission-denied',
+        });
+
+        if (data.reason && (data.reason.includes('FOLDER') || data.reason.includes('file'))) {
+          console.log('无法编辑文件夹，只能编辑文件类型的文档');
+        } else {
+          console.log(`认证失败: ${data.reason}`);
+        }
       },
 
       onSynced: () => {
@@ -266,21 +289,11 @@ export function useCollaborativeEditor(roomId: string) {
             ]
           : []),
       ],
-      // 使用initialContent作为初始内容，当Y.doc为空时会自动使用这个内容
-      content: initialContent,
+      // 移除initialContent作为初始内容，依赖从服务器同步的内容
+      content: '', // 使用空内容作为初始状态，允许从服务器同步
       onCreate: ({ editor }) => {
         console.log('Editor created', editor);
-
-        requestAnimationFrame(() => {
-          if (editor.isEmpty) {
-            try {
-              console.log('Editor is empty, setting initialContent');
-              editor.commands.setContent(initialContent);
-            } catch (err) {
-              console.error('Error setting content:', err);
-            }
-          }
-        });
+        // 不再尝试设置initialContent
       },
       onTransaction: ({ editor }) => {
         setIsEditable(editor.isEditable);
@@ -347,5 +360,6 @@ export function useCollaborativeEditor(roomId: string) {
     isOffline,
     isMounted,
     currentUser,
+    authError,
   };
 }

@@ -55,6 +55,13 @@ const BlocksTab = () => {
         <BlockItem icon="Image" label="图片" blockType="image" onDragStart={handleDragStart} />
         <BlockItem icon="ListOrdered" label="列表" blockType="list" onDragStart={handleDragStart} />
         <BlockItem icon="Table" label="表格" blockType="table" onDragStart={handleDragStart} />
+        <BlockItem
+          icon="GitBranch"
+          label="思维导图"
+          blockType="mindmap"
+          onDragStart={handleDragStart}
+        />
+        <BlockItem icon="ChartBar" label="图表" blockType="chart" onDragStart={handleDragStart} />
         <BlockItem icon="Puzzle" label="自定义" blockType="custom" onDragStart={handleDragStart} />
       </div>
     </div>

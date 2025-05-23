@@ -199,7 +199,12 @@ class Request {
       // 处理正常 HTTP 状态但含业务错误的情况
       if (res.ok) {
         // 检查业务状态码
-        if (data && data.code !== undefined && data.code !== 0 && data.code !== 200) {
+        if (
+          data &&
+          data.code !== undefined &&
+          data.code !== 0 &&
+          (data.code < 200 || data.code >= 300)
+        ) {
           throw new RequestError(
             data.message || data.reason || '请求失败',
             url,

@@ -3,7 +3,7 @@
 import { useState, ReactNode, useEffect } from 'react';
 import { icons } from 'lucide-react';
 
-import ExplorerTab from './tabs/ExplorerTab';
+import ExplorerTab from './tabs/folder';
 import SearchTab from './tabs/SearchTab';
 import TemplatesTab from './tabs/TemplatesTab';
 import BlocksTab from './tabs/BlocksTab';
