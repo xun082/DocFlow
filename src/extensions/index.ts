@@ -51,3 +51,5 @@ export { emojiSuggestion } from './EmojiSuggestion';
 export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
 export { CustomBlock } from './CustomBlock';
+export { MindMapBlock } from './MindMapBlock';
+export { ChartBlock } from './ChartBlock';

@@ -52,6 +52,8 @@ import {
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
+import { MindMapBlock } from './MindMapBlock';
+import { ChartBlock } from './ChartBlock';
 
 import { API } from '@/utils/api';
 
@@ -114,6 +116,8 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   DraggableBlock,
   DragHandler,
   CustomBlock,
+  MindMapBlock,
+  ChartBlock,
   FileHandler.configure({
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
     onDrop: (currentEditor, files, pos) => {

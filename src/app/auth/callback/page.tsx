@@ -27,6 +27,14 @@ function CallbackContent() {
   useEffect(() => {
     const processAuth = async () => {
       try {
+        // 检查searchParams是否存在
+        if (!searchParams) {
+          setStatus('URL参数获取失败');
+          setState('error');
+
+          return;
+        }
+
         // 尝试从URL参数中获取token
         const token = searchParams.get('token');
 

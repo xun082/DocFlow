@@ -14,10 +14,22 @@ import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { Header } from '@/components/layout/Header';
 import { useSidebar } from '@/hooks/useSidebar';
 import { useCollaborativeEditor } from '@/hooks/useCollaborativeEditor';
-import NoPermissionView from '@/app/docs/[room]/_components/NoPermissionView';
+import NoPermissionView from '@/app/docs/[room]/_components/no_permission_view';
 
 export default function Document() {
   const params = useParams();
+
+  // 检查params是否存在并提取roomId
+  if (!params || !params.room) {
+    return (
+      <div className="flex items-center justify-center h-screen" suppressHydrationWarning>
+        <div className="text-center">
+          <p className="text-red-500">无效的房间ID</p>
+        </div>
+      </div>
+    );
+  }
+
   const roomId = params.room as string;
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const sidebar = useSidebar();

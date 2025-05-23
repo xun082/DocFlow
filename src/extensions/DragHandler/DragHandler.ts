@@ -11,7 +11,7 @@ export interface DragHandlerOptions {
 
   /**
    * 允许拖拽的块类型列表
-   * @default ['text', 'image', 'list', 'table', 'custom']
+   * @default ['text', 'image', 'list', 'table', 'mindmap', 'chart', 'custom']
    */
   allowedBlockTypes?: string[];
 
@@ -141,6 +141,52 @@ function createContentForBlockType(blockType: string) {
             ],
           },
         ],
+      };
+    case 'mindmap':
+      return {
+        type: 'mindMapBlock',
+        attrs: {
+          data: {
+            id: 1,
+            label: '新思维导图',
+            children: [
+              {
+                id: 2,
+                label: '主题一',
+                children: [
+                  { id: 3, label: '子主题1' },
+                  { id: 4, label: '子主题2' },
+                ],
+              },
+              {
+                id: 5,
+                label: '主题二',
+                children: [
+                  { id: 6, label: '子主题3' },
+                  { id: 7, label: '子主题4' },
+                ],
+              },
+            ],
+          },
+        },
+      };
+    case 'chart':
+      return {
+        type: 'chartBlock',
+        attrs: {
+          config: {
+            type: 'bar',
+            title: '新建图表',
+            theme: 'macarons',
+            data: [
+              { name: 'A', value: 120 },
+              { name: 'B', value: 200 },
+              { name: 'C', value: 150 },
+              { name: 'D', value: 180 },
+            ],
+            options: {},
+          },
+        },
       };
     case 'custom':
       return { type: 'customBlock' };
