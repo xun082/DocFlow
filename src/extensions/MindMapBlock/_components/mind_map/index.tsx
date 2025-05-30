@@ -10,18 +10,23 @@ export default function MindMap({ data }: MindMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !data) return;
+    if (!containerRef.current || !data) {
+      setIsLoading(false);
+
+      return;
+    }
 
     // 清理之前的图表
     if (graphRef.current) {
       graphRef.current.dispose();
     }
 
-    // 获取容器尺寸
+    // 获取容器尺寸，确保有足够的空间
     const containerRect = containerRef.current.getBoundingClientRect();
-    const width = Math.max(containerRect.width, 1000);
+    const width = Math.max(containerRect.width, 1200);
     const height = Math.max(containerRect.height, 600);
 
     // 创建新的图表实例
@@ -55,7 +60,7 @@ export default function MindMap({ data }: MindMapProps) {
         enabled: true,
         modifiers: ['ctrl', 'meta'],
         factor: 1.1,
-        maxScale: 3,
+        maxScale: 2,
         minScale: 0.3,
       },
       connecting: {
@@ -73,13 +78,32 @@ export default function MindMap({ data }: MindMapProps) {
     graphRef.current = graph;
 
     try {
-      // 使用 mindmap 布局处理数据
+      setError(null);
+
+      // 计算节点数量以动态调整间距
+      const countNodes = (node: MindMapNode): number => {
+        let count = 1;
+
+        if (node.children) {
+          node.children.forEach((child) => {
+            count += countNodes(child);
+          });
+        }
+
+        return count;
+      };
+
+      const totalNodes = countNodes(data);
+      const dynamicHGap = Math.max(120, Math.min(180, 120 + totalNodes * 1.5));
+      const dynamicVGap = Math.max(30, Math.min(50, 30 + totalNodes * 0.5));
+
+      // 使用 mindmap 布局处理数据，动态调整间距
       const result = Hierarchy.mindmap(data, {
         direction: 'LR',
         getHeight: () => 50,
-        getWidth: () => 150,
-        getHGap: () => 120,
-        getVGap: () => 30,
+        getWidth: () => 160,
+        getHGap: () => dynamicHGap,
+        getVGap: () => dynamicVGap,
         getSide: () => 'right',
       });
 
@@ -122,17 +146,20 @@ export default function MindMap({ data }: MindMapProps) {
         let nodeHeight: number;
         let fontSize: number;
 
+        // 根据文本长度动态调整节点大小
+        const textLength = label.length;
+
         if (isRoot) {
-          nodeWidth = 180;
+          nodeWidth = Math.max(180, Math.min(240, 180 + textLength * 6));
           nodeHeight = 60;
           fontSize = 16;
         } else if (depth === 1) {
-          nodeWidth = 140;
-          nodeHeight = 50;
+          nodeWidth = Math.max(140, Math.min(200, 140 + textLength * 4));
+          nodeHeight = 45;
           fontSize = 14;
         } else {
-          nodeWidth = 120;
-          nodeHeight = 40;
+          nodeWidth = Math.max(120, Math.min(160, 120 + textLength * 3));
+          nodeHeight = 35;
           fontSize = 12;
         }
 
@@ -224,9 +251,10 @@ export default function MindMap({ data }: MindMapProps) {
               textAnchor: 'middle',
               textVerticalAnchor: 'middle',
               textWrap: {
-                width: nodeWidth - 20,
-                height: nodeHeight - 10,
-                ellipsis: true,
+                width: nodeWidth - 30,
+                height: nodeHeight - 20,
+                ellipsis: false,
+                breakWord: true,
               },
             },
           },
@@ -343,11 +371,12 @@ export default function MindMap({ data }: MindMapProps) {
       // 延迟调整视图，确保渲染完成
       setTimeout(() => {
         graph.centerContent();
-        graph.zoomToFit({ padding: 80, maxScale: 1.2 });
+        graph.zoomToFit({ padding: 60, maxScale: 1.2 });
         setIsLoading(false);
-      }, 300);
+      }, 500);
     } catch (error) {
       console.error('渲染思维导图时出错:', error);
+      setError(error instanceof Error ? error.message : '渲染失败');
       setIsLoading(false);
     }
 
@@ -355,9 +384,12 @@ export default function MindMap({ data }: MindMapProps) {
     const handleResize = () => {
       if (containerRef.current && graphRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        graphRef.current.resize(rect.width, rect.height);
+        const newWidth = Math.max(rect.width, 1200);
+        const newHeight = Math.max(rect.height, 600);
+        graphRef.current.resize(newWidth, newHeight);
         setTimeout(() => {
           graphRef.current?.centerContent();
+          graphRef.current?.zoomToFit({ padding: 60, maxScale: 1.2 });
         }, 100);
       }
     };
@@ -375,6 +407,28 @@ export default function MindMap({ data }: MindMapProps) {
     };
   }, [data]);
 
+  if (!data) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-500">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-2">暂无数据</div>
+          <div className="text-sm">请提供思维导图数据</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-red-500">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-2">渲染失败</div>
+          <div className="text-sm">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full relative">
       {isLoading && (
@@ -387,7 +441,7 @@ export default function MindMap({ data }: MindMapProps) {
       )}
       <div
         ref={containerRef}
-        className="w-full h-full min-h-[600px] border-2 border-gray-200 rounded-xl shadow-lg bg-gradient-to-br from-gray-50 to-white"
+        className="w-full h-full min-h-[450px] border-2 border-gray-200 rounded-xl shadow-lg bg-gradient-to-br from-gray-50 to-white"
         style={{ cursor: 'grab' }}
       />
       <div className="mt-3 text-sm text-gray-500 text-center bg-white bg-opacity-80 rounded-lg p-2">

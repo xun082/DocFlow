@@ -11,8 +11,9 @@ import { SuggestionKeyDownProps } from '@tiptap/suggestion';
 
 import { EmojiListProps } from '../types';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/utils/utils';
 
 const EmojiList = forwardRef(
   (
@@ -101,10 +102,9 @@ const EmojiList = forwardRef(
       <Panel className="overflow-y-auto max-w-[18rem] max-h-[18rem]">
         {props.items.map((item: EmojiItem, index: number) => (
           <Button
-            active={index === selectedIndex}
             variant="ghost"
-            className="justify-start w-full"
-            buttonSize="small"
+            className={cn('justify-start w-full', index === selectedIndex && 'bg-accent')}
+            size="sm"
             key={item.name}
             onClick={createClickHandler(index)}
             data-emoji-name={item.name}

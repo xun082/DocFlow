@@ -29,10 +29,14 @@ export const MindMapBlockView: React.FC<NodeViewProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [jsonInput, setJsonInput] = useState('');
+  const [isHovered, setIsHovered] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   const { data } = node.attrs as { data: MindMapNodeData };
+
+  // 判断是否为预览模式（有数据且不在编辑状态）
+  const isPreviewMode = data && !isEditing && !isGenerating;
 
   // 处理状态对应的文本和进度
   const getProcessingInfo = (state: ProcessingState) => {
@@ -253,102 +257,132 @@ export const MindMapBlockView: React.FC<NodeViewProps> = ({
 
   return (
     <NodeViewWrapper className={`mindmap-block ${selected ? 'ProseMirror-selectednode' : ''}`}>
-      <div className="w-full border border-gray-200 rounded-lg overflow-hidden bg-white relative">
-        {/* 工具栏 */}
+      <div
+        className="w-full border border-gray-200 rounded-lg overflow-hidden bg-white relative"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* 固定工具栏 - 始终占位，避免布局抖动 */}
         <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <Icon name="GitBranch" className="h-4 w-4 text-blue-600" />
             <span className="text-sm font-medium text-gray-700">思维导图</span>
           </div>
+
+          {/* 工具栏按钮区域 */}
           <div className="flex items-center space-x-2">
+            {!isPreviewMode ? (
+              // 非预览模式显示所有按钮
+              <>
+                <button
+                  onClick={handleEdit}
+                  className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  disabled={isEditing || isGenerating}
+                >
+                  <Icon name="Pencil" className="h-3 w-3 mr-1" />
+                  编辑数据
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                  disabled={isGenerating}
+                >
+                  <Icon name="RotateCcw" className="h-3 w-3 mr-1" />
+                  示例数据
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  disabled={isGenerating}
+                >
+                  <Icon name="Trash2" className="h-3 w-3 mr-1" />
+                  删除
+                </button>
+              </>
+            ) : (
+              // 预览模式下的占位空间，保持布局稳定
+              <div className="h-6 w-16"></div>
+            )}
+          </div>
+        </div>
+
+        {/* 预览模式悬浮编辑按钮 */}
+        {isPreviewMode && isHovered && (
+          <div className="absolute top-3 right-3 z-20">
             <button
               onClick={handleEdit}
-              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-all duration-200 shadow-lg"
               disabled={isEditing || isGenerating}
             >
               <Icon name="Pencil" className="h-3 w-3 mr-1" />
-              编辑数据
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-              disabled={isGenerating}
-            >
-              <Icon name="RotateCcw" className="h-3 w-3 mr-1" />
-              示例数据
-            </button>
-            <button
-              onClick={handleDelete}
-              className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-              disabled={isGenerating}
-            >
-              <Icon name="Trash2" className="h-3 w-3 mr-1" />
-              删除
+              编辑
             </button>
           </div>
-        </div>
+        )}
 
-        {/* URL输入和生成区域 */}
-        <div className="p-4 bg-blue-50 border-b border-gray-200">
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              从视频URL生成思维导图
-            </label>
-            <div className="flex space-x-2">
-              <input
-                ref={urlInputRef}
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="请输入视频URL（支持YouTube、Bilibili等）"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isGenerating}
-              />
-              <button
-                onClick={handleGenerateFromUrl}
-                disabled={isGenerating || !videoUrl.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-              >
-                {isGenerating ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>处理中</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-1">
-                    <Icon name="Zap" className="h-4 w-4" />
-                    <span>生成</span>
-                  </div>
-                )}
-              </button>
+        {/* URL输入和生成区域 - 只在非预览模式时显示 */}
+        {!isPreviewMode && (
+          <div className="p-4 bg-blue-50 border-b border-gray-200">
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                从视频URL生成思维导图
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  ref={urlInputRef}
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="请输入视频URL（支持YouTube、Bilibili等）"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isGenerating}
+                />
+                <button
+                  onClick={handleGenerateFromUrl}
+                  disabled={isGenerating || !videoUrl.trim()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                >
+                  {isGenerating ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>处理中</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1">
+                      <Icon name="Zap" className="h-4 w-4" />
+                      <span>生成</span>
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {/* 处理进度 */}
+            {isGenerating && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{processingInfo.text}</span>
+                  <span className="text-sm text-gray-500">{processingInfo.progress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${processingInfo.progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* 错误信息 */}
+            {errorMessage && (
+              <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                <Icon name="X" className="h-4 w-4 mr-1 inline" />
+                {errorMessage}
+              </div>
+            )}
           </div>
-
-          {/* 处理进度 */}
-          {isGenerating && (
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">{processingInfo.text}</span>
-                <span className="text-sm text-gray-500">{processingInfo.progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${processingInfo.progress}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-
-          {/* 错误信息 */}
-          {errorMessage && (
-            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-              <Icon name="X" className="h-4 w-4 mr-1 inline" />
-              {errorMessage}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* 编辑模式 */}
         {isEditing ? (
@@ -404,9 +438,19 @@ export const MindMapBlockView: React.FC<NodeViewProps> = ({
             </div>
           </div>
         ) : (
-          /* 思维导图显示区域 */
-          <div className="h-96 relative">
-            <MindMap data={data} />
+          /* 思维导图显示区域 - 优化高度设置 */
+          <div className={`relative ${isPreviewMode ? 'min-h-[400px]' : 'h-80'}`}>
+            {data ? (
+              <MindMap data={data} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Icon name="GitBranch" className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">暂无思维导图数据</p>
+                  <p className="text-sm">请输入视频URL生成思维导图，或使用示例数据</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

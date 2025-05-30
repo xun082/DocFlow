@@ -1,7 +1,8 @@
 import React, { ButtonHTMLAttributes, HTMLProps, forwardRef } from 'react';
+import { VariantProps } from 'class-variance-authority';
 
 import { Surface } from './Surface';
-import { Button, ButtonProps } from './Button';
+import { Button, buttonVariants } from './button';
 import Tooltip from './Tooltip';
 
 import { cn } from '@/utils/utils';
@@ -56,35 +57,33 @@ export type ToolbarButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   activeClassname?: string;
   tooltip?: string;
   tooltipShortcut?: string[];
-  buttonSize?: ButtonProps['buttonSize'];
-  variant?: ButtonProps['variant'];
+  size?: VariantProps<typeof buttonVariants>['size'];
+  variant?: VariantProps<typeof buttonVariants>['variant'];
 };
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
   (
     {
       children,
-      buttonSize = 'icon',
+      size = 'icon',
       variant = 'ghost',
       className,
       tooltip,
       tooltipShortcut,
       activeClassname,
+      active,
       ...rest
     },
     ref,
   ) => {
-    const buttonClass = cn('gap-1 min-w-[2rem] px-2 w-auto', className);
+    const buttonClass = cn(
+      'gap-1 min-w-[2rem] px-2 w-auto',
+      active && (activeClassname || 'bg-accent'),
+      className,
+    );
 
     const content = (
-      <Button
-        activeClassname={activeClassname}
-        className={buttonClass}
-        variant={variant}
-        buttonSize={buttonSize}
-        ref={ref}
-        {...rest}
-      >
+      <Button className={buttonClass} variant={variant} size={size} ref={ref} {...rest}>
         {children}
       </Button>
     );
