@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
 
 import 'cal-sans';
 import '@/styles/index.css';
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html className="h-full font-sans" lang="en" suppressHydrationWarning>
       <body className="flex flex-col h-full">
         <main className="h-full">{children}</main>
+        <Toaster />
       </body>
     </html>
   );

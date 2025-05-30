@@ -3,7 +3,7 @@
 import React from 'react';
 import { Github } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export default function LoginPage() {
   const handleGitHubLogin = () => {
@@ -22,7 +22,7 @@ export default function LoginPage() {
           <div className="w-full border-t border-gray-100"></div>
 
           <Button
-            variant="primary"
+            variant="default"
             className="w-full flex items-center justify-center py-4 px-4 space-x-3 text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-md"
             onClick={handleGitHubLogin}
           >

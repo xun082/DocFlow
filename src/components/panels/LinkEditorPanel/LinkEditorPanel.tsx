@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { Surface } from '@/components/ui/Surface';
 import { Toggle } from '@/components/ui/Toggle';
@@ -67,7 +67,7 @@ export const LinkEditorPanel = ({
             onChange={state.onChange}
           />
         </label>
-        <Button variant="primary" buttonSize="small" type="submit" disabled={!state.isValidUrl}>
+        <Button variant="default" size="sm" type="submit" disabled={!state.isValidUrl}>
           Set Link
         </Button>
       </form>

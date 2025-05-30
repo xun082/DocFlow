@@ -1,20 +1,27 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { FileExplorerProps, FileItem, SearchResultItem } from './type';
+import ShareDialog from './ShareDialog';
+import SharedDocuments from './components/SharedDocuments';
+import FileTree from './components/FileTree';
+import { useFileOperations } from './hooks/useFileOperations';
+import { useFileSearch } from './hooks/useFileSearch';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 import DocumentApi from '@/services/document';
-import { DocumentResponse } from '@/services/document/type';
+import { DocumentResponse, CreateDocumentDto } from '@/services/document/type';
 
 // 默认文件结构，可以根据需求修改
 const defaultFiles: FileItem[] = [];
 
 const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [files, setFiles] = useState<FileItem[]>(initialFiles);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -23,55 +30,19 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   );
   const [contextMenuTargetId, setContextMenuTargetId] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState<string | null>(null);
-  const [newItemFolder, setNewItemFolder] = useState<string | null>(null); // 记录在哪个文件夹下添加新项目
-  const [newItemType, setNewItemType] = useState<'file' | 'folder' | null>(null); // 记录添加的是文件还是文件夹
+  const [newItemFolder, setNewItemFolder] = useState<string | null>(null);
+  const [newItemType, setNewItemType] = useState<'file' | 'folder' | null>(null);
   const [newItemName, setNewItemName] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    async function fetchFiles() {
-      try {
-        const res = await DocumentApi.GetDocument();
+  // 分享对话框状态
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
-        if (res?.data?.code === 200 && res?.data?.data) {
-          const documentResponse = res.data.data as DocumentResponse;
-          const apiDocuments = documentResponse.owned || [];
-
-          // 将API返回的文档数据转换为组件需要的格式
-          const convertedFiles = processApiDocuments(apiDocuments);
-          setFiles(convertedFiles);
-
-          // 如果有文件，默认展开根文件夹
-          if (convertedFiles.length > 0) {
-            const rootFolders = convertedFiles
-              .filter((file) => file.type === 'folder')
-              .map((folder) => folder.id);
-
-            const initialExpanded: Record<string, boolean> = {};
-            rootFolders.forEach((id) => {
-              initialExpanded[id] = true;
-            });
-
-            setExpandedFolders(initialExpanded);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch documents:', error);
-      }
-    }
-
-    fetchFiles();
-  }, []);
+  // 分享文档展开状态
+  const [sharedDocsExpanded, setSharedDocsExpanded] = useState(false);
 
   // 处理API返回的文档数据，将其转换为组件所需的格式
-  const processApiDocuments = (documents: DocumentResponse['owned']): FileItem[] => {
-    // 创建ID到文档的映射，方便后续处理
+  const processApiDocuments = useCallback((documents: DocumentResponse['owned']): FileItem[] => {
     const docMap = new Map<number, DocumentResponse['owned'][0]>();
     documents.forEach((doc) => {
       if (!doc.is_deleted) {
@@ -79,16 +50,13 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       }
     });
 
-    // 构建文件树
     const result: FileItem[] = [];
     const childrenMap = new Map<number, FileItem[]>();
 
-    // 先初始化每个文档的children数组
     docMap.forEach((doc) => {
       childrenMap.set(doc.id, []);
     });
 
-    // 将每个文档放入其父文档的children中
     docMap.forEach((doc) => {
       const fileItem: FileItem = {
         id: String(doc.id),
@@ -104,10 +72,8 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       }
 
       if (doc.parent_id === null) {
-        // 根级文档
         result.push(fileItem);
       } else if (docMap.has(doc.parent_id)) {
-        // 将文档添加到父文档的children中
         const parentChildren = childrenMap.get(doc.parent_id) || [];
         parentChildren.push(fileItem);
         childrenMap.set(doc.parent_id, parentChildren);
@@ -115,206 +81,140 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     });
 
     return result;
-  };
+  }, []);
 
-  // 执行搜索
-  const performSearch = useCallback(
-    (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        setIsSearching(false);
+  // 加载文件列表
+  const loadFiles = useCallback(
+    async (isInitialLoad = false) => {
+      try {
+        const res = await DocumentApi.GetDocument();
 
-        return;
-      }
+        if (res?.data?.code === 200 && res?.data?.data) {
+          const documentResponse = res.data.data as DocumentResponse;
+          const apiDocuments = documentResponse.owned || [];
+          const convertedFiles = processApiDocuments(apiDocuments);
+          setFiles(convertedFiles);
 
-      setIsSearching(true);
+          if (!isInitialLoad && selectedFileId) {
+            const findFileById = (items: FileItem[], id: string): boolean => {
+              for (const item of items) {
+                if (item.id === id) return true;
+                if (item.children && findFileById(item.children, id)) return true;
+              }
 
-      // 递归搜索文件结构
-      const search = (
-        items: FileItem[],
-        currentPath: string[] = [],
-        ancestorIds: string[] = [],
-      ): SearchResultItem[] => {
-        let results: SearchResultItem[] = [];
+              return false;
+            };
 
-        for (const item of items) {
-          const lowerCaseName = item.name.toLowerCase();
-          const lowerCaseQuery = query.toLowerCase();
-
-          // 检查当前项是否匹配
-          if (lowerCaseName.includes(lowerCaseQuery)) {
-            results.push({
-              item,
-              path: [...currentPath, item.name],
-              ancestors: [...ancestorIds, item.id],
-            });
+            if (!findFileById(convertedFiles, selectedFileId)) {
+              setSelectedFileId(null);
+            }
           }
 
-          // 如果是文件夹，递归搜索子项
-          if (item.type === 'folder' && item.children) {
-            const childResults = search(
-              item.children,
-              [...currentPath, item.name],
-              [...ancestorIds, item.id],
-            );
-            results = [...results, ...childResults];
+          if (isInitialLoad && convertedFiles.length > 0) {
+            const rootFolders = convertedFiles
+              .filter((file) => file.type === 'folder')
+              .map((folder) => folder.id);
+
+            const initialExpanded: Record<string, boolean> = {};
+            rootFolders.forEach((id) => {
+              initialExpanded[id] = true;
+            });
+
+            setExpandedFolders(initialExpanded);
           }
         }
+      } catch (error) {
+        console.error('Failed to fetch documents:', error);
+      }
+    },
+    [selectedFileId, processApiDocuments],
+  );
 
-        return results;
+  const refreshFiles = useCallback(() => loadFiles(false), [loadFiles]);
+
+  useEffect(() => {
+    loadFiles(true);
+  }, [processApiDocuments]);
+
+  // 使用自定义 hooks
+  const fileOperations = useFileOperations(refreshFiles);
+  const {
+    searchQuery,
+    searchResults,
+    isSearching,
+    searchFocused,
+    searchInputRef,
+    handleSearchChange,
+    clearSearch,
+    handleSearchFocus,
+    handleSearchBlur,
+    highlightMatch,
+    showSearchDropdown,
+  } = useFileSearch(files, setExpandedFolders);
+
+  // URL选中逻辑
+  useEffect(() => {
+    if (files.length === 0) return;
+
+    const match = pathname.match(/^\/docs\/(\d+)$/);
+
+    if (match) {
+      const fileId = match[1];
+      const findFileById = (items: FileItem[], id: string): boolean => {
+        for (const item of items) {
+          if (item.id === id) return true;
+          if (item.children && findFileById(item.children, id)) return true;
+        }
+
+        return false;
       };
 
-      const results = search(files);
-      setSearchResults(results);
-
-      // 自动展开包含搜索结果的文件夹
-      const foldersToExpand: Record<string, boolean> = {};
-      results.forEach((result) => {
-        result.ancestors.forEach((id) => {
-          foldersToExpand[id] = true;
-        });
-      });
-
-      setExpandedFolders((prev) => ({
-        ...prev,
-        ...foldersToExpand,
-      }));
-
-      setIsSearching(false);
-    },
-    [files],
-  );
-
-  // 处理搜索输入
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const query = e.target.value;
-      setSearchQuery(query);
-
-      // 防抖：延迟300ms执行搜索，避免输入过程中频繁搜索
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+      if (findFileById(files, fileId)) {
+        setSelectedFileId(fileId);
+        // 展开包含该文件的父文件夹逻辑...
       }
-
-      searchTimeoutRef.current = setTimeout(() => {
-        performSearch(query);
-      }, 300);
-    },
-    [performSearch],
-  );
-
-  // 清除搜索
-  const clearSearch = useCallback(() => {
-    setSearchQuery('');
-    setSearchResults([]);
-
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
+    } else {
+      setSelectedFileId(null);
     }
-  }, []);
+  }, [pathname, files]);
 
-  // 当搜索框获得焦点时
-  const handleSearchFocus = useCallback(() => {
-    setSearchFocused(true);
-  }, []);
-
-  // 当搜索框失去焦点时
-  const handleSearchBlur = useCallback(() => {
-    setSearchFocused(false);
-  }, []);
-
-  // 处理搜索结果点击
+  // 搜索结果点击
   const handleSearchResultClick = useCallback(
     (result: SearchResultItem) => {
-      const item = result.item;
-
-      // 如果是文件夹，展开它
-      if (item.type === 'folder') {
-        setExpandedFolders((prev) => ({
-          ...prev,
-          [item.id]: true,
-        }));
+      if (result.item.type === 'folder') {
+        setExpandedFolders((prev) => ({ ...prev, [result.item.id]: true }));
       } else {
-        // 如果是文件，选中它
-        setSelectedFileId(item.id);
-
-        if (onFileSelect) {
-          onFileSelect(item);
-        }
+        setSelectedFileId(result.item.id);
+        if (onFileSelect) onFileSelect(result.item);
       }
 
-      // 清除搜索
-      setSearchQuery('');
-      setSearchResults([]);
+      clearSearch();
     },
-    [onFileSelect],
+    [onFileSelect, clearSearch],
   );
 
-  // 组件卸载时清除定时器
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // 是否显示搜索结果下拉框
-  const showSearchDropdown = searchQuery.trim() !== '' && (searchResults.length > 0 || isSearching);
-
-  // 高亮显示匹配的文本
-  const highlightMatch = useCallback((text: string, query: string) => {
-    if (!query.trim()) return <span>{text}</span>;
-
-    const lowerText = text.toLowerCase();
-    const lowerQuery = query.toLowerCase();
-    const index = lowerText.indexOf(lowerQuery);
-
-    if (index === -1) return <span>{text}</span>;
-
-    const before = text.slice(0, index);
-    const match = text.slice(index, index + query.length);
-    const after = text.slice(index + query.length);
-
-    return (
-      <>
-        {before}
-        <span className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white font-medium">
-          {match}
-        </span>
-        {after}
-      </>
-    );
-  }, []);
-
-  // 处理文件夹展开/折叠
+  // 文件夹操作
   const toggleFolder = useCallback((folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedFolders((prev) => ({
-      ...prev,
-      [folderId]: !prev[folderId],
-    }));
+    setExpandedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
   }, []);
 
-  // 处理文件选择
+  // 文件选择
   const handleFileSelect = useCallback(
     (file: FileItem, e: React.MouseEvent) => {
       e.stopPropagation();
       setSelectedFileId(file.id);
 
-      // 如果是文件类型，导航到文件详情页面
       if (file.type === 'file') {
         router.push(`/docs/${file.id}`);
       }
 
-      if (onFileSelect) {
-        onFileSelect(file);
-      }
+      if (onFileSelect) onFileSelect(file);
     },
     [onFileSelect, router],
   );
 
-  // 打开右键菜单
+  // 右键菜单
   const handleContextMenu = useCallback((e: React.MouseEvent, fileId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -322,104 +222,56 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     setContextMenuTargetId(fileId);
   }, []);
 
-  // 关闭右键菜单
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null);
     setContextMenuTargetId(null);
   }, []);
 
-  // 开始重命名
+  // 重命名操作
   const startRenaming = useCallback(
     (fileId: string) => {
       setIsRenaming(fileId);
       closeContextMenu();
-      // 聚焦到输入框
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.select();
-        }
-      }, 50);
     },
     [closeContextMenu],
   );
 
-  // 完成重命名
   const finishRenaming = useCallback(
-    (newName: string) => {
+    async (newName: string) => {
       if (!isRenaming) return;
 
-      // 更新文件列表
-      const updateFilesRename = (items: FileItem[]): FileItem[] => {
-        return items.map((item) => {
-          if (item.id === isRenaming) {
-            return { ...item, name: newName || item.name };
-          }
-
-          if (item.children) {
-            return { ...item, children: updateFilesRename(item.children) };
-          }
-
-          return item;
+      try {
+        const response = await DocumentApi.RenameDocument({
+          document_id: parseInt(isRenaming),
+          title: newName || '',
         });
-      };
 
-      setFiles(updateFilesRename(files));
-      setIsRenaming(null);
+        if (response?.data?.code === 200) {
+          await refreshFiles();
+          setIsRenaming(null);
+          toast.success(`文件已重命名为 "${newName}"`);
+        }
+      } catch (error) {
+        console.error('重命名失败:', error);
+        toast.error('重命名失败，请重试');
+        setIsRenaming(null);
+      }
     },
-    [isRenaming, files],
+    [isRenaming, refreshFiles],
   );
 
-  // 删除文件/文件夹
-  const deleteItem = useCallback(
-    (fileId: string) => {
-      const updateFilesDelete = (items: FileItem[]): FileItem[] => {
-        return items.filter((item) => {
-          if (item.id === fileId) {
-            return false;
-          }
-
-          if (item.children) {
-            item.children = updateFilesDelete(item.children);
-          }
-
-          return true;
-        });
-      };
-
-      setFiles(updateFilesDelete(files));
-      closeContextMenu();
-    },
-    [files, closeContextMenu],
-  );
-
-  // 开始创建新文件/文件夹
+  // 创建新项目
   const startCreateNewItem = useCallback(
     (folderId: string, type: 'file' | 'folder') => {
       setNewItemFolder(folderId);
       setNewItemType(type);
       setNewItemName(type === 'file' ? '新文件' : '新文件夹');
-
-      // 如果文件夹未展开，先展开它
-      setExpandedFolders((prev) => ({
-        ...prev,
-        [folderId]: true,
-      }));
-
+      setExpandedFolders((prev) => ({ ...prev, [folderId]: true }));
       closeContextMenu();
-
-      // 聚焦到输入框
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.select();
-        }
-      }, 50);
     },
     [closeContextMenu],
   );
 
-  // 完成创建新文件/文件夹
   const finishCreateNewItem = useCallback(async () => {
     if (!newItemFolder || !newItemType || !newItemName.trim()) {
       setNewItemFolder(null);
@@ -429,79 +281,37 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     }
 
     try {
-      // 获取父级ID，如果是根目录则为null
-      const parentId = newItemFolder === 'root' ? undefined : parseInt(newItemFolder);
-
-      // 调用API创建文档
-      const response = await DocumentApi.CreateDocument({
+      const createParams: CreateDocumentDto = {
         title: newItemName,
         type: newItemType === 'folder' ? 'FOLDER' : 'FILE',
-        parent_id: parentId,
         sort_order: 0,
         is_starred: false,
-      });
+      };
 
-      // 如果创建成功，刷新文件列表
+      if (newItemFolder !== 'root') {
+        createParams.parent_id = parseInt(newItemFolder);
+      }
+
+      const response = await DocumentApi.CreateDocument(createParams);
+
       if (response?.data?.code === 201) {
-        // 重新获取文件列表
-        const res = await DocumentApi.GetDocument();
-
-        if (res?.data?.code === 200 && res?.data?.data) {
-          const documentResponse = res.data.data as DocumentResponse;
-          const apiDocuments = documentResponse.owned || [];
-          const convertedFiles = processApiDocuments(apiDocuments);
-          setFiles(convertedFiles);
-
-          // 查找新创建的文件或文件夹
-          const findNewlyCreatedItem = (items: FileItem[]): FileItem | null => {
-            for (const item of items) {
-              if (item.name === newItemName) {
-                // 如果找到了名称匹配的项，且刚创建的时间比较新，则认为是新创建的
-                return item;
-              }
-
-              // 递归查找子项
-              if (item.children && item.children.length > 0) {
-                const found = findNewlyCreatedItem(item.children);
-                if (found) return found;
-              }
-            }
-
-            return null;
-          };
-
-          const newItem = findNewlyCreatedItem(convertedFiles);
-
-          if (newItem) {
-            // 如果是文件夹，展开它
-            if (newItem.type === 'folder') {
-              setExpandedFolders((prev) => ({
-                ...prev,
-                [newItem.id]: true,
-              }));
-            }
-
-            // 选中新创建的项目
-            setSelectedFileId(newItem.id);
-          }
-        }
+        setNewItemFolder(null);
+        setNewItemType(null);
+        await loadFiles();
       }
     } catch (error) {
       console.error('Failed to create document:', error);
+      setNewItemFolder(null);
+      setNewItemType(null);
     }
+  }, [newItemFolder, newItemType, newItemName, loadFiles]);
 
-    // 清除新建状态
-    setNewItemFolder(null);
-    setNewItemType(null);
-  }, [newItemFolder, newItemType, newItemName, processApiDocuments]);
-
-  // 取消创建新文件/文件夹
   const cancelCreateNewItem = useCallback(() => {
     setNewItemFolder(null);
     setNewItemType(null);
   }, []);
 
-  // 处理键盘事件
+  // 键盘事件
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter') {
@@ -511,217 +321,46 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           finishCreateNewItem();
         }
       } else if (e.key === 'Escape') {
-        if (isRenaming) {
-          setIsRenaming(null);
-        } else if (newItemFolder) {
-          cancelCreateNewItem();
-        }
+        if (isRenaming) setIsRenaming(null);
+        if (newItemFolder) cancelCreateNewItem();
       }
     },
     [isRenaming, finishRenaming, newItemFolder, finishCreateNewItem, cancelCreateNewItem],
   );
 
-  // 折叠所有文件夹
-  const collapseAll = useCallback(() => {
-    setExpandedFolders({});
-  }, []);
-
-  // 在根目录添加新项目
+  const collapseAll = useCallback(() => setExpandedFolders({}), []);
   const createNewRootItem = useCallback(
-    (type: 'file' | 'folder') => {
-      startCreateNewItem('root', type);
-    },
+    (type: 'file' | 'folder') => startCreateNewItem('root', type),
     [startCreateNewItem],
   );
 
-  // 渲染单个文件或文件夹
-  const renderFile = (file: FileItem, depth = 0) => {
-    const isFolder = file.type === 'folder';
-    const isExpanded = isFolder && expandedFolders[file.id];
-    const isSelected = selectedFileId === file.id;
-    const isItemRenaming = isRenaming === file.id;
-    const isAddingNewItem = newItemFolder === file.id;
+  const handleShare = useCallback((file: FileItem) => {
+    setShareDialogFile(file);
+    setShareDialogOpen(true);
+  }, []);
 
-    // 搜索模式下，检查是否匹配搜索条件
-    const isMatch = searchQuery && file.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleRename = useCallback((file: FileItem) => startRenaming(file.id), [startRenaming]);
+
+  // 渲染高亮文本的辅助函数
+  const renderHighlightedText = (text: string, query: string) => {
+    const result = highlightMatch(text, query);
+
+    if (result.type === 'plain') {
+      return <span>{result.content}</span>;
+    }
 
     return (
-      <div key={file.id}>
-        <div
-          className={cn(
-            'flex items-center py-1.5 px-2 text-sm cursor-pointer hover:bg-gray-100 relative group',
-            isSelected && 'bg-blue-50 text-blue-600',
-            isMatch && 'bg-yellow-50', // 搜索匹配项背景高亮
-          )}
-          style={{ paddingLeft: `${(depth + 1) * 8}px` }}
-          onClick={(e) => (isFolder ? toggleFolder(file.id, e) : handleFileSelect(file, e))}
-          onContextMenu={(e) => handleContextMenu(e, file.id)}
-        >
-          {/* 展开/折叠图标 */}
-          <div className="mr-1 w-4 flex-shrink-0">
-            {isFolder ? (
-              <div className="cursor-pointer" onClick={(e) => toggleFolder(file.id, e)}>
-                <Icon
-                  name={isExpanded ? 'ChevronDown' : 'ChevronRight'}
-                  className="h-4 w-4 text-gray-500"
-                />
-              </div>
-            ) : (
-              <span className="w-4"></span>
-            )}
-          </div>
-
-          {/* 文件/文件夹图标 */}
-          <div className="flex items-center flex-grow overflow-hidden">
-            {isFolder ? (
-              <Icon
-                name={isExpanded ? 'FolderOpen' : 'Folder'}
-                className="h-4 w-4 mr-1 flex-shrink-0 text-yellow-500"
-              />
-            ) : (
-              <Icon name="FileText" className="h-4 w-4 mr-1 flex-shrink-0 text-blue-500" />
-            )}
-
-            {/* 名称/重命名输入框 */}
-            {isItemRenaming ? (
-              <input
-                ref={inputRef}
-                type="text"
-                className="bg-white border border-blue-300 px-1 py-0 text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                defaultValue={file.name}
-                onBlur={(e) => finishRenaming(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-            ) : (
-              <span className="truncate text-gray-700">
-                {searchQuery ? highlightMatch(file.name, searchQuery) : file.name}
-              </span>
-            )}
-          </div>
-
-          {/* 快捷操作按钮 (仅在鼠标悬停时显示) */}
-          <div className="hidden group-hover:flex items-center ml-2">
-            {isFolder && (
-              <>
-                <button
-                  title="新建文件"
-                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startCreateNewItem(file.id, 'file');
-                  }}
-                >
-                  <Icon name="FilePlus" className="h-3 w-3" />
-                </button>
-                <button
-                  title="新建文件夹"
-                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500 ml-0.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startCreateNewItem(file.id, 'folder');
-                  }}
-                >
-                  <Icon name="FolderPlus" className="h-3 w-3" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* 如果是展开的文件夹，则递归渲染其子项 */}
-        {isFolder && isExpanded && (
-          <div>
-            {file.children?.map((child) => renderFile(child, depth + 1))}
-
-            {/* 新建项目输入框 */}
-            {isAddingNewItem && (
-              <div
-                className="flex items-center py-1 px-2 text-sm"
-                style={{ paddingLeft: `${(depth + 2) * 8}px` }}
-              >
-                <div className="mr-1 w-4"></div>
-                <Icon
-                  name={newItemType === 'folder' ? 'Folder' : 'FileText'}
-                  className={cn(
-                    'h-4 w-4 mr-1',
-                    newItemType === 'folder' ? 'text-yellow-500' : 'text-blue-500',
-                  )}
-                />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="bg-white border border-blue-300 px-1 py-0 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 rounded mr-2"
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-                <div className="flex space-x-1">
-                  <button
-                    className="p-1 rounded-full hover:bg-green-100 text-green-600"
-                    onClick={finishCreateNewItem}
-                    title="确认"
-                  >
-                    <Icon name="Check" className="h-3 w-3" />
-                  </button>
-                  <button
-                    className="p-1 rounded-full hover:bg-red-100 text-red-600"
-                    onClick={cancelCreateNewItem}
-                    title="取消"
-                  >
-                    <Icon name="X" className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <>
+        {result.parts.before}
+        <span className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white font-medium">
+          {result.parts.match}
+        </span>
+        {result.parts.after}
+      </>
     );
   };
 
-  // 渲染顶级新建输入框
-  const renderNewRootItem = () => {
-    if (newItemFolder !== 'root') return null;
-
-    return (
-      <div className="flex items-center py-1 px-2 text-sm">
-        <div className="w-4 mr-1"></div>
-        <Icon
-          name={newItemType === 'folder' ? 'Folder' : 'FileText'}
-          className={cn(
-            'h-4 w-4 mr-1',
-            newItemType === 'folder' ? 'text-yellow-500' : 'text-blue-500',
-          )}
-        />
-        <input
-          ref={inputRef}
-          type="text"
-          className="bg-white border border-blue-300 px-1 py-0 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 rounded mr-2"
-          value={newItemName}
-          onChange={(e) => setNewItemName(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <div className="flex space-x-1">
-          <button
-            className="p-1 rounded-full hover:bg-green-100 text-green-600"
-            onClick={finishCreateNewItem}
-            title="确认"
-          >
-            <Icon name="Check" className="h-3 w-3" />
-          </button>
-          <button
-            className="p-1 rounded-full hover:bg-red-100 text-red-600"
-            onClick={cancelCreateNewItem}
-            title="取消"
-          >
-            <Icon name="X" className="h-3 w-3" />
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染搜索结果下拉框
+  // 渲染搜索下拉框
   const renderSearchDropdown = () => {
     if (!showSearchDropdown) return null;
 
@@ -749,7 +388,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
                 />
                 <div>
                   <div className="text-gray-700">
-                    {highlightMatch(result.item.name, searchQuery)}
+                    {renderHighlightedText(result.item.name, searchQuery)}
                   </div>
                   <div className="text-xs text-gray-500">
                     {result.path.slice(0, -1).join(' > ')}
@@ -771,12 +410,9 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   const renderContextMenu = () => {
     if (!contextMenuPosition) return null;
 
-    // 找到目标文件项
     const findTargetFile = (items: FileItem[]): FileItem | null => {
       for (const item of items) {
-        if (item.id === contextMenuTargetId) {
-          return item;
-        }
+        if (item.id === contextMenuTargetId) return item;
 
         if (item.children) {
           const found = findTargetFile(item.children);
@@ -825,7 +461,9 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           </button>
           <button
             className="w-full text-left px-3 py-1.5 text-sm hover:bg-red-50 hover:text-red-600 flex items-center text-red-500"
-            onClick={() => deleteItem(contextMenuTargetId!)}
+            onClick={() => {
+              if (targetFile) fileOperations.handleDelete(targetFile);
+            }}
           >
             <Icon name="Trash" className="h-4 w-4 mr-2" />
             删除
@@ -839,7 +477,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     <div className="h-full flex flex-col overflow-hidden bg-white border-r border-gray-200">
       {/* 标题栏和工具栏 */}
       <div className="border-b border-gray-200">
-        {/* 标题栏 */}
         <div className="flex items-center justify-between p-2">
           <h3 className="text-sm font-medium flex items-center text-gray-700">
             <Icon name="Files" className="h-4 w-4 mr-1 text-blue-600" />
@@ -847,7 +484,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           </h3>
 
           <div className="flex space-x-1">
-            {/* 工具按钮 */}
             <div className="relative group">
               <button
                 className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
@@ -879,7 +515,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
             <div className="relative group">
               <button
                 className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
-                onClick={() => setFiles([...files])}
+                onClick={refreshFiles}
               >
                 <Icon name="RefreshCw" className="h-4 w-4" />
               </button>
@@ -946,12 +582,8 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       <div
         className="flex-1 overflow-y-auto relative"
         onClick={() => {
-          // 点击空白区域，取消所有操作状态
           closeContextMenu();
-
-          if (isRenaming) {
-            setIsRenaming(null);
-          }
+          if (isRenaming) setIsRenaming(null);
 
           if (newItemFolder) {
             setNewItemFolder(null);
@@ -959,12 +591,53 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           }
         }}
       >
-        {files.map((file) => renderFile(file))}
-        {renderNewRootItem()}
+        <FileTree
+          files={files}
+          expandedFolders={expandedFolders}
+          selectedFileId={selectedFileId}
+          isRenaming={isRenaming}
+          newItemFolder={newItemFolder}
+          newItemType={newItemType}
+          newItemName={newItemName}
+          searchQuery={searchQuery}
+          onFileSelect={handleFileSelect}
+          onToggleFolder={toggleFolder}
+          onContextMenu={handleContextMenu}
+          onStartCreateNewItem={startCreateNewItem}
+          onFinishRenaming={finishRenaming}
+          onFinishCreateNewItem={finishCreateNewItem}
+          onCancelCreateNewItem={cancelCreateNewItem}
+          onKeyDown={handleKeyDown}
+          onSetNewItemName={setNewItemName}
+          onShare={handleShare}
+          onDelete={fileOperations.handleDelete}
+          onRename={handleRename}
+          onDuplicate={fileOperations.handleDuplicate}
+          onDownload={fileOperations.handleDownload}
+          highlightMatch={highlightMatch}
+        />
       </div>
+
+      {/* 分享文档栏目 */}
+      <SharedDocuments
+        isExpanded={sharedDocsExpanded}
+        onToggle={() => setSharedDocsExpanded(!sharedDocsExpanded)}
+      />
 
       {/* 右键菜单 */}
       {renderContextMenu()}
+
+      {/* 分享对话框 */}
+      {shareDialogFile && (
+        <ShareDialog
+          file={shareDialogFile}
+          isOpen={shareDialogOpen}
+          onClose={() => {
+            setShareDialogOpen(false);
+            setShareDialogFile(null);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { ChangeEvent, useCallback } from 'react';
 import { useDropZone, useFileUpload, useUploader } from './hooks';
 
 import { Spinner } from '@/components/ui/Spinner';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 
@@ -44,12 +44,7 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
           {draggedInside ? 'Drop image here' : 'Drag and drop or'}
         </div>
         <div>
-          <Button
-            disabled={draggedInside}
-            onClick={handleUploadClick}
-            variant="primary"
-            buttonSize="small"
-          >
+          <Button disabled={draggedInside} onClick={handleUploadClick} variant="default" size="sm">
             <Icon name="Upload" />
             Upload an image
           </Button>
