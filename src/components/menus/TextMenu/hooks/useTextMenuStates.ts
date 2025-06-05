@@ -108,20 +108,94 @@ export const useTextMenuStates = (editor: Editor) => {
   });
 
   const shouldShow = useCallback(
-    ({ view, from }: ShouldShowProps) => {
-      if (!view || editor.view.dragging) {
+    ({ view, from }: ShouldShowProps = {} as ShouldShowProps) => {
+      // 基本检查：编辑器是否存在且不在拖拽状态
+      if (!editor || !editor.view || !view || editor.view.dragging) {
         return false;
       }
 
-      const domAtPos = view.domAtPos(from || 0).node as HTMLElement;
-      const nodeDOM = view.nodeDOM(from || 0) as HTMLElement;
-      const node = nodeDOM || domAtPos;
-
-      if (isCustomNodeSelected(editor, node)) {
+      // 检查编辑器是否聚焦
+      if (!editor.isFocused) {
         return false;
       }
 
-      return isTextSelected({ editor });
+      // 检查选择是否有效
+      const { state } = editor;
+
+      if (!state || !state.selection) {
+        return false;
+      }
+
+      const { selection } = state;
+      const { from: selFrom, to: selTo, empty } = selection;
+
+      // 如果选择为空，不显示菜单
+      if (empty) {
+        return false;
+      }
+
+      // 检查选择范围是否有效
+      if (selFrom < 0 || selTo > state.doc.content.size) {
+        return false;
+      }
+
+      try {
+        // 安全地获取DOM节点
+        const fromPos = from ?? selFrom;
+
+        if (fromPos < 0 || fromPos > state.doc.content.size) {
+          return false;
+        }
+
+        const domAtPos = view.domAtPos(fromPos);
+
+        if (!domAtPos || !domAtPos.node) {
+          return false;
+        }
+
+        const domAtPosNode = domAtPos.node as HTMLElement;
+
+        // 尝试获取节点DOM，如果失败则使用domAtPos
+        let nodeDOM: HTMLElement | null = null;
+
+        try {
+          nodeDOM = view.nodeDOM(fromPos) as HTMLElement;
+        } catch {
+          // 如果获取nodeDOM失败，使用domAtPos作为备选
+          nodeDOM = domAtPosNode;
+        }
+
+        const node = nodeDOM || domAtPosNode;
+
+        // 检查是否选择了自定义节点
+        if (isCustomNodeSelected(editor, node)) {
+          return false;
+        }
+
+        // 检查是否在表格单元格内（表格有自己的菜单）
+        if (editor.isActive('table')) {
+          return false;
+        }
+
+        // 检查是否选择了图片或其他媒体元素
+        if (editor.isActive('image') || editor.isActive('imageBlock')) {
+          return false;
+        }
+
+        // 检查是否在代码块内（代码块通常不需要格式化菜单）
+        if (editor.isActive('codeBlock')) {
+          return false;
+        }
+
+        // 最终检查：是否选择了文本
+
+        return isTextSelected({ editor });
+      } catch (error) {
+        // 如果发生任何错误，安全地返回false
+        console.warn('TextMenu shouldShow error:', error);
+
+        return false;
+      }
     },
     [editor],
   );

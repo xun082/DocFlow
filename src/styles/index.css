@@ -129,6 +129,117 @@
   [data-theme='slash-command'] {
     width: 1000vw;
   }
+
+  /* TextMenu specific styles for better positioning and z-index management */
+  [data-tippy-root] {
+    z-index: 10000 !important;
+  }
+
+  .tippy-box[data-plugin='textMenu'] {
+    z-index: 10000 !important;
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .tippy-box[data-plugin='textMenu'] .tippy-content {
+    padding: 0 !important;
+    overflow: visible;
+  }
+
+  /* 更新为text-menu主题的样式 */
+  .tippy-box[data-theme~='text-menu'] {
+    z-index: 10000 !important;
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .tippy-box[data-theme~='text-menu'] .tippy-content {
+    padding: 0 !important;
+    overflow: visible;
+  }
+
+  /* Ensure Radix Popover contents have correct z-index */
+  [data-radix-popper-content-wrapper] {
+    z-index: 99999 !important;
+  }
+
+  [data-radix-portal] {
+    z-index: 99999 !important;
+  }
+
+  /* 确保拼写检查面板本身有最高优先级 */
+  [data-spell-check-panel] {
+    z-index: 100001 !important;
+    position: relative !important;
+  }
+
+  /* Smooth transitions for menu appearance */
+  .tippy-box[data-animation='shift-away-subtle'][data-state='hidden'] {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  .tippy-box[data-animation='shift-away-subtle'][data-state='visible'] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Text menu specific animations */
+  .tippy-box[data-theme~='text-menu'][data-animation='shift-away-subtle'][data-state='hidden'] {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    transition:
+      opacity 150ms ease-out,
+      transform 150ms ease-out;
+  }
+
+  .tippy-box[data-theme~='text-menu'][data-animation='shift-away-subtle'][data-state='visible'] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 200ms ease-out,
+      transform 200ms ease-out;
+  }
+
+  /* Prevent text menu from being obscured by other elements */
+  .text-menu-container {
+    position: relative;
+    z-index: 10000;
+  }
+
+  /* Mobile responsiveness for TextMenu */
+  @media (max-width: 640px) {
+    .tippy-box[data-plugin='textMenu'],
+    .tippy-box[data-theme~='text-menu'] {
+      max-width: calc(100vw - 16px) !important;
+      font-size: 14px;
+    }
+
+    .tippy-box[data-plugin='textMenu'] .tippy-content,
+    .tippy-box[data-theme~='text-menu'] .tippy-content {
+      min-width: auto !important;
+    }
+  }
+
+  /* 高对比度模式支持 */
+  @media (prefers-contrast: high) {
+    .tippy-box[data-theme~='text-menu'] {
+      border: 2px solid currentColor;
+    }
+  }
+
+  /* 减少动画的偏好设置 */
+  @media (prefers-reduced-motion: reduce) {
+    .tippy-box[data-theme~='text-menu'] {
+      transition: none !important;
+    }
+
+    .tippy-box[data-theme~='text-menu'][data-animation='shift-away-subtle'] {
+      transform: none !important;
+    }
+  }
 }
 
 @theme inline {
