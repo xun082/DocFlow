@@ -12,7 +12,7 @@ import { FileItem } from './type';
 import UserSelector from './components/UserSelector';
 
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 import {
   Dialog,
   DialogContent,

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "PORT=6001 next start",
+    "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:ci": "eslint \"**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,cjs,mjs,json}\"",

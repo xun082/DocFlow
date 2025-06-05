@@ -27,7 +27,7 @@ export type AuthErrorType = {
 export function useCollaborativeEditor(roomId: string) {
   const [isEditable, setIsEditable] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<
-    'connecting' | 'connected' | 'disconnected'
+    'connecting' | 'connected' | 'disconnected' | 'syncing' | 'error'
   >('connecting');
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
   const [doc, setDoc] = useState<Y.Doc | null>(null);
@@ -37,6 +37,12 @@ export function useCollaborativeEditor(roomId: string) {
   const [isMounted, setIsMounted] = useState(false);
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
+  const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const [syncProgress, setSyncProgress] = useState<{ synced: boolean; loading: boolean }>({
+    synced: false,
+    loading: true,
+  });
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 客户端挂载后初始化Y.Doc
   useEffect(() => {
@@ -66,12 +72,31 @@ export function useCollaborativeEditor(roomId: string) {
       if (hasUnsyncedChangesRef.current) {
         console.log('Has unsynced changes, reconnecting to sync...');
       }
+
+      // 🔥 网络恢复时，延迟一点时间再重连，避免立即重连可能失败
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        // 如果有provider且当前状态不是已连接，触发重连
+        if (provider && connectionStatus !== 'connected') {
+          console.log('Attempting to reconnect after network recovery...');
+          provider.connect();
+        }
+      }, 1000);
     };
 
     const handleOffline = () => {
       console.log('Network is offline');
       setIsOffline(true);
       setConnectionStatus('disconnected');
+
+      // 清理重连定时器
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
     };
 
     window.addEventListener('online', handleOnline);
@@ -80,8 +105,13 @@ export function useCollaborativeEditor(roomId: string) {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+
+      // 清理重连定时器
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
     };
-  }, [isMounted]);
+  }, [isMounted, provider, connectionStatus]);
 
   useEffect(() => {
     if (!isMounted || !roomId || !doc) return;
@@ -96,6 +126,7 @@ export function useCollaborativeEditor(roomId: string) {
 
       if (localStorage.getItem(localStorageKey) === 'true') {
         hasUnsyncedChangesRef.current = true;
+        console.log('🔄 检测到未同步的离线编辑，需要同步到服务器');
       }
     });
 
@@ -106,13 +137,21 @@ export function useCollaborativeEditor(roomId: string) {
 
     indexeddbPersistence.on('afterTransaction', () => {
       console.log('After persistence transaction');
+
       // 记录有未同步的本地更改
-      localStorage.setItem(`offline-edits-${roomId}`, 'true');
+      if (isOffline || connectionStatus !== 'connected') {
+        localStorage.setItem(`offline-edits-${roomId}`, 'true');
+        hasUnsyncedChangesRef.current = true;
+
+        const now = new Date().toISOString();
+        localStorage.setItem(`last-offline-edit-${roomId}`, now);
+        console.log('📝 离线编辑已保存到本地存储');
+      }
     });
 
     // 监听更新，记录本地更改
     doc.on('update', () => {
-      if (isOffline || !provider || !provider.synced) {
+      if (isOffline || !provider || connectionStatus !== 'connected') {
         console.log('Document updated in offline mode');
         hasUnsyncedChangesRef.current = true;
 
@@ -124,7 +163,7 @@ export function useCollaborativeEditor(roomId: string) {
     return () => {
       indexeddbPersistence.destroy();
     };
-  }, [isMounted, roomId, doc, isOffline, provider]);
+  }, [isMounted, roomId, doc, isOffline, provider, connectionStatus]);
 
   useEffect(() => {
     if (!isMounted || !authToken) return;
@@ -166,9 +205,11 @@ export function useCollaborativeEditor(roomId: string) {
       onConnect: () => {
         console.log('Connected to collaboration server with token');
 
-        queueMicrotask(() => {
-          setConnectionStatus('connected');
+        // 🔥 连接成功时，先设置为同步中状态
+        setConnectionStatus('syncing');
+        setSyncProgress({ synced: false, loading: true });
 
+        queueMicrotask(() => {
           if (currentUser && hocuspocusProvider.awareness) {
             hocuspocusProvider.awareness.setLocalStateField('user', currentUser);
             console.log('设置用户awareness:', currentUser);
@@ -177,7 +218,10 @@ export function useCollaborativeEditor(roomId: string) {
       },
 
       onAuthenticationFailed: (data) => {
-        console.error('认证失败:', data, 11111);
+        console.error('认证失败:', data);
+
+        setConnectionStatus('error');
+        setSyncProgress({ synced: false, loading: false });
 
         // 设置认证错误状态
         setAuthError({
@@ -195,17 +239,27 @@ export function useCollaborativeEditor(roomId: string) {
       onSynced: () => {
         console.log('Document synced with server');
 
+        // 🔥 文档同步完成，设置为已连接状态
+        setConnectionStatus('connected');
+        setSyncProgress({ synced: true, loading: false });
+
         queueMicrotask(() => {
           hasUnsyncedChangesRef.current = false;
+          // 清除离线编辑标记
+          localStorage.removeItem(`offline-edits-${roomId}`);
         });
       },
+
       onDisconnect: () => {
         console.log('Disconnected from collaboration server');
         setConnectionStatus('disconnected');
+        setSyncProgress({ synced: false, loading: false });
       },
+
       onClose: () => {
         console.log('Connection closed');
         setConnectionStatus('disconnected');
+        setSyncProgress({ synced: false, loading: false });
       },
     });
 
@@ -236,7 +290,9 @@ export function useCollaborativeEditor(roomId: string) {
           }
         });
 
-        // 更新连接用户列表
+        // 🔥 更新连接用户列表状态
+        setConnectedUsers(users);
+
         if (users.length > 0) {
           console.log('Connected users:', users);
         }
@@ -361,5 +417,7 @@ export function useCollaborativeEditor(roomId: string) {
     isMounted,
     currentUser,
     authError,
+    connectedUsers,
+    syncProgress,
   };
 }
