@@ -1,4 +1,4 @@
-name: Deploy Next.js to Alibaba Cloud ECS
+name: Deploy Next.js to JD Cloud
 
 on:
   push:
@@ -13,14 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: '22.11.0'
-
-      - name: Install pnpm
-        run: npm install -g pnpm@9.4.0
-
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -29,65 +21,42 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # 显示当前环境信息
-            echo "Shell: $SHELL"
-            echo "PATH before: $PATH"
+            # 加载环境配置
+            source ~/.bashrc 2>/dev/null || true
+            source ~/.profile 2>/dev/null || true
 
-            # 加载环境配置文件
-            source ~/.bashrc
-            source ~/.profile
-
-            # 如果使用 NVM，加载 NVM 环境
+            # 加载 NVM 环境
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            # 添加常见的 Node.js 安装路径到 PATH
+            # 设置 PATH
             export PATH="$HOME/.nvm/versions/node/*/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.npm-global/bin:$PATH"
-            echo "PATH after: $PATH"
 
-            # 查找 npm 的位置
-            which npm || echo "npm still not found in PATH"
+            # 设置工作目录
+            PROJECT_DIR="/home/DocFlow"
+            mkdir -p $PROJECT_DIR
+            cd $PROJECT_DIR
 
-            # 使用绝对路径查找 npm
-            NPM_PATH=$(find /usr -name npm -type f 2>/dev/null | head -1)
-            if [ -n "$NPM_PATH" ]; then
-              echo "Found npm at: $NPM_PATH"
-              export PATH="$(dirname $NPM_PATH):$PATH"
-            fi
-
-            # 确保目标目录存在
-            mkdir -p /home/DocFlow
-            cd /home/DocFlow
-
-            # 如果本地仓库不存在，进行克隆
-            if [ ! -d "/home/DocFlow/.git" ]; then
-              echo "Cloning the repository..."
-              # 删除可能存在的空目录内容
-              rm -rf /home/DocFlow/*
-              # 使用 SSH 方式克隆
+            # 克隆或更新代码
+            if [ ! -d ".git" ]; then
+              echo "Cloning repository..."
+              rm -rf ./*
               git clone git@github.com:xun082/DocFlow.git .
             else
-              # 确保远程 URL 使用 SSH
-              git remote set-url origin git@github.com:xun082/DocFlow.git
-              # 获取最新代码
+              echo "Updating repository..."
               git fetch origin main
               git reset --hard origin/main
             fi
 
-            # 使用找到的 npm 路径或尝试直接运行
-            if [ -n "$NPM_PATH" ]; then
-              $NPM_PATH install -g pnpm@9.4.0
-              $NPM_PATH install -g pm2
-            else
-              npm install -g pnpm@9.4.0
-              npm install -g pm2
-            fi
+            # 安装全局依赖 (只在需要时安装)
+            command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@9.4.0
+            command -v pm2 >/dev/null 2>&1 || npm install -g pm2
 
-            # 安装依赖
-            pnpm install || npm install
+            # 安装项目依赖
+            pnpm install
 
             # 构建项目
-            pnpm run build || npm run build
+            pnpm run build
 
             # 重启应用
-            pm2 restart DocFlow || pm2 start "pnpm start" --name DocFlow || pm2 start "npm start" --name DocFlow
+            pm2 restart DocFlow 2>/dev/null || pm2 start "pnpm start" --name DocFlow
