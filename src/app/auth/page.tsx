@@ -1,13 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Github } from 'lucide-react';
+import { Github, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const handleGitHubLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/auth/github`;
+  };
+
+  const handleEmailLogin = () => {
+    router.push('/auth/email');
   };
 
   return (
@@ -28,6 +35,15 @@ export default function LoginPage() {
           >
             <Github className="mr-2 h-5 w-5" />
             <span className="text-base">使用 GitHub 登录</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-center py-4 px-4 space-x-3 text-gray-700 hover:text-gray-900 border-gray-200 hover:border-gray-300 rounded-xl transition-all duration-300 transform hover:scale-[1.02]"
+            onClick={handleEmailLogin}
+          >
+            <Mail className="mr-2 h-5 w-5" />
+            <span className="text-base">使用邮箱登录</span>
           </Button>
 
           <p className="text-sm text-gray-500 mt-6">安全登录，保护您的账户隐私</p>
