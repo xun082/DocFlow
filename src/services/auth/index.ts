@@ -14,6 +14,22 @@ export interface AuthResponse {
 }
 
 /**
+ * 发送验证码响应接口
+ */
+export interface SendCodeResponse {
+  success: boolean;
+  message: string;
+}
+
+/**
+ * 邮箱验证码登录参数
+ */
+export interface EmailCodeLoginParams {
+  email: string;
+  code: string;
+}
+
+/**
  * 认证服务API
  */
 export const authApi = {
@@ -23,6 +39,30 @@ export const authApi = {
    * @returns 用户信息，包含错误处理
    */
   getMe: (errorHandler?: ErrorHandler) => request.get<User>('/api/v1/users/me', { errorHandler }),
+
+  /**
+   * 发送邮箱验证码
+   * @param email 邮箱地址
+   * @param errorHandler 自定义错误处理函数
+   * @returns 发送结果
+   */
+  sendEmailCode: (email: string, errorHandler?: ErrorHandler) =>
+    request.post<SendCodeResponse>('/api/v1/auth/email/send-code', {
+      params: { email },
+      errorHandler,
+    }),
+
+  /**
+   * 使用邮箱验证码登录
+   * @param params 邮箱和验证码
+   * @param errorHandler 自定义错误处理函数
+   * @returns 认证结果，包含token等信息
+   */
+  emailCodeLogin: (params: EmailCodeLoginParams, errorHandler?: ErrorHandler) =>
+    request.post<AuthResponse>('/api/v1/auth/email/login', {
+      params,
+      errorHandler,
+    }),
 
   /**
    * 使用GitHub授权码完成登录
