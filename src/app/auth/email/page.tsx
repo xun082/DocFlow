@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import authApi from '@/services/auth';
 import { saveAuthData } from '@/utils/cookie';
-import { errorHandler } from '@/utils/errorHandler';
+import { ErrorHandler } from '@/services/request';
 
 export default function EmailLoginPage() {
   const router = useRouter();
@@ -18,6 +18,27 @@ export default function EmailLoginPage() {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  const errorHandler: ErrorHandler = {
+    onError: () => {
+      toast.error('请求失败，请稍后重试');
+    },
+    unauthorized: () => {
+      toast.error('未登录或登录已过期，请重新登录');
+    },
+    forbidden: () => {
+      toast.error('没有权限');
+    },
+    serverError: () => {
+      toast.error('服务器错误，请稍后再试');
+    },
+    networkError: () => {
+      toast.error('网络连接失败，请检查网络');
+    },
+    default: () => {
+      toast.error('未知错误');
+    },
+  };
 
   const handleSendCode = async () => {
     if (!email) {
@@ -66,6 +87,7 @@ export default function EmailLoginPage() {
 
     if (data?.data.success) {
       saveAuthData(data.data);
+
       router.push('/');
     } else {
       toast.error(data?.data.message || '登录失败');
