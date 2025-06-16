@@ -55,7 +55,7 @@ import { TableOfContentsNode } from './TableOfContentsNode';
 import { MindMapBlock } from './MindMapBlock';
 import { ChartBlock } from './ChartBlock';
 
-import { API } from '@/utils/api';
+import uploadService from '@/services/upload';
 
 interface ExtensionKitProps {
   provider?: HocuspocusProvider | null;
@@ -122,14 +122,14 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
     onDrop: (currentEditor, files, pos) => {
       files.forEach(async (file) => {
-        const url = await API.uploadImage(file);
+        const url = await uploadService.uploadImage(file);
 
         currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
       });
     },
     onPaste: (currentEditor, files) => {
       files.forEach(async (file) => {
-        const url = await API.uploadImage(file);
+        const url = await uploadService.uploadImage(file);
 
         return currentEditor
           .chain()

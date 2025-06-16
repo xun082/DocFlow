@@ -1,7 +1,7 @@
 import { DragEvent, useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { API } from '@/utils/api';
+import uploadService from '@/services/upload';
 
 export const useUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ export const useUploader = ({ onUpload }: { onUpload: (url: string) => void }) =
       setLoading(true);
 
       try {
-        const url = await API.uploadImage(file);
+        const url = await uploadService.uploadImage(file);
 
         onUpload(url);
       } catch (errPayload: any) {
