@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
   // 从cookie获取token
   const token = request.cookies.get('auth_token')?.value;
 
+  console.log('===MIDDLEWARE===', {
+    path: pathname,
+    hasToken: !!token,
+    userAgent: request.headers.get('user-agent')?.slice(0, 50),
+  });
+
   // 如果没有token，重定向到登录页
   if (!token) {
-    return NextResponse.redirect(new URL('/auth', request.url));
-  }
-
-  try {
-    console.log('===DEBUG MIDDLEWARE===', { path: request.nextUrl.pathname, hasToken: !!token });
-
-    // 验证token
-    return NextResponse.next();
-  } catch (error) {
-    // 出错时重定向到登录页
-    console.error('Token verification error:', error);
+    console.log('No token found, redirecting to /auth');
 
     return NextResponse.redirect(new URL('/auth', request.url));
   }
+
+  // 可以在这里添加更多的token验证逻辑
+  // 比如检查token是否过期等
+
+  // Token存在，允许访问
+  console.log('Token found, allowing access to:', pathname);
+
+  return NextResponse.next();
 }
 
 // async function verifyToken(token: string, request: NextRequest) {
@@ -50,5 +56,8 @@ export function middleware(request: NextRequest) {
 
 // 配置哪些路径需要进行验证
 export const config = {
-  matcher: ['/docs/:path*'],
+  matcher: [
+    '/docs/:path*', // 文档页面需要登录
+    '/dashboard/:path*', // 控制台页面需要登录
+  ],
 };

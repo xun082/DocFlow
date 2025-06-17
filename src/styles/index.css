@@ -13,7 +13,7 @@
 
 @layer utilities {
   .ProseMirror {
-    @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-2xl;
+    @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-3xl;
   }
 
   .dark .ProseMirror {
@@ -96,7 +96,7 @@
   }
 
   .ProseMirror .ProseMirror-gapcursor {
-    @apply relative w-full max-w-2xl mx-auto;
+    @apply relative w-full max-w-5xl mx-auto;
   }
 
   .ProseMirror .ProseMirror-gapcursor::after {
@@ -104,7 +104,7 @@
     display: block;
     border-top: 1px solid rgb(0 0 0 / 0.4);
     width: 100%;
-    max-width: 42rem; /* match max-w-2xl */
+    max-width: 80rem; /* match max-w-5xl */
     position: relative;
     top: -1.5em;
     left: 0;
