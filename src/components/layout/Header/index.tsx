@@ -3,6 +3,7 @@
 import { Editor } from '@tiptap/core';
 import { useCallback, useEffect, useState } from 'react';
 import { HocuspocusProvider } from '@hocuspocus/provider';
+import { useRouter } from 'next/navigation';
 
 import { Icon } from '@/components/ui/Icon';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -38,15 +39,31 @@ export const Header = ({
   showSelf = true,
   className,
 }: HeaderProps) => {
+  const router = useRouter();
+
   const toggleEditable = useCallback(() => {
     if (!editor) return;
     editor.setOptions({ editable: !editor.isEditable });
     editor.view.dispatch(editor.view.state.tr);
   }, [editor]);
 
+  const handleBackToDashboard = useCallback(() => {
+    router.push('/dashboard');
+  }, [router]);
+
   return (
     <div className="flex flex-row items-center justify-between flex-none py-2.5 px-4 sticky top-0 z-50 backdrop-blur-lg bg-white/90 border-b border-neutral-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
       <div className="flex items-center gap-3">
+        <Tooltip content="返回 Dashboard">
+          <button
+            onClick={handleBackToDashboard}
+            className="relative overflow-hidden group w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-300 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800"
+          >
+            <span className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            <Icon name="ArrowLeft" className="w-4 h-4 relative z-10" />
+          </button>
+        </Tooltip>
+
         <button
           onClick={toggleSidebar}
           className={`relative overflow-hidden group w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-300 ${
