@@ -16,6 +16,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup .npmrc
+        run: |
+          echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
+          echo "//registry.tiptap.dev/:_authToken=${{ secrets.TIPTAP_AUTH_TOKEN }}" >> .npmrc
+        env:
+          TIPTAP_AUTH_TOKEN: ${{ secrets.TIPTAP_AUTH_TOKEN }}
+
       - name: Install PNPM
         uses: pnpm/action-setup@v2
         with:
