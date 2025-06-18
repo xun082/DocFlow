@@ -48,6 +48,15 @@ jobs:
               git reset --hard origin/main
             fi
 
+            # 创建 .npmrc 文件 (如果不存在)
+            if [ ! -f ".npmrc" ]; then
+              echo "Creating .npmrc file..."
+              echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
+              echo "//registry.tiptap.dev/:_authToken=${{ secrets.TIPTAP_AUTH_TOKEN }}" >> .npmrc
+            else
+              echo ".npmrc file already exists, skipping creation."
+            fi
+
             # 安装全局依赖 (只在需要时安装)
             command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@9.4.0
             command -v pm2 >/dev/null 2>&1 || npm install -g pm2
