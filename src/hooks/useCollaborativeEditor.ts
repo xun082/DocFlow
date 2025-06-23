@@ -24,7 +24,15 @@ export type AuthErrorType = {
   reason: string;
 };
 
-export function useCollaborativeEditor(roomId: string) {
+export interface ExtensionKitProps {
+  provider: HocuspocusProvider | null;
+  onCommentActivated?: (commentId: string) => void;
+}
+
+export function useCollaborativeEditor(
+  roomId: string,
+  onCommentActivated?: (commentId: string) => void,
+) {
   const [isEditable, setIsEditable] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<
     'connecting' | 'connected' | 'disconnected' | 'syncing' | 'error'
@@ -326,7 +334,7 @@ export function useCollaborativeEditor(roomId: string) {
   const editor = useEditor(
     {
       extensions: [
-        ...ExtensionKit({ provider }),
+        ...ExtensionKit({ provider, onCommentActivated }),
         // 添加协作扩展
         ...(doc
           ? [
