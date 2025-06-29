@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-import { Comment } from '@/hooks/useCommentSidebar';
+import { Comment } from '@/services/comment/type';
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -67,7 +67,7 @@ export const CommentDrawer = ({
   };
 
   const relatedComments = currentSelection
-    ? comments.filter((comment) => comment.selectedText === currentSelection)
+    ? comments.filter((comment) => comment.selection?.text === currentSelection)
     : comments;
 
   return (
@@ -199,23 +199,23 @@ export const CommentDrawer = ({
                     <div className="flex-1">
                       <div className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md inline-block">
                         针对文本: "
-                        {comment.selectedText.length > 30
-                          ? comment.selectedText.substring(0, 30) + '...'
-                          : comment.selectedText}
+                        {comment.selection?.text && comment.selection.text.length > 30
+                          ? comment.selection.text.substring(0, 30) + '...'
+                          : comment.selection?.text}
                         "
                       </div>
                       <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center space-x-2">
                         <Icon name="User" className="h-3 w-3" />
-                        <span>{comment.author}</span>
+                        <span>{comment.author.name}</span>
                         <span>·</span>
                         <Icon name="Clock" className="h-3 w-3" />
-                        <span>{formatTimestamp(comment.timestamp)}</span>
+                        <span>{formatTimestamp(new Date(comment.created_at))}</span>
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onRemoveComment(comment.id)}
+                      onClick={() => onRemoveComment(comment.id.toString())}
                       className="h-6 w-6 p-0 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
                       title="删除评论"
                     >
@@ -223,7 +223,7 @@ export const CommentDrawer = ({
                     </Button>
                   </div>
                   <div className="text-sm text-neutral-800 dark:text-neutral-200 leading-relaxed bg-neutral-50 dark:bg-neutral-700/50 p-3 rounded-md">
-                    {comment.text}
+                    {comment.content}
                   </div>
                 </Surface>
               ))}

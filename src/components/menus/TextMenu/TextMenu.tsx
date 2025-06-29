@@ -1,6 +1,7 @@
 import { BubbleMenu, Editor } from '@tiptap/react';
 import { memo, useEffect, useState, useCallback, useRef } from 'react';
 import * as Popover from '@radix-ui/react-popover';
+import { useParams } from 'next/navigation';
 
 import { useTextMenuStates } from './hooks/useTextMenuStates';
 import { useTextMenuCommands } from './hooks/useTextMenuCommands';
@@ -55,6 +56,9 @@ const getViewportBoundary = () => {
 };
 
 export const TextMenu = memo(({ editor }: TextMenuProps) => {
+  const params = useParams();
+  const documentId = params?.room ? parseInt(params.room as string, 10) : undefined;
+
   const [spellCheckOpen, setSpellCheckOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const commands = useTextMenuCommands(editor);
@@ -62,9 +66,22 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   const blockOptions = useTextMenuContentTypes(editor);
 
   // 评论功能相关状态
-  const commentSidebar = useCommentSidebar();
+  const commentSidebar = useCommentSidebar(documentId || 0);
   const { comments, isOpen, close, removeComment } = commentSidebar;
   const prevCommentCount = usePrevious(comments.length);
+
+  // 延迟初始化评论侧边栏，避免在渲染过程中同步调用状态更新
+  useEffect(() => {
+    if (documentId && !isOpen) {
+      // 延迟初始化，避免在组件挂载时立即调用状态更新
+      const timer = setTimeout(() => {
+        // 加载评论列表
+        commentSidebar.fetchComments();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [documentId, isOpen]);
 
   // 当评论列表变为空时，自动关闭侧边栏。
   // 这个effect精确地捕捉了"最后一条评论被删除"的瞬间。
@@ -80,7 +97,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
     const handleCommentMarkClick = (event: CustomEvent) => {
       const { commentId } = event.detail;
       // 找到对应的评论并高亮显示
-      const comment = commentSidebar.comments.find((c) => c.commentId === commentId);
+      const comment = commentSidebar.comments.find((c) => c.mark_id === commentId);
 
       if (comment) {
         // 打开评论侧边栏
@@ -131,6 +148,8 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   // 处理添加评论
   const handleAddComment = useCallback(
     (text: string, selectedText: string) => {
+      console.log('🔄 handleAddComment 开始执行', { text, selectedText });
+
       const position = commands.getSelectedPosition();
       const commentId = Date.now().toString();
 
@@ -151,10 +170,18 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
       });
 
       // 先添加评论标记到文档中
+      console.log('🔄 添加评论标记到文档中');
       commands.setCommentMark(commentId);
 
       // 然后添加评论到侧边栏
-      commentSidebar.addComment(text, selectedText, position, commentId);
+      const payload = {
+        content: text,
+        mark_id: commentId,
+        selected_text: selectedText,
+      };
+      console.log('🔄 调用 commentSidebar.addComment', payload);
+      commentSidebar.addComment(payload);
+      console.log('🔄 handleAddComment 执行完成');
     },
     [commands, commentSidebar],
   );
@@ -162,7 +189,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   // 处理删除评论
   const handleRemoveComment = useCallback(
     (id: string) => {
-      const commentToRemove = comments.find((c) => c.id === id);
+      const commentToRemove = comments.find((c) => c.id.toString() === id);
 
       if (!commentToRemove) {
         return;
@@ -170,25 +197,27 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
 
       // 检查这是不是这段高亮文本的最后一条评论
       const isLastCommentForText =
-        comments.filter((c) => c.selectedText === commentToRemove.selectedText).length === 1;
+        comments.filter((c) => c.selection?.text === commentToRemove.selection?.text).length === 1;
 
       // 如果是，则移除文档中的标记
-      if (isLastCommentForText && commentToRemove.commentId) {
-        commands.unsetCommentMark(commentToRemove.commentId);
+      if (isLastCommentForText && commentToRemove.mark_id) {
+        commands.unsetCommentMark(commentToRemove.mark_id);
       }
 
       // 只负责移除评论，关闭侧边栏的逻辑已交由useEffect处理
-      removeComment(id);
+      removeComment(commentToRemove.id);
     },
     [comments, commands, removeComment],
   );
 
   // 监听选择变化以更新评论侧边栏的当前选择
   useEffect(() => {
+    console.log('🔄 useEffect [commands, commentSidebar, editor] 执行');
     if (!editor) return;
 
     const handleSelectionUpdate = () => {
       const selectedText = commands.getSelectedText();
+      console.log('🔄 handleSelectionUpdate 执行', { selectedText });
       commentSidebar.setCurrentSelection(selectedText);
 
       // 打印详细的选区信息
@@ -201,12 +230,14 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
       }
     };
 
+    console.log('🔄 绑定 selectionUpdate 事件监听器');
     editor.on('selectionUpdate', handleSelectionUpdate);
 
     return () => {
+      console.log('🔄 解绑 selectionUpdate 事件监听器');
       editor.off('selectionUpdate', handleSelectionUpdate);
     };
-  }, [commands, commentSidebar, editor]);
+  }, [commands, commentSidebar.setCurrentSelection, editor]);
 
   // 监听编辑器输入状态
   useEffect(() => {
