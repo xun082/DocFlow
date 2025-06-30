@@ -54,11 +54,13 @@ import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { MindMapBlock } from './MindMapBlock';
 import { ChartBlock } from './ChartBlock';
+import { CommentMark } from './CommentMark';
 
 import uploadService from '@/services/upload';
 
-interface ExtensionKitProps {
-  provider?: HocuspocusProvider | null;
+export interface ExtensionKitProps {
+  provider: HocuspocusProvider | null;
+  onCommentActivated?: (commentId: string) => void;
 }
 
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
@@ -106,6 +108,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   Highlight.configure({ multicolor: true }),
   Underline,
+  CommentMark,
   CharacterCount.configure({ limit: 50000 }),
   TableOfContents,
   TableOfContentsNode,

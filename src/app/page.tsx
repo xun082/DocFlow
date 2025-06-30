@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
   Shield,
@@ -23,52 +24,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { getCookie } from '@/utils/cookie';
 
-interface GitHubStats {
-  stargazers_count: number;
-  forks_count: number;
-  watchers_count: number;
-  subscribers_count: number;
-}
-
 const Page = () => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [githubStats, setGithubStats] = useState<GitHubStats>({
-    stargazers_count: 88,
-    forks_count: 16,
-    watchers_count: 1,
-    subscribers_count: 1,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
+    setIsMounted(true);
+
     // 检查用户是否已登录
     const token = getCookie('auth_token');
     setIsLoggedIn(!!token);
-
-    // 获取GitHub数据
-    fetchGitHubStats();
   }, []);
-
-  const fetchGitHubStats = async () => {
-    try {
-      const response = await fetch('https://api.github.com/repos/xun082/DocFlow');
-
-      if (response.ok) {
-        const data = await response.json();
-        setGithubStats({
-          stargazers_count: data.stargazers_count,
-          forks_count: data.forks_count,
-          watchers_count: data.watchers_count,
-          subscribers_count: data.subscribers_count,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch GitHub stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGetStarted = () => {
     if (isLoggedIn) {
@@ -119,73 +85,80 @@ const Page = () => {
       desc: '富文本编辑器，基于 ProseMirror',
       color: 'from-purple-600 to-indigo-600',
       icon: '✏️',
-      animation: 'animate-pulse',
     },
     {
       name: 'Yjs',
       desc: '协同编辑核心，CRDT 数据结构',
       color: 'from-green-600 to-teal-600',
       icon: '🔄',
-      animation: 'animate-spin',
     },
     {
       name: '@hocuspocus',
       desc: 'Yjs 的服务端与客户端 Provider',
       color: 'from-blue-600 to-cyan-600',
       icon: '🌐',
-      animation: 'animate-bounce',
     },
     {
       name: 'Next.js 19',
       desc: 'UI 框架，支持 Suspense 等新特性',
       color: 'from-gray-800 to-gray-900',
       icon: '⚡',
-      animation: 'animate-pulse',
     },
     {
       name: 'Socket.io',
       desc: '协同通信通道',
       color: 'from-red-600 to-orange-600',
       icon: '📡',
-      animation: 'animate-ping',
     },
     {
       name: 'Tailwind CSS',
       desc: '原子化 CSS，集成动画、表单样式等',
       color: 'from-cyan-600 to-blue-600',
       icon: '🎨',
-      animation: 'animate-pulse',
     },
   ];
 
   const stats = [
     {
-      number: isLoading ? '...' : githubStats.stargazers_count.toString(),
+      key: 'stars',
       label: 'GitHub Stars',
       icon: Star,
       gradient: 'from-yellow-500 to-orange-500',
-      animation: 'group-hover:animate-spin',
+      bgGradient: 'from-yellow-500/10 to-orange-500/10',
+      borderColor: 'border-yellow-500/20',
+      shadowColor: 'shadow-yellow-500/10',
+      iconColor: 'text-yellow-400',
     },
     {
-      number: isLoading ? '...' : githubStats.forks_count.toString(),
+      key: 'forks',
       label: 'Forks',
       icon: GitFork,
       gradient: 'from-green-500 to-emerald-500',
-      animation: 'group-hover:animate-bounce',
+      bgGradient: 'from-green-500/10 to-emerald-500/10',
+      borderColor: 'border-green-500/20',
+      shadowColor: 'shadow-green-500/10',
+      iconColor: 'text-green-400',
     },
     {
-      number: isLoading ? '...' : githubStats.watchers_count.toString(),
+      key: 'watchers',
       label: 'Watchers',
       icon: Eye,
       gradient: 'from-blue-500 to-indigo-500',
-      animation: 'group-hover:animate-pulse',
+      bgGradient: 'from-blue-500/10 to-indigo-500/10',
+      borderColor: 'border-blue-500/20',
+      shadowColor: 'shadow-blue-500/10',
+      iconColor: 'text-blue-400',
     },
     {
-      number: 'MIT',
+      key: 'license',
+      value: 'MIT',
       label: '开源协议',
       icon: Shield,
       gradient: 'from-purple-500 to-pink-500',
-      animation: 'group-hover:animate-pulse',
+      bgGradient: 'from-purple-500/10 to-pink-500/10',
+      borderColor: 'border-purple-500/20',
+      shadowColor: 'shadow-purple-500/10',
+      iconColor: 'text-purple-400',
     },
   ];
 
@@ -194,63 +167,140 @@ const Page = () => {
       {/* 动态背景 */}
       <div className="absolute inset-0">
         {/* 渐变光圈 */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.6, 1, 0.6],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        <motion.div
+          className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.4, 0.8, 0.4],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1,
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 2,
+          }}
+        />
 
         {/* 星空效果 */}
-        <div className="stars absolute inset-0">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute bg-white rounded-full animate-twinkle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
-                animationDelay: `${Math.random() * 3}s`,
-              }}
-            />
-          ))}
-        </div>
+        <AnimatePresence>
+          {isMounted && (
+            <motion.div
+              className="stars absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 2 }}
+            >
+              {[...Array(50)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute bg-white rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    width: `${Math.random() * 3 + 1}px`,
+                    height: `${Math.random() * 3 + 1}px`,
+                  }}
+                  animate={{
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 3,
+                  }}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Header */}
       <header className="relative z-10 px-4 py-6 bg-black/20 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/50 hover:shadow-blue-500/75 transition-all duration-300 hover:scale-110">
+            <motion.div
+              className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/50"
+              whileHover={{
+                scale: 1.1,
+                boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.75)',
+                rotate: [0, -10, 10, 0],
+              }}
+              transition={{
+                duration: 0.3,
+                rotate: { duration: 0.6 },
+              }}
+            >
               <FileText className="h-7 w-7 text-white" />
-            </div>
+            </motion.div>
             <div className="flex items-center space-x-3">
               <span className="text-3xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
                 DocFlow
               </span>
-              <span className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full font-medium shadow-lg shadow-green-500/25 animate-pulse">
+              <motion.span
+                className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full font-medium shadow-lg shadow-green-500/25"
+                animate={{
+                  scale: [1, 1.05, 1],
+                  boxShadow: [
+                    '0 10px 15px -3px rgba(34, 197, 94, 0.25)',
+                    '0 20px 25px -5px rgba(34, 197, 94, 0.4)',
+                    '0 10px 15px -3px rgba(34, 197, 94, 0.25)',
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
                 开源
-              </span>
+              </motion.span>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link
-              href="https://github.com/xun082/DocFlow"
-              target="_blank"
-              className="flex items-center space-x-2 text-gray-300 hover:text-yellow-400 transition-all duration-300 group bg-white/5 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:shadow-lg hover:shadow-yellow-500/25"
-            >
-              <Star className="h-4 w-4 group-hover:animate-spin transition-all duration-300" />
-              <span className="font-medium">
-                {isLoading ? '...' : githubStats.stargazers_count}
-              </span>
+            <Link href="https://github.com/xun082/DocFlow" target="_blank">
+              <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                <img
+                  alt="GitHub Repo stars"
+                  src="https://img.shields.io/github/stars/xun082/DocFlow?style=social&logo=github&logoColor=white&labelColor=1f2937&color=facc15"
+                  className="h-6 hover:shadow-lg hover:shadow-yellow-500/25 transition-shadow duration-300"
+                />
+              </motion.div>
             </Link>
-            <Link
-              href="https://github.com/xun082/DocFlow"
-              target="_blank"
-              className="flex items-center space-x-2 text-gray-300 hover:text-green-400 transition-all duration-300 group bg-white/5 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:shadow-lg hover:shadow-green-500/25"
-            >
-              <GitFork className="h-4 w-4 group-hover:animate-bounce transition-all duration-300" />
-              <span className="font-medium">{isLoading ? '...' : githubStats.forks_count}</span>
+            <Link href="https://github.com/xun082/DocFlow" target="_blank">
+              <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                <img
+                  alt="GitHub Repo forks"
+                  src="https://img.shields.io/github/forks/xun082/DocFlow?style=social&logo=github&logoColor=white&labelColor=1f2937&color=22c55e"
+                  className="h-6 hover:shadow-lg hover:shadow-green-500/25 transition-shadow duration-300"
+                />
+              </motion.div>
             </Link>
             {isLoggedIn ? (
               <Button
@@ -285,44 +335,118 @@ const Page = () => {
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <div className="mb-12">
             <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center space-x-3 bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-xl text-white px-6 py-3 rounded-full border border-white/20 shadow-2xl shadow-green-500/10 hover:scale-105 transition-all duration-500">
-                <span className="text-2xl animate-bounce">🚀</span>
+              <motion.div
+                className="flex items-center space-x-3 bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-xl text-white px-6 py-3 rounded-full border border-white/20 shadow-2xl shadow-green-500/10"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.span
+                  className="text-2xl"
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  🚀
+                </motion.span>
                 <span className="font-semibold">基于 Tiptap + Yjs 构建</span>
                 <span className="text-green-400">•</span>
                 <span className="font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   开源免费
                 </span>
-              </div>
+              </motion.div>
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-2xl">
+            <motion.h1
+              className="text-6xl md:text-8xl font-bold mb-8 leading-tight"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <motion.span
+                className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-2xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.6 }}
+              >
                 现代化
-              </span>
+              </motion.span>
               <br />
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
-                协作文档编辑器
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-              基于 <span className="font-bold text-purple-400 animate-pulse">Tiptap</span> 和{' '}
-              <span className="font-bold text-green-400 animate-pulse">Yjs</span>{' '}
+              <motion.span
+                className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.8 }}
+              >
+                <motion.span
+                  animate={{
+                    opacity: [1, 0.7, 1],
+                    scale: [1, 1.02, 1],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                >
+                  协作文档编辑器
+                </motion.span>
+              </motion.span>
+            </motion.h1>
+            <motion.p
+              className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1 }}
+            >
+              基于{' '}
+              <motion.span
+                className="font-bold text-purple-400"
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                Tiptap
+              </motion.span>{' '}
+              和{' '}
+              <motion.span
+                className="font-bold text-green-400"
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              >
+                Yjs
+              </motion.span>{' '}
               构建的现代化协同文档编辑器
               <br />
               <span className="text-lg text-gray-400 bg-gradient-to-r from-gray-400 to-gray-300 bg-clip-text text-transparent">
                 集成丰富的编辑能力与多人实时协作功能，支持插件扩展、主题切换与持久化存储
               </span>
-            </p>
+            </motion.p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20">
-            <Button
-              onClick={handleGetStarted}
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white px-12 py-6 text-xl rounded-2xl shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/50 transform hover:scale-110 transition-all duration-500 hover:-translate-y-1 font-bold"
+            <motion.div
+              whileHover={{
+                scale: 1.1,
+                y: -4,
+                boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.5)',
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.3 }}
             >
-              {isLoggedIn ? '进入控制台' : '立即体验'}
-              <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
-            </Button>
+              <Button
+                onClick={handleGetStarted}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white px-12 py-6 text-xl rounded-2xl shadow-2xl shadow-purple-500/25 font-bold"
+              >
+                {isLoggedIn ? '进入控制台' : '立即体验'}
+                <motion.div
+                  className="inline-block ml-3"
+                  whileHover={{ x: 8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ArrowRight className="h-6 w-6" />
+                </motion.div>
+              </Button>
+            </motion.div>
 
             <Link
               href="https://github.com/xun082/DocFlow"
@@ -346,19 +470,87 @@ const Page = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center group cursor-pointer">
-                <div
-                  className={`w-20 h-20 bg-gradient-to-br ${stat.gradient} rounded-3xl shadow-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-125 transition-all duration-500 hover:rotate-12`}
+              <motion.div
+                key={index}
+                className="text-center cursor-pointer"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                whileHover={{ y: -10 }}
+              >
+                <motion.div
+                  className={`w-20 h-20 bg-gradient-to-br ${stat.gradient} rounded-3xl shadow-2xl mx-auto mb-6 flex items-center justify-center`}
+                  whileHover={{
+                    scale: 1.25,
+                    rotate: 12,
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <stat.icon className={`h-8 w-8 text-white ${stat.animation}`} />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-3 group-hover:scale-110 transition-all duration-300">
-                  {stat.number}
-                </div>
-                <div className="text-gray-400 font-medium group-hover:text-white transition-colors duration-300">
+                  <motion.div
+                    animate={
+                      stat.label === 'GitHub Stars'
+                        ? { rotate: 360 }
+                        : stat.label === 'Forks'
+                          ? { y: [-2, 0, -2] }
+                          : { scale: [1, 1.1, 1] }
+                    }
+                    transition={{
+                      duration: stat.label === 'GitHub Stars' ? 2 : 1.5,
+                      repeat: Infinity,
+                      repeatType: 'reverse',
+                    }}
+                  >
+                    <stat.icon className="h-8 w-8 text-white" />
+                  </motion.div>
+                </motion.div>
+                <motion.div
+                  className="text-center"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.2, duration: 0.6 }}
+                  whileHover={{ y: -10, scale: 1.05 }}
+                >
+                  {stat.key === 'stars' ? (
+                    <img
+                      alt="GitHub Repo stars"
+                      src="https://img.shields.io/github/stars/xun082/DocFlow?style=for-the-badge&logo=github&logoColor=white&labelColor=f59e0b&color=fbbf24"
+                      className="mx-auto mb-4 hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-300"
+                    />
+                  ) : stat.key === 'forks' ? (
+                    <img
+                      alt="GitHub Repo forks"
+                      src="https://img.shields.io/github/forks/xun082/DocFlow?style=for-the-badge&logo=github&logoColor=white&labelColor=10b981&color=34d399"
+                      className="mx-auto mb-4 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                    />
+                  ) : stat.key === 'watchers' ? (
+                    <img
+                      alt="GitHub Repo watchers"
+                      src="https://img.shields.io/github/watchers/xun082/DocFlow?style=for-the-badge&logo=github&logoColor=white&labelColor=3b82f6&color=60a5fa"
+                      className="mx-auto mb-4 hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+                    />
+                  ) : (
+                    <div className="mb-4">
+                      <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                        {stat.value}
+                      </div>
+                      <div
+                        className={`inline-flex items-center space-x-2 bg-gradient-to-r ${stat.bgGradient} backdrop-blur-sm px-4 py-2 rounded-full border ${stat.borderColor} shadow-lg ${stat.shadowColor}`}
+                      >
+                        <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                        <span className="text-sm font-medium text-gray-200">{stat.label}</span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+                <motion.div
+                  className="text-gray-400 font-medium"
+                  whileHover={{ color: '#ffffff' }}
+                  transition={{ duration: 0.2 }}
+                >
                   {stat.label}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -378,29 +570,65 @@ const Page = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`group p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl ${feature.glowColor} transition-all duration-500 hover:-translate-y-4 hover:scale-105 cursor-pointer`}
+                className={`p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 cursor-pointer`}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                whileHover={{
+                  y: -16,
+                  scale: 1.05,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  boxShadow: feature.glowColor.includes('purple')
+                    ? '0 25px 50px -12px rgba(168, 85, 247, 0.25)'
+                    : feature.glowColor.includes('green')
+                      ? '0 25px 50px -12px rgba(34, 197, 94, 0.25)'
+                      : feature.glowColor.includes('blue')
+                        ? '0 25px 50px -12px rgba(59, 130, 246, 0.25)'
+                        : '0 25px 50px -12px rgba(249, 115, 22, 0.25)',
+                  transition: { duration: 0.3 },
+                }}
               >
-                <div
-                  className={`w-18 h-18 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg`}
+                <motion.div
+                  className={`w-18 h-18 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
+                  whileHover={{
+                    scale: 1.1,
+                    rotate: 12,
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
                   <feature.icon className="h-9 w-9 text-white" />
-                </div>
+                </motion.div>
                 <div className="mb-4">
-                  <span
+                  <motion.span
                     className={`text-xs bg-gradient-to-r ${feature.gradient} text-white px-3 py-1 rounded-full font-bold shadow-lg`}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.2 }}
                   >
                     {feature.highlight}
-                  </span>
+                  </motion.span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text transition-all duration-300">
+                <motion.h3
+                  className="text-xl font-bold text-white mb-4"
+                  whileHover={{
+                    backgroundImage: 'linear-gradient(to right, #ffffff, #d1d5db)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
                   {feature.title}
-                </h3>
-                <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
+                </motion.h3>
+                <motion.p
+                  className="text-gray-400 leading-relaxed"
+                  whileHover={{ color: '#d1d5db' }}
+                  transition={{ duration: 0.3 }}
+                >
                   {feature.description}
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -418,22 +646,67 @@ const Page = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {techStack.map((tech, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="group p-8 bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl hover:shadow-2xl hover:bg-white/10 transition-all duration-500 hover:-translate-y-4 hover:scale-105 border border-white/10 hover:border-white/20 cursor-pointer"
+                className="p-8 bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 cursor-pointer"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                whileHover={{
+                  y: -16,
+                  scale: 1.05,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                }}
               >
-                <div
-                  className={`w-20 h-20 bg-gradient-to-br ${tech.color} rounded-3xl flex items-center justify-center text-3xl mb-8 mx-auto group-hover:scale-125 transition-all duration-500 shadow-2xl group-hover:rotate-12`}
+                <motion.div
+                  className={`w-20 h-20 bg-gradient-to-br ${tech.color} rounded-3xl flex items-center justify-center text-3xl mb-8 mx-auto shadow-2xl`}
+                  whileHover={{
+                    scale: 1.25,
+                    rotate: 12,
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <span className={tech.animation}>{tech.icon}</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4 group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                  <motion.span
+                    animate={
+                      tech.name === 'Yjs'
+                        ? { rotate: 360 }
+                        : tech.name === '@hocuspocus'
+                          ? { y: [-2, 0, -2] }
+                          : tech.name === 'Next.js 19'
+                            ? { scale: [1, 1.1, 1] }
+                            : tech.name === 'Socket.io'
+                              ? { scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }
+                              : { scale: [1, 1.05, 1] }
+                    }
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: 'reverse',
+                    }}
+                  >
+                    {tech.icon}
+                  </motion.span>
+                </motion.div>
+                <motion.h3
+                  className="text-2xl font-bold text-white mb-4"
+                  whileHover={{
+                    backgroundImage: 'linear-gradient(to right, #ffffff, #d1d5db)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
                   {tech.name}
-                </h3>
-                <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
+                </motion.h3>
+                <motion.p
+                  className="text-gray-400 leading-relaxed"
+                  whileHover={{ color: '#d1d5db' }}
+                  transition={{ duration: 0.3 }}
+                >
                   {tech.desc}
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -608,9 +881,7 @@ const Page = () => {
           <div className="border-t border-white/20 pt-8">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="flex items-center space-x-2 mb-4 md:mb-0">
-                <span className="text-sm text-gray-400">
-                  © {new Date().getFullYear()} DocFlow. 基于 MIT 许可证开源.
-                </span>
+                <span className="text-sm text-gray-400">© 2025 DocFlow. 基于 MIT 许可证开源.</span>
               </div>
 
               <div className="flex items-center space-x-8 text-sm text-gray-400">
@@ -618,34 +889,24 @@ const Page = () => {
                   <Heart className="h-4 w-4 text-red-400 animate-pulse" />
                   <span>开源社区驱动</span>
                 </div>
-                <div className="flex items-center space-x-2 hover:text-green-400 transition-colors duration-300 cursor-pointer">
+                <div className="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors duration-300">
                   <Shield className="h-4 w-4 text-green-400" />
-                  <span>代码透明</span>
+                  <span>MIT 开源</span>
                 </div>
-                <div className="flex items-center space-x-2 hover:text-yellow-400 transition-colors duration-300 cursor-pointer">
-                  <Star className="h-4 w-4 text-yellow-400 animate-pulse" />
-                  <span>{isLoading ? '...' : githubStats.stargazers_count} Stars</span>
-                </div>
+                <Link href="https://github.com/xun082/DocFlow" target="_blank">
+                  <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                    <img
+                      alt="GitHub Repo stars"
+                      src="https://img.shields.io/github/stars/xun082/DocFlow?style=flat&logo=github&logoColor=facc15&labelColor=374151&color=facc15"
+                      className="h-5 hover:shadow-lg hover:shadow-yellow-500/25 transition-shadow duration-300"
+                    />
+                  </motion.div>
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </footer>
-
-      <style jsx>{`
-        @keyframes twinkle {
-          0%,
-          100% {
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
-          }
-        }
-        .animate-twinkle {
-          animation: twinkle 2s infinite;
-        }
-      `}</style>
     </div>
   );
 };
