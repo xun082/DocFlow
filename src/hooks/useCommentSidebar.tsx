@@ -40,7 +40,7 @@ export type CommentSidebarState = {
 export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
   const [isOpen, setIsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [currentSelection, setCurrentSelection] = useState('');
+  const [currentSelection, setCurrentSelection] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const addComment = useCallback(
@@ -207,6 +207,12 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
     [documentId],
   );
 
+  // 创建稳定的 setCurrentSelection 函数
+  const setCurrentSelectionStable = useCallback((text: string) => {
+    console.log('🔄 设置当前选择:', text);
+    setCurrentSelection(text);
+  }, []);
+
   return useMemo(() => {
     return {
       isOpen,
@@ -218,8 +224,17 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
       toggle: () => setIsOpen((prev) => !prev),
       addComment,
       removeComment,
-      setCurrentSelection,
+      setCurrentSelection: setCurrentSelectionStable,
       loadComments,
     };
-  }, [isOpen, comments, currentSelection, loading, addComment, removeComment, loadComments]);
+  }, [
+    isOpen,
+    comments,
+    currentSelection,
+    loading,
+    addComment,
+    removeComment,
+    loadComments,
+    setCurrentSelectionStable,
+  ]);
 };

@@ -11,7 +11,7 @@ import { cn } from '@/utils/utils';
 interface CommentDrawerProps {
   isOpen: boolean;
   comments: Comment[];
-  currentSelection: string | null;
+  currentSelection: string;
   loading?: boolean;
   onClose: () => void;
   onAddComment: (text: string, selectedText: string) => Promise<void>;
@@ -43,7 +43,7 @@ export const CommentDrawer = ({
   }, [isOpen, onClose]);
 
   const handleSubmitComment = async () => {
-    if (commentText.trim() && currentSelection?.trim()) {
+    if (commentText.trim() && currentSelection.trim()) {
       try {
         await onAddComment(commentText.trim(), currentSelection);
         setCommentText('');
@@ -134,7 +134,7 @@ export const CommentDrawer = ({
 
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* 当前选中文本 */}
-        {currentSelection && (
+        {currentSelection.trim() && (
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-blue-50 dark:bg-blue-900/20">
             <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 font-medium">
               当前选中的文本：
@@ -146,7 +146,7 @@ export const CommentDrawer = ({
         )}
 
         {/* 添加评论区域 */}
-        {currentSelection && currentSelection.trim() && (
+        {currentSelection.trim() && (
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <div className="space-y-3">
               <div>
@@ -196,7 +196,7 @@ export const CommentDrawer = ({
               <Spinner className="h-6 w-6" />
               <span className="ml-2 text-neutral-500">正在加载评论...</span>
             </div>
-          ) : !currentSelection ? (
+          ) : !currentSelection.trim() ? (
             <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
               <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                 <Icon name="MousePointer" className="h-8 w-8 opacity-50" />

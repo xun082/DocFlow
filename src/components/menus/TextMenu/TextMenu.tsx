@@ -78,15 +78,31 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
 
   // 监听评论标记点击事件
   useEffect(() => {
-    const handleCommentMarkClick = (event: CustomEvent) => {
-      const { commentId } = event.detail;
+    const handleCommentMarkClick = async (event: CustomEvent) => {
+      const { commentId, selectedText } = event.detail;
+
+      console.log('🎯 处理评论标记点击:', {
+        commentId,
+        selectedText,
+        当前选择: commentSidebar.currentSelection,
+      });
+
+      // 设置当前选择的文本，这样评论面板就知道用户选择了什么
+      if (selectedText?.trim()) {
+        commentSidebar.setCurrentSelection(selectedText);
+        console.log('✅ 已设置当前选择:', selectedText);
+      }
+
+      // 打开评论侧边栏
+      commentSidebar.open();
+      console.log('✅ 已打开评论面板');
+
       // 找到对应的评论并高亮显示
       const comment = commentSidebar.comments.find((c) => c.commentId === commentId);
 
       if (comment) {
-        // 打开评论侧边栏
-        commentSidebar.open();
-        // 可以在这里添加高亮评论的逻辑
+        console.log('✅ 找到对应评论:', comment);
+        // 滚动到对应评论
         setTimeout(() => {
           const commentElement = document.querySelector(`[data-comment-id="${comment.id}"]`);
 
@@ -94,13 +110,32 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
             commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }, 300);
+      } else {
+        console.log('❌ 未找到对应评论，加载评论:', commentId);
+        // 如果没有找到评论，加载对应的评论
+        await commentSidebar.loadComments(commentId);
       }
+
+      // 延迟检查状态
+      setTimeout(() => {
+        console.log('🔍 延迟检查状态:', {
+          isOpen: commentSidebar.isOpen,
+          currentSelection: commentSidebar.currentSelection,
+          commentsCount: commentSidebar.comments.length,
+        });
+      }, 200);
     };
 
-    document.addEventListener('commentMarkClicked', handleCommentMarkClick as EventListener);
+    document.addEventListener(
+      'commentMarkClicked',
+      handleCommentMarkClick as unknown as EventListener,
+    );
 
     return () => {
-      document.removeEventListener('commentMarkClicked', handleCommentMarkClick as EventListener);
+      document.removeEventListener(
+        'commentMarkClicked',
+        handleCommentMarkClick as unknown as EventListener,
+      );
     };
   }, [commentSidebar]);
 
