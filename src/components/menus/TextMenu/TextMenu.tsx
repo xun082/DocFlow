@@ -42,6 +42,7 @@ function usePrevious<T>(value: T): T | undefined {
 
 export type TextMenuProps = {
   editor: Editor;
+  documentId?: string;
 };
 
 // 视口边界检测函数
@@ -54,7 +55,7 @@ const getViewportBoundary = () => {
   };
 };
 
-export const TextMenu = memo(({ editor }: TextMenuProps) => {
+export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
   const [spellCheckOpen, setSpellCheckOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const commands = useTextMenuCommands(editor);
@@ -62,7 +63,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   const blockOptions = useTextMenuContentTypes(editor);
 
   // 评论功能相关状态
-  const commentSidebar = useCommentSidebar();
+  const commentSidebar = useCommentSidebar(documentId);
   const { comments, isOpen, close, removeComment } = commentSidebar;
   const prevCommentCount = usePrevious(comments.length);
 
@@ -104,22 +105,49 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   }, [commentSidebar]);
 
   // 处理评论按钮点击
-  const handleCommentButtonClick = useCallback(() => {
+  const handleCommentButtonClick = useCallback(async () => {
     const selectedText = commands.getSelectedText();
 
     if (selectedText.trim()) {
       const selectionInfo = commands.getSelectionInfo();
-      console.log('🎯 点击评论按钮，当前选区信息：', selectionInfo);
+      console.log('🎯 点击评论按钮，详细信息：', {
+        selectedText: `"${selectedText}"`,
+        selectionLength: selectedText.length,
+        selectionInfo,
+        currentSelection: commentSidebar.currentSelection,
+      });
 
       commentSidebar.setCurrentSelection(selectedText);
+
+      // 检查当前选区是否已有评论标记
+      const existingMarkIds = commands.getCommentMarkIds();
+      console.log('🔍 检查已有评论标记：', {
+        existingMarkIds,
+        selectedText: `"${selectedText}"`,
+        markIdsCount: existingMarkIds.length,
+      });
 
       // 如果评论面板已经打开且选择了相同文本，则关闭
       if (commentSidebar.isOpen && commentSidebar.currentSelection === selectedText) {
         console.log('🔄 相同文本已选中，关闭评论面板');
         commentSidebar.close();
+
+        return;
+      }
+
+      // 打开评论面板
+      console.log('🔄 打开评论面板');
+      commentSidebar.open();
+
+      // 如果当前选区有评论标记，加载相关评论
+      if (existingMarkIds.length > 0) {
+        console.log('📖 发现已有评论标记，加载评论：', existingMarkIds);
+        // 加载第一个mark_id的评论（通常一个选区只会有一个评论标记）
+        await commentSidebar.loadComments(existingMarkIds[0]);
       } else {
-        console.log('🔄 打开评论面板');
-        commentSidebar.open();
+        console.log('📝 当前选区没有评论标记，显示空的评论列表');
+        // 没有评论标记，清空评论列表，准备添加新评论
+        await commentSidebar.loadComments('');
       }
     } else {
       console.log('⚠️ 没有选中文本，直接切换侧边栏显示状态');
@@ -130,7 +158,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
 
   // 处理添加评论
   const handleAddComment = useCallback(
-    (text: string, selectedText: string) => {
+    async (text: string, selectedText: string) => {
       const position = commands.getSelectedPosition();
       const commentId = Date.now().toString();
 
@@ -153,8 +181,8 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
       // 先添加评论标记到文档中
       commands.setCommentMark(commentId);
 
-      // 然后添加评论到侧边栏
-      commentSidebar.addComment(text, selectedText, position, commentId);
+      // 然后添加评论到侧边栏 (这是异步操作)
+      await commentSidebar.addComment(text, selectedText, position, commentId);
     },
     [commands, commentSidebar],
   );
@@ -208,24 +236,27 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
     };
   }, [commands, commentSidebar, editor]);
 
-  // 监听编辑器输入状态
+  // 简化输入状态管理 - 暂时禁用以避免阻塞TextMenu显示
   useEffect(() => {
     if (!editor) return;
 
     let typingTimeout: number;
 
     const handleUpdate = () => {
-      setIsTyping(true);
+      // 暂时注释掉，避免阻塞TextMenu显示
+      // console.log('📝 编辑器更新，设置 isTyping = true');
+      // setIsTyping(true);
 
       // 清除之前的定时器
       if (typingTimeout) {
         window.clearTimeout(typingTimeout);
       }
 
-      // 输入停止后的延迟
+      // 快速重置输入状态
       typingTimeout = window.setTimeout(() => {
+        console.log('⏰ 重置 isTyping = false');
         setIsTyping(false);
-      }, 500); // 简化延迟时间
+      }, 100); // 大幅减少延迟时间
     };
 
     editor.on('update', handleUpdate);
@@ -248,6 +279,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
       // Ctrl/Cmd + Shift + C 键触发评论
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'C') {
         event.preventDefault();
+        console.log('🎯 快捷键触发评论面板');
         handleCommentButtonClick();
       }
 
@@ -393,34 +425,32 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
         editor={editor}
         pluginKey="textMenu"
         shouldShow={({ state, from, to }) => {
-          // 如果正在输入，不显示菜单
-          if (isTyping) return false;
+          // 简化条件：只要有选择就显示
+          const hasSelection = !state.selection.empty;
 
-          // 检查是否有选中文本
-          const hasSelection = !state.selection.empty && from !== to;
+          console.log('🔍 TextMenu shouldShow 简化检查:', {
+            hasSelection,
+            from,
+            to,
+            isTyping,
+          });
 
-          // 如果没有选中文本，不显示菜单
-          if (!hasSelection) return false;
+          if (!hasSelection) {
+            console.log('❌ 没有选择，不显示TextMenu');
 
-          // 检查选中的内容是否是文本
-          const selectedText = state.doc.textBetween(from, to, ' ');
-
-          // 如果没有选中任何文本内容，不显示菜单
-          if (!selectedText.trim()) return false;
-
-          // 当TextMenu显示时，自动关闭评论面板
-          if (commentSidebar.isOpen) {
-            console.log('🔄 TextMenu显示，自动关闭评论面板');
-            setTimeout(() => {
-              commentSidebar.close();
-            }, 100);
+            return false;
           }
+
+          console.log('✅ 有选择，显示TextMenu');
 
           return true;
         }}
-        updateDelay={300} // 增加更新延迟，避免频繁更新
+        updateDelay={100} // 减少更新延迟，让菜单更快显示
       >
-        <Surface className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-lg backdrop-blur-sm">
+        <Surface
+          className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-lg backdrop-blur-sm"
+          style={{ zIndex: 10000 }}
+        >
           <Toolbar.Wrapper>
             <Toolbar.Divider />
             <MemoContentTypePicker options={blockOptions} />
@@ -663,6 +693,7 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
         isOpen={commentSidebar.isOpen}
         comments={commentSidebar.comments}
         currentSelection={commentSidebar.currentSelection}
+        loading={commentSidebar.loading}
         onClose={commentSidebar.close}
         onAddComment={handleAddComment}
         onRemoveComment={handleRemoveComment}
