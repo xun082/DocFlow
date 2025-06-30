@@ -1,14 +1,9 @@
-export interface ReturnResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-  timestamp: number;
-}
-
 export interface CreateCommentPayload {
   content: string; //评论内容
   mark_id: string; //TipTap标记id
   selected_text?: string; //选中的文本内容
+  range_from?: number; //选中的文本范围开始位置
+  range_to?: number; //选中的文本范围结束位置
 }
 
 export interface Selection {
@@ -47,9 +42,9 @@ export interface Author {
 
 //获取评论列表的参数
 export interface IGetCommentsParams {
-  mark_id?: string;
-  page: number;
-  page_size: number;
+  mark_id: string;
+  page?: number;
+  page_size?: number;
   include_resolved?: boolean;
 }
 
