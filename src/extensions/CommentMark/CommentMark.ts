@@ -78,31 +78,36 @@ export const CommentMark = Mark.create<CommentMarkOptions>({
 
   addProseMirrorPlugins() {
     return [
-      // 添加点击事件处理
       new Plugin({
         key: new PluginKey('commentMark-click'),
         props: {
           handleClick: (view: any, pos: number, event: MouseEvent) => {
-            // 检查点击的元素是否是评论标记
             const target = event.target as HTMLElement;
 
-            if (target.classList.contains('comment-mark') || target.closest('.comment-mark')) {
-              const commentElement = target.classList.contains('comment-mark')
-                ? target
-                : target.closest('.comment-mark');
+            // 查找最近的评论标记元素
+            const commentElement = target.closest('.comment-mark');
 
-              if (commentElement) {
-                const commentId = commentElement.getAttribute('data-comment-id');
+            if (commentElement) {
+              const commentId = commentElement.getAttribute('data-comment-id');
 
-                if (commentId) {
-                  // 触发自定义事件来通知评论被点击
-                  const customEvent = new CustomEvent('commentMarkClicked', {
-                    detail: { commentId },
-                  });
-                  document.dispatchEvent(customEvent);
+              if (commentId) {
+                // 获取评论标记的文本内容
+                const commentText = commentElement.textContent || '';
 
-                  return true;
-                }
+                // 触发自定义事件，传递评论ID和文本内容
+                const customEvent = new CustomEvent('commentMarkClicked', {
+                  detail: {
+                    commentId,
+                    selectedText: commentText,
+                  },
+                  bubbles: true,
+                  cancelable: true,
+                });
+
+                document.dispatchEvent(customEvent);
+
+                // 返回 true 阻止 ProseMirror 的默认点击行为
+                return true;
               }
             }
 

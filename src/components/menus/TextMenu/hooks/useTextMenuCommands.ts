@@ -196,6 +196,24 @@ export const useTextMenuCommands = (editor: Editor) => {
     [editor],
   );
 
+  // 新增：检查当前选区是否包含评论标记，并返回mark_id
+  const getCommentMarkIds = useCallback(() => {
+    const { from, to } = editor.state.selection;
+    const markIds = new Set<string>();
+
+    editor.state.doc.nodesBetween(from, to, (node) => {
+      if (node.marks) {
+        node.marks.forEach((mark) => {
+          if (mark.type.name === 'commentMark' && mark.attrs.commentId) {
+            markIds.add(mark.attrs.commentId);
+          }
+        });
+      }
+    });
+
+    return Array.from(markIds);
+  }, [editor]);
+
   return {
     onBold,
     onItalic,
@@ -221,5 +239,6 @@ export const useTextMenuCommands = (editor: Editor) => {
     getSelectionInfo,
     setCommentMark,
     unsetCommentMark,
+    getCommentMarkIds,
   };
 };

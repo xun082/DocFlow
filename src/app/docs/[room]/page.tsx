@@ -104,7 +104,7 @@ export default function Document() {
         <>
           <ContentItemMenu editor={editor} isEditable={isEditable} />
           <LinkMenu editor={editor} appendTo={menuContainerRef} />
-          <TextMenu editor={editor} />
+          <TextMenu editor={editor} documentId={roomId} />
           <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
           <TableRowMenu editor={editor} appendTo={menuContainerRef} />
           <TableColumnMenu editor={editor} appendTo={menuContainerRef} />

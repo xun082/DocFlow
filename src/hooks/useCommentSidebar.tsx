@@ -12,9 +12,10 @@ export type Comment = {
   author?: string;
   position?: { from: number; to: number };
   commentId?: string; // 用于关联评论标记
-  markId?: string; // 新增
-  apiId?: number; // 新增
-  documentId?: number; // 新增
+  // API相关字段
+  markId?: string;
+  apiId?: number; // 来自API的评论ID
+  documentId?: number;
 };
 
 export type CommentSidebarState = {
@@ -22,6 +23,7 @@ export type CommentSidebarState = {
   comments: Comment[];
   replies: { [commentId: string]: Comment[] };
   currentSelection: string;
+  loading: boolean;
   open: () => void;
   close: () => void;
   toggle: () => void;
@@ -30,7 +32,7 @@ export type CommentSidebarState = {
     selectedText: string,
     position?: { from: number; to: number },
     commentId?: string,
-  ) => void;
+  ) => Promise<void>;
   removeComment: (id: string) => void;
   setCurrentSelection: (text: string) => void;
   loadComments: (markId: string) => Promise<void>;
@@ -117,7 +119,7 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
         setLoading(false);
       }
     },
-    [],
+    [documentId],
   );
 
   const removeComment = useCallback((id: string) => {
@@ -343,6 +345,7 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
       comments,
       replies,
       currentSelection,
+      loading,
       open: () => setIsOpen(true),
       close: () => setIsOpen(false),
       toggle: () => setIsOpen((prev) => !prev),

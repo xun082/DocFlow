@@ -87,15 +87,31 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
 
   // 监听评论标记点击事件
   useEffect(() => {
-    const handleCommentMarkClick = (event: CustomEvent) => {
-      const { commentId } = event.detail;
+    const handleCommentMarkClick = async (event: CustomEvent) => {
+      const { commentId, selectedText } = event.detail;
+
+      console.log('🎯 处理评论标记点击:', {
+        commentId,
+        selectedText,
+        当前选择: commentSidebar.currentSelection,
+      });
+
+      // 设置当前选择的文本，这样评论面板就知道用户选择了什么
+      if (selectedText?.trim()) {
+        commentSidebar.setCurrentSelection(selectedText);
+        console.log('✅ 已设置当前选择:', selectedText);
+      }
+
+      // 打开评论侧边栏
+      commentSidebar.open();
+      console.log('✅ 已打开评论面板');
+
       // 找到对应的评论并高亮显示
       const comment = commentSidebar.comments.find((c) => c.commentId === commentId);
 
       if (comment) {
-        // 打开评论侧边栏
-        commentSidebar.open();
-        // 可以在这里添加高亮评论的逻辑
+        console.log('✅ 找到对应评论:', comment);
+        // 滚动到对应评论
         setTimeout(() => {
           const commentElement = document.querySelector(`[data-comment-id="${comment.id}"]`);
 
@@ -103,33 +119,79 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
             commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }, 300);
+      } else {
+        console.log('❌ 未找到对应评论，加载评论:', commentId);
+        // 如果没有找到评论，加载对应的评论
+        await commentSidebar.loadComments(commentId);
       }
+
+      // 延迟检查状态
+      setTimeout(() => {
+        console.log('🔍 延迟检查状态:', {
+          isOpen: commentSidebar.isOpen,
+          currentSelection: commentSidebar.currentSelection,
+          commentsCount: commentSidebar.comments.length,
+        });
+      }, 200);
     };
 
-    document.addEventListener('commentMarkClicked', handleCommentMarkClick as EventListener);
+    document.addEventListener(
+      'commentMarkClicked',
+      handleCommentMarkClick as unknown as EventListener,
+    );
 
     return () => {
-      document.removeEventListener('commentMarkClicked', handleCommentMarkClick as EventListener);
+      document.removeEventListener(
+        'commentMarkClicked',
+        handleCommentMarkClick as unknown as EventListener,
+      );
     };
   }, [commentSidebar]);
 
   // 处理评论按钮点击
-  const handleCommentButtonClick = useCallback(() => {
+  const handleCommentButtonClick = useCallback(async () => {
     const selectedText = commands.getSelectedText();
 
     if (selectedText.trim()) {
       const selectionInfo = commands.getSelectionInfo();
-      console.log('🎯 点击评论按钮，当前选区信息：', selectionInfo);
+      console.log('🎯 点击评论按钮，详细信息：', {
+        selectedText: `"${selectedText}"`,
+        selectionLength: selectedText.length,
+        selectionInfo,
+        currentSelection: commentSidebar.currentSelection,
+      });
 
       commentSidebar.setCurrentSelection(selectedText);
+
+      // 检查当前选区是否已有评论标记
+      const existingMarkIds = commands.getCommentMarkIds();
+      console.log('🔍 检查已有评论标记：', {
+        existingMarkIds,
+        selectedText: `"${selectedText}"`,
+        markIdsCount: existingMarkIds.length,
+      });
 
       // 如果评论面板已经打开且选择了相同文本，则关闭
       if (commentSidebar.isOpen && commentSidebar.currentSelection === selectedText) {
         console.log('🔄 相同文本已选中，关闭评论面板');
         commentSidebar.close();
+
+        return;
+      }
+
+      // 打开评论面板
+      console.log('🔄 打开评论面板');
+      commentSidebar.open();
+
+      // 如果当前选区有评论标记，加载相关评论
+      if (existingMarkIds.length > 0) {
+        console.log('📖 发现已有评论标记，加载评论：', existingMarkIds);
+        // 加载第一个mark_id的评论（通常一个选区只会有一个评论标记）
+        await commentSidebar.loadComments(existingMarkIds[0]);
       } else {
-        console.log('🔄 打开评论面板');
-        commentSidebar.open();
+        console.log('📝 当前选区没有评论标记，显示空的评论列表');
+        // 没有评论标记，清空评论列表，准备添加新评论
+        await commentSidebar.loadComments('');
       }
     } else {
       console.log('⚠️ 没有选中文本，直接切换侧边栏显示状态');
@@ -218,24 +280,27 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
     };
   }, [commands, commentSidebar, editor]);
 
-  // 监听编辑器输入状态
+  // 简化输入状态管理 - 暂时禁用以避免阻塞TextMenu显示
   useEffect(() => {
     if (!editor) return;
 
     let typingTimeout: number;
 
     const handleUpdate = () => {
-      setIsTyping(true);
+      // 暂时注释掉，避免阻塞TextMenu显示
+      // console.log('📝 编辑器更新，设置 isTyping = true');
+      // setIsTyping(true);
 
       // 清除之前的定时器
       if (typingTimeout) {
         window.clearTimeout(typingTimeout);
       }
 
-      // 输入停止后的延迟
+      // 快速重置输入状态
       typingTimeout = window.setTimeout(() => {
+        console.log('⏰ 重置 isTyping = false');
         setIsTyping(false);
-      }, 500); // 简化延迟时间
+      }, 100); // 大幅减少延迟时间
     };
 
     editor.on('update', handleUpdate);
@@ -258,6 +323,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
       // Ctrl/Cmd + Shift + C 键触发评论
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'C') {
         event.preventDefault();
+        console.log('🎯 快捷键触发评论面板');
         handleCommentButtonClick();
       }
 
@@ -403,34 +469,32 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
         editor={editor}
         pluginKey="textMenu"
         shouldShow={({ state, from, to }) => {
-          // 如果正在输入，不显示菜单
-          if (isTyping) return false;
+          // 简化条件：只要有选择就显示
+          const hasSelection = !state.selection.empty;
 
-          // 检查是否有选中文本
-          const hasSelection = !state.selection.empty && from !== to;
+          console.log('🔍 TextMenu shouldShow 简化检查:', {
+            hasSelection,
+            from,
+            to,
+            isTyping,
+          });
 
-          // 如果没有选中文本，不显示菜单
-          if (!hasSelection) return false;
+          if (!hasSelection) {
+            console.log('❌ 没有选择，不显示TextMenu');
 
-          // 检查选中的内容是否是文本
-          const selectedText = state.doc.textBetween(from, to, ' ');
-
-          // 如果没有选中任何文本内容，不显示菜单
-          if (!selectedText.trim()) return false;
-
-          // 当TextMenu显示时，自动关闭评论面板
-          if (commentSidebar.isOpen) {
-            console.log('🔄 TextMenu显示，自动关闭评论面板');
-            setTimeout(() => {
-              commentSidebar.close();
-            }, 100);
+            return false;
           }
+
+          console.log('✅ 有选择，显示TextMenu');
 
           return true;
         }}
-        updateDelay={300} // 增加更新延迟，避免频繁更新
+        updateDelay={100} // 减少更新延迟，让菜单更快显示
       >
-        <Surface className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-lg backdrop-blur-sm">
+        <Surface
+          className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-lg backdrop-blur-sm"
+          style={{ zIndex: 10000 }}
+        >
           <Toolbar.Wrapper>
             <Toolbar.Divider />
             <MemoContentTypePicker options={blockOptions} />
@@ -674,6 +738,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
         comments={commentSidebar.comments}
         replies={commentSidebar.replies}
         currentSelection={commentSidebar.currentSelection}
+        loading={commentSidebar.loading}
         onClose={commentSidebar.close}
         onAddComment={commentSidebar.addComment}
         onRemoveComment={commentSidebar.removeComment}

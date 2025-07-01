@@ -15,7 +15,7 @@ interface CommentDrawerProps {
   currentSelection: string;
   loading?: boolean;
   onClose: () => void;
-  onAddComment: (text: string, selectedText: string) => void;
+  onAddComment: (text: string, selectedText: string) => Promise<void>;
   onRemoveComment: (id: string) => void;
   addReply: (commentId: string, content: string) => Promise<void>;
   setReplyInput: (commentId: string, value: string) => void;
@@ -85,8 +85,35 @@ export const CommentDrawer = ({
   };
 
   const relatedComments = currentSelection
-    ? comments.filter((comment) => comment.selectedText === currentSelection)
+    ? comments.filter((comment) => {
+        // 精确匹配
+        if (comment.selectedText === currentSelection) {
+          return true;
+        }
+
+        // 包含匹配 - 如果当前选择包含评论的文本，或评论的文本包含当前选择
+        if (comment.selectedText && currentSelection) {
+          const commentText = comment.selectedText.trim();
+          const selectionText = currentSelection.trim();
+
+          return commentText.includes(selectionText) || selectionText.includes(commentText);
+        }
+
+        return false;
+      })
     : comments;
+
+  console.log('🔍 评论匹配调试:', {
+    currentSelection,
+    totalComments: comments.length,
+    matchedComments: relatedComments.length,
+    commentsData: comments.map((c) => ({
+      id: c.id,
+      selectedText: c.selectedText,
+      text: c.text,
+      matches: c.selectedText === currentSelection,
+    })),
+  });
 
   return (
     <div
@@ -120,7 +147,7 @@ export const CommentDrawer = ({
 
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* 当前选中文本 */}
-        {currentSelection && (
+        {currentSelection.trim() && (
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-blue-50 dark:bg-blue-900/20">
             <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 font-medium">
               当前选中的文本：
@@ -132,7 +159,7 @@ export const CommentDrawer = ({
         )}
 
         {/* 添加评论区域 */}
-        {currentSelection && currentSelection.trim() && (
+        {currentSelection.trim() && (
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <div className="space-y-3">
               <div>
@@ -159,12 +186,16 @@ export const CommentDrawer = ({
                 </div>
                 <Button
                   onClick={handleSubmitComment}
-                  disabled={!commentText.trim()}
+                  disabled={!commentText.trim() || loading}
                   size="sm"
                   className="px-4 bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <Icon name="Plus" className="h-3 w-3 mr-1" />
-                  添加评论
+                  {loading ? (
+                    <Spinner className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Icon name="Plus" className="h-3 w-3 mr-1" />
+                  )}
+                  {loading ? '添加中...' : '添加评论'}
                 </Button>
               </div>
             </div>
@@ -178,7 +209,7 @@ export const CommentDrawer = ({
               <Spinner className="h-6 w-6" />
               <span className="ml-2 text-neutral-500">正在加载评论...</span>
             </div>
-          ) : !currentSelection ? (
+          ) : !currentSelection.trim() ? (
             <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
               <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                 <Icon name="MousePointer" className="h-8 w-8 opacity-50" />
@@ -189,15 +220,42 @@ export const CommentDrawer = ({
               <p className="text-sm">选中文档中的文本以查看相关评论</p>
             </div>
           ) : relatedComments.length === 0 ? (
-            <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
-              <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <Icon name="MessageSquare" className="h-8 w-8 opacity-50" />
+            // 调试模式：如果没有匹配评论但有加载的评论，显示调试信息
+            comments.length > 0 ? (
+              <div className="space-y-4">
+                <div className="text-sm text-red-600 dark:text-red-400 font-medium mb-3 p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                  🔍 调试模式：找到 {comments.length} 条评论，但没有匹配当前选择 "{currentSelection}
+                  "
+                </div>
+                <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
+                  所有已加载的评论：
+                </div>
+                {comments.map((comment) => (
+                  <Surface
+                    key={comment.id}
+                    data-comment-id={comment.id}
+                    className="p-4 border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10 rounded-lg"
+                  >
+                    <div className="text-xs text-red-600 dark:text-red-400 mb-2">
+                      ID: {comment.id} | 选中文本: "{comment.selectedText}" | 当前选择: "
+                      {currentSelection}"
+                    </div>
+                    <div className="text-sm">{comment.text}</div>
+                    <div className="text-xs text-neutral-500 mt-1">作者: {comment.author}</div>
+                  </Surface>
+                ))}
               </div>
-              <h3 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                此文本还没有评论
-              </h3>
-              <p className="text-sm">为当前选中的文本添加第一条评论</p>
-            </div>
+            ) : (
+              <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
+                <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <Icon name="MessageSquare" className="h-8 w-8 opacity-50" />
+                </div>
+                <h3 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  此文本还没有评论
+                </h3>
+                <p className="text-sm">为当前选中的文本添加第一条评论</p>
+              </div>
+            )
           ) : (
             <div className="space-y-4">
               <div className="text-sm text-neutral-600 dark:text-neutral-400 font-medium mb-3">
