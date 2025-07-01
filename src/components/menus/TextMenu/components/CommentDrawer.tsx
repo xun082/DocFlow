@@ -11,23 +11,32 @@ import { cn } from '@/utils/utils';
 interface CommentDrawerProps {
   isOpen: boolean;
   comments: Comment[];
-  currentSelection: string | null;
+  replies: { [commentId: string]: Comment[] };
+  currentSelection: string;
   loading?: boolean;
   onClose: () => void;
   onAddComment: (text: string, selectedText: string) => void;
   onRemoveComment: (id: string) => void;
+  addReply: (commentId: string, content: string) => Promise<void>;
+  setReplyInput: (commentId: string, value: string) => void;
+  replyInput: { [commentId: string]: string };
 }
 
 export const CommentDrawer = ({
   isOpen,
   comments,
+  replies,
   currentSelection,
   loading,
   onClose,
   onAddComment,
   onRemoveComment,
+  addReply,
+  setReplyInput,
+  replyInput,
 }: CommentDrawerProps) => {
   const [commentText, setCommentText] = useState('');
+  const [activeReplyBox, setActiveReplyBox] = useState<string | null>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,10 +51,19 @@ export const CommentDrawer = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
-  const handleSubmitComment = () => {
-    if (commentText.trim() && currentSelection?.trim()) {
-      onAddComment(commentText.trim(), currentSelection);
-      setCommentText('');
+  useEffect(() => {
+    if (!isOpen) setActiveReplyBox(null);
+  }, [isOpen]);
+
+  const handleSubmitComment = async () => {
+    if (commentText.trim() && currentSelection.trim()) {
+      try {
+        await onAddComment(commentText.trim(), currentSelection);
+        setCommentText('');
+      } catch (error) {
+        console.error('添加评论失败:', error);
+        // 这里可以添加错误提示
+      }
     }
   };
 
@@ -189,44 +207,111 @@ export const CommentDrawer = ({
                   : currentSelection}
                 " 的 {relatedComments.length} 条评论
               </div>
-              {relatedComments.map((comment) => (
-                <Surface
-                  key={comment.id}
-                  data-comment-id={comment.id}
-                  className="p-4 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md inline-block">
-                        针对文本: "
-                        {comment.selectedText.length > 30
-                          ? comment.selectedText.substring(0, 30) + '...'
-                          : comment.selectedText}
-                        "
+              {relatedComments.map((comment) => {
+                const cid = comment.id?.toString() || comment.id;
+
+                return (
+                  <Surface
+                    key={comment.id}
+                    data-comment-id={comment.id}
+                    className="p-4 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg shadow-sm hover:shadow-md transition-shadow relative"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md inline-block">
+                          针对文本: "
+                          {comment.selectedText.length > 30
+                            ? comment.selectedText.substring(0, 30) + '...'
+                            : comment.selectedText}
+                          "
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center space-x-2">
+                          <Icon name="User" className="h-3 w-3" />
+                          <span>{comment.author}</span>
+                          <span>·</span>
+                          <Icon name="Clock" className="h-3 w-3" />
+                          <span>{formatTimestamp(comment.timestamp)}</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center space-x-2">
-                        <Icon name="User" className="h-3 w-3" />
-                        <span>{comment.author}</span>
-                        <span>·</span>
-                        <Icon name="Clock" className="h-3 w-3" />
-                        <span>{formatTimestamp(comment.timestamp)}</span>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveComment(comment.id)}
+                        className="h-6 w-6 p-0 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
+                        title="删除评论"
+                      >
+                        <Icon name="Trash2" className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveComment(comment.id)}
-                      className="h-6 w-6 p-0 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-                      title="删除评论"
-                    >
-                      <Icon name="Trash2" className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="text-sm text-neutral-800 dark:text-neutral-200 leading-relaxed bg-neutral-50 dark:bg-neutral-700/50 p-3 rounded-md">
-                    {comment.text}
-                  </div>
-                </Surface>
-              ))}
+                    <div className="text-sm text-neutral-800 dark:text-neutral-200 leading-relaxed bg-neutral-50 dark:bg-neutral-700/50 p-3 rounded-md">
+                      {comment.text}
+                    </div>
+                    {/* 回复列表 */}
+                    {replies[cid]?.length > 0 && (
+                      <div className="mt-3 ml-8 space-y-2">
+                        {replies[cid].map((reply) => (
+                          <div
+                            key={reply.id}
+                            className="flex items-start gap-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2"
+                          >
+                            <Icon name="User" className="h-5 w-5 text-blue-400 mt-1" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
+                                <span className="font-medium text-blue-700 dark:text-blue-300">
+                                  {reply.author}
+                                </span>
+                                <span>·</span>
+                                <span>{formatTimestamp(reply.timestamp)}</span>
+                              </div>
+                              <div className="text-sm text-neutral-800 dark:text-neutral-100 break-words">
+                                {reply.text}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* 回复按钮和输入框，每条评论都独立 */}
+                    {activeReplyBox !== cid && (
+                      <div className="flex justify-end mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-500 hover:bg-blue-100"
+                          onClick={() => setActiveReplyBox(cid)}
+                        >
+                          <Icon name="MessageSquare" className="h-4 w-4" />
+                          <span className="ml-1 text-xs">回复</span>
+                        </Button>
+                      </div>
+                    )}
+                    {activeReplyBox === cid && isOpen && (
+                      <div className="flex items-center gap-2 mt-3 ml-8 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 shadow-sm border border-neutral-200 dark:border-neutral-700">
+                        <Textarea
+                          value={replyInput[cid] || ''}
+                          onChange={(e) => setReplyInput(cid, e.target.value)}
+                          placeholder="写下你的回复…"
+                          className="flex-1 min-h-[36px] max-h-[80px] resize-none text-sm border-none bg-transparent focus:ring-0 focus:outline-none"
+                          rows={1}
+                          style={{ boxShadow: 'none' }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            await addReply(cid, replyInput[cid] || '');
+                            setActiveReplyBox(null);
+                          }}
+                          disabled={!replyInput[cid]?.trim()}
+                          className="ml-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 transition font-medium shadow-sm disabled:opacity-60"
+                          style={{ minWidth: 60 }}
+                        >
+                          回复
+                        </Button>
+                      </div>
+                    )}
+                  </Surface>
+                );
+              })}
             </div>
           )}
         </div>

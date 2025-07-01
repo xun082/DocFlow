@@ -42,6 +42,7 @@ function usePrevious<T>(value: T): T | undefined {
 
 export type TextMenuProps = {
   editor: Editor;
+  documentId?: string;
 };
 
 // 视口边界检测函数
@@ -54,7 +55,7 @@ const getViewportBoundary = () => {
   };
 };
 
-export const TextMenu = memo(({ editor }: TextMenuProps) => {
+export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
   const [spellCheckOpen, setSpellCheckOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const commands = useTextMenuCommands(editor);
@@ -62,8 +63,17 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   const blockOptions = useTextMenuContentTypes(editor);
 
   // 评论功能相关状态
-  const commentSidebar = useCommentSidebar();
-  const { comments, isOpen, close, removeComment } = commentSidebar;
+  const commentSidebar = useCommentSidebar(documentId);
+  const {
+    comments,
+    isOpen,
+    close,
+    // removeComment,
+    // replies,
+    // loadReplies,
+    // addReply,
+    // setReplyInput,
+  } = commentSidebar;
   const prevCommentCount = usePrevious(comments.length);
 
   // 当评论列表变为空时，自动关闭侧边栏。
@@ -129,59 +139,59 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
   }, [commands, commentSidebar]);
 
   // 处理添加评论
-  const handleAddComment = useCallback(
-    (text: string, selectedText: string) => {
-      const position = commands.getSelectedPosition();
-      const commentId = Date.now().toString();
+  // const handleAddComment = useCallback(
+  //   async (text: string, selectedText: string) => {
+  //     const position = commands.getSelectedPosition();
+  //     const commentId = Date.now().toString();
 
-      // 获取完整的选区信息
-      const selectionInfo = commands.getSelectionInfo();
+  //     // 获取完整的选区信息
+  //     const selectionInfo = commands.getSelectionInfo();
 
-      console.log('💬 正在添加评论：', {
-        评论内容: text,
-        选中文本: selectedText,
-        评论ID: commentId,
-        选区位置: position,
-        完整选区信息: selectionInfo,
-        传递给后端的数据: {
-          commentId,
-          commentText: text,
-          selectionInfo,
-        },
-      });
+  //     console.log('💬 正在添加评论：', {
+  //       评论内容: text,
+  //       选中文本: selectedText,
+  //       评论ID: commentId,
+  //       选区位置: position,
+  //       完整选区信息: selectionInfo,
+  //       传递给后端的数据: {
+  //         commentId,
+  //         commentText: text,
+  //         selectionInfo,
+  //       },
+  //     });
 
-      // 先添加评论标记到文档中
-      commands.setCommentMark(commentId);
+  //     // 先添加评论标记到文档中
+  //     commands.setCommentMark(commentId);
 
-      // 然后添加评论到侧边栏
-      commentSidebar.addComment(text, selectedText, position, commentId);
-    },
-    [commands, commentSidebar],
-  );
+  //     // 然后添加评论到侧边栏 (这是异步操作)
+  //     await commentSidebar.addComment(text, selectedText, position, commentId);
+  //   },
+  //   [commands, commentSidebar],
+  // );
 
-  // 处理删除评论
-  const handleRemoveComment = useCallback(
-    (id: string) => {
-      const commentToRemove = comments.find((c) => c.id === id);
+  // // 处理删除评论
+  // const handleRemoveComment = useCallback(
+  //   (id: string) => {
+  //     const commentToRemove = comments.find((c) => c.id === id);
 
-      if (!commentToRemove) {
-        return;
-      }
+  //     if (!commentToRemove) {
+  //       return;
+  //     }
 
-      // 检查这是不是这段高亮文本的最后一条评论
-      const isLastCommentForText =
-        comments.filter((c) => c.selectedText === commentToRemove.selectedText).length === 1;
+  //     // 检查这是不是这段高亮文本的最后一条评论
+  //     const isLastCommentForText =
+  //       comments.filter((c) => c.selectedText === commentToRemove.selectedText).length === 1;
 
-      // 如果是，则移除文档中的标记
-      if (isLastCommentForText && commentToRemove.commentId) {
-        commands.unsetCommentMark(commentToRemove.commentId);
-      }
+  //     // 如果是，则移除文档中的标记
+  //     if (isLastCommentForText && commentToRemove.commentId) {
+  //       commands.unsetCommentMark(commentToRemove.commentId);
+  //     }
 
-      // 只负责移除评论，关闭侧边栏的逻辑已交由useEffect处理
-      removeComment(id);
-    },
-    [comments, commands, removeComment],
-  );
+  //     // 只负责移除评论，关闭侧边栏的逻辑已交由useEffect处理
+  //     removeComment(id);
+  //   },
+  //   [comments, commands, removeComment],
+  // );
 
   // 监听选择变化以更新评论侧边栏的当前选择
   useEffect(() => {
@@ -662,10 +672,14 @@ export const TextMenu = memo(({ editor }: TextMenuProps) => {
       <CommentDrawer
         isOpen={commentSidebar.isOpen}
         comments={commentSidebar.comments}
+        replies={commentSidebar.replies}
         currentSelection={commentSidebar.currentSelection}
         onClose={commentSidebar.close}
-        onAddComment={handleAddComment}
-        onRemoveComment={handleRemoveComment}
+        onAddComment={commentSidebar.addComment}
+        onRemoveComment={commentSidebar.removeComment}
+        addReply={commentSidebar.addReply}
+        setReplyInput={commentSidebar.setReplyInput}
+        replyInput={commentSidebar.replyInput}
       />
     </>
   );
