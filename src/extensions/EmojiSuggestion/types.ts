@@ -1,4 +1,4 @@
-import { EmojiItem } from '@tiptap-pro/extension-emoji';
+import { EmojiItem } from '@tiptap/extension-emoji';
 
 export interface Command {
   name: string;

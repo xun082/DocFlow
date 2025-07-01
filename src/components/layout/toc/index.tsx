@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { useEditorState } from '@tiptap/react';
-import { TableOfContentsStorage } from '@tiptap-pro/extension-table-of-contents';
+import { TableOfContentsStorage } from '@tiptap/extension-table-of-contents';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
