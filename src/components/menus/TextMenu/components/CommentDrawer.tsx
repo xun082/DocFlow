@@ -159,7 +159,7 @@ export const CommentDrawer = ({
         )}
 
         {/* 添加评论区域 */}
-        {currentSelection.trim() && (
+        {currentSelection.trim() && comments.length > 0 && (
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
             <div className="space-y-3">
               <div>

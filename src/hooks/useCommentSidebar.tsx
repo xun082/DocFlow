@@ -1,6 +1,12 @@
 import { useMemo, useState, useCallback } from 'react';
 
-import { createRootComment, getComments, getReplies, createReply } from '@/services/comment';
+import {
+  createRootComment,
+  getComments,
+  getReplies,
+  createReply,
+  deleteComment as apiDeleteComment,
+} from '@/services/comment';
 import { CreateCommentPayload, IGetCommentsParams } from '@/services/comment/type';
 
 // 为了兼容现有的本地Comment类型，我们创建一个扩展的Comment类型
@@ -122,9 +128,33 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
     [documentId],
   );
 
-  const removeComment = useCallback((id: string) => {
-    setComments((prev) => prev.filter((comment) => comment.id !== id));
-    // TODO: 这里应该调用删除评论的API
+  const removeComment = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      // 调用后端API删除评论
+      await apiDeleteComment(id);
+      // 删除本地状态中的评论
+      setComments((prev) => prev.filter((comment) => comment.id !== id));
+      // 同时移除该评论的所有回复
+      setReplies((prev) => {
+        const newReplies = { ...prev };
+        delete newReplies[id];
+
+        return newReplies;
+      });
+      // 可选：移除回复输入框内容
+      setReplyInput((prev) => {
+        const newInput = { ...prev };
+        delete newInput[id];
+
+        return newInput;
+      });
+    } catch (error) {
+      console.error('❌ 删除评论失败：', error);
+      // 这里可以添加错误提示，比如toast通知
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // 根据maid加载评论
@@ -237,6 +267,8 @@ export const useCommentSidebar = (documentId?: string): CommentSidebarState => {
           console.log('📝 该mark_id没有评论');
           setComments([]);
         }
+
+        console.log('后端返回的评论:', response.data?.data?.comments);
       } catch (error) {
         console.error('❌ 获取评论失败：', error);
         setComments([]);
