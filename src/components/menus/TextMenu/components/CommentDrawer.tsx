@@ -220,42 +220,15 @@ export const CommentDrawer = ({
               <p className="text-sm">选中文档中的文本以查看相关评论</p>
             </div>
           ) : relatedComments.length === 0 ? (
-            // 调试模式：如果没有匹配评论但有加载的评论，显示调试信息
-            comments.length > 0 ? (
-              <div className="space-y-4">
-                <div className="text-sm text-red-600 dark:text-red-400 font-medium mb-3 p-3 bg-red-50 dark:bg-red-900/20 rounded">
-                  🔍 调试模式：找到 {comments.length} 条评论，但没有匹配当前选择 "{currentSelection}
-                  "
-                </div>
-                <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
-                  所有已加载的评论：
-                </div>
-                {comments.map((comment) => (
-                  <Surface
-                    key={comment.id}
-                    data-comment-id={comment.id}
-                    className="p-4 border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10 rounded-lg"
-                  >
-                    <div className="text-xs text-red-600 dark:text-red-400 mb-2">
-                      ID: {comment.id} | 选中文本: "{comment.selectedText}" | 当前选择: "
-                      {currentSelection}"
-                    </div>
-                    <div className="text-sm">{comment.text}</div>
-                    <div className="text-xs text-neutral-500 mt-1">作者: {comment.author}</div>
-                  </Surface>
-                ))}
+            <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
+              <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <Icon name="MessageSquare" className="h-8 w-8 opacity-50" />
               </div>
-            ) : (
-              <div className="text-center text-neutral-500 dark:text-neutral-400 mt-16">
-                <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <Icon name="MessageSquare" className="h-8 w-8 opacity-50" />
-                </div>
-                <h3 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  此文本还没有评论
-                </h3>
-                <p className="text-sm">为当前选中的文本添加第一条评论</p>
-              </div>
-            )
+              <h3 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                此文本还没有评论
+              </h3>
+              <p className="text-sm">为当前选中的文本添加第一条评论</p>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="text-sm text-neutral-600 dark:text-neutral-400 font-medium mb-3">
