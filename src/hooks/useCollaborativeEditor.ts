@@ -338,19 +338,19 @@ export function useCollaborativeEditor(
         // 添加协作扩展
         ...(doc
           ? [
-              Collaboration.configure({
-                document: doc,
-                field: 'content',
-              }),
-            ]
+            Collaboration.configure({
+              document: doc,
+              field: 'content',
+            }),
+          ]
           : []),
         ...(provider && !isOffline && currentUser && doc
           ? [
-              CollaborationCursor.configure({
-                provider,
-                user: currentUser || undefined,
-              }),
-            ]
+            CollaborationCursor.configure({
+              provider,
+              user: currentUser || undefined,
+            }),
+          ]
           : []),
       ],
       // 移除initialContent作为初始内容，依赖从服务器同步的内容

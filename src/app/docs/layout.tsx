@@ -25,6 +25,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     setMounted(true);
+    console.log('🚀 ~ useEffect ~ mounted:', mounted);
   }, []);
 
   const toggleSidebar = () => {

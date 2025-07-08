@@ -17,6 +17,7 @@ import { ColorPicker } from '@/components/panels';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { useCommentSidebar } from '@/hooks/useCommentSidebar';
+import { useExcalidrawExportListener } from '@/hooks/useExcalidraw';
 
 // We memorize the button so each button is not rerendered
 // on every editor state change
@@ -351,6 +352,11 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
       height: viewport.bottom - viewport.top - padding * 2,
     };
   }, []);
+
+  useExcalidrawExportListener((svg, fileName) => {
+    // 这里可以处理 svg 和 fileName，比如上传、弹窗、插入到文档等
+    console.log('TextMenu 收到 SVG:', fileName, svg);
+  });
 
   return (
     <>

@@ -12,6 +12,10 @@ import {
   DetailsContent,
   DetailsSummary,
   Document,
+  HardBreak,
+  Paragraph,
+  Text,
+  Image,
   Dropcursor,
   Emoji,
   Figcaption,
@@ -49,7 +53,7 @@ import {
   DraggableBlock,
   DragHandler,
   CustomBlock,
-} from '.';
+} from './index';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { MindMapBlock } from './MindMapBlock';
@@ -65,6 +69,10 @@ export interface ExtensionKitProps {
 
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
+  HardBreak,
+  Paragraph,
+  Text,
+  Image,
   Columns,
   TaskList,
   TaskItem.configure({
