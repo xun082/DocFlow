@@ -353,9 +353,14 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
     };
   }, []);
 
+  // 在组件顶层调用
   useExcalidrawExportListener((svg, fileName) => {
     // 这里可以处理 svg 和 fileName，比如上传、弹窗、插入到文档等
     console.log('TextMenu 收到 SVG:', fileName, svg);
+
+    // 这里可以上传 svg 和 fileName 到服务器，或者弹窗提示用户下载
+    const processedSvg = svg.replace(/width=".*?"/, 'width="100%"'); // 举例：让 svg 宽度自适应
+    editor.commands.setExcalidrawImage(processedSvg, fileName);
   });
 
   return (

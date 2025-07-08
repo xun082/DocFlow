@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw';
 // eslint-disable-next-line import/order
@@ -80,7 +82,7 @@ export default function ExcalidrawPage() {
   };
 
   // 导出SVG功能
-  const { sendExportMessage } = useExcalidrawMessage();
+  const { sendExportMessage } = useExcalidrawMessage({ origin: window.location.origin });
   const handleExportSVG = async () => {
     if (!excalidrawAPI) {
       setError('画布未初始化，请稍后重试');

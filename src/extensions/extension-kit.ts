@@ -59,6 +59,7 @@ import { TableOfContentsNode } from './TableOfContentsNode';
 import { MindMapBlock } from './MindMapBlock';
 import { ChartBlock } from './ChartBlock';
 import { CommentMark } from './CommentMark';
+import { ExcalidrawImage } from './ExcalidrawImage';
 
 import uploadService from '@/services/upload';
 
@@ -124,6 +125,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     clientId: provider?.document?.clientID,
   }),
   ImageBlock,
+  ExcalidrawImage,
   DraggableBlock,
   DragHandler,
   CustomBlock,
