@@ -4,7 +4,7 @@ import React from 'react';
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     excalidrawImage: {
-      setExcalidrawImage: (svg: string, fileName: string) => ReturnType;
+      setExcalidrawImage: (attrs: Record<string, any>) => ReturnType;
     };
   }
 }
@@ -22,6 +22,7 @@ const ExcalidrawImageNodeView: React.FC<NodeViewProps> = ({ node }) => {
 
 export const ExcalidrawImage = Node.create({
   name: 'excalidrawImage',
+
   isolating: true,
   defining: true,
   group: 'block',
@@ -42,9 +43,43 @@ export const ExcalidrawImage = Node.create({
           'data-excalidraw-image': attributes.svg || '',
         }),
       },
-      fileName: {
+      name: {
         default: '',
       },
+      id: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.id ? { id: attributes.id } : {}),
+      },
+      class: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.class ? { class: attributes.class } : {}),
+      },
+      width: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.width ? { width: attributes.width } : {}),
+      },
+      height: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.height ? { height: attributes.height } : {}),
+      },
+      style: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.style ? { style: attributes.style } : {}),
+      },
+      fill: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.fill ? { fill: attributes.fill } : {}),
+      },
+      stroke: {
+        default: '',
+        renderHTML: (attributes: any) => (attributes.stroke ? { stroke: attributes.stroke } : {}),
+      },
+      strokeWidth: {
+        default: '',
+        renderHTML: (attributes: any) =>
+          attributes.strokeWidth ? { strokeWidth: attributes.strokeWidth } : {},
+      },
+      // 可扩展更多自定义属性
     };
   },
 
@@ -60,9 +95,14 @@ export const ExcalidrawImage = Node.create({
   },
 
   renderHTML({ HTMLAttributes, node }: any) {
+    // 合并自定义属性
+    const attrs = { ...HTMLAttributes };
+    if (node.attrs.id) attrs.id = node.attrs.id;
+    if (node.attrs.class) attrs.class = node.attrs.class;
+
     return [
       'div',
-      { ...HTMLAttributes, 'data-type': 'excalidraw-image' },
+      { ...attrs, 'data-type': 'excalidraw-image' },
       node.attrs.svg ? { html: node.attrs.svg } : '',
     ];
   },
@@ -70,12 +110,9 @@ export const ExcalidrawImage = Node.create({
   addCommands() {
     return {
       setExcalidrawImage:
-        (svg: string, fileName: string = '') =>
+        (attrs: Record<string, any> = {}) =>
           ({ commands }: any) =>
-            commands.insertContent({
-              type: 'excalidrawImage',
-              attrs: { svg, fileName },
-            }),
+            commands.insertContent({ type: this.name, attrs }),
     };
   },
 

@@ -57,3 +57,4 @@ export { CustomBlock } from './CustomBlock';
 export { MindMapBlock } from './MindMapBlock';
 export { ChartBlock } from './ChartBlock';
 export { CommentMark } from './CommentMark';
+export { ExcalidrawImage } from './ExcalidrawImage';

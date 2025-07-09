@@ -359,8 +359,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
     console.log('TextMenu 收到 SVG:', fileName, svg);
 
     // 这里可以上传 svg 和 fileName 到服务器，或者弹窗提示用户下载
-    const processedSvg = svg.replace(/width=".*?"/, 'width="100%"'); // 举例：让 svg 宽度自适应
-    editor.commands.setExcalidrawImage(processedSvg, fileName);
+    editor.commands.setExcalidrawImage({ svg: svg, name: fileName });
   });
 
   return (
