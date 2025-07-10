@@ -1,4 +1,9 @@
 @layer utilities {
+  /* 重要：保留空格和换行 */
+  .ProseMirror {
+    white-space: pre-wrap;
+  }
+
   .ProseMirror p {
     @apply leading-relaxed my-3;
   }

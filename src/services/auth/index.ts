@@ -75,6 +75,8 @@ export const authApi = {
       params: { code },
       errorHandler,
       withCredentials: true,
+      timeout: 30000, // 增加超时到30秒，GitHub OAuth可能需要更长时间
+      retries: 2, // 允许重试2次
     }),
 
   /**

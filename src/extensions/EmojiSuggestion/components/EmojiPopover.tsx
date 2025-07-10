@@ -1,3 +1,5 @@
+'use client';
+
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { SuggestionKeyDownProps } from '@tiptap/suggestion';

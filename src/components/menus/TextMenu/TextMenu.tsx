@@ -1,3 +1,5 @@
+'use client';
+
 import { BubbleMenu, Editor } from '@tiptap/react';
 import { memo, useEffect, useState, useCallback, useRef } from 'react';
 import * as Popover from '@radix-ui/react-popover';
@@ -43,16 +45,6 @@ function usePrevious<T>(value: T): T | undefined {
 export type TextMenuProps = {
   editor: Editor;
   documentId?: string;
-};
-
-// 视口边界检测函数
-const getViewportBoundary = () => {
-  return {
-    top: window.scrollY,
-    bottom: window.scrollY + window.innerHeight,
-    left: window.scrollX,
-    right: window.scrollX + window.innerWidth,
-  };
 };
 
 export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
@@ -337,27 +329,20 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
     };
   }, [handleCommentButtonClick]);
 
-  // 自定义边界检查函数
-  const getBoundaryRect = useCallback(() => {
-    const viewport = getViewportBoundary();
-    const padding = 16;
-
-    return {
-      top: viewport.top + padding,
-      bottom: viewport.bottom - padding,
-      left: viewport.left + padding,
-      right: viewport.right - padding,
-      width: viewport.right - viewport.left - padding * 2,
-      height: viewport.bottom - viewport.top - padding * 2,
-    };
-  }, []);
-
   return (
     <>
       <BubbleMenu
         tippyOptions={{
+          placement: 'top',
+          zIndex: 10000,
+          interactive: true,
+          animation: 'shift-away-subtle',
+          duration: [200, 150],
+          hideOnClick: false,
+          trigger: 'manual',
+          appendTo: () => document.body,
+          offset: [0, 8],
           popperOptions: {
-            placement: 'top',
             strategy: 'absolute',
             modifiers: [
               {
@@ -379,108 +364,44 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
                     'top-end',
                     'bottom-start',
                     'bottom-end',
-                    'left',
-                    'right',
-                    'left-start',
-                    'right-start',
                   ],
-                  allowedAutoPlacements: ['top', 'bottom', 'left', 'right'],
                   skipEqual: false,
                 },
               },
               {
                 name: 'offset',
                 options: {
-                  offset: ({ placement }: { placement: string }) => {
-                    // 根据不同的放置位置调整偏移
-                    if (placement.includes('top') || placement.includes('bottom')) {
-                      return [0, 12];
-                    }
-
-                    return [12, 0];
-                  },
-                },
-              },
-              {
-                name: 'computeStyles',
-                options: {
-                  adaptive: true,
-                  roundOffsets: true,
-                  gpuAcceleration: true,
-                },
-              },
-              // 添加自定义修饰符来处理边界情况
-              {
-                name: 'customBoundary',
-                enabled: true,
-                phase: 'main',
-                fn: ({ state }: { state: any }) => {
-                  const boundary = getBoundaryRect();
-                  const popperOffsets = state.modifiersData?.popperOffsets;
-
-                  if (!popperOffsets) return;
-
-                  const { x, y } = popperOffsets;
-
-                  // 确保不超出边界
-                  if (x < boundary.left) {
-                    popperOffsets.x = boundary.left;
-                  }
-
-                  if (x + state.rects.popper.width > boundary.right) {
-                    popperOffsets.x = boundary.right - state.rects.popper.width;
-                  }
-
-                  if (y < boundary.top) {
-                    popperOffsets.y = boundary.top;
-                  }
-
-                  if (y + state.rects.popper.height > boundary.bottom) {
-                    popperOffsets.y = boundary.bottom - state.rects.popper.height;
-                  }
+                  offset: [0, 8],
                 },
               },
             ],
           },
-          zIndex: 10000,
-          maxWidth: 'min(calc(100vw - 32px), 600px)',
-          interactive: true,
-          animation: 'shift-away-subtle',
-          duration: [200, 150],
-          hideOnClick: false,
-          trigger: 'manual',
-          appendTo: () => document.body, // 确保添加到body，避免被父容器裁剪
           aria: {
             content: 'labelledby',
             expanded: 'auto',
           },
-          // 添加主题以便样式定位
-          theme: 'text-menu',
         }}
         editor={editor}
         pluginKey="textMenu"
-        shouldShow={({ state, from, to }) => {
-          // 简化条件：只要有选择就显示
-          const hasSelection = !state.selection.empty;
+        shouldShow={({ state }) => {
+          const { selection } = state;
+          const { empty } = selection;
 
-          console.log('🔍 TextMenu shouldShow 简化检查:', {
-            hasSelection,
-            from,
-            to,
-            isTyping,
-          });
+          // 不显示菜单的情况
+          if (empty) return false;
+          if (isTyping) return false;
 
-          if (!hasSelection) {
-            console.log('❌ 没有选择，不显示TextMenu');
+          // 检查选择的内容是否在编辑器视图内
+          const { $from, $to } = selection;
+          if ($from.pos === $to.pos) return false;
 
-            return false;
-          }
-
-          console.log('✅ 有选择，显示TextMenu');
+          // 确保选择了实际内容
+          const selectedText = state.doc.textBetween($from.pos, $to.pos, ' ');
+          if (!selectedText || selectedText.trim().length === 0) return false;
 
           return true;
         }}
-        updateDelay={100} // 减少更新延迟，让菜单更快显示
+        updateDelay={50}
       >
         <Surface
           className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-lg backdrop-blur-sm"

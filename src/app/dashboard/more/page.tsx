@@ -1,3 +1,5 @@
+'use client';
+
 import {
   HelpCircle,
   MessageSquare,
@@ -7,6 +9,9 @@ import {
   Mail,
   ExternalLink,
 } from 'lucide-react';
+import { useEffect } from 'react';
+
+import request from '@/services/request';
 
 const moreFeatures = [
   {
@@ -69,6 +74,23 @@ const quickLinks = [
 ];
 
 export default function MorePage() {
+  useEffect(() => {
+    async function getMoreFeatures() {
+      const result = await request.get(
+        `/api/v1/documents/35/content`,
+        { cacheTime: 0 }, // 不缓存，确保数据新鲜
+        undefined, // mode
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzLCJuYW1lIjoiMjA0MjIwNDI4NUBxcS5jb20iLCJlbWFpbCI6IjIwNDIyMDQyODVAcXEuY29tIiwiaWF0IjoxNzUyMDUzMjMwLCJleHAiOjE3NTQ2NDUyMzB9.pz0hnKhcGdq7tDiYxeEnUooLUoPnTg1OvHJtShix78w', // 传递 token，现在 request 已经支持 SSR
+      );
+
+      console.log('result', result);
+    }
+
+    getMoreFeatures();
+
+    return () => {};
+  }, []);
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {/* 页面头部 */}

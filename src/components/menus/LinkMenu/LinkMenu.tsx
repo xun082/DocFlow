@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useCallback, useState, JSX } from 'react';
 import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react';
 
@@ -50,15 +52,41 @@ export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey="textMenu"
+      pluginKey="linkMenu"
       shouldShow={shouldShow}
       updateDelay={0}
       tippyOptions={{
+        placement: 'bottom',
+        zIndex: 10001,
+        interactive: true,
+        appendTo: appendTo?.current || document.body,
+        offset: [0, 8],
         popperOptions: {
-          modifiers: [{ name: 'flip', enabled: false }],
-        },
-        appendTo: () => {
-          return appendTo?.current;
+          strategy: 'absolute',
+          modifiers: [
+            {
+              name: 'preventOverflow',
+              options: {
+                boundary: 'viewport',
+                padding: 8,
+                altBoundary: true,
+                altAxis: true,
+                tether: false,
+              },
+            },
+            {
+              name: 'flip',
+              options: {
+                fallbackPlacements: ['top', 'bottom-start', 'bottom-end', 'top-start', 'top-end'],
+              },
+            },
+            {
+              name: 'offset',
+              options: {
+                offset: [0, 8],
+              },
+            },
+          ],
         },
         onHidden: () => {
           setShowEdit(false);
