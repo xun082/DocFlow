@@ -104,7 +104,7 @@ const TemplatesTab = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 flex flex-col flex-1">
       {/* 搜索框 */}
       <div className="relative">
         <input
@@ -151,75 +151,77 @@ const TemplatesTab = () => {
       </div>
 
       {/* 模板列表 */}
-      <div className="space-y-3">
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
           模板 ({filteredTemplates.length})
         </div>
 
-        {filteredTemplates.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-            {searchQuery ? '未找到匹配的模板' : '该分类下暂无模板'}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                className={cn(
-                  'group p-3 rounded-lg border border-gray-200 dark:border-gray-600',
-                  'bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-500',
-                  'hover:shadow-sm transition-all duration-200 cursor-pointer',
-                )}
-                onClick={() => handleCreateDocument(template)}
-              >
-                <div className="flex items-start space-x-3">
-                  <div
-                    className={cn(
-                      'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
-                      'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-                      'group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors',
-                    )}
-                  >
-                    <Icon name={template.icon as any} className="h-4 w-4" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        {template.name}
-                      </h4>
-                      <Icon
-                        name="Plus"
-                        className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
+        <div className="flex-1 overflow-y-auto">
+          {filteredTemplates.length === 0 ? (
+            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+              {searchQuery ? '未找到匹配的模板' : '该分类下暂无模板'}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className={cn(
+                    'group p-3 rounded-lg border border-gray-200 dark:border-gray-600',
+                    'bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-500',
+                    'hover:shadow-sm transition-all duration-200 cursor-pointer',
+                  )}
+                  onClick={() => handleCreateDocument(template)}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div
+                      className={cn(
+                        'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
+                        'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+                        'group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors',
+                      )}
+                    >
+                      <Icon name={template.icon as any} className="h-4 w-4" />
                     </div>
 
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                      {template.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          {template.name}
+                        </h4>
+                        <Icon
+                          name="Plus"
+                          className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
 
-                    {/* 标签 */}
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {template.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {template.tags.length > 3 && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500">
-                          +{template.tags.length - 3}
-                        </span>
-                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                        {template.description}
+                      </p>
+
+                      {/* 标签 */}
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {template.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {template.tags.length > 3 && (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            +{template.tags.length - 3}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 创建自定义模板 */}

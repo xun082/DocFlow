@@ -5,10 +5,15 @@ import { DocumentClient } from '../_components/DocumentClient';
 import { useDocumentError } from '../_components/error';
 import { getDocumentContent, generateDocumentHTML } from '../_components/document-service';
 
-// 测试用的固定文档ID
-const TEST_DOCUMENT_ID = '79';
+interface PageProps {
+  params: Promise<{
+    room: string;
+  }>;
+}
 
-export default async function DocumentPage() {
+export default async function DocumentPage({ params }: PageProps) {
+  // 获取动态路由参数
+  const { room: documentId } = await params;
   // 检查认证状态
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token')?.value;
@@ -18,7 +23,7 @@ export default async function DocumentPage() {
   }
 
   // 在服务器端获取文档数据
-  const result = await getDocumentContent(TEST_DOCUMENT_ID, authToken);
+  const result = await getDocumentContent(documentId, authToken);
 
   // 处理错误情况
   if (result.error) {
@@ -26,7 +31,7 @@ export default async function DocumentPage() {
       redirect('/auth');
     }
 
-    return useDocumentError(result, TEST_DOCUMENT_ID);
+    return useDocumentError(result, documentId);
   }
 
   const documentData = result.data;
@@ -41,9 +46,10 @@ export default async function DocumentPage() {
   return (
     <div className="w-full h-screen" suppressHydrationWarning>
       <DocumentClient
-        documentId={TEST_DOCUMENT_ID}
+        documentId={documentId}
         initialContent={content}
         initialHTML={initialHTML}
+        enableCollaboration={true}
       />
     </div>
   );
@@ -55,37 +61,40 @@ export function generateStaticParams() {
 }
 
 // 元数据生成
-export async function generateMetadata() {
+export async function generateMetadata({ params }: PageProps) {
   try {
+    // 获取动态路由参数
+    const { room: documentId } = await params;
+
     const cookieStore = await cookies();
     const authToken = cookieStore.get('auth_token')?.value;
 
     if (!authToken) {
       return {
-        title: 'SSR测试 - 需要登录',
-        description: 'SSR认证测试页面',
+        title: `协作文档 ${documentId} - 需要登录`,
+        description: '需要登录才能查看此协作文档',
       };
     }
 
-    const result = await getDocumentContent(TEST_DOCUMENT_ID, authToken);
+    const result = await getDocumentContent(documentId, authToken);
 
     if (result.error || !result.data) {
       return {
-        title: 'SSR测试 - 加载失败',
-        description: 'SSR认证测试页面 - 文档加载失败',
+        title: `协作文档 ${documentId} - 加载失败`,
+        description: '协作文档加载失败，请稍后重试',
       };
     }
 
-    const title = result.data.title || '无标题文档';
+    const title = result.data.title || '无标题协作文档';
 
     return {
-      title: `SSR测试 - ${title}`,
-      description: 'SSR认证测试页面 - ' + title,
+      title: title,
+      description: `实时协作编辑文档：${title}`,
     };
   } catch {
     return {
-      title: 'SSR测试 - 错误',
-      description: 'SSR认证测试页面',
+      title: '协作文档 - 错误',
+      description: '协作文档加载时发生错误',
     };
   }
 }

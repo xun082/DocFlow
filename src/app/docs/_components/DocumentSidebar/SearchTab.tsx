@@ -547,120 +547,122 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
           </div>
         ) : (
           // 搜索结果
-          <div className="space-y-3 max-h-96 overflow-auto">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
-              </div>
-              {searchResults.length > 0 && (
-                <button
-                  onClick={clearSearch}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                >
-                  清除
-                </button>
-              )}
-            </div>
-
-            {isSearching ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-3">
-                  <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto" />
-                  <div className="text-sm text-slate-500 dark:text-slate-400">搜索中...</div>
+          <div className="flex flex-col h-full">
+            <div className="space-y-3 flex-1 overflow-auto">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
                 </div>
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="text-center py-12 space-y-3">
-                <Icon
-                  name="Search"
-                  className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto"
-                />
-                <div className="text-sm text-slate-500 dark:text-slate-400">未找到相关文档</div>
-                <div className="text-xs text-slate-400 dark:text-slate-500">
-                  尝试使用不同的关键词
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {searchResults.map((result) => (
+                {searchResults.length > 0 && (
                   <button
-                    key={result.id}
-                    onClick={() => handleResultClick(result)}
-                    className={cn(
-                      'w-full p-3 rounded-xl text-left group transition-all duration-200',
-                      'bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm',
-                      'hover:bg-gradient-to-r hover:from-blue-50/90 hover:to-indigo-50/70',
-                      'dark:hover:from-slate-700/80 dark:hover:to-slate-800/90',
-                      'border border-slate-200/50 dark:border-slate-600/40',
-                      'hover:border-blue-300/60 dark:hover:border-blue-500/40',
-                      'hover:shadow-md hover:scale-[1.02]',
-                    )}
+                    onClick={clearSearch}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                   >
-                    <div className="flex items-start space-x-3">
-                      <div
-                        className={cn(
-                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
-                          result.type === 'FOLDER'
-                            ? 'bg-amber-100 dark:bg-amber-900/30'
-                            : 'bg-blue-100 dark:bg-blue-900/30',
-                        )}
-                      >
-                        <Icon
-                          name={result.type === 'FOLDER' ? 'Folder' : 'FileText'}
-                          className={cn(
-                            'h-4 w-4',
-                            result.type === 'FOLDER'
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-blue-600 dark:text-blue-400',
-                          )}
-                        />
-                      </div>
+                    清除
+                  </button>
+                )}
+              </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                            {highlightText(result.title, searchQuery)}
-                          </h4>
-                          {result.is_starred && (
-                            <Icon
-                              name="Star"
-                              className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0"
-                            />
+              {isSearching ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center space-y-3">
+                    <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto" />
+                    <div className="text-sm text-slate-500 dark:text-slate-400">搜索中...</div>
+                  </div>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center py-12 space-y-3">
+                  <Icon
+                    name="Search"
+                    className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto"
+                  />
+                  <div className="text-sm text-slate-500 dark:text-slate-400">未找到相关文档</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">
+                    尝试使用不同的关键词
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      onClick={() => handleResultClick(result)}
+                      className={cn(
+                        'w-full p-3 rounded-xl text-left group transition-all duration-200',
+                        'bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm',
+                        'hover:bg-gradient-to-r hover:from-blue-50/90 hover:to-indigo-50/70',
+                        'dark:hover:from-slate-700/80 dark:hover:to-slate-800/90',
+                        'border border-slate-200/50 dark:border-slate-600/40',
+                        'hover:border-blue-300/60 dark:hover:border-blue-500/40',
+                        'hover:shadow-md hover:scale-[1.02]',
+                      )}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
+                            result.type === 'FOLDER'
+                              ? 'bg-amber-100 dark:bg-amber-900/30'
+                              : 'bg-blue-100 dark:bg-blue-900/30',
                           )}
+                        >
+                          <Icon
+                            name={result.type === 'FOLDER' ? 'Folder' : 'FileText'}
+                            className={cn(
+                              'h-4 w-4',
+                              result.type === 'FOLDER'
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-blue-600 dark:text-blue-400',
+                            )}
+                          />
                         </div>
 
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {result.type === 'FOLDER' ? '文件夹' : '文档'} •{' '}
-                            {formatTime(result.updated_at)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                              {highlightText(result.title, searchQuery)}
+                            </h4>
+                            {result.is_starred && (
+                              <Icon
+                                name="Star"
+                                className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0"
+                              />
+                            )}
                           </div>
 
-                          {/* 文件路径显示 */}
-                          {result.path && result.path.length > 1 && (
-                            <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center space-x-1">
-                              <Icon name="Folder" className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">
-                                {result.path.slice(0, -1).join(' / ')}
-                              </span>
+                          <div className="space-y-1">
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              {result.type === 'FOLDER' ? '文件夹' : '文档'} •{' '}
+                              {formatTime(result.updated_at)}
                             </div>
-                          )}
 
-                          {result.matches.length > 0 && (
-                            <div className="text-xs text-slate-600 dark:text-slate-300 opacity-75 flex items-center space-x-1">
-                              <Icon name="Search" className="h-3 w-3 flex-shrink-0" />
-                              <span>
-                                在 {result.matches[0].field === 'title' ? '标题' : '内容'}{' '}
-                                中找到匹配
-                              </span>
-                            </div>
-                          )}
+                            {/* 文件路径显示 */}
+                            {result.path && result.path.length > 1 && (
+                              <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center space-x-1">
+                                <Icon name="Folder" className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">
+                                  {result.path.slice(0, -1).join(' / ')}
+                                </span>
+                              </div>
+                            )}
+
+                            {result.matches.length > 0 && (
+                              <div className="text-xs text-slate-600 dark:text-slate-300 opacity-75 flex items-center space-x-1">
+                                <Icon name="Search" className="h-3 w-3 flex-shrink-0" />
+                                <span>
+                                  在 {result.matches[0].field === 'title' ? '标题' : '内容'}{' '}
+                                  中找到匹配
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

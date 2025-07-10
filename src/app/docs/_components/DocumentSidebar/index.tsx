@@ -79,19 +79,21 @@ const DocumentSidebar = memo(() => {
       style={{ width: `${sidebarWidth}px` }}
     >
       {/* 左侧图标栏 */}
-      <div className="w-16 relative bg-gradient-to-b from-white/90 via-white/70 to-white/90 dark:from-slate-800/90 dark:via-slate-800/70 dark:to-slate-800/90 backdrop-blur-lg flex flex-col items-center py-4 after:absolute after:right-0 after:top-4 after:bottom-4 after:w-px after:bg-gradient-to-b after:from-transparent after:via-slate-200/50 after:to-transparent dark:after:via-slate-600/30">
+      <div className="w-16 h-full relative bg-gradient-to-b from-white/90 via-white/70 to-white/90 dark:from-slate-800/90 dark:via-slate-800/70 dark:to-slate-800/90 backdrop-blur-lg flex flex-col py-4 after:absolute after:right-0 after:top-4 after:bottom-4 after:w-px after:bg-gradient-to-b after:from-transparent after:via-slate-200/50 after:to-transparent dark:after:via-slate-600/30">
         {/* Logo */}
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
-          <Icon name="FileText" className="w-5 h-5 text-white" />
+        <div className="flex justify-center mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <Icon name="FileText" className="w-5 h-5 text-white" />
+          </div>
         </div>
 
         {/* 标签按钮 */}
-        <div className="space-y-2 flex-1">
+        <div className="flex-1 flex flex-col items-center space-y-2 overflow-y-auto">
           {tabs.map((tab) => (
             <Tooltip key={tab.id} content={tab.label}>
               <button
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 backdrop-blur-md border ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 backdrop-blur-md border flex-shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/20 border-blue-200/50 dark:border-blue-600/30 scale-105'
                     : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-slate-200 border-slate-200/50 dark:border-slate-600/50 hover:scale-105'
@@ -104,18 +106,20 @@ const DocumentSidebar = memo(() => {
         </div>
 
         {/* 关闭按钮 */}
-        <Tooltip content="关闭侧边栏">
-          <button
-            onClick={close}
-            className="w-12 h-12 bg-white/60 dark:bg-slate-700/60 rounded-2xl flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 backdrop-blur-md border border-slate-200/50 dark:border-slate-600/50 hover:scale-105"
-          >
-            <Icon name="X" className="w-5 h-5" />
-          </button>
-        </Tooltip>
+        <div className="flex justify-center mt-4">
+          <Tooltip content="关闭侧边栏">
+            <button
+              onClick={close}
+              className="w-12 h-12 bg-white/60 dark:bg-slate-700/60 rounded-2xl flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 backdrop-blur-md border border-slate-200/50 dark:border-slate-600/50 hover:scale-105 flex-shrink-0"
+            >
+              <Icon name="X" className="w-5 h-5" />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* 右侧内容区域 */}
-      <div className="flex-1 overflow-hidden relative bg-gradient-to-br from-white/95 via-slate-50/60 to-white/95 dark:from-slate-800/95 dark:via-slate-800/70 dark:to-slate-800/95 backdrop-blur-lg before:absolute before:left-0 before:top-0 before:bottom-0 before:w-4 before:bg-gradient-to-r before:from-slate-900/5 before:to-transparent dark:before:from-slate-900/20 before:pointer-events-none">
+      <div className="flex-1 h-full overflow-hidden relative bg-gradient-to-br from-white/95 via-slate-50/60 to-white/95 dark:from-slate-800/95 dark:via-slate-800/70 dark:to-slate-800/95 backdrop-blur-lg before:absolute before:left-0 before:top-0 before:bottom-0 before:w-4 before:bg-gradient-to-r before:from-slate-900/5 before:to-transparent dark:before:from-slate-900/20 before:pointer-events-none">
         <Surface className="h-full overflow-hidden">
           {ActiveComponent && <ActiveComponent />}
         </Surface>

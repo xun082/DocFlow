@@ -58,7 +58,7 @@ const SettingsTab = () => {
   ];
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 flex flex-col flex-1 overflow-y-auto">
       {settingSections.map((section) => (
         <div key={section.title} className="space-y-4">
           {/* 分组标题 */}

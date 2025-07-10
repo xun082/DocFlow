@@ -1,6 +1,6 @@
 'use client';
 
-import DragHandle from '@tiptap/extension-drag-handle-react';
+import DragHandle from '@tiptap-pro/extension-drag-handle-react';
 import { Editor } from '@tiptap/react';
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useState } from 'react';

@@ -210,7 +210,7 @@ const BlocksTab = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 flex flex-col flex-1">
       {/* 搜索框 */}
       <div className="relative">
         <input
@@ -271,31 +271,33 @@ const BlocksTab = () => {
       </div>
 
       {/* 区块列表 */}
-      <div className="space-y-3">
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
           区块 ({filteredBlocks.length})
         </div>
 
-        {filteredBlocks.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-            {searchQuery ? '未找到匹配的区块' : '该分类下暂无区块'}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredBlocks.map((block) => (
-              <BlockItem
-                key={block.blockType}
-                icon={block.icon}
-                label={block.label}
-                description={block.description}
-                blockType={block.blockType}
-                category={block.category}
-                onDragStart={handleDragStart}
-                onClick={handleBlockClick}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {filteredBlocks.length === 0 ? (
+            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+              {searchQuery ? '未找到匹配的区块' : '该分类下暂无区块'}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredBlocks.map((block) => (
+                <BlockItem
+                  key={block.blockType}
+                  icon={block.icon}
+                  label={block.label}
+                  description={block.description}
+                  blockType={block.blockType}
+                  category={block.category}
+                  onDragStart={handleDragStart}
+                  onClick={handleBlockClick}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
