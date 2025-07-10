@@ -8,7 +8,7 @@ import { convertToExcalidrawElements, exportToSvg } from '@excalidraw/excalidraw
 import '@excalidraw/excalidraw/index.css';
 import dynamic from 'next/dynamic';
 
-import DiagramModal from './components/DiagramModal';
+import DiagramModal from './_components/DiagramModal';
 
 import { useExcalidrawMessage } from '@/hooks/useExcalidraw';
 

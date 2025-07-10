@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
+
+import { AiGenerateDiagram } from '@/services/ai';
 
 // ====== 常量、类型、枚举 ======
 export enum DiagramType {
@@ -15,25 +18,45 @@ const DIAGRAM_TYPE_OPTIONS = [
 
 const DEFAULT_MERMAID_CODE = `flowchart TD\n    A[Christmas] --> B[Get money]\n    B --> C[Go shopping]\n    C --> D{Let me think}\n    D -->|One| E[Laptop]\n    D -->|Two| F[iPhone]\n    D -->|Three| G[Car]`;
 
-const API_URL = 'http://localhost:8080/api/v1/ai/generate-diagram';
-const API_TOKEN =
-  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzLCJuYW1lIjoiMjA0MjIwNDI4NUBxcS5jb20iLCJlbWFpbCI6IjIwNDIyMDQyODVAcXEuY29tIiwiaWF0IjoxNzUwNzQ2NDk3LCJleHAiOjE3NTEzNTEyOTd9.pukKyPTmVqPDuOQr1svifI1p2ivJ5N6Fk5QyKhs4-Eo';
-
 async function fetchMermaidFromAI(description: string, diagramType: DiagramType): Promise<string> {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: API_TOKEN,
+  const response = await AiGenerateDiagram.CorrectText(
+    { text: description, diagramType: diagramType },
+    {
+      onError: (error) => {
+        console.error('AI生成图表错误:', error);
+        toast.dismiss('generate-diagram-progress');
+      },
+      unauthorized: () => {
+        toast.dismiss('generate-diagram-progress');
+        toast.error('身份验证失败，请重新登录');
+      },
+      forbidden: () => {
+        toast.dismiss('generate-diagram-progress');
+        toast.error('没有权限使用AI生成图表功能');
+      },
+      serverError: () => {
+        toast.dismiss('generate-diagram-progress');
+        toast.error('AI服务暂时不可用，请稍后再试');
+      },
+      networkError: () => {
+        toast.dismiss('generate-diagram-progress');
+        toast.error('网络连接失败，请检查网络连接');
+      },
+      default: (error: any) => {
+        toast.dismiss('generate-diagram-progress');
+
+        if (error?.message?.includes('timeout') || error?.message?.includes('超时')) {
+          toast.error('AI生成图表超时，请稍后重试或检查网络连接');
+        } else {
+          toast.error('AI生成图表失败，已切换到基础模式');
+        }
+      },
     },
-    body: JSON.stringify({ text: description, diagramType }),
-  });
-  if (!response.ok) throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+  );
 
-  const data = await response.json();
-  if (data.code !== 201) throw new Error(data.message || '生成失败');
+  if (response.data?.code !== 201) throw new Error(response.data?.message || '生成失败');
 
-  let code = data.data.mermaidCode;
+  let code = response.data?.data?.mermaidCode || '';
   code = code
     .replace(/\\n/g, '\n')
     .replace(/\n+/g, '\n')
