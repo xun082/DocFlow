@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo, startTransition } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 import dynamic from 'next/dynamic';
@@ -73,17 +73,26 @@ export function DocumentClient({
   const [showSSRContent, setShowSSRContent] = useState(true);
   const [menuContainer, setMenuContainer] = useState<HTMLElement | null>(null);
 
-  // 客户端挂载检测
+  // 客户端挂载检测 - 使用调度器避免flushSync
   useEffect(() => {
-    setIsClient(true);
-    // 不要立即隐藏SSR内容，等编辑器就绪后再切换
+    // 延迟到下一个微任务执行，避免与其他状态更新冲突
+    queueMicrotask(() => {
+      setIsClient(true);
+    });
   }, []);
 
-  // 设置菜单容器
+  // 设置菜单容器 - 延迟更新避免渲染冲突
   useEffect(() => {
-    if (menuContainerRef.current) {
-      setMenuContainer(menuContainerRef.current);
-    }
+    if (!isClient) return;
+
+    // 使用调度器延迟设置，避免在渲染过程中同步更新
+    const timeoutId = setTimeout(() => {
+      if (menuContainerRef.current) {
+        setMenuContainer(menuContainerRef.current);
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [isClient]);
 
   // 有条件地初始化编辑器hook
@@ -98,9 +107,10 @@ export function DocumentClient({
     isEditable: true,
   });
 
-  // 选择使用哪个编辑器的状态
-  const editorState = enableCollaboration
-    ? {
+  // 选择使用哪个编辑器的状态 - 使用useMemo避免频繁重新创建对象导致flushSync错误
+  const editorState = useMemo(() => {
+    if (enableCollaboration) {
+      return {
         editor: collaborativeEditor.editor,
         isEditable: collaborativeEditor.isEditable,
         loading: !collaborativeEditor.isFullyLoaded,
@@ -114,8 +124,9 @@ export function DocumentClient({
         isLocalLoaded: collaborativeEditor.isLocalLoaded,
         isServerSynced: collaborativeEditor.isServerSynced,
         connectedUsers: collaborativeEditor.connectedUsers,
-      }
-    : {
+      };
+    } else {
+      return {
         editor: documentEditor.editor,
         isEditable: documentEditor.isEditable,
         loading: documentEditor.loading,
@@ -130,11 +141,38 @@ export function DocumentClient({
         isServerSynced: true,
         connectedUsers: [],
       };
+    }
+  }, [
+    enableCollaboration,
+    collaborativeEditor.editor,
+    collaborativeEditor.isEditable,
+    collaborativeEditor.isFullyLoaded,
+    collaborativeEditor.authError,
+    collaborativeEditor.isMounted,
+    collaborativeEditor.connectionStatus,
+    collaborativeEditor.provider,
+    collaborativeEditor.isOffline,
+    collaborativeEditor.isLocalLoaded,
+    collaborativeEditor.isServerSynced,
+    collaborativeEditor.connectedUsers,
+    documentEditor.editor,
+    documentEditor.isEditable,
+    documentEditor.loading,
+    documentEditor.error,
+    documentEditor.isMounted,
+  ]);
 
-  // 当编辑器完全就绪时，隐藏SSR内容
+  // 当编辑器完全就绪时，隐藏SSR内容 - 使用调度器避免flushSync错误
   useEffect(() => {
     if (editorState.editor && editorState.isFullyLoaded && !editorState.loading) {
-      setShowSSRContent(false);
+      // 使用React的调度器来延迟状态更新，避免在渲染过程中同步更新
+      const timeoutId = setTimeout(() => {
+        startTransition(() => {
+          setShowSSRContent(false);
+        });
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [editorState.editor, editorState.isFullyLoaded, editorState.loading]);
 
@@ -164,17 +202,28 @@ export function DocumentClient({
     );
   }
 
-  // 编辑器就绪状态
-  const isEditorReady = Boolean(
-    isClient &&
-      editorState.editor &&
-      !editorState.loading &&
-      !editorState.error &&
-      (enableCollaboration ? editorState.isFullyLoaded : true),
-  );
+  // 编辑器就绪状态 - 使用useMemo避免重复计算
+  const isEditorReady = useMemo(() => {
+    return Boolean(
+      isClient &&
+        editorState.editor &&
+        !editorState.loading &&
+        !editorState.error &&
+        (enableCollaboration ? editorState.isFullyLoaded : true),
+    );
+  }, [
+    isClient,
+    editorState.editor,
+    editorState.loading,
+    editorState.error,
+    editorState.isFullyLoaded,
+    enableCollaboration,
+  ]);
 
   // 菜单就绪状态 - 需要编辑器就绪和菜单容器存在
-  const isMenuReady = isEditorReady && menuContainer && document.contains(menuContainer);
+  const isMenuReady = useMemo(() => {
+    return isEditorReady && menuContainer && menuContainer.isConnected;
+  }, [isEditorReady, menuContainer]);
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900" ref={menuContainerRef}>

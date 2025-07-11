@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import { useEditor } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 
@@ -33,9 +33,11 @@ export function useDocumentEditor({
   const [documentData, setDocumentData] = useState<any>(null);
   const [content, setContent] = useState<JSONContent | null>(initialContent || null);
 
-  // 客户端挂载
+  // 客户端挂载 - 使用startTransition避免flushSync错误
   useEffect(() => {
-    setIsMounted(true);
+    startTransition(() => {
+      setIsMounted(true);
+    });
   }, []);
 
   // 获取文档内容（仅在客户端且没有初始内容时）
@@ -44,8 +46,10 @@ export function useDocumentEditor({
 
     const fetchDocument = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        startTransition(() => {
+          setLoading(true);
+          setError(null);
+        });
 
         const response = await DocumentApi.GetDocumentContent(parseInt(documentId));
 
@@ -57,8 +61,10 @@ export function useDocumentEditor({
         }
 
         if (response.data?.data) {
-          setDocumentData(response.data.data);
-          setContent((response.data.data as any).content);
+          startTransition(() => {
+            setDocumentData(response.data!.data);
+            setContent((response.data!.data as any).content);
+          });
         } else {
           throw new Error('无法获取文档内容');
         }
@@ -72,16 +78,20 @@ export function useDocumentEditor({
           return;
         }
 
-        setError(err instanceof Error ? err.message : '获取文档失败');
+        startTransition(() => {
+          setError(err instanceof Error ? err.message : '获取文档失败');
+        });
       } finally {
-        setLoading(false);
+        startTransition(() => {
+          setLoading(false);
+        });
       }
     };
 
     fetchDocument();
   }, [documentId, initialContent, isMounted]);
 
-  // 创建编辑器 - 始终创建，让 TipTap 处理 SSR
+  // 创建编辑器 - 使用startTransition避免flushSync错误
   const editor = useEditor(
     {
       extensions: ExtensionKit({
@@ -94,6 +104,7 @@ export function useDocumentEditor({
       immediatelyRender: false, // 关键：不立即渲染，等待手动控制
       onTransaction: () => {
         // 可以在这里处理文档变更，比如自动保存
+        // 注意：这里不需要状态更新，所以不需要startTransition
       },
       editorProps: {
         attributes: {
@@ -160,7 +171,9 @@ export function useDocumentEditor({
           };
         } catch (error) {
           console.error('设置编辑器内容失败:', error);
-          setError('编辑器内容加载失败');
+          startTransition(() => {
+            setError('编辑器内容加载失败');
+          });
         }
       }, 250); // 延迟250ms确保DOM稳定
 
