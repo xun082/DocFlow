@@ -29,6 +29,7 @@ export { Details } from '@tiptap-pro/extension-details';
 export { DetailsContent } from '@tiptap-pro/extension-details-content';
 export { DetailsSummary } from '@tiptap-pro/extension-details-summary';
 export { UniqueID } from '@tiptap-pro/extension-unique-id';
+export { Text } from '@tiptap/extension-text';
 
 export { Selection } from './Selection';
 export { Table, TableCell, TableHeader, TableRow } from './Table';
@@ -45,6 +46,7 @@ export { BlockquoteFigure } from './BlockquoteFigure';
 export { Quote } from './BlockquoteFigure/Quote';
 export { QuoteCaption } from './BlockquoteFigure/QuoteCaption';
 export { Link } from './Link';
+export { Image } from './Image';
 export { ImageUpload } from './ImageUpload';
 export { ImageBlock } from './ImageBlock';
 export { Columns, Column } from './MultiColumn';
