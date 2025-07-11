@@ -10,12 +10,19 @@ import {
   SharedDocumentsResponse,
   AccessSharedDocumentDto,
   AccessSharedDocumentResponse,
+  GetDocumentContentResponse,
 } from './type';
 
 export const DocumentApi = {
   // 获取文档列表
   GetDocument: (errorHandler?: ErrorHandler) =>
     request.get<DocumentResponse>('/api/v1/documents', { errorHandler }),
+
+  // 获取文档内容
+  GetDocumentContent: (documentId: number, errorHandler?: ErrorHandler) =>
+    request.get<GetDocumentContentResponse>(`/api/v1/documents/${documentId}/content`, {
+      errorHandler,
+    }),
 
   // 创建文档
   CreateDocument: (data: CreateDocumentDto, errorHandler?: ErrorHandler) =>

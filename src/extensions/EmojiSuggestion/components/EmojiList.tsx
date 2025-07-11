@@ -1,4 +1,6 @@
-import { EmojiItem } from '@tiptap/extension-emoji';
+'use client';
+
+import { EmojiItem } from '@tiptap-pro/extension-emoji';
 import React, {
   ForwardedRef,
   forwardRef,

@@ -120,8 +120,8 @@ class Request {
       ...customHeaders,
     };
 
-    // 如果没有提供token，则尝试从cookie中获取
-    const authToken = token || getCookie('auth_token');
+    // 如果没有提供token，则尝试从cookie中获取（仅在客户端环境）
+    const authToken = token || (typeof window !== 'undefined' ? getCookie('auth_token') : null);
 
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;

@@ -16,6 +16,27 @@
     @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-3xl;
   }
 
+  /* 新增：编辑器容器专用样式 */
+  .prose-container .ProseMirror {
+    @apply caret-black outline-0 px-8 py-12 z-0 mx-auto max-w-4xl;
+    min-height: 100%;
+    height: auto;
+  }
+
+  .dark .prose-container .ProseMirror {
+    @apply caret-white;
+  }
+
+  /* ContentItemMenu 主题样式 */
+  .tippy-box[data-theme~='content-item-menu'] {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg;
+    z-index: 9999 !important;
+  }
+
+  .tippy-box[data-theme~='content-item-menu'] .tippy-content {
+    padding: 0 !important;
+  }
+
   .dark .ProseMirror {
     @apply caret-neutral-400;
   }
