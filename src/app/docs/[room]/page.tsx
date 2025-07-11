@@ -1,116 +1,100 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
-import { useRef } from 'react';
-import { EditorContent } from '@tiptap/react';
-import { useParams } from 'next/navigation';
+import { DocumentClient } from '../_components/DocumentClient';
+import { useDocumentError } from '../_components/error';
+import { getDocumentContent, generateDocumentHTML } from '../_components/document-service';
 
-import { LinkMenu } from '@/components/menus';
-import { TableOfContents } from '@/components/layout/toc';
-import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
-import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
-import { TableColumnMenu, TableRowMenu } from '@/extensions/Table/menus';
-import { TextMenu } from '@/components/menus/TextMenu';
-import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
-import { Header } from '@/components/layout/Header';
-import { useSidebar } from '@/hooks/useSidebar';
-import { useCollaborativeEditor } from '@/hooks/useCollaborativeEditor';
-import NoPermissionView from '@/app/docs/[room]/_components/no_permission_view';
+interface PageProps {
+  params: Promise<{
+    room: string;
+  }>;
+}
 
-export default function Document() {
-  const params = useParams();
+export default async function DocumentPage({ params }: PageProps) {
+  // 获取动态路由参数
+  const { room: documentId } = await params;
+  // 检查认证状态
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth_token')?.value;
 
-  // 检查params是否存在并提取roomId
-  if (!params || !params.room) {
-    return (
-      <div className="flex items-center justify-center h-screen" suppressHydrationWarning>
-        <div className="text-center">
-          <p className="text-red-500">无效的房间ID</p>
-        </div>
-      </div>
-    );
+  if (!authToken) {
+    redirect('/auth');
   }
 
-  const roomId = params.room as string;
-  const menuContainerRef = useRef<HTMLDivElement>(null);
-  const sidebar = useSidebar();
+  // 在服务器端获取文档数据
+  const result = await getDocumentContent(documentId, authToken);
 
-  const { editor, isEditable, connectionStatus, provider, isOffline, isMounted, authError } =
-    useCollaborativeEditor(roomId);
+  // 处理错误情况
+  if (result.error) {
+    if (result.error === 'AUTH_FAILED') {
+      redirect('/auth');
+    }
 
-  // 处理加载状态
-  if (!isMounted) {
-    return (
-      <div className="flex items-center justify-center h-screen" suppressHydrationWarning>
-        <div className="text-center">
-          <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-          <p>加载中...</p>
-        </div>
-      </div>
-    );
+    return useDocumentError(result, documentId);
   }
 
-  // 处理权限错误
-  if (authError.status) {
-    return <NoPermissionView reason={authError.reason} />;
-  }
+  const documentData = result.data;
+  const content = documentData.content;
 
-  if (!editor || (!provider && !isOffline) || (connectionStatus !== 'connected' && !isOffline)) {
-    return (
-      <div className="flex items-center justify-center h-screen" suppressHydrationWarning>
-        <div className="text-center">
-          <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-          <p>
-            {isOffline
-              ? '离线模式加载中...'
-              : connectionStatus === 'connected'
-                ? '加载编辑器中...'
-                : '连接协作服务器中...'}
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            状态: {isOffline ? '离线编辑' : connectionStatus}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  console.log('documentData:', documentData);
+  console.log('content:', content);
 
-  // 渲染编辑器
+  // 生成初始HTML用于SSR
+  const initialHTML = generateDocumentHTML(content);
+
   return (
-    <div
-      className="relative flex flex-col h-full overflow-hidden"
-      suppressHydrationWarning
-      ref={menuContainerRef}
-    >
-      <Header
-        editor={editor}
-        isSidebarOpen={sidebar.isOpen}
-        toggleSidebar={sidebar.toggle}
-        provider={provider || undefined}
+    <div className="w-full h-screen" suppressHydrationWarning>
+      <DocumentClient
+        documentId={documentId}
+        initialContent={content}
+        initialHTML={initialHTML}
+        enableCollaboration={true}
       />
-
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto relative">
-          {isMounted && editor && <EditorContent editor={editor} className="h-full" />}
-        </div>
-
-        {sidebar.isOpen && (
-          <div className="w-64 border-l border-neutral-200 dark:border-neutral-800 overflow-y-auto">
-            <TableOfContents isOpen={true} onClose={sidebar.close} editor={editor} />
-          </div>
-        )}
-      </div>
-
-      {editor && (
-        <>
-          <ContentItemMenu editor={editor} isEditable={isEditable} />
-          <LinkMenu editor={editor} appendTo={menuContainerRef} />
-          <TextMenu editor={editor} documentId={roomId} />
-          <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
-          <TableRowMenu editor={editor} appendTo={menuContainerRef} />
-          <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
-          <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
-        </>
-      )}
     </div>
   );
+}
+
+// 生成静态参数（可选，用于静态生成）
+export function generateStaticParams() {
+  return [];
+}
+
+// 元数据生成
+export async function generateMetadata({ params }: PageProps) {
+  try {
+    // 获取动态路由参数
+    const { room: documentId } = await params;
+
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get('auth_token')?.value;
+
+    if (!authToken) {
+      return {
+        title: `协作文档 ${documentId} - 需要登录`,
+        description: '需要登录才能查看此协作文档',
+      };
+    }
+
+    const result = await getDocumentContent(documentId, authToken);
+
+    if (result.error || !result.data) {
+      return {
+        title: `协作文档 ${documentId} - 加载失败`,
+        description: '协作文档加载失败，请稍后重试',
+      };
+    }
+
+    const title = result.data.title || '无标题协作文档';
+
+    return {
+      title: title,
+      description: `实时协作编辑文档：${title}`,
+    };
+  } catch {
+    return {
+      title: '协作文档 - 错误',
+      description: '协作文档加载时发生错误',
+    };
+  }
 }

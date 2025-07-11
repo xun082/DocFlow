@@ -76,6 +76,13 @@ export const DraggableBlock = Node.create<DraggableBlockOptions>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(DraggableBlockView);
+    if (typeof window !== 'undefined') {
+      return ReactNodeViewRenderer(DraggableBlockView);
+    }
+
+    // 服务器端返回一个空的NodeView函数
+    return () => ({
+      dom: document.createElement('div'),
+    });
   },
 });

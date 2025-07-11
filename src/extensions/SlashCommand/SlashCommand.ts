@@ -170,7 +170,7 @@ export const SlashCommand = Extension.create({
 
               const anchorRect = getReferenceClientRect();
 
-              component.updateProps({
+              component?.updateProps({
                 ...props,
                 anchorRect,
               });
@@ -178,7 +178,7 @@ export const SlashCommand = Extension.create({
 
             onKeyDown(props: SuggestionKeyDownProps) {
               if (props.event.key === 'Escape') {
-                component.destroy();
+                component?.destroy();
 
                 return true;
               }
@@ -189,7 +189,7 @@ export const SlashCommand = Extension.create({
                 props.event.stopPropagation();
               }
 
-              const handled = component.ref?.onKeyDown(props) ?? false;
+              const handled = component?.ref?.onKeyDown(props) ?? false;
 
               // 如果是Enter键且处理成功，则阻止冒泡和默认行为
               if (props.event.key === 'Enter' && handled) {
@@ -203,7 +203,7 @@ export const SlashCommand = Extension.create({
             },
 
             onExit() {
-              component.destroy();
+              component?.destroy();
             },
           };
         },

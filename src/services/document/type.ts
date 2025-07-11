@@ -1,3 +1,5 @@
+import { JSONContent } from '@tiptap/core';
+
 interface DocumentItem {
   id: number;
   title: string;
@@ -151,4 +153,19 @@ export interface GetDocumentPermissionResponse {
   documentType: 'FILE' | 'FOLDER';
   isOwner: boolean;
   permission: 'NONE' | 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
+}
+
+// 获取文档内容的响应类型
+export interface GetDocumentContentResponse {
+  code: number;
+  message: string;
+  data: {
+    id: number;
+    title: string;
+    content: JSONContent;
+    owner: DocumentOwner;
+    created_at: string;
+    updated_at: string;
+  };
+  timestamp: number;
 }

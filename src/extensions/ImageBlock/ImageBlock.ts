@@ -64,11 +64,33 @@ export const ImageBlock = Image.extend({
       {
         tag: 'img[src*="tiptap.dev"]:not([src^="data:"]), img[src*="windows.net"]:not([src^="data:"])',
       },
+      {
+        tag: 'figure[data-type="imageBlock"]',
+      },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    const { src, width, align, alt } = HTMLAttributes;
+    const alignClass =
+      align === 'left' ? 'text-left' : align === 'right' ? 'text-right' : 'text-center';
+
+    return [
+      'figure',
+      {
+        'data-type': 'imageBlock',
+        class: alignClass,
+      },
+      [
+        'img',
+        mergeAttributes(this.options.HTMLAttributes, {
+          src,
+          alt: alt || '',
+          class: 'rounded block h-auto w-full max-w-full',
+          style: width ? `width: ${width}` : undefined,
+        }),
+      ],
+    ];
   },
 
   addCommands() {
@@ -103,7 +125,36 @@ export const ImageBlock = Image.extend({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ImageBlockView);
+    // 只在客户端环境使用React组件
+    if (typeof window !== 'undefined') {
+      return ReactNodeViewRenderer(ImageBlockView);
+    }
+
+    // SSR环境使用简单的DOM渲染
+    return ({ node }) => {
+      const { src, width, align, alt } = node.attrs;
+      const alignClass =
+        align === 'left' ? 'text-left' : align === 'right' ? 'text-right' : 'text-center';
+
+      const figure = document.createElement('figure');
+      figure.setAttribute('data-type', 'imageBlock');
+      figure.className = alignClass;
+
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = alt || '';
+      img.className = 'rounded block h-auto w-full max-w-full';
+
+      if (width) {
+        img.style.width = width;
+      }
+
+      figure.appendChild(img);
+
+      return {
+        dom: figure,
+      };
+    };
   },
 });
 

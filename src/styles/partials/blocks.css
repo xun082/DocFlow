@@ -1,7 +1,7 @@
 @layer utilities {
   /* Image Block */
   .ProseMirror figure[data-type='imageBlock'] {
-    @apply m-0;
+    @apply my-6 mx-0;
   }
 
   .ProseMirror figure[data-type='imageBlock'] img {

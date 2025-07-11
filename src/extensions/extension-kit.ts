@@ -52,12 +52,9 @@ import {
   UniqueID,
   DraggableBlock,
   DragHandler,
-  CustomBlock,
-} from './index';
+} from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
-import { MindMapBlock } from './MindMapBlock';
-import { ChartBlock } from './ChartBlock';
 import { CommentMark } from './CommentMark';
 import { ExcalidrawImage } from './ExcalidrawImage';
 
@@ -128,9 +125,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   ExcalidrawImage,
   DraggableBlock,
   DragHandler,
-  CustomBlock,
-  MindMapBlock,
-  ChartBlock,
   FileHandler.configure({
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
     onDrop: (currentEditor, files, pos) => {
