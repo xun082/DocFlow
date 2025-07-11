@@ -111,8 +111,8 @@ export const ExcalidrawImage = Node.create({
     return {
       setExcalidrawImage:
         (attrs: Record<string, any> = {}) =>
-          ({ commands }: any) =>
-            commands.insertContent({ type: this.name, attrs }),
+        ({ commands }: any) =>
+          commands.insertContent({ type: this.name, attrs }),
     };
   },
 

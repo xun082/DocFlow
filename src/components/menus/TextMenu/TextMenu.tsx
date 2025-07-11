@@ -19,7 +19,6 @@ import { ColorPicker } from '@/components/panels';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { useCommentSidebar } from '@/hooks/useCommentSidebar';
-import { useExcalidrawExportListener } from '@/hooks/useExcalidraw';
 
 // We memorize the button so each button is not rerendered
 // on every editor state change
