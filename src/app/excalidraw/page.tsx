@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw';
-// eslint-disable-next-line import/order
-import { convertToExcalidrawElements, exportToSvg } from '@excalidraw/excalidraw';
-
-import '@excalidraw/excalidraw/index.css';
-import dynamic from 'next/dynamic';
+import { useState, useCallback, useEffect } from 'react';
+import dynamicImport from 'next/dynamic';
 
 import DiagramModal from './_components/DiagramModal';
 
 import { useExcalidrawMessage } from '@/hooks/useExcalidraw';
 
+import '@excalidraw/excalidraw/index.css';
+
+export const dynamic = 'force-dynamic';
+
 // 动态导入 Excalidraw，避免 SSR 问题
-const Excalidraw = dynamic(async () => (await import('@excalidraw/excalidraw')).Excalidraw, {
+const Excalidraw = dynamicImport(async () => (await import('@excalidraw/excalidraw')).Excalidraw, {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-white">
@@ -30,15 +29,36 @@ export default function ExcalidrawPage() {
   const [isRendering, setIsRendering] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 动态导入的函数
+  const [excalidrawUtils, setExcalidrawUtils] = useState<any>(null);
+
   // 模态框状态
   const [isModalOpen, setIsModalOpen] = useState(false);
   // 导出状态
   const [isExporting, setIsExporting] = useState(false);
 
+  // 动态加载 Excalidraw 相关的工具函数
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      Promise.all([import('@excalidraw/mermaid-to-excalidraw'), import('@excalidraw/excalidraw')])
+        .then(([mermaidModule, excalidrawModule]) => {
+          setExcalidrawUtils({
+            parseMermaidToExcalidraw: mermaidModule.parseMermaidToExcalidraw,
+            convertToExcalidrawElements: excalidrawModule.convertToExcalidrawElements,
+            exportToSvg: excalidrawModule.exportToSvg,
+          });
+        })
+        .catch((err) => {
+          console.error('Failed to load Excalidraw modules:', err);
+          setError('加载绘图工具失败，请刷新页面重试');
+        });
+    }
+  }, []);
+
   // 渲染 Mermaid 代码为 Excalidraw 图表
   const renderMermaidToExcalidraw = useCallback(
     async (code: string) => {
-      if (!excalidrawAPI || !code.trim()) {
+      if (!excalidrawAPI || !code.trim() || !excalidrawUtils) {
         if (excalidrawAPI) {
           excalidrawAPI.updateScene({ elements: [] });
         }
@@ -50,8 +70,8 @@ export default function ExcalidrawPage() {
       setError(null);
 
       try {
-        const { elements } = await parseMermaidToExcalidraw(code);
-        const convertedElements = convertToExcalidrawElements(elements);
+        const { elements } = await excalidrawUtils.parseMermaidToExcalidraw(code);
+        const convertedElements = excalidrawUtils.convertToExcalidrawElements(elements);
         excalidrawAPI.updateScene({ elements: convertedElements });
         setTimeout(() => {
           if (convertedElements.length > 0) {
@@ -64,7 +84,7 @@ export default function ExcalidrawPage() {
         setIsRendering(false);
       }
     },
-    [excalidrawAPI],
+    [excalidrawAPI, excalidrawUtils],
   );
 
   // 从模态框生成图表
@@ -82,9 +102,12 @@ export default function ExcalidrawPage() {
   };
 
   // 导出SVG功能
-  const { sendExportMessage } = useExcalidrawMessage({ origin: window.location.origin });
+  const { sendExportMessage } = useExcalidrawMessage({
+    origin: typeof window !== 'undefined' ? window.location.origin : '*',
+  });
+
   const handleExportSVG = async () => {
-    if (!excalidrawAPI) {
+    if (!excalidrawAPI || !excalidrawUtils) {
       setError('画布未初始化，请稍后重试');
 
       return;
@@ -104,7 +127,7 @@ export default function ExcalidrawPage() {
         return;
       }
 
-      const svg = await exportToSvg({
+      const svg = await excalidrawUtils.exportToSvg({
         elements,
         appState: { ...appState, exportBackground: true, exportWithDarkMode: false },
         files: null,
@@ -147,14 +170,15 @@ export default function ExcalidrawPage() {
           )}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+            disabled={!excalidrawUtils}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span>⚡</span>
             图表生成器
           </button>
           <button
             onClick={handleExportSVG}
-            disabled={isExporting}
+            disabled={isExporting || !excalidrawUtils}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span>📥</span>
@@ -168,12 +192,21 @@ export default function ExcalidrawPage() {
           </button>
         </div>
       </div>
+
       {/* 错误提示 */}
       {error && (
         <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
+
+      {/* 加载提示 */}
+      {!excalidrawUtils && (
+        <div className="mx-6 mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-600 text-sm">正在加载绘图工具...</p>
+        </div>
+      )}
+
       {/* Excalidraw 画布 */}
       <div className="flex-1 relative" style={{ minHeight: 'calc(100vh - 4rem)' }}>
         <div className="absolute inset-0">
@@ -190,6 +223,7 @@ export default function ExcalidrawPage() {
           />
         </div>
       </div>
+
       {/* 模态框 */}
       <DiagramModal
         isOpen={isModalOpen}
