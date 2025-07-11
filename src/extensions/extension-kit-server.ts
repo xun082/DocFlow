@@ -1,4 +1,3 @@
-// 简化的服务端扩展配置 - 只保留渲染必需的核心扩展
 import StarterKit from '@tiptap/starter-kit';
 import { Heading } from '@tiptap/extension-heading';
 import { Typography } from '@tiptap/extension-typography';
