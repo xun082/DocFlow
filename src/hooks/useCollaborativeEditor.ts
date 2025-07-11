@@ -486,20 +486,20 @@ export function useCollaborativeEditor(
         // Y.js协作扩展
         ...(doc
           ? [
-              Collaboration.configure({
-                document: doc,
-                field: 'content',
-              }),
-            ]
+            Collaboration.configure({
+              document: doc,
+              field: 'content',
+            }),
+          ]
           : []),
         // 协作光标扩展
         ...(provider && !isOffline && currentUser && doc
           ? [
-              CollaborationCursor.configure({
-                provider,
-                user: currentUser,
-              }),
-            ]
+            CollaborationCursor.configure({
+              provider,
+              user: currentUser,
+            }),
+          ]
           : []),
       ],
       // 编辑器初始为空，让Y.js处理内容同步

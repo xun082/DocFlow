@@ -18,6 +18,7 @@ export { Subscript } from '@tiptap/extension-subscript';
 export { TableOfContents } from '@tiptap-pro/extension-table-of-contents';
 export { Superscript } from '@tiptap/extension-superscript';
 export { Paragraph } from '@tiptap/extension-paragraph';
+export { HardBreak } from '@tiptap/extension-hard-break';
 export { BulletList } from '@tiptap/extension-bullet-list';
 export { OrderedList } from '@tiptap/extension-ordered-list';
 export { Collaboration } from '@tiptap/extension-collaboration';
@@ -52,3 +53,4 @@ export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
 
 export { CommentMark } from './CommentMark';
+export { ExcalidrawImage } from './ExcalidrawImage';

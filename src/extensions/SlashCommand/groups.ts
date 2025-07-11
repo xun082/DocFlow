@@ -187,6 +187,16 @@ export const GROUPS: Group[] = [
           editor.chain().focus().insertTableOfContents().run();
         },
       },
+      {
+        name: 'excalidraw',
+        label: 'Excalidraw',
+        iconName: 'Image',
+        description: 'Insert an Excalidraw diagram',
+        aliases: ['excalidraw'],
+        action: () => {
+          window.open(`${window.location.origin}/excalidraw`);
+        },
+      },
     ],
   },
 ];

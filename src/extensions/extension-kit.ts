@@ -12,6 +12,10 @@ import {
   DetailsContent,
   DetailsSummary,
   Document,
+  HardBreak,
+  Paragraph,
+  Text,
+  Image,
   Dropcursor,
   Emoji,
   Figcaption,
@@ -52,6 +56,7 @@ import {
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { CommentMark } from './CommentMark';
+import { ExcalidrawImage } from './ExcalidrawImage';
 
 import uploadService from '@/services/upload';
 
@@ -62,6 +67,10 @@ export interface ExtensionKitProps {
 
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
+  HardBreak,
+  Paragraph,
+  Text,
+  Image,
   Columns,
   TaskList,
   TaskItem.configure({
@@ -113,6 +122,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     clientId: provider?.document?.clientID,
   }),
   ImageBlock,
+  ExcalidrawImage,
   DraggableBlock,
   DragHandler,
   FileHandler.configure({
