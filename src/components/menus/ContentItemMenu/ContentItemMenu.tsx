@@ -34,7 +34,7 @@ export const ContentItemMenu = ({ editor }: ContentItemMenuProps) => {
   return (
     <DragHandle pluginKey="ContentItemMenu" editor={editor} onNodeChange={data.handleNodeChange}>
       {isFocused && (
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 -mt-1.25">
           <Toolbar.Button onClick={actions.handleAdd}>
             <Icon name="Plus" />
           </Toolbar.Button>
