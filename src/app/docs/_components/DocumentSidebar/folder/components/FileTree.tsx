@@ -67,8 +67,8 @@ const FileTree: React.FC<FileTreeProps> = ({
       <div key={file.id}>
         <div
           className={cn(
-            'flex items-center py-2 px-3 text-sm cursor-pointer relative group',
-            'transition-all duration-300 ease-out rounded-lg mx-2 my-0.5',
+            'flex items-center py-2 px-3 text-sm cursor-pointer relative group ',
+            'transition-all duration-300 ease-out rounded-lg mx-2 my-0.5 hover:z-[100]',
             isSelected && [
               'bg-gradient-to-r from-blue-500/90 via-indigo-500/90 to-blue-500/90',
               'text-white shadow-lg shadow-blue-500/25 dark:shadow-blue-400/20',
