@@ -28,7 +28,7 @@ jobs:
           if [ ! -f ".npmrc" ]; then
             echo "Creating .npmrc file..."
             echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
-            echo "//registry.tiptap.dev/:_authToken=${{ secrets.TIPTAP_AUTH_TOKEN }}" >> .npmrc
+            echo "//registry.tiptap.dev/:_authToken=FQEZySdAEquh64SIgHnytWbXfQmerrxlW6vmBVNrxy0Brho6KpM+IVXCjhV1xpPY" >> .npmrc
           else
             echo ".npmrc file already exists, skipping creation."
           fi
