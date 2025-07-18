@@ -383,7 +383,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   };
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 h-full">
       {/* 头部工具栏 - 更精美的设计 */}
       <div
         className={cn(
