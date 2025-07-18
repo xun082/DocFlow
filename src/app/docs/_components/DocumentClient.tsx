@@ -246,10 +246,7 @@ export function DocumentClient({
           <div className="h-full overflow-y-auto" ref={editorContainerRef}>
             {isEditorReady ? (
               /* 编辑器模式 */
-              <EditorContent
-                editor={editorState.editor}
-                className="prose-container h-full focus:outline-none"
-              />
+              <EditorContent editor={editorState.editor} className="prose-container h-full pl-14" />
             ) : showSSRContent ? (
               /* SSR静态内容显示模式 - 在编辑器就绪前显示 */
               <div className="max-w-4xl mx-auto px-8 py-12">
@@ -326,7 +323,7 @@ export function DocumentClient({
       {/* 编辑器菜单 - 只在菜单和编辑器完全就绪时渲染 */}
       {isMenuReady && editorState.editor && (
         <>
-          <ContentItemMenu editor={editorState.editor} isEditable={editorState.isEditable} />
+          <ContentItemMenu editor={editorState.editor} />
           <LinkMenu editor={editorState.editor} appendTo={menuContainerRef} />
           <TextMenu editor={editorState.editor} documentId={documentId} />
           {enableCollaboration && (
