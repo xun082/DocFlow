@@ -5,9 +5,10 @@ import { EditorContent } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 import dynamic from 'next/dynamic';
 
+import NoPermissionView from './no_permission_view';
+
 import { DocumentHeader } from '@/app/docs/_components/DocumentHeader';
 import { TableOfContents } from '@/app/docs/_components/TableOfContents';
-import NoPermissionView from '@/app/docs/room/_components/no_permission_view';
 import { useSidebar } from '@/stores/sidebarStore';
 import { useDocumentEditor } from '@/hooks/useDocumentEditor';
 import { useCollaborativeEditor } from '@/hooks/useCollaborativeEditor';
