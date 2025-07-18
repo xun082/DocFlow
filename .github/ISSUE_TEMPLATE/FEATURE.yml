@@ -1,31 +1,68 @@
-name: "\U0001F680 Feature Request"
-description: "I have a suggestion \U0001F63B!"
-labels: ['feature']
+name: '🚀 功能请求'
+description: '我有一个功能建议 💡'
+labels: ['enhancement', 'feature']
 body:
   - type: textarea
     validations:
       required: true
     attributes:
-      label: 'Is your feature request related to a problem? Please describe it'
-      description: 'A clear and concise description of what the problem is'
+      label: '功能请求是否与某个问题相关？请详细描述'
+      description: '清楚简洁地描述你遇到的问题或需求'
       placeholder: |
-        I have an issue when ...
+        我在使用文档编辑器时遇到了...
+        或者：我希望能够...
 
   - type: textarea
     validations:
       required: true
     attributes:
-      label: "Describe the solution you'd like"
-      description: 'A clear and concise description of what you want to happen. Add any considered drawbacks'
+      label: '描述你希望的解决方案'
+      description: '清楚简洁地描述你希望实现的功能。如果有任何考虑到的缺点，也请添加'
+      placeholder: |
+        我希望能够...
+        这个功能应该...
 
   - type: textarea
     attributes:
-      label: 'Teachability, documentation, adoption, migration strategy'
-      description: 'If you can, explain how users will be able to use this and possibly write out a version the docs. Maybe a screenshot or design?'
+      label: '功能的使用场景和用户体验'
+      description: '如果可以的话，请解释用户将如何使用这个功能。也许可以提供截图或设计稿？'
+      placeholder: |
+        用户可以通过...来使用这个功能
+        预期的用户体验是...
 
   - type: textarea
     validations:
       required: true
     attributes:
-      label: 'What is the motivation / use case for changing the behavior?'
-      description: 'Describe the motivation or the concrete use case'
+      label: '改变现有行为的动机/用例是什么？'
+      description: '描述添加此功能的动机或具体用例'
+      placeholder: |
+        这个功能对于文档协作很重要，因为...
+        或者：当前的工作流程中缺少...
+
+  - type: dropdown
+    attributes:
+      label: '功能类型'
+      description: '这个功能主要属于哪个方面？'
+      options:
+        - 文档编辑器
+        - 协作功能
+        - 文件管理
+        - 用户界面
+        - 性能优化
+        - 安全性
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: '优先级'
+      description: '你认为这个功能的优先级如何？'
+      options:
+        - 低 - 有了更好
+        - 中 - 希望尽快实现
+        - 高 - 对产品很重要
+        - 紧急 - 阻碍了正常使用
+    validations:
+      required: true

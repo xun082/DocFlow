@@ -1,39 +1,45 @@
-name: "\U0001F41B Bug Report"
-description: "If something isn't working as expected \U0001F914"
+name: '🐛 Bug 报告'
+description: '发现了问题？请告诉我们 🤔'
 labels: ['needs triage', 'bug']
 body:
   - type: textarea
     validations:
       required: true
     attributes:
-      label: 'Current behavior'
-      description: 'How the issue manifests?'
+      label: '当前行为（Bug 描述）'
+      description: '这个问题是如何表现的？请详细描述当前的错误行为'
+      placeholder: |
+        当我尝试...时，发生了...
+        预期应该...，但实际上...
 
   - type: input
     validations:
       required: true
     attributes:
-      label: 'Minimum reproduction code'
-      description: 'An URL to some git repository or gist that reproduces this issue. [Wtf is a minimum reproduction?](https://jmcdo29.github.io/wtf-is-a-minimum-reproduction)'
-      placeholder: 'https://github.com/...'
+      label: '重现代码或链接'
+      description: '提供能重现此问题的代码片段、截图或者在线链接。什么是最小重现？请尽可能简化问题'
+      placeholder: '请提供截图、代码片段或问题链接'
 
   - type: textarea
     attributes:
-      label: 'Steps to reproduce'
+      label: '重现步骤'
       description: |
-        How the issue manifests?
-        You could leave this blank if you alread write this in your reproduction code/repo
+        详细的重现步骤，帮助我们快速定位问题
       placeholder: |
-        1. `npm i`
-        2. `npm start:dev`
-        3. See error...
+        1. 打开文档编辑器
+        2. 点击...按钮
+        3. 输入...
+        4. 看到错误...
 
   - type: textarea
     validations:
       required: true
     attributes:
-      label: 'Expected behavior'
-      description: 'A clear and concise description of what you expected to happend (or code)'
+      label: '预期行为'
+      description: '清楚简洁地描述你期望发生的行为'
+      placeholder: |
+        我期望...
+        系统应该...
 
   - type: markdown
     attributes:
@@ -44,37 +50,62 @@ body:
     validations:
       required: true
     attributes:
-      label: 'Package version'
+      label: 'DocFlow 版本'
       description: |
-        Which version of `@nestjs/cli` are you using?
-        **Tip**: Make sure that all of yours `@nestjs/*` dependencies are in sync!
-      placeholder: '8.1.3'
+        你使用的 DocFlow 版本是什么？可以在设置页面或者浏览器控制台查看
+      placeholder: 'v1.0.0 或 commit hash'
 
   - type: dropdown
     attributes:
-      label: 'Template Package'
-      description: 'Which project template are you using?'
+      label: '问题类型'
+      description: '这个 Bug 主要影响哪个功能？'
       options:
-        - react-web-ts
-        - vue-web-js
-        - react-web-js
-        - vue-web-ts
+        - 文档编辑器
+        - 协作功能
+        - 文件管理
+        - 用户认证
+        - 图片/媒体处理
+        - 导入/导出
+        - 用户界面
+        - 性能问题
+        - 其他
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     attributes:
-      label: 'Node.js version'
-      description: 'Which version of Node.js are you using?'
-      placeholder: '14.17.6'
+      label: '浏览器'
+      description: '在哪个浏览器中遇到了问题？'
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - 其他 (请在下面的"其他信息"中说明)
+    validations:
+      required: true
 
   - type: checkboxes
     attributes:
-      label: 'In which operating systems have you tested?'
+      label: '你在哪些操作系统上测试过？'
       options:
         - label: macOS
         - label: Windows
         - label: Linux
+        - label: iOS (Mobile Safari)
+        - label: Android
+
+  - type: dropdown
+    attributes:
+      label: '问题严重程度'
+      description: '这个问题对你的使用有多大影响？'
+      options:
+        - 低 - 不影响正常使用
+        - 中 - 有些不便但有替代方案
+        - 高 - 严重影响使用体验
+        - 紧急 - 完全无法使用某功能
+    validations:
+      required: true
 
   - type: markdown
     attributes:
@@ -83,7 +114,11 @@ body:
 
   - type: textarea
     attributes:
-      label: 'Other'
+      label: '其他信息'
       description: |
-        Anything else relevant? eg: Logs, OS version, IDE, package manager, etc.
-        **Tip:** You can attach images, recordings or log files by clicking this area to highlight it and then dragging files in
+        还有其他相关信息吗？比如：日志、错误消息、设备信息等
+        💡 提示：你可以通过拖拽文件到这个区域来附加图片、录屏或日志文件
+      placeholder: |
+        浏览器控制台错误：...
+        设备信息：...
+        其他相关信息：...
