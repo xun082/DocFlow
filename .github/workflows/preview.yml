@@ -1,0 +1,116 @@
+name: Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup npmrc
+        run: |
+          # 创建 .npmrc 文件 (如果不存在)
+          if [ ! -f ".npmrc" ]; then
+            echo "Creating .npmrc file..."
+            echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
+            echo "//registry.tiptap.dev/:_authToken=FQEZySdAEquh64SIgHnytWbXfQmerrxlW6vmBVNrxy0Brho6KpM+IVXCjhV1xpPY" >> .npmrc
+          else
+            echo ".npmrc file already exists, skipping creation."
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        env:
+          NODE_ENV: production
+        run: pnpm run build
+
+      - name: Install Netlify CLI
+        if: steps.build.outcome == 'success'
+        run: npm install -g netlify-cli
+
+      - name: Deploy to Netlify
+        if: steps.build.outcome == 'success'
+        id: netlify-deploy
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          # 部署到Netlify并获取预览URL
+          DEPLOY_OUTPUT=$(netlify deploy \
+            --dir=.next \
+            --message='Deploy Preview for PR #${{ github.event.number }}' \
+            --alias=pr-${{ github.event.number }} \
+            --json)
+
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploy_url')
+          echo "Preview URL: $DEPLOY_URL"
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+      - name: Update Preview Comment
+        if: steps.build.outcome == 'success' && steps.netlify-deploy.outcome == 'success'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const deployUrl = '${{ steps.netlify-deploy.outputs.deploy_url }}';
+            const prNumber = context.issue.number;
+
+            // 查找现有的预览评论
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              (comment.body.includes('Deploy Preview') || comment.body.includes('Preview Deployment'))
+            );
+
+            const successComment = `✅ **Deploy Preview for PR #${prNumber} - SUCCESS!**
+
+            🚀 **Preview URL:** ${deployUrl}
+            📅 **Updated:** ${new Date().toISOString()}
+
+            _This preview will be updated automatically when you push new commits._`;
+
+            if (botComment) {
+              // 更新现有评论
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: successComment
+              });
+            } else {
+              // 创建新评论
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: successComment
+              });
+            }
