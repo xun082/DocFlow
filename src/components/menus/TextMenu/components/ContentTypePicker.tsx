@@ -1,5 +1,4 @@
 import { icons } from 'lucide-react';
-import { useMemo } from 'react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 
 import { Icon } from '@/components/ui/Icon';
@@ -36,11 +35,8 @@ const isCategory = (
   option: ContentTypePickerOption | ContentTypePickerCategory,
 ): option is ContentTypePickerCategory => option.type === 'category';
 
-export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
-  const activeItem = useMemo(
-    () => options.find((option) => option.type === 'option' && option.isActive()),
-    [options],
-  );
+export function ContentTypePicker({ options }: ContentTypePickerProps) {
+  const activeItem = options.find((option) => option.type === 'option' && option.isActive());
 
   return (
     <Dropdown.Root>
@@ -76,4 +72,4 @@ export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
       </Dropdown.Content>
     </Dropdown.Root>
   );
-};
+}

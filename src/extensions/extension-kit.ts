@@ -55,14 +55,12 @@ import {
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
-import { CommentMark } from './CommentMark';
 import { ExcalidrawImage } from './ExcalidrawImage';
 
 import uploadService from '@/services/upload';
 
 export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
-  onCommentActivated?: (commentId: string) => void;
 }
 
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
@@ -94,6 +92,9 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     blockquote: false,
     history: false,
     codeBlock: false,
+    paragraph: false,
+    hardBreak: false,
+    text: false,
   }),
   Details.configure({
     persist: true,
@@ -114,7 +115,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   Highlight.configure({ multicolor: true }),
   Underline,
-  CommentMark,
   CharacterCount.configure({ limit: 50000 }),
   TableOfContents,
   TableOfContentsNode,

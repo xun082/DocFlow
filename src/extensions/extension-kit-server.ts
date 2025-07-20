@@ -14,6 +14,7 @@ import { TaskItem } from '@tiptap/extension-task-item';
 import { Image } from '@tiptap/extension-image';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Paragraph } from '@tiptap/extension-paragraph';
+import { mergeAttributes } from '@tiptap/core';
 
 // 从项目导入必要的自定义扩展
 import { Document } from './Document';
@@ -37,8 +38,19 @@ export const ExtensionKitServer = () => [
     // 保留其他默认配置，包括 HardBreak 来处理换行
   }),
 
-  // 段落 - 使用简单配置，依赖CSS样式处理间距
-  Paragraph,
+  // 段落 - 扩展配置直接添加样式类
+  Paragraph.extend({
+    renderHTML({ HTMLAttributes, node }) {
+      // 如果段落为空，添加 &nbsp; 确保显示
+      const isEmpty = !node.textContent.trim();
+
+      return [
+        'p',
+        mergeAttributes(HTMLAttributes, { class: 'leading-relaxed my-3' }),
+        isEmpty ? '\u00A0' : 0, // 使用不间断空格
+      ];
+    },
+  }),
 
   // 水平分割线 - 使用自定义版本避免重复
   HorizontalRule,

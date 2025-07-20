@@ -1,5 +1,5 @@
 import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react';
-import React, { useCallback, JSX } from 'react';
+import React, { JSX } from 'react';
 
 import { isRowGripSelected } from './utils';
 
@@ -8,29 +8,26 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 
-export const TableRowMenu = React.memo(({ editor, appendTo }: MenuProps): JSX.Element => {
-  const shouldShow = useCallback(
-    ({ view, state, from }: ShouldShowProps) => {
-      if (!state || !from) {
-        return false;
-      }
+export function TableRowMenu({ editor, appendTo }: MenuProps): JSX.Element {
+  const shouldShow = ({ view, state, from }: ShouldShowProps) => {
+    if (!state || !from) {
+      return false;
+    }
 
-      return isRowGripSelected({ editor, view, state, from });
-    },
-    [editor],
-  );
+    return isRowGripSelected({ editor, view, state, from });
+  };
 
-  const onAddRowBefore = useCallback(() => {
+  const onAddRowBefore = () => {
     editor.chain().focus().addRowBefore().run();
-  }, [editor]);
+  };
 
-  const onAddRowAfter = useCallback(() => {
+  const onAddRowAfter = () => {
     editor.chain().focus().addRowAfter().run();
-  }, [editor]);
+  };
 
-  const onDeleteRow = useCallback(() => {
+  const onDeleteRow = () => {
     editor.chain().focus().deleteRow().run();
-  }, [editor]);
+  };
 
   return (
     <BaseBubbleMenu
@@ -66,8 +63,6 @@ export const TableRowMenu = React.memo(({ editor, appendTo }: MenuProps): JSX.El
       </Toolbar.Wrapper>
     </BaseBubbleMenu>
   );
-});
-
-TableRowMenu.displayName = 'TableRowMenu';
+}
 
 export default TableRowMenu;

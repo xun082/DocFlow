@@ -1,5 +1,5 @@
 import { useEditorState } from '@tiptap/react';
-import React, { useCallback, useRef, JSX } from 'react';
+import React, { useRef, JSX } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { ImageBlockWidth } from './ImageBlockWidth';
@@ -10,40 +10,38 @@ import { MenuProps } from '@/components/menus/types';
 import { getRenderContainer } from '@/utils/utils';
 import { BubbleMenu } from '@/components/ui/BubbleMenu';
 
-export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
+export function ImageBlockMenu({ editor }: MenuProps): JSX.Element {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const getReferenceClientRect = useCallback(() => {
+  const getReferenceClientRect = () => {
     const renderContainer = getRenderContainer(editor, 'node-imageBlock');
     const rect = renderContainer?.getBoundingClientRect() || new DOMRect(-1000, -1000, 0, 0);
 
     return rect;
-  }, [editor]);
+  };
 
-  const shouldShow = useCallback(() => {
+  const shouldShow = () => {
     const isActive = editor.isActive('imageBlock');
 
     return isActive;
-  }, [editor]);
+  };
 
-  const onAlignImageLeft = useCallback(() => {
+  const onAlignImageLeft = () => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('left').run();
-  }, [editor]);
+  };
 
-  const onAlignImageCenter = useCallback(() => {
+  const onAlignImageCenter = () => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('center').run();
-  }, [editor]);
+  };
 
-  const onAlignImageRight = useCallback(() => {
+  const onAlignImageRight = () => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('right').run();
-  }, [editor]);
+  };
 
-  const onWidthChange = useCallback(
-    (value: number) => {
-      editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockWidth(value).run();
-    },
-    [editor],
-  );
+  const onWidthChange = (value: number) => {
+    editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockWidth(value).run();
+  };
+
   const { isImageCenter, isImageLeft, isImageRight, width } = useEditorState({
     editor,
     selector: (ctx) => {
@@ -87,6 +85,6 @@ export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
       </Toolbar.Wrapper>
     </BubbleMenu>
   );
-};
+}
 
 export default ImageBlockMenu;

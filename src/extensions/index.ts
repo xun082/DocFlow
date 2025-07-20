@@ -54,5 +54,4 @@ export { emojiSuggestion } from './EmojiSuggestion';
 export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
 
-export { CommentMark } from './CommentMark';
 export { ExcalidrawImage } from './ExcalidrawImage';

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
 import { ColorButton } from './ColorButton';
@@ -13,14 +13,14 @@ export type ColorPickerProps = {
   onClear?: () => void;
 };
 
-export const ColorPicker = ({ color, onChange, onClear }: ColorPickerProps) => {
+export function ColorPicker({ color, onChange, onClear }: ColorPickerProps) {
   const [colorInputValue, setColorInputValue] = useState(color || '');
 
-  const handleColorUpdate = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleColorUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
     setColorInputValue(event.target.value);
-  }, []);
+  };
 
-  const handleColorChange = useCallback(() => {
+  const handleColorChange = () => {
     const isCorrectColor = /^#([0-9A-F]{3}){1,2}$/i.test(colorInputValue);
 
     if (!isCorrectColor) {
@@ -34,7 +34,7 @@ export const ColorPicker = ({ color, onChange, onClear }: ColorPickerProps) => {
     if (onChange) {
       onChange(colorInputValue);
     }
-  }, [colorInputValue, onChange]);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -62,4 +62,4 @@ export const ColorPicker = ({ color, onChange, onClear }: ColorPickerProps) => {
       </div>
     </div>
   );
-};
+}

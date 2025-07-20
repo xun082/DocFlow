@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, JSX } from 'react';
+import React, { useState, JSX } from 'react';
 import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react';
 
 import { MenuProps } from '../types';
@@ -8,7 +8,7 @@ import { MenuProps } from '../types';
 import { LinkPreviewPanel } from '@/components/panels/LinkPreviewPanel';
 import { LinkEditorPanel } from '@/components/panels';
 
-export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
+export function LinkMenu({ editor, appendTo }: MenuProps): JSX.Element {
   const [showEdit, setShowEdit] = useState(false);
   const { link, target } = useEditorState({
     editor,
@@ -19,35 +19,32 @@ export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
     },
   });
 
-  const shouldShow = useCallback(() => {
+  const shouldShow = () => {
     const isActive = editor.isActive('link');
 
     return isActive;
-  }, [editor]);
+  };
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = () => {
     setShowEdit(true);
-  }, []);
+  };
 
-  const onSetLink = useCallback(
-    (url: string, openInNewTab?: boolean) => {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url, target: openInNewTab ? '_blank' : '' })
-        .run();
-      setShowEdit(false);
-    },
-    [editor],
-  );
+  const onSetLink = (url: string, openInNewTab?: boolean) => {
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: url, target: openInNewTab ? '_blank' : '' })
+      .run();
+    setShowEdit(false);
+  };
 
-  const onUnsetLink = useCallback(() => {
+  const onUnsetLink = () => {
     editor.chain().focus().extendMarkRange('link').unsetLink().run();
     setShowEdit(false);
 
     return null;
-  }, [editor]);
+  };
 
   return (
     <BaseBubbleMenu
@@ -104,6 +101,6 @@ export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
       )}
     </BaseBubbleMenu>
   );
-};
+}
 
 export default LinkMenu;
