@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 export type SidebarState = {
   isOpen: boolean;
@@ -7,15 +7,13 @@ export type SidebarState = {
   toggle: () => void;
 };
 
-export const useSidebar = (): SidebarState => {
+export function useSidebar(): SidebarState {
   const [isOpen, setIsOpen] = useState(true);
 
-  return useMemo(() => {
-    return {
-      isOpen,
-      open: () => setIsOpen(true),
-      close: () => setIsOpen(false),
-      toggle: () => setIsOpen((prev) => !prev),
-    };
-  }, [isOpen]);
-};
+  return {
+    isOpen,
+    open: () => setIsOpen(true),
+    close: () => setIsOpen(false),
+    toggle: () => setIsOpen((prev) => !prev),
+  };
+}

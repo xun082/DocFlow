@@ -1,5 +1,4 @@
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { useCallback } from 'react';
 
 import { DropdownButton, DropdownCategoryTitle } from '@/components/ui/Dropdown';
 import { Icon } from '@/components/ui/Icon';
@@ -39,11 +38,9 @@ export type FontFamilyPickerProps = {
   value: string;
 };
 
-export const FontFamilyPicker = ({ onChange, value }: FontFamilyPickerProps) => {
+export function FontFamilyPicker({ onChange, value }: FontFamilyPickerProps) {
   const currentValue = FONT_FAMILIES.find((size) => size.value === value);
   const currentFontLabel = currentValue?.label.split(' ')[0] || 'Inter';
-
-  const selectFont = useCallback((font: string) => () => onChange(font), [onChange]);
 
   return (
     <Dropdown.Root>
@@ -61,7 +58,7 @@ export const FontFamilyPicker = ({ onChange, value }: FontFamilyPickerProps) => 
               {group.options.map((font) => (
                 <DropdownButton
                   isActive={value === font.value}
-                  onClick={selectFont(font.value)}
+                  onClick={() => onChange(font.value)}
                   key={`${font.label}_${font.value}`}
                 >
                   <span style={{ fontFamily: font.value }}>{font.label}</span>
@@ -73,4 +70,4 @@ export const FontFamilyPicker = ({ onChange, value }: FontFamilyPickerProps) => 
       </Dropdown.Content>
     </Dropdown.Root>
   );
-};
+}

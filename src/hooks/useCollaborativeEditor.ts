@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useEditor } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 import * as Y from 'yjs';
@@ -27,11 +27,6 @@ export type AuthErrorType = {
   reason: string;
 };
 
-export interface ExtensionKitProps {
-  provider: HocuspocusProvider | null;
-  onCommentActivated?: (commentId: string) => void;
-}
-
 // 工具函数
 const getWebSocketUrl = (): string | null => {
   const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
@@ -52,10 +47,22 @@ const validateConfig = () => {
   };
 };
 
-// 网络状态管理hook
-const useNetworkStatus = () => {
+// 主要的协作编辑器hook
+export function useCollaborativeEditor(roomId: string, initialContent?: JSONContent) {
+  const [isEditable, setIsEditable] = useState(true);
+  const [doc] = useState(() => new Y.Doc());
+  const [authToken] = useState(() => getCookie('auth_token'));
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
+  const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
+  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
+  const [isServerSynced, setIsServerSynced] = useState(false);
+  const [isLocalLoaded, setIsLocalLoaded] = useState(false);
+  const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const hasUnsyncedChangesRef = useRef(false);
 
+  // 网络状态监听
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
@@ -69,69 +76,38 @@ const useNetworkStatus = () => {
     };
   }, []);
 
-  return isOffline;
-};
-
-// 用户信息管理hook
-const useCurrentUser = (authToken: string | null) => {
-  const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
-  const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
-
+  // 获取当前用户信息
   useEffect(() => {
     if (!authToken) return;
-
-    let cancelled = false;
 
     const fetchUser = async () => {
       try {
         const { data: response } = await authApi.getMe({
           onError: (error) => console.error('获取用户信息失败:', error),
           unauthorized: () => {
-            if (!cancelled) {
-              startTransition(() => {
-                setAuthError({ status: true, reason: 'unauthorized' });
-              });
-            }
+            setAuthError({ status: true, reason: 'unauthorized' });
           },
         });
 
-        if (!cancelled && response?.data) {
-          // 使用startTransition避免flushSync错误
-          startTransition(() => {
-            setCurrentUser({
-              id: response.data.id.toString(),
-              name: response.data.name,
-              color: getCursorColorByUserId(response.data.id.toString()),
-              avatar: response.data.avatar_url,
-            });
-            setAuthError({ status: false, reason: '' });
+        if (response?.data) {
+          setCurrentUser({
+            id: response.data.id.toString(),
+            name: response.data.name,
+            color: getCursorColorByUserId(response.data.id.toString()),
+            avatar: response.data.avatar_url,
           });
+          setAuthError({ status: false, reason: '' });
         }
       } catch (error) {
-        if (!cancelled) {
-          console.error('获取用户信息异常:', error);
-          startTransition(() => {
-            setAuthError({ status: true, reason: 'user-fetch-failed' });
-          });
-        }
+        console.error('获取用户信息异常:', error);
+        setAuthError({ status: true, reason: 'user-fetch-failed' });
       }
     };
 
     fetchUser();
-
-    return () => {
-      cancelled = true;
-    };
   }, [authToken]);
 
-  return { currentUser, authError, setAuthError };
-};
-
-// 本地持久化hook
-const useLocalPersistence = (roomId: string, doc: Y.Doc | null, isOffline: boolean) => {
-  const [isLocalLoaded, setIsLocalLoaded] = useState(false);
-  const hasUnsyncedChangesRef = useRef(false);
-
+  // 本地持久化
   useEffect(() => {
     if (!roomId || !doc) return;
 
@@ -139,10 +115,7 @@ const useLocalPersistence = (roomId: string, doc: Y.Doc | null, isOffline: boole
     const localStorageKey = `offline-edits-${roomId}`;
 
     persistence.on('synced', () => {
-      // 使用startTransition避免flushSync错误
-      startTransition(() => {
-        setIsLocalLoaded(true);
-      });
+      setIsLocalLoaded(true);
 
       if (localStorage.getItem(localStorageKey) === 'true') {
         hasUnsyncedChangesRef.current = true;
@@ -165,40 +138,22 @@ const useLocalPersistence = (roomId: string, doc: Y.Doc | null, isOffline: boole
     };
   }, [roomId, doc, isOffline]);
 
-  const clearOfflineEdits = useCallback(() => {
-    hasUnsyncedChangesRef.current = false;
-    localStorage.removeItem(`offline-edits-${roomId}`);
-  }, [roomId]);
-
-  return { isLocalLoaded, hasUnsyncedChangesRef, clearOfflineEdits };
-};
-
-// 协作提供者管理hook
-const useCollaborationProvider = (
-  roomId: string,
-  doc: Y.Doc | null,
-  authToken: string | null,
-  isOffline: boolean,
-  currentUser: CollaborationUser | null,
-  clearOfflineEdits: () => void,
-  setAuthError: (error: AuthErrorType) => void,
-) => {
-  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
-  const [isServerSynced, setIsServerSynced] = useState(false);
-
+  // 协作提供者
   useEffect(() => {
-    if (!doc || isOffline || !authToken || !roomId) return;
+    if (isOffline || !authToken || !roomId || !doc) return;
 
     const config = validateConfig();
 
     if (!config.isValid) {
-      startTransition(() => {
-        setAuthError({ status: true, reason: 'config-incomplete' });
-      });
+      setAuthError({ status: true, reason: 'config-incomplete' });
 
       return;
     }
+
+    const clearOfflineEdits = () => {
+      hasUnsyncedChangesRef.current = false;
+      localStorage.removeItem(`offline-edits-${roomId}`);
+    };
 
     const hocuspocusProvider = new HocuspocusProvider({
       url: config.websocketUrl!,
@@ -207,18 +162,13 @@ const useCollaborationProvider = (
       token: authToken,
 
       onConnect: () => {
-        // 使用startTransition避免flushSync错误
-        startTransition(() => {
-          setConnectionStatus('syncing');
-          setAuthError({ status: false, reason: '' });
-        });
+        setConnectionStatus('syncing');
+        setAuthError({ status: false, reason: '' });
       },
 
       onDisconnect: () => {
-        startTransition(() => {
-          setConnectionStatus('disconnected');
-          setIsServerSynced(false);
-        });
+        setConnectionStatus('disconnected');
+        setIsServerSynced(false);
 
         // 自动重连（如果不是离线状态）
         if (!isOffline) {
@@ -228,31 +178,23 @@ const useCollaborationProvider = (
 
       onAuthenticationFailed: (data) => {
         console.error('协作服务器认证失败:', data);
-        startTransition(() => {
-          setConnectionStatus('error');
-          setAuthError({ status: true, reason: 'authentication-failed' });
-        });
+        setConnectionStatus('error');
+        setAuthError({ status: true, reason: 'authentication-failed' });
       },
 
       onSynced: () => {
-        startTransition(() => {
-          setConnectionStatus('connected');
-          setIsServerSynced(true);
-        });
+        setConnectionStatus('connected');
+        setIsServerSynced(true);
         clearOfflineEdits();
       },
 
       onDestroy: () => {
-        startTransition(() => {
-          setConnectionStatus('disconnected');
-          setIsServerSynced(false);
-        });
+        setConnectionStatus('disconnected');
+        setIsServerSynced(false);
       },
     });
 
-    startTransition(() => {
-      setProvider(hocuspocusProvider);
-    });
+    setProvider(hocuspocusProvider);
 
     // 设置用户awareness信息
     if (currentUser && hocuspocusProvider.awareness) {
@@ -266,18 +208,9 @@ const useCollaborationProvider = (
 
       hocuspocusProvider.destroy();
     };
-  }, [roomId, doc, authToken, isOffline, currentUser, clearOfflineEdits, setAuthError]);
+  }, [roomId, doc, authToken, isOffline, currentUser]);
 
-  return { provider, connectionStatus, isServerSynced };
-};
-
-// 协作用户管理hook
-const useConnectedUsers = (
-  provider: HocuspocusProvider | null,
-  currentUser: CollaborationUser | null,
-) => {
-  const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
-
+  // 协作用户管理
   useEffect(() => {
     if (!provider?.awareness) return;
 
@@ -301,10 +234,7 @@ const useConnectedUsers = (
         }
       });
 
-      // 使用startTransition避免flushSync错误
-      startTransition(() => {
-        setConnectedUsers(users);
-      });
+      setConnectedUsers(users);
     };
 
     provider.awareness.on('update', handleAwarenessUpdate);
@@ -312,103 +242,47 @@ const useConnectedUsers = (
     return () => provider.awareness?.off('update', handleAwarenessUpdate);
   }, [provider, currentUser]);
 
-  return connectedUsers;
-};
-
-// 主要的协作编辑器hook
-export function useCollaborativeEditor(
-  roomId: string,
-  initialContent?: JSONContent,
-  onCommentActivated?: (commentId: string) => void,
-) {
-  const [isEditable, setIsEditable] = useState(true);
-  const [doc, setDoc] = useState<Y.Doc | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  const isOffline = useNetworkStatus();
-  const { currentUser, authError, setAuthError } = useCurrentUser(authToken);
-  const { isLocalLoaded, clearOfflineEdits } = useLocalPersistence(roomId, doc, isOffline);
-  const { provider, connectionStatus, isServerSynced } = useCollaborationProvider(
-    roomId,
-    doc,
-    authToken,
-    isOffline,
-    currentUser,
-    clearOfflineEdits,
-    setAuthError,
-  );
-  const connectedUsers = useConnectedUsers(provider, currentUser);
-
-  // 初始化 - 使用调度器避免快速状态更新导致的flushSync错误
-  useEffect(() => {
-    if (isMounted) return;
-
-    // 延迟初始化，避免多个状态同时更新
-    queueMicrotask(() => {
-      startTransition(() => {
-        setIsMounted(true);
-        setDoc(new Y.Doc());
-        setAuthToken(getCookie('auth_token'));
-      });
-    });
-  }, [isMounted]);
-
-  // 创建编辑器 - 使用startTransition避免flushSync错误
-  const editor = useEditor(
-    {
-      extensions: [
-        ...ExtensionKit({ provider, onCommentActivated }),
-        ...(doc ? [Collaboration.configure({ document: doc, field: 'content' })] : []),
-        ...(provider && !isOffline && currentUser && doc
-          ? [CollaborationCursor.configure({ provider, user: currentUser })]
-          : []),
-      ],
-      content: '',
-      onTransaction: ({ editor }) => {
-        // 使用startTransition包装状态更新，避免flushSync错误
-        startTransition(() => {
-          setIsEditable(editor.isEditable);
-        });
-      },
-      onSelectionUpdate: ({ editor }) => {
-        // 延迟DOM操作，避免在渲染过程中同步更新
-        requestAnimationFrame(() => {
-          const { from, to } = editor.state.selection;
-          const isAllSelected = from === 0 && to === editor.state.doc.content.size;
-          const editorElement = document.querySelector('.ProseMirror');
-
-          if (editorElement) {
-            editorElement.classList.toggle('is-all-selected', isAllSelected);
-          }
-        });
-      },
-      editorProps: {
-        attributes: {
-          autocomplete: 'off',
-          autocorrect: 'off',
-          autocapitalize: 'off',
-          class: 'min-h-full',
-          spellcheck: 'false',
-        },
-      },
-      immediatelyRender: false,
+  // 创建编辑器
+  const editor = useEditor({
+    extensions: [
+      ...ExtensionKit({ provider }),
+      ...(doc ? [Collaboration.configure({ document: doc, field: 'content' })] : []),
+      ...(provider && !isOffline && currentUser && doc
+        ? [CollaborationCursor.configure({ provider, user: currentUser })]
+        : []),
+    ],
+    content: '',
+    onTransaction: ({ editor }) => {
+      setIsEditable(editor.isEditable);
     },
-    [provider, isOffline, currentUser, doc, isMounted],
-  );
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      const isAllSelected = from === 0 && to === editor.state.doc.content.size;
+      const editorElement = document.querySelector('.ProseMirror');
 
-  // 设置初始内容 - 直接设置从接口获取的内容，避免flushSync错误
+      if (editorElement) {
+        editorElement.classList.toggle('is-all-selected', isAllSelected);
+      }
+    },
+    editorProps: {
+      attributes: {
+        autocomplete: 'off',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        class: 'min-h-full',
+        spellcheck: 'false',
+      },
+    },
+    immediatelyRender: false,
+  });
+
+  // 设置初始内容
   useEffect(() => {
     if (!editor || !initialContent || !isLocalLoaded) return;
 
-    // 使用调度器延迟内容设置，避免在编辑器初始化时触发flushSync
-    const timeoutId = setTimeout(() => {
-      if (editor && !editor.isDestroyed) {
-        editor.commands.setContent(initialContent);
-      }
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
+    if (editor && !editor.isDestroyed) {
+      editor.commands.setContent(initialContent);
+    }
   }, [editor, initialContent, isLocalLoaded]);
 
   const isFullyLoaded = isLocalLoaded && (isOffline || isServerSynced);
@@ -424,7 +298,6 @@ export function useCollaborativeEditor(
     provider,
     doc,
     isOffline,
-    isMounted,
     currentUser,
     authError,
     connectedUsers,

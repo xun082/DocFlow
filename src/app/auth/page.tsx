@@ -1,16 +1,45 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Github, Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // 获取重定向URL
+  const getRedirectUrl = () => {
+    const redirectTo = searchParams?.get('redirect_to');
+
+    if (redirectTo) {
+      return decodeURIComponent(redirectTo);
+    }
+
+    return '/'; // 默认跳转到首页
+  };
+
+  // 保存重定向信息到sessionStorage
+  useEffect(() => {
+    const redirectUrl = getRedirectUrl();
+
+    if (redirectUrl !== '/') {
+      sessionStorage.setItem('auth_redirect', redirectUrl);
+    }
+  }, [searchParams]);
 
   const handleGitHubLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/auth/github`;
+    const redirectUrl = getRedirectUrl();
+
+    // 构建GitHub授权URL，通过state参数传递重定向信息
+    const baseUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/auth/github`;
+    const state = redirectUrl !== '/' ? encodeURIComponent(redirectUrl) : '';
+
+    const authUrl = state ? `${baseUrl}?state=${state}` : baseUrl;
+
+    window.location.href = authUrl;
   };
 
   const handleEmailLogin = () => {
@@ -54,5 +83,24 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-800">欢迎回来</h1>
+              <p className="mt-3 text-gray-600">加载中...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

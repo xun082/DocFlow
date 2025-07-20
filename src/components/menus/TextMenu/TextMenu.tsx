@@ -1,7 +1,7 @@
 'use client';
 
 import { BubbleMenu, Editor } from '@tiptap/react';
-import { memo, useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 
 import { useTextMenuStates } from './hooks/useTextMenuStates';
@@ -12,256 +12,18 @@ import { useTextMenuContentTypes } from './hooks/useTextMenuContentTypes';
 import { ContentTypePicker } from './components/ContentTypePicker';
 import { EditLinkPopover } from './components/EditLinkPopover';
 import { SpellCheckPanel } from './components/SpellCheckPanel';
-import { CommentDrawer } from './components/CommentDrawer';
 
 import { Surface } from '@/components/ui/Surface';
 import { ColorPicker } from '@/components/panels';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
-import { useCommentSidebar } from '@/hooks/useCommentSidebar';
 
-// We memorize the button so each button is not rerendered
-// on every editor state change
-const MemoButton = memo(Toolbar.Button);
-const MemoColorPicker = memo(ColorPicker);
-const MemoFontFamilyPicker = memo(FontFamilyPicker);
-const MemoFontSizePicker = memo(FontSizePicker);
-const MemoContentTypePicker = memo(ContentTypePicker);
-
-/**
- * 一个自定义Hook，用于获取一个值在上次渲染时的状态。
- * @param value 需要追踪其先前状态的值。
- * @returns 该值在上次渲染时的状态。
- */
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
-
-  return ref.current;
-}
-
-export type TextMenuProps = {
-  editor: Editor;
-  documentId?: string;
-};
-
-export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
+export function TextMenu({ editor }: { editor: Editor }) {
   const [spellCheckOpen, setSpellCheckOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const commands = useTextMenuCommands(editor);
   const states = useTextMenuStates(editor);
   const blockOptions = useTextMenuContentTypes(editor);
-
-  // 评论功能相关状态
-  const commentSidebar = useCommentSidebar(documentId);
-  const { comments, isOpen, close, removeComment } = commentSidebar;
-  const prevCommentCount = usePrevious(comments.length);
-
-  // 当评论列表变为空时，自动关闭侧边栏。
-  // 这个effect精确地捕捉了"最后一条评论被删除"的瞬间。
-  useEffect(() => {
-    // 仅当侧边栏之前是打开的，且评论数从有到无时，才触发关闭。
-    if (isOpen && prevCommentCount && prevCommentCount > 0 && comments.length === 0) {
-      close();
-    }
-  }, [comments.length, prevCommentCount, isOpen, close]);
-
-  // 监听评论标记点击事件
-  useEffect(() => {
-    const handleCommentMarkClick = async (event: CustomEvent) => {
-      const { commentId, selectedText } = event.detail;
-
-      console.log('🎯 处理评论标记点击:', {
-        commentId,
-        selectedText,
-        当前选择: commentSidebar.currentSelection,
-      });
-
-      // 设置当前选择的文本，这样评论面板就知道用户选择了什么
-      if (selectedText?.trim()) {
-        commentSidebar.setCurrentSelection(selectedText);
-        console.log('✅ 已设置当前选择:', selectedText);
-      }
-
-      // 打开评论侧边栏
-      commentSidebar.open();
-      console.log('✅ 已打开评论面板');
-
-      // 找到对应的评论并高亮显示
-      const comment = commentSidebar.comments.find((c) => c.commentId === commentId);
-
-      if (comment) {
-        console.log('✅ 找到对应评论:', comment);
-        // 滚动到对应评论
-        setTimeout(() => {
-          const commentElement = document.querySelector(`[data-comment-id="${comment.id}"]`);
-
-          if (commentElement) {
-            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 300);
-      } else {
-        console.log('❌ 未找到对应评论，加载评论:', commentId);
-        // 如果没有找到评论，加载对应的评论
-        await commentSidebar.loadComments(commentId);
-      }
-
-      // 延迟检查状态
-      setTimeout(() => {
-        console.log('🔍 延迟检查状态:', {
-          isOpen: commentSidebar.isOpen,
-          currentSelection: commentSidebar.currentSelection,
-          commentsCount: commentSidebar.comments.length,
-        });
-      }, 200);
-    };
-
-    document.addEventListener(
-      'commentMarkClicked',
-      handleCommentMarkClick as unknown as EventListener,
-    );
-
-    return () => {
-      document.removeEventListener(
-        'commentMarkClicked',
-        handleCommentMarkClick as unknown as EventListener,
-      );
-    };
-  }, [commentSidebar]);
-
-  // 处理评论按钮点击
-  const handleCommentButtonClick = useCallback(async () => {
-    const selectedText = commands.getSelectedText();
-
-    if (selectedText.trim()) {
-      const selectionInfo = commands.getSelectionInfo();
-      console.log('🎯 点击评论按钮，详细信息：', {
-        selectedText: `"${selectedText}"`,
-        selectionLength: selectedText.length,
-        selectionInfo,
-        currentSelection: commentSidebar.currentSelection,
-      });
-
-      commentSidebar.setCurrentSelection(selectedText);
-
-      // 检查当前选区是否已有评论标记
-      const existingMarkIds = commands.getCommentMarkIds();
-      console.log('🔍 检查已有评论标记：', {
-        existingMarkIds,
-        selectedText: `"${selectedText}"`,
-        markIdsCount: existingMarkIds.length,
-      });
-
-      // 如果评论面板已经打开且选择了相同文本，则关闭
-      if (commentSidebar.isOpen && commentSidebar.currentSelection === selectedText) {
-        console.log('🔄 相同文本已选中，关闭评论面板');
-        commentSidebar.close();
-
-        return;
-      }
-
-      // 打开评论面板
-      console.log('🔄 打开评论面板');
-      commentSidebar.open();
-
-      // 如果当前选区有评论标记，加载相关评论
-      if (existingMarkIds.length > 0) {
-        console.log('📖 发现已有评论标记，加载评论：', existingMarkIds);
-        // 加载第一个mark_id的评论（通常一个选区只会有一个评论标记）
-        await commentSidebar.loadComments(existingMarkIds[0]);
-      } else {
-        console.log('📝 当前选区没有评论标记，显示空的评论列表');
-        // 没有评论标记，清空评论列表，准备添加新评论
-        await commentSidebar.loadComments('');
-      }
-    } else {
-      console.log('⚠️ 没有选中文本，直接切换侧边栏显示状态');
-      // 如果没有选中文本，直接打开/关闭侧边栏
-      commentSidebar.toggle();
-    }
-  }, [commands, commentSidebar]);
-
-  // 处理添加评论
-  const handleAddComment = useCallback(
-    async (text: string, selectedText: string) => {
-      const position = commands.getSelectedPosition();
-      const commentId = Date.now().toString();
-
-      // 获取完整的选区信息
-      const selectionInfo = commands.getSelectionInfo();
-
-      console.log('💬 正在添加评论：', {
-        评论内容: text,
-        选中文本: selectedText,
-        评论ID: commentId,
-        选区位置: position,
-        完整选区信息: selectionInfo,
-        传递给后端的数据: {
-          commentId,
-          commentText: text,
-          selectionInfo,
-        },
-      });
-
-      // 先添加评论标记到文档中
-      commands.setCommentMark(commentId);
-
-      // 然后添加评论到侧边栏 (这是异步操作)
-      await commentSidebar.addComment(text, selectedText, position, commentId);
-    },
-    [commands, commentSidebar],
-  );
-
-  // 处理删除评论
-  const handleRemoveComment = useCallback(
-    (id: string) => {
-      const commentToRemove = comments.find((c) => c.id === id);
-
-      if (!commentToRemove) {
-        return;
-      }
-
-      // 检查这是不是这段高亮文本的最后一条评论
-      const isLastCommentForText =
-        comments.filter((c) => c.selectedText === commentToRemove.selectedText).length === 1;
-
-      // 如果是，则移除文档中的标记
-      if (isLastCommentForText && commentToRemove.commentId) {
-        commands.unsetCommentMark(commentToRemove.commentId);
-      }
-
-      // 只负责移除评论，关闭侧边栏的逻辑已交由useEffect处理
-      removeComment(id);
-    },
-    [comments, commands, removeComment],
-  );
-
-  // 监听选择变化以更新评论侧边栏的当前选择
-  useEffect(() => {
-    if (!editor) return;
-
-    const handleSelectionUpdate = () => {
-      const selectedText = commands.getSelectedText();
-      commentSidebar.setCurrentSelection(selectedText);
-
-      // 打印详细的选区信息
-      if (selectedText.trim()) {
-        const selectionInfo = commands.getSelectionInfo();
-
-        if (selectionInfo) {
-          console.log('🚀 选区信息已更新，可传递给后端：', selectionInfo);
-        }
-      }
-    };
-
-    editor.on('selectionUpdate', handleSelectionUpdate);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-    };
-  }, [commands, commentSidebar, editor]);
 
   // 简化输入状态管理 - 暂时禁用以避免阻塞TextMenu显示
   useEffect(() => {
@@ -303,13 +65,6 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
         setSpellCheckOpen((prev) => !prev);
       }
 
-      // Ctrl/Cmd + Shift + C 键触发评论
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'C') {
-        event.preventDefault();
-        console.log('🎯 快捷键触发评论面板');
-        handleCommentButtonClick();
-      }
-
       // 检测是否是输入键（字母、数字、空格等）
       const isInputKey =
         event.key.length === 1 ||
@@ -327,7 +82,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleCommentButtonClick]);
+  }, []);
 
   return (
     <>
@@ -409,73 +164,60 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
         >
           <Toolbar.Wrapper>
             <Toolbar.Divider />
-            <MemoContentTypePicker options={blockOptions} />
-            <MemoFontFamilyPicker onChange={commands.onSetFont} value={states.currentFont || ''} />
-            <MemoFontSizePicker
-              onChange={commands.onSetFontSize}
-              value={states.currentSize || ''}
-            />
+            <ContentTypePicker options={blockOptions} />
+            <FontFamilyPicker onChange={commands.onSetFont} value={states.currentFont || ''} />
+            <FontSizePicker onChange={commands.onSetFontSize} value={states.currentSize || ''} />
             <Toolbar.Divider />
-            <MemoButton
+            <Toolbar.Button
               tooltip="Bold"
               tooltipShortcut={['Mod', 'B']}
               onClick={commands.onBold}
               active={states.isBold}
             >
               <Icon name="Bold" />
-            </MemoButton>
-            <MemoButton
+            </Toolbar.Button>
+            <Toolbar.Button
               tooltip="Italic"
               tooltipShortcut={['Mod', 'I']}
               onClick={commands.onItalic}
               active={states.isItalic}
             >
               <Icon name="Italic" />
-            </MemoButton>
-            <MemoButton
+            </Toolbar.Button>
+            <Toolbar.Button
               tooltip="Underline"
               tooltipShortcut={['Mod', 'U']}
               onClick={commands.onUnderline}
               active={states.isUnderline}
             >
               <Icon name="Underline" />
-            </MemoButton>
-            <MemoButton
+            </Toolbar.Button>
+            <Toolbar.Button
               tooltip="Strikehrough"
               tooltipShortcut={['Mod', 'Shift', 'S']}
               onClick={commands.onStrike}
               active={states.isStrike}
             >
               <Icon name="Strikethrough" />
-            </MemoButton>
-            <MemoButton
+            </Toolbar.Button>
+            <Toolbar.Button
               tooltip="Code"
               tooltipShortcut={['Mod', 'E']}
               onClick={commands.onCode}
               active={states.isCode}
             >
               <Icon name="Code" />
-            </MemoButton>
-            <MemoButton tooltip="Code block" onClick={commands.onCodeBlock}>
+            </Toolbar.Button>
+            <Toolbar.Button tooltip="Code block" onClick={commands.onCodeBlock}>
               <Icon name="FileCode" />
-            </MemoButton>
+            </Toolbar.Button>
             <EditLinkPopover onSetLink={commands.onLink} />
-
-            {/* 评论按钮 */}
-            <MemoButton
-              tooltip="添加评论"
-              tooltipShortcut={['Mod', 'Shift', 'C']}
-              onClick={handleCommentButtonClick}
-              active={commentSidebar.isOpen}
-            >
-              <Icon name="MessageSquare" />
-            </MemoButton>
 
             <Popover.Root>
               <Popover.Trigger asChild>
-                <MemoButton active={!!states.currentHighlight} tooltip="Highlight text">
+                <Toolbar.Button active={!!states.currentHighlight} tooltip="Highlight text">
                   <Icon name="Highlighter" />
-                </MemoButton>
+                </Toolbar.Button>
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
@@ -486,7 +228,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
                   avoidCollisions={true}
                 >
                   <Surface className="p-1">
-                    <MemoColorPicker
+                    <ColorPicker
                       color={states.currentHighlight}
                       onChange={commands.onChangeHighlight}
                       onClear={commands.onClearHighlight}
@@ -497,9 +239,9 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
             </Popover.Root>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <MemoButton active={!!states.currentColor} tooltip="Text color">
+                <Toolbar.Button active={!!states.currentColor} tooltip="Text color">
                   <Icon name="Palette" />
-                </MemoButton>
+                </Toolbar.Button>
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
@@ -510,7 +252,7 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
                   avoidCollisions={true}
                 >
                   <Surface className="p-1">
-                    <MemoColorPicker
+                    <ColorPicker
                       color={states.currentColor}
                       onChange={commands.onChangeColor}
                       onClear={commands.onClearColor}
@@ -522,9 +264,9 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
             {/* 错字检测按钮 */}
             <Popover.Root open={spellCheckOpen} onOpenChange={setSpellCheckOpen}>
               <Popover.Trigger asChild>
-                <MemoButton tooltip="拼写检查" tooltipShortcut={['F7']} active={spellCheckOpen}>
+                <Toolbar.Button tooltip="拼写检查" tooltipShortcut={['F7']} active={spellCheckOpen}>
                   <Icon name="Search" />
-                </MemoButton>
+                </Toolbar.Button>
               </Popover.Trigger>
               <Popover.Portal container={document.body}>
                 <Popover.Content
@@ -575,9 +317,9 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
             </Popover.Root>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <MemoButton tooltip="More options">
+                <Toolbar.Button tooltip="More options">
                   <Icon name="EllipsisVertical" />
-                </MemoButton>
+                </Toolbar.Button>
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
@@ -587,55 +329,55 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
                   avoidCollisions={true}
                 >
                   <Toolbar.Wrapper>
-                    <MemoButton
+                    <Toolbar.Button
                       tooltip="Subscript"
                       tooltipShortcut={['Mod', '.']}
                       onClick={commands.onSubscript}
                       active={states.isSubscript}
                     >
                       <Icon name="Subscript" />
-                    </MemoButton>
-                    <MemoButton
+                    </Toolbar.Button>
+                    <Toolbar.Button
                       tooltip="Superscript"
                       tooltipShortcut={['Mod', ',']}
                       onClick={commands.onSuperscript}
                       active={states.isSuperscript}
                     >
                       <Icon name="Superscript" />
-                    </MemoButton>
+                    </Toolbar.Button>
                     <Toolbar.Divider />
-                    <MemoButton
+                    <Toolbar.Button
                       tooltip="Align left"
                       tooltipShortcut={['Shift', 'Mod', 'L']}
                       onClick={commands.onAlignLeft}
                       active={states.isAlignLeft}
                     >
                       <Icon name="AlignLeft" />
-                    </MemoButton>
-                    <MemoButton
+                    </Toolbar.Button>
+                    <Toolbar.Button
                       tooltip="Align center"
                       tooltipShortcut={['Shift', 'Mod', 'E']}
                       onClick={commands.onAlignCenter}
                       active={states.isAlignCenter}
                     >
                       <Icon name="AlignCenter" />
-                    </MemoButton>
-                    <MemoButton
+                    </Toolbar.Button>
+                    <Toolbar.Button
                       tooltip="Align right"
                       tooltipShortcut={['Shift', 'Mod', 'R']}
                       onClick={commands.onAlignRight}
                       active={states.isAlignRight}
                     >
                       <Icon name="AlignRight" />
-                    </MemoButton>
-                    <MemoButton
+                    </Toolbar.Button>
+                    <Toolbar.Button
                       tooltip="Justify"
                       tooltipShortcut={['Shift', 'Mod', 'J']}
                       onClick={commands.onAlignJustify}
                       active={states.isAlignJustify}
                     >
                       <Icon name="AlignJustify" />
-                    </MemoButton>
+                    </Toolbar.Button>
                   </Toolbar.Wrapper>
                 </Popover.Content>
               </Popover.Portal>
@@ -643,17 +385,6 @@ export const TextMenu = memo(({ editor, documentId }: TextMenuProps) => {
           </Toolbar.Wrapper>
         </Surface>
       </BubbleMenu>
-
-      {/* 评论抽屉 */}
-      <CommentDrawer
-        isOpen={commentSidebar.isOpen}
-        comments={commentSidebar.comments}
-        currentSelection={commentSidebar.currentSelection}
-        loading={commentSidebar.loading}
-        onClose={commentSidebar.close}
-        onAddComment={handleAddComment}
-        onRemoveComment={handleRemoveComment}
-      />
     </>
   );
-});
+}

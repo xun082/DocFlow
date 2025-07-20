@@ -16,7 +16,11 @@ export function middleware(request: NextRequest) {
   if (!token) {
     console.log('No token found, redirecting to /auth');
 
-    return NextResponse.redirect(new URL('/auth', request.url));
+    // 保存原始URL到登录页的查询参数中
+    const loginUrl = new URL('/auth', request.url);
+    loginUrl.searchParams.set('redirect_to', encodeURIComponent(pathname + request.nextUrl.search));
+
+    return NextResponse.redirect(loginUrl);
   }
 
   // 可以在这里添加更多的token验证逻辑

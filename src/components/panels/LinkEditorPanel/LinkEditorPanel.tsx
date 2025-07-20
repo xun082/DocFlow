@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
@@ -11,30 +11,23 @@ export type LinkEditorPanelProps = {
   onSetLink: (url: string, openInNewTab?: boolean) => void;
 };
 
-export const useLinkEditorState = ({
-  initialUrl,
-  initialOpenInNewTab,
-  onSetLink,
-}: LinkEditorPanelProps) => {
+function useLinkEditorState({ initialUrl, initialOpenInNewTab, onSetLink }: LinkEditorPanelProps) {
   const [url, setUrl] = useState(initialUrl || '');
   const [openInNewTab, setOpenInNewTab] = useState(initialOpenInNewTab || false);
 
-  const onChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
-  }, []);
+  };
 
-  const isValidUrl = useMemo(() => /^(\S+):(\/\/)?\S+$/.test(url), [url]);
+  const isValidUrl = /^(\S+):(\/\/)?\S+$/.test(url);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-      if (isValidUrl) {
-        onSetLink(url, openInNewTab);
-      }
-    },
-    [url, isValidUrl, openInNewTab, onSetLink],
-  );
+    if (isValidUrl) {
+      onSetLink(url, openInNewTab);
+    }
+  };
 
   return {
     url,
@@ -45,13 +38,13 @@ export const useLinkEditorState = ({
     handleSubmit,
     isValidUrl,
   };
-};
+}
 
-export const LinkEditorPanel = ({
+export function LinkEditorPanel({
   onSetLink,
   initialOpenInNewTab,
   initialUrl,
-}: LinkEditorPanelProps) => {
+}: LinkEditorPanelProps) {
   const state = useLinkEditorState({ onSetLink, initialOpenInNewTab, initialUrl });
 
   return (
@@ -79,4 +72,4 @@ export const LinkEditorPanel = ({
       </div>
     </Surface>
   );
-};
+}

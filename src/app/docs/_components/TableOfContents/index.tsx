@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 
 import { Icon } from '@/components/ui/Icon';
@@ -18,7 +18,7 @@ interface TableOfContentsProps {
   isOpen?: boolean;
 }
 
-export const TableOfContents = memo(({ editor, onClose, isOpen = true }: TableOfContentsProps) => {
+export function TableOfContents({ editor, onClose, isOpen = true }: TableOfContentsProps) {
   const [items, setItems] = useState<TocItem[]>([]);
 
   useEffect(() => {
@@ -113,6 +113,4 @@ export const TableOfContents = memo(({ editor, onClose, isOpen = true }: TableOf
       </div>
     </div>
   );
-});
-
-TableOfContents.displayName = 'TableOfContents';
+}

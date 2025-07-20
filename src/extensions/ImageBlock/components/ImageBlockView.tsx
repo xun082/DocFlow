@@ -2,7 +2,7 @@
 
 import { Node } from '@tiptap/pm/model';
 import { Editor, NodeViewWrapper } from '@tiptap/react';
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 
 interface ImageBlockViewProps {
   editor: Editor;
@@ -11,7 +11,7 @@ interface ImageBlockViewProps {
   updateAttributes: (attrs: Record<string, string>) => void;
 }
 
-export const ImageBlockView = (props: ImageBlockViewProps) => {
+export function ImageBlockView(props: ImageBlockViewProps) {
   const { editor, getPos, node } = props as ImageBlockViewProps & {
     node: Node & {
       attrs: {
@@ -28,9 +28,9 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
   const alignClass =
     align === 'left' ? 'text-left' : align === 'right' ? 'text-right' : 'text-center';
 
-  const onClick = useCallback(() => {
+  const onClick = () => {
     editor.commands.setNodeSelection(getPos());
-  }, [getPos, editor.commands]);
+  };
 
   return (
     <NodeViewWrapper as="figure" data-type="imageBlock" className={alignClass} data-drag-handle>
@@ -45,6 +45,6 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
       </div>
     </NodeViewWrapper>
   );
-};
+}
 
 export default ImageBlockView;

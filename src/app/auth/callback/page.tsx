@@ -13,6 +13,41 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // 获取原始跳转页面
+  const getRedirectUrl = () => {
+    // 优先从state参数获取（GitHub OAuth标准做法）
+    const state = searchParams?.get('state');
+
+    if (state) {
+      try {
+        return decodeURIComponent(state);
+      } catch (e) {
+        console.warn('解析state参数失败:', e);
+      }
+    }
+
+    // 其次从URL参数获取
+    const redirectTo = searchParams?.get('redirect_to') || searchParams?.get('returnTo');
+
+    if (redirectTo) {
+      return decodeURIComponent(redirectTo);
+    }
+
+    // 最后从sessionStorage获取
+    if (typeof window !== 'undefined') {
+      const savedRedirect = sessionStorage.getItem('auth_redirect');
+
+      if (savedRedirect) {
+        sessionStorage.removeItem('auth_redirect'); // 使用后清除
+
+        return savedRedirect;
+      }
+    }
+
+    // 默认跳转到首页
+    return '/';
+  };
+
   // 统一处理认证成功逻辑
   const handleAuthSuccess = (authData: any) => {
     saveAuthData(authData);
@@ -20,8 +55,9 @@ function CallbackContent() {
     setState('success');
     console.log('认证数据:', authData);
 
-    // 延迟跳转到首页
-    setTimeout(() => router.push('/'), 1500);
+    // 跳转到原来的页面
+    const redirectUrl = getRedirectUrl();
+    setTimeout(() => router.push(redirectUrl), 1000);
   };
 
   useEffect(() => {
@@ -135,9 +171,6 @@ function CallbackContent() {
   );
 }
 
-// 使用React.memo优化组件重渲染
-const MemoizedContent = React.memo(CallbackContent);
-
 export default function AuthCallback() {
   return (
     <Suspense
@@ -155,7 +188,7 @@ export default function AuthCallback() {
         </div>
       }
     >
-      <MemoizedContent />
+      <CallbackContent />
     </Suspense>
   );
 }

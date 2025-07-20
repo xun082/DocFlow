@@ -1,5 +1,3 @@
-import { useCallback } from 'react';
-
 import { cn } from '@/utils/utils';
 
 export type ToggleProps = {
@@ -8,7 +6,7 @@ export type ToggleProps = {
   size?: 'small' | 'large';
 };
 
-export const Toggle = ({ onChange, active = false, size = 'large' }: ToggleProps) => {
+export function Toggle({ onChange, active = false, size = 'large' }: ToggleProps) {
   const state = active ? 'checked' : 'unchecked';
   const value = active ? 'on' : 'off';
 
@@ -30,10 +28,6 @@ export const Toggle = ({ onChange, active = false, size = 'large' }: ToggleProps
       : 'translate-x-0',
   );
 
-  const handleChange = useCallback(() => {
-    onChange(!active);
-  }, [active, onChange]);
-
   return (
     <button
       className={buttonClass}
@@ -42,9 +36,9 @@ export const Toggle = ({ onChange, active = false, size = 'large' }: ToggleProps
       aria-checked={active}
       data-state={state}
       value={value}
-      onClick={handleChange}
+      onClick={() => onChange(!active)}
     >
       <span className={pinClass} data-state={state} />
     </button>
   );
-};
+}
