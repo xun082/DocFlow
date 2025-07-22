@@ -56,3 +56,5 @@ export { DragHandler } from './DragHandler';
 export { MarkdownPaste } from './MarkdownPaste';
 
 export { ExcalidrawImage } from './ExcalidrawImage';
+
+export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';

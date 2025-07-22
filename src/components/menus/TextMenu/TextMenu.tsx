@@ -149,6 +149,8 @@ export function TextMenu({ editor }: { editor: Editor }) {
           // 检查选择的内容是否在编辑器视图内
           const { $from, $to } = selection;
           if ($from.pos === $to.pos) return false;
+          // 如果选择了代码块，不显示菜单
+          if (editor.isActive('codeBlock')) return false;
 
           // 确保选择了实际内容
           const selectedText = state.doc.textBetween($from.pos, $to.pos, ' ');

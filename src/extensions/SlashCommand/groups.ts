@@ -121,7 +121,7 @@ export const GROUPS: Group[] = [
         description: 'Code block with syntax highlighting',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
-          editor.chain().focus().setCodeBlock().run();
+          editor.chain().focus().toggleCodeBlock().run();
         },
       },
     ],
