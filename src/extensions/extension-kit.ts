@@ -28,6 +28,7 @@ import {
   HorizontalRule,
   ImageBlock,
   Link,
+  MarkdownPaste,
   Placeholder,
   Selection,
   SlashCommand,
@@ -177,6 +178,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     width: 2,
     class: 'ProseMirror-dropcursor border-black',
   }),
+  MarkdownPaste,
 ];
 
 export default ExtensionKit;
