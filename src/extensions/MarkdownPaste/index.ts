@@ -1,0 +1,1 @@
+export { MarkdownPaste } from './MarkdownPaste';

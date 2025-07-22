@@ -53,5 +53,6 @@ export { Columns, Column } from './MultiColumn';
 export { emojiSuggestion } from './EmojiSuggestion';
 export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
+export { MarkdownPaste } from './MarkdownPaste';
 
 export { ExcalidrawImage } from './ExcalidrawImage';

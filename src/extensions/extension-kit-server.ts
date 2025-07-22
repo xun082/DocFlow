@@ -1,4 +1,5 @@
-import StarterKit from '@tiptap/starter-kit';
+import { mergeAttributes } from '@tiptap/core';
+import { StarterKit } from '@tiptap/starter-kit';
 import { Heading } from '@tiptap/extension-heading';
 import { Typography } from '@tiptap/extension-typography';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -14,16 +15,15 @@ import { TaskItem } from '@tiptap/extension-task-item';
 import { Image } from '@tiptap/extension-image';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Paragraph } from '@tiptap/extension-paragraph';
-import { mergeAttributes } from '@tiptap/core';
+import { Emoji } from '@tiptap-pro/extension-emoji';
 
-// 从项目导入必要的自定义扩展
 import { Document } from './Document';
 import { HorizontalRule } from './HorizontalRule/HorizontalRule';
 import { FontSize } from './FontSize';
 import { Table, TableRow, TableHeader, TableCell } from './Table';
 import { Columns, Column } from './MultiColumn';
 import { ImageBlock } from './ImageBlock';
-import { TrailingNode } from './TrailingNode';
+import { MarkdownPaste } from './MarkdownPaste';
 
 export const ExtensionKitServer = () => [
   // 核心文档 - 使用与客户端相同的自定义 Document 扩展
@@ -112,8 +112,11 @@ export const ExtensionKitServer = () => [
   Columns,
   Column,
 
-  // TrailingNode - 确保文档末尾正确处理
-  TrailingNode,
+  // Markdown 粘贴支持
+  MarkdownPaste,
+
+  // Emoji 支持
+  Emoji,
 ];
 
 export default ExtensionKitServer;
