@@ -28,6 +28,7 @@ import {
   HorizontalRule,
   ImageBlock,
   Link,
+  MarkdownPaste,
   Placeholder,
   Selection,
   SlashCommand,
@@ -56,6 +57,7 @@ import {
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { ExcalidrawImage } from './ExcalidrawImage';
+import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 
 import uploadService from '@/services/upload';
 
@@ -177,6 +179,8 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     width: 2,
     class: 'ProseMirror-dropcursor border-black',
   }),
+  MarkdownPaste,
+  SelectOnlyCode,
 ];
 
 export default ExtensionKit;

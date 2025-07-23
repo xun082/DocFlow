@@ -460,7 +460,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
             key={option.value}
             onClick={() => setSearchMode(option.value as 'all' | 'files' | 'content')}
             className={cn(
-              'flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
+              'flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer',
               searchMode === option.value
                 ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-600/50',
@@ -482,7 +482,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 快捷搜索
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 px-2">
                 {quickSearchOptions.map((item) => (
                   <button
                     key={item.label}
@@ -495,7 +495,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                       'dark:hover:from-slate-600/80 dark:hover:to-slate-700/80',
                       'border border-slate-200/50 dark:border-slate-600/50',
                       'hover:border-blue-300/50 dark:hover:border-blue-500/30',
-                      'transition-all duration-200 hover:scale-105',
+                      'transition-all duration-200 hover:scale-105 cursor-pointer',
                     )}
                   >
                     <Icon

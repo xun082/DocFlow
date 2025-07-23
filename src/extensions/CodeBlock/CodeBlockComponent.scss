@@ -1,0 +1,273 @@
+.ProseMirror .tiptap .code-block,
+.tiptap .code-block {
+  position: relative;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 16px 0;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  .code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+    border-bottom: 1px solid #21262d;
+    min-height: 48px;
+
+    .language-selector {
+      // 暗色主题的语言选择器样式会由 Popover 组件处理
+    }
+
+    .code-block-controls {
+      display: flex;
+      gap: 6px;
+
+      .control-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: rgba(99, 110, 123, 0.1);
+        border: 1px solid rgba(99, 110, 123, 0.2);
+        border-radius: 6px;
+        color: #8b949e;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background: rgba(99, 110, 123, 0.2);
+          color: #f0f6fc;
+          border-color: rgba(99, 110, 123, 0.4);
+          transform: translateY(-1px);
+        }
+
+        &.active {
+          background: rgba(56, 139, 253, 0.15);
+          color: #58a6ff;
+          border-color: rgba(56, 139, 253, 0.3);
+        }
+
+        &.copied {
+          background: rgba(46, 160, 67, 0.15);
+          color: #3fb950;
+          border-color: rgba(46, 160, 67, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+
+        svg {
+          flex-shrink: 0;
+          transition: transform 0.2s ease;
+        }
+
+        &:hover svg {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+
+  .code-block-content {
+    position: relative;
+
+    pre {
+      margin: 0;
+      padding: 20px;
+      background: #0d1117;
+      color: #e6edf3;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      font-weight: 400;
+      border: none;
+
+      &.word-wrap {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-x: visible;
+      }
+
+      code {
+        font-family: inherit;
+        font-size: inherit;
+        color: inherit;
+        background: transparent;
+        padding: 0;
+        outline: none;
+        caret-color: #58a6ff;
+        box-shadow: none;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      // GitHub 暗色主题语法高亮
+      .hljs-comment,
+      .hljs-quote {
+        color: #8b949e;
+        font-style: italic;
+      }
+
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-literal,
+      .hljs-section,
+      .hljs-link {
+        color: #ff7b72;
+      }
+
+      .hljs-function .hljs-keyword {
+        color: #d2a8ff;
+      }
+
+      .hljs-subst {
+        color: #e6edf3;
+      }
+
+      .hljs-string,
+      .hljs-attr,
+      .hljs-symbol,
+      .hljs-bullet,
+      .hljs-addition {
+        color: #a5d6ff;
+      }
+
+      .hljs-title,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class,
+      .hljs-type,
+      .hljs-template-tag {
+        color: #79c0ff;
+      }
+
+      .hljs-number,
+      .hljs-meta,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-params {
+        color: #79c0ff;
+      }
+
+      .hljs-variable,
+      .hljs-template-variable {
+        color: #ffa657;
+      }
+
+      .hljs-regexp,
+      .hljs-deletion {
+        color: #ff7b72;
+      }
+
+      .hljs-tag {
+        color: #7ee787;
+      }
+
+      .hljs-tag .hljs-attr {
+        color: #79c0ff;
+      }
+
+      .hljs-tag .hljs-name {
+        color: #7ee787;
+      }
+
+      .hljs-attribute {
+        color: #79c0ff;
+      }
+
+      .hljs-emphasis {
+        font-style: italic;
+      }
+
+      .hljs-strong {
+        font-weight: 600;
+      }
+
+      // 选中文本样式
+      &::selection,
+      & *::selection {
+        background: rgba(56, 139, 253, 0.4);
+      }
+    }
+  }
+
+  // 焦点状态
+  &:focus-within {
+    border-color: #388bfd;
+    box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.12);
+  }
+
+  // 折叠状态
+  &.collapsed {
+    .code-block-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .code-block-header .code-block-controls .control-btn svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:not(.collapsed) {
+    .code-block-content {
+      max-height: none;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    .code-block-header {
+      padding: 8px 12px;
+      min-height: 44px;
+
+      .code-block-controls .control-btn {
+        width: 28px;
+        height: 28px;
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+
+    .code-block-content pre {
+      padding: 16px 12px;
+      font-size: 13px;
+    }
+  }
+
+  // 滚动条样式
+  .code-block-content pre::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .code-block-content pre::-webkit-scrollbar-track {
+    background: rgba(99, 110, 123, 0.1);
+    border-radius: 4px;
+  }
+
+  .code-block-content pre::-webkit-scrollbar-thumb {
+    background: rgba(99, 110, 123, 0.3);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(99, 110, 123, 0.5);
+    }
+  }
+}

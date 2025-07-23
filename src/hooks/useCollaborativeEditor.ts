@@ -52,7 +52,14 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
   const [isEditable, setIsEditable] = useState(true);
   const [doc] = useState(() => new Y.Doc());
   const [authToken] = useState(() => getCookie('auth_token'));
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(() => {
+    // 检查是否在浏览器环境中
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      return !navigator.onLine;
+    }
+
+    return false; // 服务端默认为在线状态
+  });
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
@@ -64,6 +71,9 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
 
   // 网络状态监听
   useEffect(() => {
+    // 只在浏览器环境中添加事件监听器
+    if (typeof window === 'undefined') return;
+
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 

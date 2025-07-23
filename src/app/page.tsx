@@ -32,7 +32,6 @@ const Page = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 使用 useMotionValue 和 useSpring 来优化鼠标跟随效果
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springConfig = { damping: 25, stiffness: 700 };
@@ -50,7 +49,6 @@ const Page = () => {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // 延迟设置 mounted 状态，让动画更平滑
     const timer = setTimeout(() => {
       setIsMounted(true);
     }, 100);
