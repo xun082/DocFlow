@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
   FileText,
   Github,
@@ -215,20 +216,19 @@ const Page = () => {
     },
   };
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: {
       opacity: 1,
       y: 0,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         duration: 0.4,
         bounce: 0.2,
       },
     },
   };
 
-  // Contact 组件逻辑
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
   const handleCopyText = async (text: string, key: string) => {
@@ -254,14 +254,14 @@ const Page = () => {
     },
   };
 
-  const contactItem = {
+  const contactItem: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.8 },
     show: {
       opacity: 1,
       y: 0,
       scale: 1,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         duration: 0.8,
         bounce: 0.4,
       },
@@ -331,7 +331,7 @@ const Page = () => {
     },
   };
 
-  const faqItem = {
+  const faqItem: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.9, rotateX: -15 },
     show: {
       opacity: 1,
@@ -339,7 +339,7 @@ const Page = () => {
       scale: 1,
       rotateX: 0,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         duration: 0.8,
         bounce: 0.4,
       },
