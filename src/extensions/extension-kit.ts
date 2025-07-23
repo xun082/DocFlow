@@ -57,6 +57,7 @@ import {
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { ExcalidrawImage } from './ExcalidrawImage';
+import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 
 import uploadService from '@/services/upload';
 
@@ -179,6 +180,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     class: 'ProseMirror-dropcursor border-black',
   }),
   MarkdownPaste,
+  SelectOnlyCode,
 ];
 
 export default ExtensionKit;

@@ -24,6 +24,8 @@ import { Table, TableRow, TableHeader, TableCell } from './Table';
 import { Columns, Column } from './MultiColumn';
 import { ImageBlock } from './ImageBlock';
 import { MarkdownPaste } from './MarkdownPaste';
+import { TrailingNode } from './TrailingNode';
+import { CodeBlock } from './CodeBlock';
 
 export const ExtensionKitServer = () => [
   // 核心文档 - 使用与客户端相同的自定义 Document 扩展
@@ -35,9 +37,11 @@ export const ExtensionKitServer = () => [
     heading: false,
     paragraph: false, // 我们单独配置段落
     horizontalRule: false, // 禁用 StarterKit 的 horizontalRule，使用自定义版本
+    codeBlock: false,
     // 保留其他默认配置，包括 HardBreak 来处理换行
   }),
-
+  // 代码块
+  CodeBlock,
   // 段落 - 扩展配置直接添加样式类
   Paragraph.extend({
     renderHTML({ HTMLAttributes, node }) {
@@ -111,6 +115,9 @@ export const ExtensionKitServer = () => [
   // 列布局 - 使用项目中的MultiColumn扩展
   Columns,
   Column,
+
+  // Trailing Node - 确保文档末尾有空段落
+  TrailingNode,
 
   // Markdown 粘贴支持
   MarkdownPaste,
