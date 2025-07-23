@@ -132,13 +132,38 @@ function parseMarkdownToProseMirror(md: string, editor: Editor): ProseMirrorNode
 function mdastToProseMirror(node: any, schema: Schema): ProseMirrorNode[] {
   if (!node || !node.children) return [];
 
-  return node.children.map((child: any) => mdastNodeToPM(child, schema)).filter(Boolean);
+  return node.children
+    .map((child: any) => mdastNodeToPM(child, schema))
+    .flat()
+    .filter(Boolean);
 }
 
-function mdastNodeToPM(node: any, schema: Schema): ProseMirrorNode | null {
+function mdastNodeToPM(node: any, schema: Schema): ProseMirrorNode | ProseMirrorNode[] | null {
   switch (node.type) {
     case 'paragraph':
-      return schema.nodes.paragraph.create({}, mdastInlineToPM(node.children || [], schema));
+      const nodes: ProseMirrorNode[] = [];
+      let inlineNodes: ProseMirrorNode[] = []; // 存放 inline 节点
+
+      for (const child of node.children || []) {
+        // Block Node
+        if (['image'].includes(child.type)) {
+          if (inlineNodes.length > 0) {
+            nodes.push(schema.nodes.paragraph.create({}, mdastInlineToPM(inlineNodes, schema)));
+            inlineNodes = [];
+          }
+
+          nodes.push(mdastNodeToPM(child, schema) as ProseMirrorNode);
+        } else {
+          inlineNodes.push(child);
+        }
+      }
+
+      if (inlineNodes.length > 0) {
+        nodes.push(schema.nodes.paragraph.create({}, mdastInlineToPM(inlineNodes, schema)));
+        inlineNodes = [];
+      }
+
+      return nodes;
 
     case 'heading':
       return schema.nodes.heading.create(
@@ -165,7 +190,12 @@ function mdastNodeToPM(node: any, schema: Schema): ProseMirrorNode | null {
 
           for (const child of item.children || []) {
             const childNode = mdastNodeToPM(child, schema);
-            if (childNode) listItemContent.push(childNode);
+
+            if (Array.isArray(childNode)) {
+              listItemContent.push(...childNode);
+            } else if (childNode) {
+              listItemContent.push(childNode);
+            }
           }
 
           if (item.checked !== null && item.checked !== undefined && schema.nodes.taskItem) {
