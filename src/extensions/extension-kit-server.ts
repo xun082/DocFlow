@@ -15,6 +15,10 @@ import { TaskItem } from '@tiptap/extension-task-item';
 import { Image } from '@tiptap/extension-image';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Paragraph } from '@tiptap/extension-paragraph';
+import { Text } from '@tiptap/extension-text';
+import { HardBreak } from '@tiptap/extension-hard-break';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { all, createLowlight } from 'lowlight';
 import { Emoji } from '@tiptap-pro/extension-emoji';
 
 import { Document } from './Document';
@@ -25,11 +29,20 @@ import { Columns, Column } from './MultiColumn';
 import { ImageBlock } from './ImageBlock';
 import { MarkdownPaste } from './MarkdownPaste';
 import { TrailingNode } from './TrailingNode';
-import { CodeBlock } from './CodeBlock';
+import { BlockquoteFigure } from './BlockquoteFigure';
+import { Figcaption } from './Figcaption';
+
+const ServerSafeCodeBlock = CodeBlockLowlight.configure({
+  lowlight: createLowlight(all),
+  HTMLAttributes: {
+    class: 'hljs',
+  },
+});
 
 export const ExtensionKitServer = () => [
-  // 核心文档 - 使用与客户端相同的自定义 Document 扩展
   Document,
+  Text,
+  HardBreak,
 
   // StarterKit - 禁用冲突的扩展，使用自定义版本
   StarterKit.configure({
@@ -37,92 +50,65 @@ export const ExtensionKitServer = () => [
     heading: false,
     paragraph: false, // 我们单独配置段落
     horizontalRule: false, // 禁用 StarterKit 的 horizontalRule，使用自定义版本
-    codeBlock: false,
-    // 保留其他默认配置，包括 HardBreak 来处理换行
+    blockquote: false, // 禁用默认的 blockquote，使用 BlockquoteFigure
+    text: false, // 使用自定义 Text 扩展
+    hardBreak: false, // 使用自定义 HardBreak 扩展
+    codeBlock: false, // 禁用默认的 codeBlock，使用自定义版本
   }),
-  // 代码块
-  CodeBlock,
-  // 段落 - 扩展配置直接添加样式类
+
+  ServerSafeCodeBlock,
+
   Paragraph.extend({
     renderHTML({ HTMLAttributes, node }) {
-      // 如果段落为空，添加 &nbsp; 确保显示
       const isEmpty = !node.textContent.trim();
 
       return [
         'p',
         mergeAttributes(HTMLAttributes, { class: 'leading-relaxed my-3' }),
-        isEmpty ? '\u00A0' : 0, // 使用不间断空格
+        isEmpty ? '\u00A0' : 0,
       ];
     },
   }),
-
-  // 水平分割线 - 使用自定义版本避免重复
   HorizontalRule,
-
-  // 标题
   Heading.configure({
     levels: [1, 2, 3, 4, 5, 6],
   }),
-
-  // Typography - 重要！确保空格和文本格式正确，但禁用可能影响换行的转换
   Typography.configure({
-    // 禁用一些自动转换，避免影响换行
     openDoubleQuote: false,
     closeDoubleQuote: false,
     openSingleQuote: false,
     closeSingleQuote: false,
-    // 保留其他有用的功能
   }),
-
-  // 文本样式
+  BlockquoteFigure,
+  Figcaption,
   TextStyle,
   FontSize,
   FontFamily,
   Color,
   Underline,
-
-  // 文本对齐
   TextAlign.configure({
     types: ['heading', 'paragraph'],
   }),
-
-  // 高亮和上下标
   Highlight.configure({ multicolor: true }),
   Subscript,
   Superscript,
-
-  // 链接
   Link.configure({
     openOnClick: false,
   }),
-
-  // 任务列表
   TaskList,
   TaskItem.configure({
     nested: true,
   }),
-
-  // 图片 - 使用项目中的ImageBlock，已经有SSR兼容性处理
   Image,
   ImageBlock,
-
-  // 表格
   Table,
   TableRow,
   TableHeader,
   TableCell,
-
-  // 列布局 - 使用项目中的MultiColumn扩展
   Columns,
   Column,
-
-  // Trailing Node - 确保文档末尾有空段落
   TrailingNode,
-
-  // Markdown 粘贴支持
   MarkdownPaste,
-
-  // Emoji 支持
   Emoji,
 ];
 
