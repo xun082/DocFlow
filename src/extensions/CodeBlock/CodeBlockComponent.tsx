@@ -19,7 +19,13 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/utils/utils';
 
-function CodeBlockComponent({ node, updateAttributes, extension }: ReactNodeViewProps) {
+interface CodeBlockComponentProps extends ReactNodeViewProps {
+  editor: any;
+  getPos: () => number;
+}
+
+function CodeBlockComponent(props: CodeBlockComponentProps) {
+  const { node, updateAttributes, extension, editor, getPos } = props;
   const defaultLanguage = node.attrs.language || 'null';
 
   // 从 extension.options 获取配置
@@ -72,89 +78,12 @@ function CodeBlockComponent({ node, updateAttributes, extension }: ReactNodeView
     }
   };
 
-  // 语言映射函数
-  const mapLanguageForLowlight = (lang: string): string => {
-    const languageMap: Record<string, string> = {
-      js: 'javascript',
-      ts: 'typescript',
-      jsx: 'javascript',
-      tsx: 'typescript',
-      scss: 'css',
-      sass: 'css',
-      less: 'css',
-      vue: 'html',
-      svelte: 'html',
-      xml: 'html',
-      null: 'javascript',
-      auto: 'javascript',
-    };
-
-    return languageMap[lang] || lang;
-  };
-
-  // 应用语法高亮
-  const applyHighlight = (code: string, language: string) => {
-    const codeElement = codeBlockRef.current?.querySelector('pre code');
-
-    if (!codeElement || !extension.options.lowlight) {
-      if (codeElement) {
-        codeElement.textContent = code;
-      }
-
-      return;
-    }
-
-    try {
-      const mappedLanguage = mapLanguageForLowlight(language);
-      const highlighted = extension.options.lowlight.highlight(mappedLanguage, code);
-
-      if (highlighted && highlighted.children) {
-        const htmlContent = highlighted.children
-          .map((child: any) => {
-            if (typeof child === 'string') return child;
-            if (child.type === 'text') return child.value;
-
-            if (child.type === 'element') {
-              const className = child.properties?.className?.join(' ') || '';
-              const childContent =
-                child.children
-                  ?.map((c: any) => (typeof c === 'string' ? c : c.value || ''))
-                  .join('') || '';
-
-              return `<span class="${className}">${childContent}</span>`;
-            }
-
-            return '';
-          })
-          .join('');
-
-        if (htmlContent) {
-          codeElement.innerHTML = htmlContent;
-        } else {
-          codeElement.textContent = code;
-        }
-      } else {
-        codeElement.textContent = code;
-      }
-    } catch {
-      codeElement.textContent = code;
-    }
-  };
-
   const handleLanguageChange = (language: string) => {
     updateAttributes({ language });
     onLanguageChange?.(language);
 
-    // 重新应用语法高亮
-    const codeElement = codeBlockRef.current?.querySelector('pre code');
-
-    if (codeElement) {
-      const currentCode = codeElement.textContent || '';
-
-      if (currentCode.trim()) {
-        applyHighlight(currentCode, language);
-      }
-    }
+    // 不需要手动应用语法高亮，TipTap 会自动处理
+    // 当属性更新后，NodeView 会重新渲染并应用正确的语法高亮
   };
 
   const toggleCollapse = () => {
@@ -170,10 +99,14 @@ function CodeBlockComponent({ node, updateAttributes, extension }: ReactNodeView
     try {
       setIsFormatting(true);
 
-      const codeElement = codeBlockRef.current?.querySelector('pre code');
-      if (!codeElement) return;
+      // 获取当前代码块的内容
+      const pos = getPos();
+      const currentCode = node.textContent || '';
 
-      const currentCode = codeElement.textContent || '';
+      if (!currentCode.trim()) {
+        return;
+      }
+
       let formattedCode = currentCode;
 
       // js-beautify 配置选项
@@ -260,8 +193,25 @@ function CodeBlockComponent({ node, updateAttributes, extension }: ReactNodeView
           }
       }
 
+      // 如果格式化后的代码和原代码不同，通过 TipTap 命令更新内容
       if (formattedCode !== currentCode) {
-        applyHighlight(formattedCode, defaultLanguage);
+        const codeBlockPos = pos;
+        const codeBlockSize = node.nodeSize;
+
+        // 代码内容位置：跳过开始标签，直接定位到内容
+        const contentStart = codeBlockPos + 1;
+        const contentEnd = codeBlockPos + codeBlockSize - 1;
+
+        // 使用 TipTap 命令更新代码块内容
+        editor
+          .chain()
+          .command(({ tr, state }: { tr: any; state: any }) => {
+            // 替换代码块内的文本内容
+            tr.replaceWith(contentStart, contentEnd, state.schema.text(formattedCode));
+
+            return true;
+          })
+          .run();
       }
     } catch (error) {
       console.error('格式化失败:', error);
