@@ -106,7 +106,14 @@ function createContentForBlockType(blockType: string) {
     case 'text':
       return { type: 'paragraph', content: [{ type: 'text', text: '在此输入文本' }] };
     case 'image':
-      return { type: 'imageUpload' };
+      return {
+        type: 'imageUpload',
+        attrs: {
+          placeholder: '点击上传图片',
+          maxSize: 5 * 1024 * 1024, // 5MB
+        },
+      };
+    // return { type: 'imageUpload' };
     case 'list':
       return {
         type: 'bulletList',
@@ -138,6 +145,32 @@ function createContentForBlockType(blockType: string) {
             content: [
               { type: 'tableCell', content: [{ type: 'paragraph' }] },
               { type: 'tableCell', content: [{ type: 'paragraph' }] },
+            ],
+          },
+        ],
+      };
+    case 'codeblock':
+      return {
+        type: 'codeBlock',
+        attrs: {
+          language: 'javascript', // 默认语言
+        },
+        content: [],
+      };
+    case 'todolist':
+      return {
+        type: 'taskList',
+        content: [
+          {
+            type: 'taskItem',
+            attrs: {
+              checked: false,
+            },
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: '待办事项' }],
+              },
             ],
           },
         ],

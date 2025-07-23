@@ -32,7 +32,7 @@ export default function CalendarPage() {
     <div className="flex h-full">
       {/* 左侧侧边栏 */}
       <div className="w-80 border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-200">
           <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <Plus className="w-4 h-4" />
             <span>创建日程</span>
@@ -97,7 +97,7 @@ export default function CalendarPage() {
       {/* 主日历视图 */}
       <div className="flex-1 flex flex-col">
         {/* 头部 */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="px-4 py-[14px] border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-semibold text-gray-900">日历</h1>

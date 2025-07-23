@@ -202,7 +202,7 @@ const BlocksTab = () => {
   });
 
   const handleDragStart = (event: React.DragEvent, blockType: string) => {
-    event.dataTransfer.setData('text/plain', blockType);
+    event.dataTransfer.setData('application/x-block-type', blockType);
     event.dataTransfer.effectAllowed = 'copy';
   };
 
