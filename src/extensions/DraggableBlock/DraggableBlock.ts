@@ -80,9 +80,18 @@ export const DraggableBlock = Node.create<DraggableBlockOptions>({
       return ReactNodeViewRenderer(DraggableBlockView);
     }
 
-    // 服务器端返回一个空的NodeView函数
-    return () => ({
-      dom: document.createElement('div'),
-    });
+    return ({ node }) => {
+      const div = document?.createElement ? document.createElement('div') : null;
+
+      if (div) {
+        div.setAttribute('data-type', 'draggableBlock');
+        div.setAttribute('data-block-type', node.attrs.blockType || 'default');
+      }
+
+      return {
+        dom: div || ({ tagName: 'div' } as any),
+        contentDOM: div || ({ tagName: 'div' } as any),
+      };
+    };
   },
 });

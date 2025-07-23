@@ -64,10 +64,25 @@ export function generateDocumentHTML(content: JSONContent): string {
       return '<div class="text-gray-500 p-4 text-center">正在加载文档内容...</div>';
     }
 
-    return generateHTML(content, ExtensionKitServer());
+    // 获取服务端扩展
+    const extensions = ExtensionKitServer();
+
+    // 调试信息：记录扩展数量和内容结构
+    if (process.env.NODE_ENV === 'development') {
+      console.log('服务端扩展数量:', extensions.length);
+      console.log('文档内容类型:', content.type);
+    }
+
+    return generateHTML(content, extensions);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('HTML生成失败:', error);
+      console.error('错误详情:', {
+        message: error instanceof Error ? error.message : '未知错误',
+        stack: error instanceof Error ? error.stack : undefined,
+        contentType: content?.type,
+        contentStructure: typeof content === 'object' ? Object.keys(content) : 'not an object',
+      });
     }
 
     return '<div class="text-gray-500 p-4 text-center">正在加载文档内容...</div>';

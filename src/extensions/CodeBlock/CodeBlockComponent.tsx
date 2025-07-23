@@ -28,7 +28,6 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
   const { node, updateAttributes, extension, editor, getPos } = props;
   const defaultLanguage = node.attrs.language || 'null';
 
-  // 从 extension.options 获取配置
   const {
     theme = 'auto',
     showLineNumbers = false,
@@ -71,6 +70,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
       const codeText = codeElement?.textContent || '';
       await navigator.clipboard.writeText(codeText);
       setCopied(true);
+      // 使用 setTimeout 延迟状态更新，避免在渲染期间更新
       setTimeout(() => setCopied(false), 2000);
       onCopy?.(codeText);
     } catch (err) {
@@ -79,11 +79,11 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
   };
 
   const handleLanguageChange = (language: string) => {
-    updateAttributes({ language });
-    onLanguageChange?.(language);
-
-    // 不需要手动应用语法高亮，TipTap 会自动处理
-    // 当属性更新后，NodeView 会重新渲染并应用正确的语法高亮
+    // 使用 setTimeout 延迟更新，避免在渲染期间更新
+    setTimeout(() => {
+      updateAttributes({ language });
+      onLanguageChange?.(language);
+    }, 0);
   };
 
   const toggleCollapse = () => {
@@ -104,6 +104,8 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
       const currentCode = node.textContent || '';
 
       if (!currentCode.trim()) {
+        setIsFormatting(false);
+
         return;
       }
 
@@ -202,21 +204,24 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
         const contentStart = codeBlockPos + 1;
         const contentEnd = codeBlockPos + codeBlockSize - 1;
 
-        // 使用 TipTap 命令更新代码块内容
-        editor
-          .chain()
-          .command(({ tr, state }: { tr: any; state: any }) => {
-            // 替换代码块内的文本内容
-            tr.replaceWith(contentStart, contentEnd, state.schema.text(formattedCode));
+        // 使用 requestAnimationFrame 延迟更新，避免同步更新
+        requestAnimationFrame(() => {
+          editor
+            .chain()
+            .command(({ tr, state }: { tr: any; state: any }) => {
+              // 替换代码块内的文本内容
+              tr.replaceWith(contentStart, contentEnd, state.schema.text(formattedCode));
 
-            return true;
-          })
-          .run();
+              return true;
+            })
+            .run();
+        });
       }
     } catch (error) {
       console.error('格式化失败:', error);
     } finally {
-      setIsFormatting(false);
+      // 使用 setTimeout 延迟状态更新
+      setTimeout(() => setIsFormatting(false), 100);
     }
   };
 
