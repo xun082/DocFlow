@@ -89,6 +89,8 @@ interface DocumentHeaderProps {
   editor?: Editor | null;
   isSidebarOpen?: boolean;
   toggleSidebar?: () => void;
+  isTocOpen?: boolean;
+  toggleToc?: () => void;
   provider?: any;
   connectedUsers?: CollaborationUser[];
   currentUser?: CollaborationUser | null;
@@ -100,6 +102,8 @@ export default function DocumentHeader({
   editor,
   isSidebarOpen,
   toggleSidebar,
+  isTocOpen,
+  toggleToc,
   provider,
   connectedUsers = [],
   currentUser,
@@ -158,16 +162,42 @@ export default function DocumentHeader({
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px]">
-      {/* 左侧：侧边栏切换按钮和文档标题 */}
-      <div className="flex items-center space-x-4 min-w-0 flex-1">
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          aria-label={isSidebarOpen ? '隐藏侧边栏' : '显示侧边栏'}
-        >
-          <Icon name={isSidebarOpen ? 'PanelLeftClose' : 'PanelLeft'} />
-        </button>
+      {/* 左侧：侧边栏切换按钮、目录按钮和文档标题 */}
+      <div className="flex items-center space-x-3 min-w-0 flex-1">
+        <div className="flex items-center space-x-1">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+            aria-label={isSidebarOpen ? '隐藏侧边栏' : '显示侧边栏'}
+          >
+            <Icon name={isSidebarOpen ? 'PanelLeftClose' : 'PanelLeft'} />
+          </button>
+
+          {/* 目录控制按钮 */}
+          {toggleToc && (
+            <button
+              type="button"
+              onClick={toggleToc}
+              className={`
+                flex-shrink-0 p-2 rounded-lg transition-all duration-300 hover:scale-105
+                ${
+                  isTocOpen
+                    ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/50 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }
+              `}
+              aria-label={isTocOpen ? '隐藏目录' : '显示目录'}
+            >
+              <div className="relative">
+                <Icon name="List" className="w-4 h-4" />
+                {isTocOpen && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full animate-pulse" />
+                )}
+              </div>
+            </button>
+          )}
+        </div>
 
         {/* 文档标题 */}
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">

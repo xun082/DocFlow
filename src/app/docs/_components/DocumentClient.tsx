@@ -69,6 +69,12 @@ export function DocumentClient({
   const sidebar = useSidebar();
 
   const [isClient, setIsClient] = useState(false);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+
+  // 目录切换函数
+  const toggleToc = () => {
+    setIsTocOpen(!isTocOpen);
+  };
 
   // 简单的客户端检测
   useEffect(() => {
@@ -138,6 +144,8 @@ export function DocumentClient({
         editor={isReady ? currentEditor : null}
         isSidebarOpen={sidebar.isOpen}
         toggleSidebar={sidebar.toggle}
+        isTocOpen={isTocOpen}
+        toggleToc={toggleToc}
         provider={enableCollaboration ? collaborativeEditor.provider : undefined}
         connectedUsers={enableCollaboration ? collaborativeEditor.connectedUsers : undefined}
         currentUser={enableCollaboration ? collaborativeEditor.currentUser : undefined}
@@ -173,10 +181,10 @@ export function DocumentClient({
           </div>
         </div>
 
-        {/* 侧边栏 */}
-        {sidebar.isOpen && isReady && (
-          <div className="w-64 border-l border-gray-200 dark:border-gray-700 overflow-y-auto bg-white dark:bg-gray-900">
-            <TableOfContents isOpen={true} onClose={sidebar.close} editor={currentEditor} />
+        {/* 目录侧边栏 */}
+        {isTocOpen && isReady && (
+          <div className="w-80 border-l border-slate-200/60 dark:border-slate-800/60 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
+            <TableOfContents isOpen={isTocOpen} editor={currentEditor} />
           </div>
         )}
       </div>

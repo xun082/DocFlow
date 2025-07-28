@@ -484,7 +484,11 @@ const Page = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
           >
-            <Link href="https://github.com/xun082/DocFlow" target="_blank">
+            <Link
+              href="https://github.com/xun082/DocFlow"
+              target="_blank"
+              aria-label="查看 DocFlow 在 GitHub 上的源代码"
+            >
               <div className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10">
                 <Github className="h-4 w-4" />
                 <span className="text-sm font-medium">GitHub</span>
@@ -613,7 +617,7 @@ const Page = () => {
                     </div>
 
                     {/* 标题 */}
-                    <h3
+                    <h2
                       className={`text-xl font-bold text-white mb-3 transition-all duration-300 ${
                         isMounted
                           ? 'group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-300'
@@ -621,7 +625,7 @@ const Page = () => {
                       }`}
                     >
                       {feature.title}
-                    </h3>
+                    </h2>
 
                     {/* 描述 */}
                     <p
@@ -738,9 +742,9 @@ const Page = () => {
                   ease: 'easeInOut',
                 }}
               />
-              <h2 className="relative text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-6">
+              <h3 className="relative text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-6">
                 加入社区
-              </h2>
+              </h3>
             </div>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -875,6 +879,7 @@ const Page = () => {
                           href={method.link}
                           target="_blank"
                           rel="noopener noreferrer"
+                          aria-label={`${method.text} - ${method.desc}`}
                           className={`relative overflow-hidden px-6 py-3 bg-gradient-to-r ${method.gradient} text-white rounded-xl font-medium text-base shadow-lg transition-all duration-300 group/btn block`}
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.98 }}
@@ -921,7 +926,7 @@ const Page = () => {
             >
               开源项目
             </motion.span>
-            <motion.h2
+            <motion.h3
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
@@ -929,7 +934,7 @@ const Page = () => {
               className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent"
             >
               更多开源项目
-            </motion.h2>
+            </motion.h3>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -1002,9 +1007,9 @@ const Page = () => {
                     <div className="absolute inset-0 flex flex-col justify-center items-center p-6 z-10 text-center">
                       {/* 项目图标 */}
                       <div className="text-6xl mb-4">{project.icon}</div>
-                      <h3 className="text-3xl font-bold text-white mb-3 drop-shadow-md tracking-tight">
+                      <h4 className="text-3xl font-bold text-white mb-3 drop-shadow-md tracking-tight">
                         {project.title}
-                      </h3>
+                      </h4>
                       <div className="flex items-center gap-6 mb-2">
                         <div className="flex items-center gap-2">
                           <Star className="text-yellow-300 text-xl w-5 h-5" />
@@ -1050,6 +1055,7 @@ const Page = () => {
                         href={project.link}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`查看 ${project.title} 项目的 GitHub 源代码`}
                         className="w-full inline-flex items-center justify-center gap-2 px-6 py-3
                           relative overflow-hidden group/link
                           bg-gradient-to-r from-violet-600 to-purple-600
@@ -1268,9 +1274,9 @@ const Page = () => {
                   ease: 'easeInOut',
                 }}
               />
-              <h2 className="relative text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-transparent mb-8 tracking-tight">
+              <h3 className="relative text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-8 tracking-tight">
                 常见问题
-              </h2>
+              </h3>
             </div>
 
             <motion.p
@@ -1497,11 +1503,11 @@ const Page = () => {
           >
             <div className="relative">
               {/* 主装饰线 */}
-              <div className="w-32 h-2 bg-gradient-to-r from-indigo-500 via-purple-500 via-pink-500 to-cyan-500 rounded-full" />
+              <div className="w-32 h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full" />
 
               {/* 多层光晕效果 */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 via-pink-500 to-cyan-500 rounded-full blur-sm opacity-60"
+                className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full blur-sm opacity-60"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.6, 0.9, 0.6],
@@ -1569,6 +1575,7 @@ const Page = () => {
               <Link
                 href="https://github.com/xun082/DocFlow"
                 target="_blank"
+                aria-label="访问 DocFlow 的 GitHub 仓库"
                 className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 will-change-transform"
               >
                 <Github className="h-5 w-5" />
