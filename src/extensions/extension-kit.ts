@@ -154,7 +154,28 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   TextAlign.extend({
     addKeyboardShortcuts() {
-      return {};
+      return {
+        Tab: () => {
+          return this.editor.commands.insertContent('  ');
+        },
+        'Shift-Tab': () => {
+          const { state } = this.editor;
+          const { from } = state.selection;
+          const $from = state.doc.resolve(from);
+          const startOfLine = $from.start($from.depth);
+          const textBeforeCursor = state.doc.textBetween(startOfLine, from);
+
+          if (textBeforeCursor.endsWith('  ')) {
+            const deleteFrom = Math.max(startOfLine, from - 2);
+
+            return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
+          } else if (textBeforeCursor.endsWith(' ')) {
+            return this.editor.commands.deleteRange({ from: from - 1, to: from });
+          }
+
+          return false;
+        },
+      };
     },
   }).configure({
     types: ['heading', 'paragraph'],
