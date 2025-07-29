@@ -3,6 +3,7 @@ import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+
   webpack(config, { isServer }) {
     config.module.rules.push({
       test: /\.svg$/,

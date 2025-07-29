@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense, useState } from 'react';
 import { Github, Mail } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -9,9 +9,17 @@ import { Button } from '@/components/ui/button';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+
+  // 确保组件在客户端挂载后再处理重定向逻辑
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 获取重定向URL
   const getRedirectUrl = () => {
+    if (!mounted) return '/'; // 未挂载时返回默认值
+
     const redirectTo = searchParams?.get('redirect_to');
 
     if (redirectTo) {
@@ -23,14 +31,23 @@ function LoginContent() {
 
   // 保存重定向信息到sessionStorage
   useEffect(() => {
+    if (!mounted) return; // 确保在客户端执行
+
     const redirectUrl = getRedirectUrl();
 
     if (redirectUrl !== '/') {
-      sessionStorage.setItem('auth_redirect', redirectUrl);
+      try {
+        sessionStorage.setItem('auth_redirect', redirectUrl);
+      } catch (error) {
+        // 静默处理sessionStorage错误（如隐私模式）
+        console.warn('Failed to save redirect URL to sessionStorage:', error);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, mounted]);
 
   const handleGitHubLogin = () => {
+    if (!mounted) return; // 确保在客户端执行
+
     const redirectUrl = getRedirectUrl();
 
     // 构建GitHub授权URL，通过state参数传递重定向信息
