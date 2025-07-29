@@ -10,8 +10,14 @@ import { saveAuthData } from '@/utils/cookie';
 function CallbackContent() {
   const [status, setStatus] = useState('处理中...');
   const [state, setState] = useState<'loading' | 'success' | 'error'>('loading');
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // 确保组件在客户端挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 获取原始跳转页面
   const getRedirectUrl = () => {
@@ -33,14 +39,19 @@ function CallbackContent() {
       return decodeURIComponent(redirectTo);
     }
 
-    // 最后从sessionStorage获取
-    if (typeof window !== 'undefined') {
-      const savedRedirect = sessionStorage.getItem('auth_redirect');
+    // 最后从sessionStorage获取（仅在客户端）
+    if (mounted && typeof window !== 'undefined') {
+      try {
+        const savedRedirect = sessionStorage.getItem('auth_redirect');
 
-      if (savedRedirect) {
-        sessionStorage.removeItem('auth_redirect'); // 使用后清除
+        if (savedRedirect) {
+          sessionStorage.removeItem('auth_redirect'); // 使用后清除
 
-        return savedRedirect;
+          return savedRedirect;
+        }
+      } catch (error) {
+        // 静默处理sessionStorage错误
+        console.warn('Failed to access sessionStorage:', error);
       }
     }
 
@@ -60,6 +71,9 @@ function CallbackContent() {
   };
 
   useEffect(() => {
+    // 只有在客户端挂载后才执行认证处理
+    if (!mounted) return;
+
     const processAuth = async () => {
       try {
         // 检查searchParams是否存在
@@ -151,7 +165,7 @@ function CallbackContent() {
     };
 
     processAuth();
-  }, [searchParams, router]);
+  }, [searchParams, router, mounted]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
