@@ -33,7 +33,7 @@ export function TextMenu({ editor }: { editor: Editor }) {
 
     const handleUpdate = () => {
       // 暂时注释掉，避免阻塞TextMenu显示
-      // console.log('📝 编辑器更新，设置 isTyping = true');
+
       // setIsTyping(true);
 
       // 清除之前的定时器
@@ -43,7 +43,6 @@ export function TextMenu({ editor }: { editor: Editor }) {
 
       // 快速重置输入状态
       typingTimeout = window.setTimeout(() => {
-        console.log('⏰ 重置 isTyping = false');
         setIsTyping(false);
       }, 100); // 大幅减少延迟时间
     };
