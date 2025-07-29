@@ -21,8 +21,8 @@ function CallbackContent() {
     if (state) {
       try {
         return decodeURIComponent(state);
-      } catch (e) {
-        console.warn('解析state参数失败:', e);
+      } catch {
+        // 解析失败时忽略state参数
       }
     }
 
@@ -53,7 +53,6 @@ function CallbackContent() {
     saveAuthData(authData);
     setStatus('登录成功! 正在跳转...');
     setState('success');
-    console.log('认证数据:', authData);
 
     // 跳转到原来的页面
     const redirectUrl = getRedirectUrl();
@@ -97,14 +96,27 @@ function CallbackContent() {
         const code = searchParams.get('code');
 
         if (!code) {
-          setStatus('未收到授权码或Token');
+          setStatus('未收到授权码或Token，请重新尝试登录');
           setState('error');
 
           return;
         }
 
+        setStatus('正在与GitHub服务器通信...');
+
         const { data, error } = await authApi.githubCallback(code, {
-          onError: (error) => console.error('GitHub认证出错:', error),
+          onError: (error) => {
+            // 处理不同类型的错误
+            if (error instanceof Error) {
+              if (error.message.includes('超时') || error.message.includes('timeout')) {
+                setStatus('GitHub认证超时，请重试或检查网络连接');
+              } else if (error.message.includes('网络')) {
+                setStatus('网络连接错误，请检查您的网络设置');
+              } else {
+                setStatus(`认证失败: ${error.message}`);
+              }
+            }
+          },
         });
 
         if (error) {
@@ -122,9 +134,19 @@ function CallbackContent() {
           setState('error');
         }
       } catch (e) {
-        setStatus('登录过程中发生错误');
+        if (e instanceof Error) {
+          if (e.message.includes('Failed to fetch') || e.message.includes('Network')) {
+            setStatus('网络连接失败，请检查网络设置后重试');
+          } else if (e.message.includes('timeout') || e.message.includes('超时')) {
+            setStatus('请求超时，服务器响应较慢，请重试');
+          } else {
+            setStatus(`认证失败: ${e.message}`);
+          }
+        } else {
+          setStatus('登录过程中发生未知错误，请重试');
+        }
+
         setState('error');
-        console.error(e);
       }
     };
 
@@ -155,13 +177,26 @@ function CallbackContent() {
             {state === 'error' && (
               <div className="flex flex-col items-center">
                 <AlertCircle className="h-14 w-14 text-red-500 mb-4" />
-                <p className="text-lg font-medium text-gray-700">{status}</p>
-                <button
-                  className="mt-6 py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                  onClick={() => router.push('/auth')}
-                >
-                  返回登录
-                </button>
+                <p className="text-lg font-medium text-gray-700 text-center mb-4">{status}</p>
+                <div className="flex space-x-3">
+                  <button
+                    className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                    onClick={() => {
+                      setState('loading');
+                      setStatus('重新尝试认证...');
+                      // 重新触发认证流程
+                      window.location.reload();
+                    }}
+                  >
+                    重试
+                  </button>
+                  <button
+                    className="py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    onClick={() => router.push('/auth')}
+                  >
+                    返回登录
+                  </button>
+                </div>
               </div>
             )}
           </div>

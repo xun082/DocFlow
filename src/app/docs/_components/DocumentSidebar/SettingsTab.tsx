@@ -154,7 +154,6 @@ const SettingsTab = () => {
               )}
               onClick={() => {
                 // TODO: 实现具体的设置操作
-                console.log(`执行操作: ${item.action}`);
               }}
             >
               <Icon name={item.icon as any} className="h-4 w-4 text-gray-500 dark:text-gray-400" />

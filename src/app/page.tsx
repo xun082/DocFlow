@@ -43,6 +43,19 @@ const Page = () => {
     const token = getCookie('auth_token');
     setIsLoggedIn(!!token);
 
+    // 检查是否是GitHub OAuth回调（如果callback URL配置错误指向了根目录）
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      // 构建完整的callback URL，保留所有参数
+      const callbackUrl = `/auth/callback${window.location.search}`;
+      // 使用replace避免在浏览器历史中留下痕迹
+      window.location.replace(callbackUrl);
+
+      return; // 早期返回，避免设置其他监听器
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX - 192);
       mouseY.set(e.clientY - 192);
@@ -238,8 +251,8 @@ const Page = () => {
       setTimeout(() => {
         setCopiedStates((prev) => ({ ...prev, [key]: false }));
       }, 2000);
-    } catch (err) {
-      console.error('复制失败', err);
+    } catch {
+      // 复制失败时静默处理
     }
   };
 
