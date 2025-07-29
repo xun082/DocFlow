@@ -27,26 +27,6 @@ export type AuthErrorType = {
   reason: string;
 };
 
-// 工具函数
-const getWebSocketUrl = (): string | null => {
-  const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-  if (!url) return null;
-
-  // 将127.0.0.1转换为localhost以避免连接问题
-  return url.includes('127.0.0.1') ? url.replace('127.0.0.1', 'localhost') : url;
-};
-
-const validateConfig = () => {
-  const websocketUrl = getWebSocketUrl();
-  const authToken = getCookie('auth_token');
-
-  return {
-    websocketUrl,
-    authToken,
-    isValid: !!(websocketUrl && authToken),
-  };
-};
-
 // 主要的协作编辑器hook
 export function useCollaborativeEditor(roomId: string, initialContent?: JSONContent) {
   const [isEditable, setIsEditable] = useState(true);
@@ -152,10 +132,10 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
   useEffect(() => {
     if (isOffline || !authToken || !roomId || !doc) return;
 
-    const config = validateConfig();
+    const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
-    if (!config.isValid) {
-      setAuthError({ status: true, reason: 'config-incomplete' });
+    if (!websocketUrl) {
+      setAuthError({ status: true, reason: 'websocket-url-missing' });
 
       return;
     }
@@ -166,7 +146,7 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
     };
 
     const hocuspocusProvider = new HocuspocusProvider({
-      url: config.websocketUrl!,
+      url: websocketUrl,
       name: roomId,
       document: doc,
       token: authToken,
@@ -206,11 +186,6 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
 
     setProvider(hocuspocusProvider);
 
-    // 设置用户awareness信息
-    if (currentUser && hocuspocusProvider.awareness) {
-      hocuspocusProvider.awareness.setLocalStateField('user', currentUser);
-    }
-
     return () => {
       if (hocuspocusProvider.awareness) {
         hocuspocusProvider.awareness.setLocalStateField('user', null);
@@ -218,7 +193,14 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
 
       hocuspocusProvider.destroy();
     };
-  }, [roomId, doc, authToken, isOffline, currentUser]);
+  }, [roomId, doc, authToken, isOffline]);
+
+  // 设置用户awareness信息
+  useEffect(() => {
+    if (provider?.awareness && currentUser) {
+      provider.awareness.setLocalStateField('user', currentUser);
+    }
+  }, [provider, currentUser]);
 
   // 协作用户管理
   useEffect(() => {
