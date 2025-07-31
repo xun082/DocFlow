@@ -3,9 +3,9 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import { memo, useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 
-import { useTextmenuStates } from './hooks/useTextmenuStates';
-import { useTextmenuCommands } from './hooks/useTextmenuCommands';
-import { useTextmenuContentTypes } from './hooks/useTextmenuContentTypes';
+import { useTextmenuStates } from './hooks/useTextMenuStates';
+import { useTextmenuCommands } from './hooks/useTextMenuCommands';
+import { useTextmenuContentTypes } from './hooks/useTextMenuContentTypes';
 import { FontFamilyPicker } from './components/FontFamilyPicker';
 import { FontSizePicker } from './components/FontSizePicker';
 import { ContentTypePicker } from './components/ContentTypePicker';

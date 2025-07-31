@@ -60,10 +60,33 @@ function CallbackContent() {
   };
 
   // 统一处理认证成功逻辑
-  const handleAuthSuccess = (authData: any) => {
+  const handleAuthSuccess = async (authData: any) => {
     saveAuthData(authData);
-    setStatus('登录成功! 正在跳转...');
+    setStatus('登录成功! 正在获取用户资料...');
     setState('success');
+
+    try {
+      // 使用 getCurrentUser 接口获取用户资料
+      const { data: userResponse } = await authApi.getCurrentUser({
+        onError: (error) => {
+          console.error('获取用户资料失败:', error);
+          setStatus('获取用户资料失败，但登录成功');
+        },
+        unauthorized: () => {
+          setStatus('用户认证失败');
+          setState('error');
+        },
+      });
+
+      if (userResponse?.data && typeof window !== 'undefined') {
+        console.log('User profile loaded:', userResponse.data);
+        localStorage.setItem('user_profile', JSON.stringify(userResponse.data));
+        setStatus('登录成功! 正在跳转...');
+      }
+    } catch (error) {
+      console.warn('Error processing user profile:', error);
+      setStatus('获取用户资料失败，但登录成功');
+    }
 
     // 跳转到原来的页面
     const redirectUrl = getRedirectUrl();
@@ -101,7 +124,7 @@ function CallbackContent() {
             success: true,
           };
 
-          handleAuthSuccess(authData);
+          await handleAuthSuccess(authData);
 
           return;
         }
@@ -142,7 +165,7 @@ function CallbackContent() {
 
         // 从API响应中获取实际的数据
         if (data && data.code === 200) {
-          handleAuthSuccess(data.data);
+          await handleAuthSuccess(data.data);
         } else {
           setStatus(`登录失败: ${data?.message || '未知错误'}`);
           setState('error');

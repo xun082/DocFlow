@@ -9,8 +9,7 @@ export interface AuthResponse {
   refresh_token?: string;
   expires_in?: number;
   refresh_expires_in?: number;
-  success: boolean;
-  message?: string;
+  user: User;
 }
 
 /**
@@ -38,7 +37,8 @@ export const authApi = {
    * @param errorHandler 自定义错误处理函数
    * @returns 用户信息，包含错误处理
    */
-  getMe: (errorHandler?: ErrorHandler) => request.get<User>('/api/v1/users/me', { errorHandler }),
+  getCurrentUser: (errorHandler?: ErrorHandler) =>
+    request.get<User>('/api/v1/auth/profile', { errorHandler }),
 
   /**
    * 发送邮箱验证码

@@ -9,8 +9,7 @@ import { HocuspocusProvider } from '@hocuspocus/provider';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
-import authApi from '@/services/auth';
-import { getCookie } from '@/utils/cookie';
+import { getAuthToken } from '@/utils/cookie';
 
 // 类型定义
 export interface CollaborationUser {
@@ -35,7 +34,7 @@ export function useCollaborativeEditor(
 ) {
   const [isEditable, setIsEditable] = useState(true);
   const [doc] = useState(() => new Y.Doc());
-  const [authToken] = useState(() => getCookie('auth_token'));
+  const [authToken] = useState(() => getAuthToken());
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
@@ -47,35 +46,31 @@ export function useCollaborativeEditor(
   const providerRef = useRef<HocuspocusProvider | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
 
-  // 获取当前用户信息
+  // 从localStorage获取当前用户信息
   useEffect(() => {
     if (!authToken || !roomId || roomId === '') return;
 
-    const fetchUser = async () => {
-      try {
-        const { data: response } = await authApi.getMe({
-          onError: (error) => console.error('获取用户信息失败:', error),
-          unauthorized: () => {
-            setAuthError({ status: true, reason: 'unauthorized' });
-          },
-        });
+    try {
+      if (typeof window !== 'undefined') {
+        const userProfileStr = localStorage.getItem('user_profile');
 
-        if (response?.data) {
+        if (userProfileStr) {
+          const userProfile = JSON.parse(userProfileStr);
           setCurrentUser({
-            id: response.data.id.toString(),
-            name: response.data.name,
-            color: getCursorColorByUserId(response.data.id.toString()),
-            avatar: response.data.avatar_url,
+            id: userProfile.id.toString(),
+            name: userProfile.name,
+            color: getCursorColorByUserId(userProfile.id.toString()),
+            avatar: userProfile.avatar_url,
           });
           setAuthError({ status: false, reason: '' });
+        } else {
+          setAuthError({ status: true, reason: 'user-profile-missing' });
         }
-      } catch (error) {
-        console.error('获取用户信息异常:', error);
-        setAuthError({ status: true, reason: 'user-fetch-failed' });
       }
-    };
-
-    fetchUser();
+    } catch (error) {
+      console.error('解析用户信息失败:', error);
+      setAuthError({ status: true, reason: 'user-parse-failed' });
+    }
   }, [authToken]);
 
   // 本地持久化
