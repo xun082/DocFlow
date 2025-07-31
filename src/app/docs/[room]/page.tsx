@@ -1,512 +1,409 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { EditorContent, useEditor } from '@tiptap/react';
+import { JSONContent } from '@tiptap/core';
+import * as Y from 'yjs';
+import { Collaboration } from '@tiptap/extension-collaboration';
+import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
+import { IndexeddbPersistence } from 'y-indexeddb';
+import { HocuspocusProvider } from '@hocuspocus/provider';
 
-import { ErrorPage, getErrorDisplay } from '../_components/error';
-import { DocumentClient } from '../_components/DocumentClient';
-
-import { getCookie } from '@/utils/cookie';
 import { DocumentApi } from '@/services/document';
+import { ExtensionKit } from '@/extensions/extension-kit';
+import { getCursorColorByUserId } from '@/utils/cursor_color';
+import { getAuthToken } from '@/utils/cookie';
+import DocumentHeader from '@/app/docs/_components/DocumentHeader';
+import { TableOfContents } from '@/app/docs/_components/TableOfContents';
+import { useSidebar } from '@/stores/sidebarStore';
+import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
+import { LinkMenu } from '@/components/menus';
+import { TextMenu } from '@/components/menus/TextMenu';
+import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
+import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
 
-// 文档结果类型定义
-interface DocumentResult {
-  data?: any;
-  error?: string | null;
-  status?: number;
-  message?: string;
+// 类型定义
+interface CollaborationUser {
+  id: string;
+  name: string;
+  color: string;
+  avatar: string;
 }
 
-// 简单的错误边界组件
-function SimpleErrorBoundary({
-  children,
-  fallback,
-  onError,
-}: {
-  children: React.ReactNode;
-  fallback: React.ReactNode;
-  onError?: (error: Error) => void;
-}) {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setHasError(true);
-      onError?.(new Error(event.message));
-    };
-
-    window.addEventListener('error', handleError);
-
-    return () => window.removeEventListener('error', handleError);
-  }, [onError]);
-
-  if (hasError) {
-    return <>{fallback}</>;
-  }
-
-  return <>{children}</>;
-}
-
-// 优化的加载动画组件 - 添加无障碍支持
-function LoadingSpinner() {
-  return (
-    <div
-      className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
-      role="status"
-      aria-live="polite"
-      aria-label="正在加载文档编辑器"
-    >
-      <div className="text-center">
-        <div
-          className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"
-          aria-hidden="true"
-        ></div>
-        <p className="text-lg text-gray-600 dark:text-gray-400">正在加载文档编辑器...</p>
-        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">首次加载可能需要几秒钟</p>
-        {/* 无障碍支持 - 屏幕阅读器 */}
-        <span className="sr-only">文档编辑器正在加载中，请稍候</span>
-      </div>
-    </div>
-  );
-}
-
-// 文档状态枚举
-enum DocumentStatus {
-  CHECKING_AUTH = 'checking_auth',
-  LOADING = 'loading',
-  READY = 'ready',
-  ERROR = 'error',
-  UNAUTHORIZED = 'unauthorized',
-}
-
-interface DocumentState {
-  status: DocumentStatus;
-  documentData: any;
-  initialContent: any;
-  error: DocumentResult | null;
-  title: string;
-}
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'syncing' | 'error';
 
 export default function DocumentPage() {
-  const router = useRouter();
   const params = useParams();
   const documentId = params?.room as string;
-
-  // 状态管理
-  const [state, setState] = useState<DocumentState>({
-    status: DocumentStatus.CHECKING_AUTH,
-    documentData: null,
-    initialContent: null,
-    error: null,
-    title: `协作文档 ${documentId}`,
-  });
-
-  // 缓存管理
-  const [documentCache, setDocumentCache] = useState<Map<string, any>>(new Map());
-  const [isOffline, setIsOffline] = useState<boolean>(false);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-
-  // 组件挂载状态追踪
-  const isMountedRef = useRef<boolean>(false);
-
-  // 认证检查
-  const checkAuth = useCallback(() => {
-    const authToken = getCookie('auth_token');
-
-    if (!authToken) {
-      // 保存当前路径用于登录后跳转
-      const currentPath = window.location.pathname + window.location.search;
-
-      sessionStorage.setItem('redirect_after_auth', currentPath);
-      router.replace('/auth');
-
-      return false;
-    }
-
-    return true;
-  }, [router]);
-
-  // 客户端挂载状态
-  useEffect(() => {
-    isMountedRef.current = true;
-    setIsMounted(true);
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // 离线检测 - 客户端安全
-  useEffect(() => {
-    if (!isMounted) return;
-
-    // 确保在客户端环境中执行
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
-
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    // 设置初始状态
-    setIsOffline(!navigator.onLine);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [isMounted]);
-
-  // 获取文档数据（带缓存和离线支持）
-  const fetchDocument = useCallback(async () => {
-    if (!isMountedRef.current || !documentId) {
-      return;
-    }
-
-    const authToken = getCookie('auth_token');
-
-    if (!authToken) {
-      if (!isMountedRef.current) return;
-      setState((prev) => ({ ...prev, status: DocumentStatus.UNAUTHORIZED }));
-
-      return;
-    }
-
-    if (!isMountedRef.current) return;
-    setState((prev) => ({ ...prev, status: DocumentStatus.LOADING }));
-
-    try {
-      // 检查缓存 - 使用当前的引用而不是依赖
-      const currentCache = documentCache.get(documentId);
-
-      // 动态检查网络状态
-      const isCurrentlyOffline =
-        isMounted && typeof navigator !== 'undefined' ? !navigator.onLine : false;
-
-      if (currentCache && isCurrentlyOffline) {
-        if (!isMountedRef.current) return;
-        setState((prev) => ({
-          ...prev,
-          status: DocumentStatus.READY,
-          documentData: currentCache.documentData,
-          initialContent: currentCache.content,
-          title: currentCache.title,
-          error: null,
-        }));
-
-        return;
-      }
-
-      const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
-
-      // 检查组件是否仍然挂载
-      if (!isMountedRef.current) return;
-
-      if (result.error) {
-        let errorType = 'API_ERROR';
-        let errorMessage = result.error;
-
-        if (result.status === 401) {
-          errorType = 'AUTH_FAILED';
-          errorMessage = '认证失败，请重新登录';
-        } else if (result.status === 403) {
-          errorType = 'PERMISSION_DENIED';
-          errorMessage = '没有权限访问此文档';
-        } else if (result.status === 404) {
-          errorType = 'NOT_FOUND';
-          errorMessage = '文档不存在或已被删除';
-        }
-
-        if (errorType === 'AUTH_FAILED') {
-          if (!isMountedRef.current) return;
-          setState((prev) => ({ ...prev, status: DocumentStatus.UNAUTHORIZED }));
-
-          return;
-        }
-
-        // 如果网络错误且有缓存，使用缓存
-        if (errorType === 'NETWORK_ERROR' && currentCache) {
-          if (!isMountedRef.current) return;
-          setState((prev) => ({
-            ...prev,
-            status: DocumentStatus.READY,
-            documentData: currentCache.documentData,
-            initialContent: currentCache.content,
-            title: currentCache.title,
-            error: null,
-          }));
-
-          return;
-        }
-
-        if (!isMountedRef.current) return;
-        setState((prev) => ({
-          ...prev,
-          status: DocumentStatus.ERROR,
-          error: { error: errorType, message: errorMessage, status: result.status },
-        }));
-
-        return;
-      }
-
-      if (!result.data?.data) {
-        if (!isMountedRef.current) return;
-        setState((prev) => ({
-          ...prev,
-          status: DocumentStatus.ERROR,
-          error: { error: 'INVALID_DATA', message: '响应数据格式错误' },
-        }));
-
-        return;
-      }
-
-      const documentData = result.data.data as any;
-      const content = documentData.content;
-      const title = documentData.title;
-
-      // 缓存数据
-      setDocumentCache((prev) =>
-        new Map(prev).set(documentId, {
-          documentData,
-          content,
-          title,
-          cachedAt: Date.now(),
-        }),
-      );
-
-      // 更新页面标题 - 只在客户端执行
-      if (typeof document !== 'undefined') {
-        document.title = title;
-      }
-
-      if (!isMountedRef.current) return;
-      setState((prev) => ({
-        ...prev,
-        status: DocumentStatus.READY,
-        documentData,
-        initialContent: content,
-        title,
-        error: null,
-      }));
-    } catch (error) {
-      console.error('文档加载失败:', error);
-
-      // 尝试使用缓存数据
-      const currentCache = documentCache.get(documentId);
-
-      if (currentCache) {
-        if (!isMountedRef.current) return;
-        setState((prev) => ({
-          ...prev,
-          status: DocumentStatus.READY,
-          documentData: currentCache.documentData,
-          initialContent: currentCache.content,
-          title: currentCache.title,
-          error: null,
-        }));
-
-        return;
-      }
-
-      if (!isMountedRef.current) return;
-      setState((prev) => ({
-        ...prev,
-        status: DocumentStatus.ERROR,
-        error: {
-          error: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : '网络连接失败',
-        },
-      }));
-    }
-  }, [documentId, isMounted]); // 移除 documentCache 依赖避免循环
-
-  // 重试逻辑
-  const retry = useCallback(() => {
-    if (state.status === DocumentStatus.UNAUTHORIZED) {
-      if (!checkAuth()) return;
-    }
-
-    fetchDocument();
-  }, [state.status, checkAuth, fetchDocument]);
-
-  // 初始化 - 只在客户端挂载且 documentId 存在时执行，并且只执行一次
-  useEffect(() => {
-    if (!isMounted || !documentId) return;
-
-    // 避免重复加载 - 如果已经在加载或者已经成功，就不再加载
-    if (state.status !== DocumentStatus.CHECKING_AUTH) {
-      return;
-    }
-
-    if (!checkAuth()) return;
-    fetchDocument();
-  }, [documentId, isMounted, state.status]); // 添加 state.status 确保只在初始状态时执行
-
-  // 注：移除预加载逻辑，因为已改为静态导入
-
-  // 内存管理 - 清理过期缓存
-  useEffect(() => {
-    const cleanupInterval = setInterval(
-      () => {
-        const now = Date.now();
-        const maxAge = 30 * 60 * 1000; // 30分钟
-
-        setDocumentCache((prev) => {
-          const newCache = new Map(prev);
-
-          for (const [key, value] of newCache.entries()) {
-            if (now - value.cachedAt > maxAge) {
-              newCache.delete(key);
-            }
-          }
-
-          return newCache;
-        });
-      },
-      5 * 60 * 1000,
-    ); // 每5分钟清理一次
-
-    return () => clearInterval(cleanupInterval);
-  }, []);
-
-  // 注：移除预取逻辑以避免无意义的请求循环
-
-  // 错误边界处理
-  const errorDisplay = useMemo(() => {
-    if (!state.error) return null;
-
-    return getErrorDisplay(state.error.error || 'UNKNOWN_ERROR', state.error.message);
-  }, [state.error]);
-
-  // 增强的键盘快捷键和无障碍支持
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + R 刷新
-      if ((e.ctrlKey || e.metaKey) && e.key === 'r' && state.status === DocumentStatus.ERROR) {
-        e.preventDefault();
-        retry();
-      }
-
-      // Escape 键关闭错误对话框或返回
-      if (e.key === 'Escape' && state.status === DocumentStatus.ERROR) {
-        router.back();
-      }
-
-      // F5 重新加载
-      if (e.key === 'F5' && state.status === DocumentStatus.ERROR) {
-        e.preventDefault();
-        retry();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [retry, state.status, router]);
-
-  // 渲染逻辑
-  const renderContent = () => {
-    switch (state.status) {
-      case DocumentStatus.CHECKING_AUTH:
-      case DocumentStatus.LOADING:
-        return <LoadingSpinner />;
-
-      case DocumentStatus.UNAUTHORIZED:
-        return (
-          <ErrorPage
-            errorDisplay={{
-              title: '需要登录',
-              message: '请先登录以访问文档',
-              actionText: '前往登录',
-              actionUrl: '/auth',
-            }}
-            documentId={documentId}
-            errorType="UNAUTHORIZED"
-          />
-        );
-
-      case DocumentStatus.ERROR:
-        if (!errorDisplay) return <LoadingSpinner />;
-
-        return (
-          <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-            <div className="text-center max-w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                {errorDisplay.title}
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {errorDisplay.message}
-              </p>
-              <div className="text-xs text-gray-500 dark:text-gray-500 mb-4">
-                文档ID: {documentId}
-              </div>
-              <div className="space-y-2">
-                <button
-                  onClick={retry}
-                  className="w-full px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  重试
-                </button>
-                {errorDisplay.actionUrl && (
-                  <a
-                    href={errorDisplay.actionUrl}
-                    className="block w-full px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                  >
-                    {errorDisplay.actionText || '返回'}
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case DocumentStatus.READY:
-        return (
-          <div className="w-full h-screen">
-            {/* 离线状态指示器 - 只在客户端挂载后显示 */}
-            {isMounted && isOffline && (
-              <div className="fixed top-0 left-0 right-0 z-50 bg-orange-500 text-white text-center py-2 text-sm">
-                ⚠️ 离线模式
-              </div>
-            )}
-
-            {/* 主要内容 */}
-            <div className="w-full h-full">
-              <SimpleErrorBoundary
-                fallback={
-                  <div className="h-screen flex items-center justify-center">
-                    <div className="text-center">
-                      <h2 className="text-xl font-semibold mb-4">编辑器错误</h2>
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                      >
-                        重新加载
-                      </button>
-                    </div>
-                  </div>
-                }
-                onError={(error: Error) => {
-                  console.error('Editor error:', error);
-                }}
-              >
-                <DocumentClient
-                  documentId={documentId}
-                  initialContent={state.initialContent}
-                  enableCollaboration={true}
-                  isOffline={isOffline}
-                />
-              </SimpleErrorBoundary>
-            </div>
-          </div>
-        );
-
-      default:
-        return <LoadingSpinner />;
-    }
+  const menuContainerRef = useRef<HTMLDivElement>(null);
+  const sidebar = useSidebar();
+
+  // 文档加载状态
+  const [loading, setLoading] = useState(true);
+  const [initialContent, setInitialContent] = useState<JSONContent | null>(null);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+  const [isClientReady, setIsClientReady] = useState(false);
+
+  // 协作编辑器状态
+  const [doc, setDoc] = useState<Y.Doc | null>(null);
+  const [authToken, setAuthToken] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
+  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
+  const [isServerSynced, setIsServerSynced] = useState(false);
+  const [isLocalLoaded, setIsLocalLoaded] = useState(false);
+  const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const hasUnsyncedChangesRef = useRef(false);
+  const providerRef = useRef<HocuspocusProvider | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+
+  // 目录切换函数
+  const toggleToc = () => {
+    setIsTocOpen(!isTocOpen);
   };
 
-  return renderContent();
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDoc(new Y.Doc());
+      setAuthToken(getAuthToken() as string);
+      setIsClientReady(true);
+    }
+  }, []);
+
+  // 获取文档内容 - 确保在客户端且有认证token后再请求
+  useEffect(() => {
+    const fetchDocument = async () => {
+      try {
+        setLoading(true);
+
+        const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
+
+        if (result.data?.data) {
+          const documentData = result.data.data as any;
+
+          setInitialContent(documentData.content);
+
+          if (typeof document !== 'undefined') {
+            document.title = documentData.title;
+          }
+        }
+      } catch (error) {
+        console.error('文档加载失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // 只在客户端发请求 - 避免服务端调用API
+    if (typeof window !== 'undefined' && documentId && authToken && doc) {
+      fetchDocument();
+    }
+  }, [documentId, authToken, doc]);
+
+  // 从localStorage获取当前用户信息
+  useEffect(() => {
+    if (!authToken || !documentId || documentId === '' || typeof window === 'undefined') return;
+
+    try {
+      if (typeof window !== 'undefined') {
+        // localStorage 只在浏览器中存在
+        const userProfileStr = localStorage.getItem('user_profile');
+
+        if (userProfileStr) {
+          const userProfile = JSON.parse(userProfileStr);
+          setCurrentUser({
+            id: userProfile.id.toString(),
+            name: userProfile.name,
+            color: getCursorColorByUserId(userProfile.id.toString()),
+            avatar: userProfile.avatar_url,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('解析用户信息失败:', error);
+    }
+  }, [authToken, documentId]);
+
+  // 本地持久化 - IndexedDB 只在浏览器中可用
+  useEffect(() => {
+    if (!documentId || !doc || typeof window === 'undefined') return;
+
+    const persistence = new IndexeddbPersistence(`tiptap-collaborative-${documentId}`, doc);
+    const localStorageKey = `offline-edits-${documentId}`;
+
+    persistence.on('synced', () => {
+      setIsLocalLoaded(true);
+
+      if (localStorage.getItem(localStorageKey) === 'true') {
+        hasUnsyncedChangesRef.current = true;
+      }
+    });
+
+    const handleTransaction = () => {
+      localStorage.setItem(localStorageKey, 'true');
+      localStorage.setItem(`last-offline-edit-${documentId}`, new Date().toISOString());
+      hasUnsyncedChangesRef.current = true;
+    };
+
+    persistence.on('afterTransaction', handleTransaction);
+    doc.on('update', handleTransaction);
+
+    return () => {
+      persistence.destroy();
+    };
+  }, [documentId, doc]);
+
+  // 协作提供者 - 等待编辑器就绪后再启动WebSocket连接
+  useEffect(() => {
+    if (!authToken || !documentId || !doc || !isEditorReady) return;
+
+    // 如果已经有连接且参数相同，不重复创建
+    if (providerRef.current && providerRef.current.configuration.name === documentId) {
+      return;
+    }
+
+    // 清理旧连接
+    if (providerRef.current) {
+      providerRef.current.destroy();
+      providerRef.current = null;
+    }
+
+    const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+
+    if (!websocketUrl) {
+      console.error('WebSocket URL 未配置');
+
+      return;
+    }
+
+    // 额外延迟，确保编辑器完全稳定后再建立WebSocket连接
+    const connectionTimer = setTimeout(() => {
+      const clearOfflineEdits = () => {
+        hasUnsyncedChangesRef.current = false;
+        localStorage.removeItem(`offline-edits-${documentId}`);
+      };
+
+      const hocuspocusProvider = new HocuspocusProvider({
+        url: websocketUrl,
+        name: documentId,
+        document: doc,
+        token: authToken,
+
+        onConnect: () => {
+          setConnectionStatus('syncing');
+        },
+
+        onDisconnect: () => {
+          setConnectionStatus('disconnected');
+          setIsServerSynced(false);
+        },
+
+        onAuthenticationFailed: (data) => {
+          console.error('协作服务器认证失败:', data);
+          setConnectionStatus('error');
+        },
+
+        onSynced: () => {
+          setConnectionStatus('connected');
+          setIsServerSynced(true);
+          clearOfflineEdits();
+        },
+
+        onDestroy: () => {
+          setConnectionStatus('disconnected');
+          setIsServerSynced(false);
+        },
+      });
+
+      providerRef.current = hocuspocusProvider;
+      setProvider(hocuspocusProvider);
+    }, 300); // 300ms延迟，确保编辑器完全稳定
+
+    return () => {
+      clearTimeout(connectionTimer);
+
+      // 只在组件卸载时清理
+      if (providerRef.current) {
+        if (providerRef.current.awareness) {
+          providerRef.current.awareness.setLocalStateField('user', null);
+        }
+
+        providerRef.current.destroy();
+        providerRef.current = null;
+      }
+    };
+  }, [documentId, isEditorReady]); // 在roomId变化或编辑器就绪时创建连接
+
+  // 设置用户awareness信息
+  useEffect(() => {
+    if (provider?.awareness && currentUser) {
+      provider.awareness.setLocalStateField('user', currentUser);
+    }
+  }, [provider, currentUser]);
+
+  // 协作用户管理
+  useEffect(() => {
+    if (!provider?.awareness) return;
+
+    const handleAwarenessUpdate = () => {
+      const states = provider.awareness!.getStates();
+      const users: CollaborationUser[] = [];
+
+      states.forEach((state, clientId) => {
+        if (state?.user) {
+          const userData = state.user;
+          const userId = userData.id || clientId.toString();
+
+          if (currentUser && userId !== currentUser.id) {
+            users.push({
+              id: userId,
+              name: userData.name,
+              color: getCursorColorByUserId(userId),
+              avatar: userData.avatar,
+            });
+          }
+        }
+      });
+
+      setConnectedUsers(users);
+    };
+
+    provider.awareness.on('update', handleAwarenessUpdate);
+
+    return () => provider.awareness?.off('update', handleAwarenessUpdate);
+  }, [provider, currentUser]);
+
+  // 创建编辑器 - 包含协作扩展但延迟WebSocket连接
+  const editor = useEditor({
+    extensions: [
+      ...ExtensionKit({ provider }),
+      ...(doc ? [Collaboration.configure({ document: doc, field: 'content' })] : []),
+      ...(provider && currentUser && doc
+        ? [CollaborationCaret.configure({ provider, user: currentUser })]
+        : []),
+    ],
+    content: '',
+    onSelectionUpdate: ({ editor }) => {
+      // 延迟DOM操作，避免在渲染期间触发
+      requestAnimationFrame(() => {
+        const { from, to } = editor.state.selection;
+        const isAllSelected = from === 0 && to === editor.state.doc.content.size;
+        const editorElement = document.querySelector('.ProseMirror');
+
+        if (editorElement) {
+          editorElement.classList.toggle('is-all-selected', isAllSelected);
+        }
+      });
+    },
+    onCreate: () => {
+      // 编辑器创建成功后延迟设置就绪状态
+      setTimeout(() => {
+        setIsEditorReady(true);
+      }, 500); // 增加延迟，确保编辑器完全就绪
+    },
+    onUpdate: () => {
+      // 防止在更新期间的意外状态变更
+    },
+    editorProps: {
+      attributes: {
+        autocomplete: 'off',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        class: 'min-h-full',
+        spellcheck: 'false',
+      },
+    },
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: false, // 避免每次事务都重新渲染
+  });
+
+  // 设置初始内容
+  useEffect(() => {
+    if (!editor || !initialContent || !isLocalLoaded) return;
+
+    if (editor && !editor.isDestroyed) {
+      // 使用 setTimeout 避免在渲染期间同步设置内容
+      setTimeout(() => {
+        if (editor && !editor.isDestroyed) {
+          editor.commands.setContent(initialContent);
+        }
+      }, 0);
+    }
+  }, [editor, initialContent, isLocalLoaded]);
+
+  const isFullyLoaded = isLocalLoaded && isServerSynced;
+  const isReady = editor && isFullyLoaded && !loading && doc;
+
+  if (!isClientReady || loading || !doc) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            {!isClientReady ? '正在初始化...' : '正在加载文档编辑器...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="h-screen flex flex-col bg-white dark:bg-gray-900"
+      ref={menuContainerRef}
+      suppressHydrationWarning
+    >
+      {/* Header */}
+      <DocumentHeader
+        editor={isReady ? editor : null}
+        isSidebarOpen={sidebar.isOpen}
+        toggleSidebar={sidebar.toggle}
+        isTocOpen={isTocOpen}
+        toggleToc={toggleToc}
+        provider={provider}
+        connectedUsers={connectedUsers}
+        currentUser={currentUser}
+        connectionStatus={connectionStatus}
+        isOffline={false}
+      />
+
+      {/* 主内容区域 */}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 relative">
+          <div className="h-full overflow-y-auto">
+            {isReady ? (
+              <EditorContent editor={editor} className="prose-container h-full pl-14" />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                  <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 目录侧边栏 */}
+        {isTocOpen && isReady && (
+          <div className="w-80 border-l border-slate-200/60 dark:border-slate-800/60 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
+            <TableOfContents isOpen={isTocOpen} editor={editor} />
+          </div>
+        )}
+      </div>
+
+      {/* 编辑器菜单 */}
+      {isReady && isEditorReady && (
+        <>
+          <ContentItemMenu editor={editor} />
+          <LinkMenu editor={editor} appendTo={menuContainerRef} />
+          <TextMenu editor={editor} />
+          <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
+          <TableRowMenu editor={editor} appendTo={menuContainerRef} />
+          <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
+        </>
+      )}
+    </div>
+  );
 }
