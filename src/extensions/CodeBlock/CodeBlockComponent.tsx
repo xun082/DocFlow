@@ -19,9 +19,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/utils/utils';
 
-interface CodeBlockComponentProps extends ReactNodeViewProps {
+interface CodeBlockComponentProps extends Omit<ReactNodeViewProps, 'getPos'> {
   editor: any;
-  getPos: () => number;
+  getPos: () => number | undefined;
 }
 
 function CodeBlockComponent(props: CodeBlockComponentProps) {
@@ -101,6 +101,13 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
 
       // 获取当前代码块的内容
       const pos = getPos();
+
+      if (pos === undefined) {
+        setIsFormatting(false);
+
+        return;
+      }
+
       const currentCode = node.textContent || '';
 
       if (!currentCode.trim()) {
@@ -338,7 +345,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
             showLineNumbers ? 'line-numbers' : '',
           )}
         >
-          <NodeViewContent as="code" />
+          <NodeViewContent as="div" />
         </pre>
       </div>
     </NodeViewWrapper>

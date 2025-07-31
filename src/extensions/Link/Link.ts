@@ -10,7 +10,7 @@ export const Link = TiptapLink.extend({
     return [
       {
         tag: 'a[href]:not([data-type="button"]):not([href *= "javascript:" i])',
-        getAttrs: (element) => {
+        getAttrs: (element: any) => {
           // check if link starts with javascript:
           if (element.getAttribute('href')?.toLowerCase().startsWith('javascript:')) {
             return false;
@@ -22,7 +22,7 @@ export const Link = TiptapLink.extend({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     if (HTMLAttributes.href?.toLowerCase().startsWith('javascript:')) {
       return [
         'a',
@@ -46,7 +46,6 @@ export const Link = TiptapLink.extend({
     const { editor } = this;
 
     return [
-      ...(this.parent?.() || []),
       new Plugin({
         props: {
           handleKeyDown: (view: EditorView, event: KeyboardEvent) => {

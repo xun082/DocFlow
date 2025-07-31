@@ -36,7 +36,7 @@ export function useDocumentEditor({
     }),
     content: initialContent || '',
     editable: isEditable,
-    immediatelyRender: false,
+    immediatelyRender: true,
     editorProps: {
       attributes: {
         autocomplete: 'off',
@@ -50,7 +50,7 @@ export function useDocumentEditor({
 
   // 获取文档内容
   useEffect(() => {
-    if (initialContent || !documentId) return;
+    if (initialContent || !documentId || documentId === '') return;
 
     const fetchDocument = async () => {
       try {
@@ -71,7 +71,7 @@ export function useDocumentEditor({
 
           // 设置编辑器内容
           if (editor && (docData as any).content) {
-            editor.commands.setContent((docData as any).content, false);
+            editor.commands.setContent((docData as any).content);
           }
         } else {
           throw new Error('无法获取文档内容');

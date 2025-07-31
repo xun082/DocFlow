@@ -1,6 +1,6 @@
 import { Node, NodeViewRendererProps } from '@tiptap/core';
 import { NodeViewWrapper, ReactNodeViewRenderer, useEditorState } from '@tiptap/react';
-import { TableOfContentsStorage } from '@tiptap-pro/extension-table-of-contents';
+import { TableOfContentsStorage } from '@tiptap/extension-table-of-contents';
 import { Editor as CoreEditor } from '@tiptap/core';
 
 import { cn } from '@/utils/utils';
@@ -14,7 +14,7 @@ export function TableOfContents({ editor, onItemClick }: TableOfContentsProps) {
   const content = useEditorState({
     editor,
     selector: (ctx) => {
-      return (ctx.editor.storage.tableOfContents as TableOfContentsStorage).content;
+      return ((ctx.editor.storage as any).tableOfContents as TableOfContentsStorage)?.content;
     },
     equalityFn: (a, b) => a === b,
   });

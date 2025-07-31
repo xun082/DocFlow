@@ -1,9 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
-import dynamic from 'next/dynamic';
 
 import NoPermissionView from './no_permission_view';
 
@@ -12,63 +11,30 @@ import { TableOfContents } from '@/app/docs/_components/TableOfContents';
 import { useSidebar } from '@/stores/sidebarStore';
 import { useDocumentEditor } from '@/hooks/useDocumentEditor';
 import { useCollaborativeEditor } from '@/hooks/useCollaborativeEditor';
-
-const ContentItemMenu = dynamic(
-  () =>
-    import('@/components/menus/ContentItemMenu').then((mod) => ({ default: mod.ContentItemMenu })),
-  { ssr: false },
-);
-
-const LinkMenu = dynamic(
-  () => import('@/components/menus').then((mod) => ({ default: mod.LinkMenu })),
-  { ssr: false },
-);
-
-const TextMenu = dynamic(
-  () => import('@/components/menus/TextMenu').then((mod) => ({ default: mod.TextMenu })),
-  { ssr: false },
-);
-
-const ImageBlockMenu = dynamic(
-  () =>
-    import('@/extensions/ImageBlock/components/ImageBlockMenu').then((mod) => ({
-      default: mod.default,
-    })),
-  { ssr: false },
-);
-
-const ColumnsMenu = dynamic(
-  () => import('@/extensions/MultiColumn/menus').then((mod) => ({ default: mod.ColumnsMenu })),
-  { ssr: false },
-);
-
-const TableRowMenu = dynamic(
-  () => import('@/extensions/Table/menus').then((mod) => ({ default: mod.TableRowMenu })),
-  { ssr: false },
-);
-
-const TableColumnMenu = dynamic(
-  () => import('@/extensions/Table/menus').then((mod) => ({ default: mod.TableColumnMenu })),
-  { ssr: false },
-);
+// 直接静态导入所有菜单组件
+import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
+import { LinkMenu } from '@/components/menus';
+import { TextMenu } from '@/components/menus/TextMenu';
+import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
+import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
+import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
 
 interface DocumentClientProps {
   documentId: string;
   initialContent: JSONContent;
-  initialHTML: string;
   enableCollaboration?: boolean;
+  isOffline?: boolean;
 }
 
 export function DocumentClient({
   documentId,
   initialContent,
-  initialHTML,
   enableCollaboration = false,
+  isOffline = false,
 }: DocumentClientProps) {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const sidebar = useSidebar();
 
-  const [isClient, setIsClient] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
 
   // 目录切换函数
@@ -76,19 +42,15 @@ export function DocumentClient({
     setIsTocOpen(!isTocOpen);
   };
 
-  // 简单的客户端检测
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // 选择使用哪个编辑器
+  // 根据模式选择使用哪个编辑器，避免重复初始化
   const collaborativeEditor = useCollaborativeEditor(
     enableCollaboration ? documentId : '',
     enableCollaboration ? initialContent : undefined,
+    isOffline,
   );
 
   const documentEditor = useDocumentEditor({
-    documentId,
+    documentId: enableCollaboration ? '' : documentId, // 如果启用协作模式就不初始化单机编辑器
     initialContent: enableCollaboration ? undefined : initialContent,
     isEditable: true,
   });
@@ -128,17 +90,19 @@ export function DocumentClient({
   }
 
   // 编辑器是否就绪 - 分别处理两种编辑器的加载状态
-  const isReady =
-    isClient &&
-    (enableCollaboration
-      ? collaborativeEditor.editor && collaborativeEditor.isFullyLoaded
-      : documentEditor.editor && !documentEditor.loading);
+  const isReady = enableCollaboration
+    ? collaborativeEditor.editor && collaborativeEditor.isFullyLoaded
+    : documentEditor.editor && !documentEditor.loading;
 
   // 获取当前编辑器实例
   const currentEditor = enableCollaboration ? collaborativeEditor.editor : documentEditor.editor;
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-gray-900" ref={menuContainerRef}>
+    <div
+      className="h-screen flex flex-col bg-white dark:bg-gray-900"
+      ref={menuContainerRef}
+      suppressHydrationWarning
+    >
       {/* Header */}
       <DocumentHeader
         editor={isReady ? currentEditor : null}
@@ -150,7 +114,7 @@ export function DocumentClient({
         connectedUsers={enableCollaboration ? collaborativeEditor.connectedUsers : undefined}
         currentUser={enableCollaboration ? collaborativeEditor.currentUser : undefined}
         connectionStatus={enableCollaboration ? collaborativeEditor.connectionStatus : undefined}
-        isOffline={enableCollaboration ? collaborativeEditor.isOffline : false}
+        isOffline={isOffline}
       />
 
       {/* 主内容区域 */}
@@ -161,21 +125,13 @@ export function DocumentClient({
               /* 编辑器就绪 */
               <EditorContent editor={currentEditor} className="prose-container h-full pl-14" />
             ) : (
-              /* 显示 SSR 内容或加载状态 */
-              <div className="max-w-4xl mx-auto px-8 py-12">
-                {initialHTML ? (
-                  <div
-                    className="prose prose-lg max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: initialHTML }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-                      <p className="text-lg">正在加载编辑器...</p>
-                    </div>
-                  </div>
-                )}
+              /* 编辑器加载状态 */
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                  <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">请稍候片刻</p>
+                </div>
               </div>
             )}
           </div>

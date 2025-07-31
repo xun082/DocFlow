@@ -41,7 +41,7 @@ const Page = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    
+
     const token = getCookie('auth_token');
     setIsLoggedIn(!!token);
 

@@ -1,4 +1,5 @@
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import { useCallback } from 'react';
 
 import { DropdownButton } from '@/components/ui/Dropdown';
 import { Icon } from '@/components/ui/Icon';
@@ -18,9 +19,11 @@ export type FontSizePickerProps = {
   value: string;
 };
 
-export function FontSizePicker({ onChange, value }: FontSizePickerProps) {
+export const FontSizePicker = ({ onChange, value }: FontSizePickerProps) => {
   const currentValue = FONT_SIZES.find((size) => size.value === value);
   const currentSizeLabel = currentValue?.label.split(' ')[0] || 'Medium';
+
+  const selectSize = useCallback((size: string) => () => onChange(size), [onChange]);
 
   return (
     <Dropdown.Root>
@@ -35,7 +38,7 @@ export function FontSizePicker({ onChange, value }: FontSizePickerProps) {
           {FONT_SIZES.map((size) => (
             <DropdownButton
               isActive={value === size.value}
-              onClick={() => onChange(size.value)}
+              onClick={selectSize(size.value)}
               key={`${size.label}_${size.value}`}
             >
               <span style={{ fontSize: size.value }}>{size.label}</span>
@@ -45,4 +48,4 @@ export function FontSizePicker({ onChange, value }: FontSizePickerProps) {
       </Dropdown.Content>
     </Dropdown.Root>
   );
-}
+};

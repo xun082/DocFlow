@@ -1,7 +1,7 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
 
-export const useTextMenuCommands = (editor: Editor) => {
+export const useTextmenuCommands = (editor: Editor) => {
   const onBold = useCallback(() => editor.chain().focus().toggleBold().run(), [editor]);
   const onItalic = useCallback(() => editor.chain().focus().toggleItalic().run(), [editor]);
   const onStrike = useCallback(() => editor.chain().focus().toggleStrike().run(), [editor]);
@@ -78,23 +78,6 @@ export const useTextMenuCommands = (editor: Editor) => {
     [editor],
   );
 
-  // 新增：获取当前选中的文本
-  const getSelectedText = useCallback(() => {
-    const { from, to, empty } = editor.state.selection;
-    if (empty) return '';
-
-    return editor.state.doc.textBetween(from, to, ' ');
-  }, [editor]);
-
-  // 新增：获取当前选中的位置
-  const getSelectedPosition = useCallback(() => {
-    const { from, to } = editor.state.selection;
-
-    return { from, to };
-  }, [editor]);
-
-  // 简单的字符串哈希函数，用于生成稳定的ID
-
   return {
     onBold,
     onItalic,
@@ -115,7 +98,5 @@ export const useTextMenuCommands = (editor: Editor) => {
     onSetFont,
     onSetFontSize,
     onLink,
-    getSelectedText,
-    getSelectedPosition,
   };
 };

@@ -25,7 +25,7 @@ export const BlockquoteFigure = Figure.extend({
     return [Quote, QuoteCaption];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['figure', mergeAttributes(HTMLAttributes, { 'data-type': this.name }), ['div', {}, 0]];
   },
 
@@ -36,16 +36,14 @@ export const BlockquoteFigure = Figure.extend({
   },
 
   addAttributes() {
-    return {
-      ...this.parent?.(),
-    };
+    return {};
   },
 
   addCommands() {
     return {
       setBlockquote:
         () =>
-        ({ state, chain }) => {
+        ({ state, chain }: { state: any; chain: any }) => {
           const position = state.selection.$from.start();
           const selectionContent = state.selection.content();
 
