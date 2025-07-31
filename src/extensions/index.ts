@@ -5,7 +5,7 @@ export { Highlight } from '@tiptap/extension-highlight';
 export { CharacterCount } from '@tiptap/extension-character-count';
 export { Underline } from '@tiptap/extension-underline';
 export { Placeholder } from '@tiptap/extension-placeholder';
-export { Emoji, gitHubEmojis } from '@tiptap-pro/extension-emoji';
+export { Emoji, gitHubEmojis } from '@tiptap/extension-emoji';
 export { TextAlign } from '@tiptap/extension-text-align';
 export { TextStyle } from '@tiptap/extension-text-style';
 export { FontFamily } from '@tiptap/extension-font-family';

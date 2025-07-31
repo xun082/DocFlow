@@ -1,5 +1,6 @@
-import { useEditorState } from '@tiptap/react';
-import React, { useRef, JSX } from 'react';
+import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react';
+import React, { useCallback, useRef, JSX } from 'react';
+import { Instance, sticky } from 'tippy.js';
 import { v4 as uuid } from 'uuid';
 
 import { ImageBlockWidth } from './ImageBlockWidth';
@@ -8,40 +9,42 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps } from '@/components/menus/types';
 import { getRenderContainer } from '@/utils/utils';
-import { BubbleMenu } from '@/components/ui/BubbleMenu';
 
-export function ImageBlockMenu({ editor }: MenuProps): JSX.Element {
+export const ImageBlockMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const tippyInstance = useRef<Instance | null>(null);
 
-  const getReferenceClientRect = () => {
+  const getReferenceClientRect = useCallback(() => {
     const renderContainer = getRenderContainer(editor, 'node-imageBlock');
     const rect = renderContainer?.getBoundingClientRect() || new DOMRect(-1000, -1000, 0, 0);
 
     return rect;
-  };
+  }, [editor]);
 
-  const shouldShow = () => {
+  const shouldShow = useCallback(() => {
     const isActive = editor.isActive('imageBlock');
 
     return isActive;
-  };
+  }, [editor]);
 
-  const onAlignImageLeft = () => {
+  const onAlignImageLeft = useCallback(() => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('left').run();
-  };
+  }, [editor]);
 
-  const onAlignImageCenter = () => {
+  const onAlignImageCenter = useCallback(() => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('center').run();
-  };
+  }, [editor]);
 
-  const onAlignImageRight = () => {
+  const onAlignImageRight = useCallback(() => {
     editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockAlign('right').run();
-  };
+  }, [editor]);
 
-  const onWidthChange = (value: number) => {
-    editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockWidth(value).run();
-  };
-
+  const onWidthChange = useCallback(
+    (value: number) => {
+      editor.chain().focus(undefined, { scrollIntoView: false }).setImageBlockWidth(value).run();
+    },
+    [editor],
+  );
   const { isImageCenter, isImageLeft, isImageRight, width } = useEditorState({
     editor,
     selector: (ctx) => {
@@ -55,12 +58,26 @@ export function ImageBlockMenu({ editor }: MenuProps): JSX.Element {
   });
 
   return (
-    <BubbleMenu
+    <BaseBubbleMenu
       editor={editor}
       pluginKey={`imageBlockMenu-${uuid()}`}
       shouldShow={shouldShow}
       updateDelay={0}
-      getReferenceClientRect={getReferenceClientRect}
+      tippyOptions={{
+        offset: [0, 8],
+        popperOptions: {
+          modifiers: [{ name: 'flip', enabled: false }],
+        },
+        getReferenceClientRect,
+        onCreate: (instance: Instance) => {
+          tippyInstance.current = instance;
+        },
+        appendTo: () => {
+          return appendTo?.current;
+        },
+        plugins: [sticky],
+        sticky: 'popper',
+      }}
     >
       <Toolbar.Wrapper shouldShowContent={shouldShow()} ref={menuRef}>
         <Toolbar.Button tooltip="Align image left" active={isImageLeft} onClick={onAlignImageLeft}>
@@ -83,8 +100,8 @@ export function ImageBlockMenu({ editor }: MenuProps): JSX.Element {
         <Toolbar.Divider />
         <ImageBlockWidth onChange={onWidthChange} value={width} />
       </Toolbar.Wrapper>
-    </BubbleMenu>
+    </BaseBubbleMenu>
   );
-}
+};
 
 export default ImageBlockMenu;

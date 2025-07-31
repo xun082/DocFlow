@@ -28,18 +28,14 @@ export type AuthErrorType = {
 };
 
 // 主要的协作编辑器hook
-export function useCollaborativeEditor(roomId: string, initialContent?: JSONContent) {
+export function useCollaborativeEditor(
+  roomId: string,
+  initialContent?: JSONContent,
+  isOffline: boolean = false,
+) {
   const [isEditable, setIsEditable] = useState(true);
   const [doc] = useState(() => new Y.Doc());
   const [authToken] = useState(() => getCookie('auth_token'));
-  const [isOffline, setIsOffline] = useState(() => {
-    // 检查是否在浏览器环境中
-    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-      return !navigator.onLine;
-    }
-
-    return false; // 服务端默认为在线状态
-  });
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [authError, setAuthError] = useState<AuthErrorType>({ status: false, reason: '' });
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
@@ -48,27 +44,12 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
   const [isLocalLoaded, setIsLocalLoaded] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
   const hasUnsyncedChangesRef = useRef(false);
-
-  // 网络状态监听
-  useEffect(() => {
-    // 只在浏览器环境中添加事件监听器
-    if (typeof window === 'undefined') return;
-
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  const providerRef = useRef<HocuspocusProvider | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   // 获取当前用户信息
   useEffect(() => {
-    if (!authToken) return;
+    if (!authToken || !roomId || roomId === '') return;
 
     const fetchUser = async () => {
       try {
@@ -128,9 +109,20 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
     };
   }, [roomId, doc, isOffline]);
 
-  // 协作提供者
+  // 协作提供者 - 等待编辑器就绪后再启动WebSocket连接
   useEffect(() => {
-    if (isOffline || !authToken || !roomId || !doc) return;
+    if (!authToken || !roomId || !doc || !isEditorReady) return;
+
+    // 如果已经有连接且参数相同，不重复创建
+    if (providerRef.current && providerRef.current.configuration.name === roomId) {
+      return;
+    }
+
+    // 清理旧连接
+    if (providerRef.current) {
+      providerRef.current.destroy();
+      providerRef.current = null;
+    }
 
     const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
@@ -140,60 +132,65 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
       return;
     }
 
-    const clearOfflineEdits = () => {
-      hasUnsyncedChangesRef.current = false;
-      localStorage.removeItem(`offline-edits-${roomId}`);
-    };
+    // 额外延迟，确保编辑器完全稳定后再建立WebSocket连接
+    const connectionTimer = setTimeout(() => {
+      const clearOfflineEdits = () => {
+        hasUnsyncedChangesRef.current = false;
+        localStorage.removeItem(`offline-edits-${roomId}`);
+      };
 
-    const hocuspocusProvider = new HocuspocusProvider({
-      url: websocketUrl,
-      name: roomId,
-      document: doc,
-      token: authToken,
+      const hocuspocusProvider = new HocuspocusProvider({
+        url: websocketUrl,
+        name: roomId,
+        document: doc,
+        token: authToken,
 
-      onConnect: () => {
-        setConnectionStatus('syncing');
-        setAuthError({ status: false, reason: '' });
-      },
+        onConnect: () => {
+          setConnectionStatus('syncing');
+          setAuthError({ status: false, reason: '' });
+        },
 
-      onDisconnect: () => {
-        setConnectionStatus('disconnected');
-        setIsServerSynced(false);
+        onDisconnect: () => {
+          setConnectionStatus('disconnected');
+          setIsServerSynced(false);
+        },
 
-        // 自动重连（如果不是离线状态）
-        if (!isOffline) {
-          setTimeout(() => hocuspocusProvider.connect(), 5000);
-        }
-      },
+        onAuthenticationFailed: (data) => {
+          console.error('协作服务器认证失败:', data);
+          setConnectionStatus('error');
+          setAuthError({ status: true, reason: 'authentication-failed' });
+        },
 
-      onAuthenticationFailed: (data) => {
-        console.error('协作服务器认证失败:', data);
-        setConnectionStatus('error');
-        setAuthError({ status: true, reason: 'authentication-failed' });
-      },
+        onSynced: () => {
+          setConnectionStatus('connected');
+          setIsServerSynced(true);
+          clearOfflineEdits();
+        },
 
-      onSynced: () => {
-        setConnectionStatus('connected');
-        setIsServerSynced(true);
-        clearOfflineEdits();
-      },
+        onDestroy: () => {
+          setConnectionStatus('disconnected');
+          setIsServerSynced(false);
+        },
+      });
 
-      onDestroy: () => {
-        setConnectionStatus('disconnected');
-        setIsServerSynced(false);
-      },
-    });
-
-    setProvider(hocuspocusProvider);
+      providerRef.current = hocuspocusProvider;
+      setProvider(hocuspocusProvider);
+    }, 300); // 300ms延迟，确保编辑器完全稳定
 
     return () => {
-      if (hocuspocusProvider.awareness) {
-        hocuspocusProvider.awareness.setLocalStateField('user', null);
-      }
+      clearTimeout(connectionTimer);
 
-      hocuspocusProvider.destroy();
+      // 只在组件卸载时清理
+      if (providerRef.current) {
+        if (providerRef.current.awareness) {
+          providerRef.current.awareness.setLocalStateField('user', null);
+        }
+
+        providerRef.current.destroy();
+        providerRef.current = null;
+      }
     };
-  }, [roomId, doc, authToken, isOffline]);
+  }, [roomId, isEditorReady]); // 在roomId变化或编辑器就绪时创建连接
 
   // 设置用户awareness信息
   useEffect(() => {
@@ -234,7 +231,7 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
     return () => provider.awareness?.off('update', handleAwarenessUpdate);
   }, [provider, currentUser]);
 
-  // 创建编辑器
+  // 创建编辑器 - 包含协作扩展但延迟WebSocket连接
   const editor = useEditor({
     extensions: [
       ...ExtensionKit({ provider }),
@@ -256,6 +253,12 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
         editorElement.classList.toggle('is-all-selected', isAllSelected);
       }
     },
+    onCreate: () => {
+      // 编辑器创建成功后延迟设置就绪状态
+      setTimeout(() => {
+        setIsEditorReady(true);
+      }, 500); // 增加延迟，确保编辑器完全就绪
+    },
     editorProps: {
       attributes: {
         autocomplete: 'off',
@@ -265,7 +268,7 @@ export function useCollaborativeEditor(roomId: string, initialContent?: JSONCont
         spellcheck: 'false',
       },
     },
-    immediatelyRender: false,
+    immediatelyRender: true,
   });
 
   // 设置初始内容

@@ -1,8 +1,8 @@
-'use client';
-
 import { Node } from '@tiptap/pm/model';
 import { Editor, NodeViewWrapper } from '@tiptap/react';
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
+
+import { cn } from '@/utils/utils';
 
 interface ImageBlockViewProps {
   editor: Editor;
@@ -11,40 +11,36 @@ interface ImageBlockViewProps {
   updateAttributes: (attrs: Record<string, string>) => void;
 }
 
-export function ImageBlockView(props: ImageBlockViewProps) {
+export const ImageBlockView = (props: ImageBlockViewProps) => {
   const { editor, getPos, node } = props as ImageBlockViewProps & {
     node: Node & {
       attrs: {
         src: string;
-        width?: string;
-        align?: 'left' | 'center' | 'right';
-        alt?: string;
       };
     };
   };
   const imageWrapperRef = useRef<HTMLDivElement>(null);
-  const { src, width, align = 'center', alt } = node.attrs;
+  const { src } = node.attrs;
 
-  const alignClass =
-    align === 'left' ? 'text-left' : align === 'right' ? 'text-right' : 'text-center';
+  const wrapperClassName = cn(
+    node.attrs.align === 'left' ? 'ml-0' : 'ml-auto',
+    node.attrs.align === 'right' ? 'mr-0' : 'mr-auto',
+    node.attrs.align === 'center' && 'mx-auto',
+  );
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     editor.commands.setNodeSelection(getPos());
-  };
+  }, [getPos, editor.commands]);
 
   return (
-    <NodeViewWrapper as="figure" data-type="imageBlock" className={alignClass} data-drag-handle>
-      <div contentEditable={false} ref={imageWrapperRef}>
-        <img
-          className="rounded block h-auto w-full max-w-full"
-          src={src}
-          alt={alt || ''}
-          onClick={onClick}
-          style={{ width: width || undefined }}
-        />
+    <NodeViewWrapper>
+      <div className={wrapperClassName} style={{ width: node.attrs.width }} data-drag-handle>
+        <div contentEditable={false} ref={imageWrapperRef}>
+          <img className="block" src={src} alt="" onClick={onClick} />
+        </div>
       </div>
     </NodeViewWrapper>
   );
-}
+};
 
 export default ImageBlockView;

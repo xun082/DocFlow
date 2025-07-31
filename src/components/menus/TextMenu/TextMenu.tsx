@@ -32,9 +32,7 @@ export function TextMenu({ editor }: { editor: Editor }) {
     let typingTimeout: number;
 
     const handleUpdate = () => {
-      // 暂时注释掉，避免阻塞TextMenu显示
-
-      // setIsTyping(true);
+      // setIsTyping(true); // 暂时保持注释状态
 
       // 清除之前的定时器
       if (typingTimeout) {
