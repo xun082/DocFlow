@@ -78,16 +78,6 @@ export function saveAuthData(authData: {
  * @returns token字符串或null
  */
 export function getAuthToken(): string | null {
-  if (typeof window !== 'undefined') {
-    // 优先从localStorage获取
-    const localToken = localStorage.getItem('auth_token');
-
-    if (localToken) {
-      return localToken;
-    }
-  }
-
-  // fallback到cookie
   return getCookie('auth_token');
 }
 

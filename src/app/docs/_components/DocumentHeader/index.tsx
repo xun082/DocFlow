@@ -1,7 +1,14 @@
 import { Editor } from '@tiptap/react';
 
-import { CollaborationUser } from '@/hooks/useCollaborativeEditor';
 import { Icon } from '@/components/ui/Icon';
+
+// 类型定义
+interface CollaborationUser {
+  id: string;
+  name: string;
+  color: string;
+  avatar: string;
+}
 
 // 编辑器信息组件
 function EditorInfo({ editor }: { editor: Editor }) {
