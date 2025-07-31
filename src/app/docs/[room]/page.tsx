@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
 import { ErrorPage, getErrorDisplay } from '../_components/error';
@@ -104,6 +104,10 @@ export default function DocumentPage() {
   // 缓存管理
   const [documentCache, setDocumentCache] = useState<Map<string, any>>(new Map());
   const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  // 组件挂载状态追踪
+  const isMountedRef = useRef<boolean>(false);
 
   // 认证检查
   const checkAuth = useCallback(() => {
@@ -122,8 +126,20 @@ export default function DocumentPage() {
     return true;
   }, [router]);
 
+  // 客户端挂载状态
+  useEffect(() => {
+    isMountedRef.current = true;
+    setIsMounted(true);
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // 离线检测 - 客户端安全
   useEffect(() => {
+    if (!isMounted) return;
+
     // 确保在客户端环境中执行
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
 
@@ -140,54 +156,54 @@ export default function DocumentPage() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isMounted]);
 
   // 获取文档数据（带缓存和离线支持）
   const fetchDocument = useCallback(async () => {
-    if (!documentId) {
-      setState((prev) => ({
-        ...prev,
-        status: DocumentStatus.ERROR,
-        error: { error: 'INVALID_ID', message: '无效的文档ID' },
-      }));
-
+    if (!isMountedRef.current || !documentId) {
       return;
     }
 
     const authToken = getCookie('auth_token');
 
     if (!authToken) {
+      if (!isMountedRef.current) return;
       setState((prev) => ({ ...prev, status: DocumentStatus.UNAUTHORIZED }));
 
       return;
     }
 
-    // 检查缓存 - 获取当前缓存状态，避免依赖问题
-    const currentCache = documentCache.get(documentId);
-
-    // 动态检查网络状态而不依赖state
-    const isCurrentlyOffline = typeof navigator !== 'undefined' ? !navigator.onLine : false;
-
-    if (currentCache && isCurrentlyOffline) {
-      setState((prev) => ({
-        ...prev,
-        status: DocumentStatus.READY,
-        documentData: currentCache.documentData,
-        initialContent: currentCache.content,
-        title: currentCache.title,
-        error: null,
-      }));
-
-      return;
-    }
-
+    if (!isMountedRef.current) return;
     setState((prev) => ({ ...prev, status: DocumentStatus.LOADING }));
 
     try {
+      // 检查缓存 - 使用当前的引用而不是依赖
+      const currentCache = documentCache.get(documentId);
+
+      // 动态检查网络状态
+      const isCurrentlyOffline =
+        isMounted && typeof navigator !== 'undefined' ? !navigator.onLine : false;
+
+      if (currentCache && isCurrentlyOffline) {
+        if (!isMountedRef.current) return;
+        setState((prev) => ({
+          ...prev,
+          status: DocumentStatus.READY,
+          documentData: currentCache.documentData,
+          initialContent: currentCache.content,
+          title: currentCache.title,
+          error: null,
+        }));
+
+        return;
+      }
+
       const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
 
+      // 检查组件是否仍然挂载
+      if (!isMountedRef.current) return;
+
       if (result.error) {
-        // 处理API错误
         let errorType = 'API_ERROR';
         let errorMessage = result.error;
 
@@ -203,6 +219,7 @@ export default function DocumentPage() {
         }
 
         if (errorType === 'AUTH_FAILED') {
+          if (!isMountedRef.current) return;
           setState((prev) => ({ ...prev, status: DocumentStatus.UNAUTHORIZED }));
 
           return;
@@ -210,6 +227,7 @@ export default function DocumentPage() {
 
         // 如果网络错误且有缓存，使用缓存
         if (errorType === 'NETWORK_ERROR' && currentCache) {
+          if (!isMountedRef.current) return;
           setState((prev) => ({
             ...prev,
             status: DocumentStatus.READY,
@@ -222,6 +240,7 @@ export default function DocumentPage() {
           return;
         }
 
+        if (!isMountedRef.current) return;
         setState((prev) => ({
           ...prev,
           status: DocumentStatus.ERROR,
@@ -232,6 +251,7 @@ export default function DocumentPage() {
       }
 
       if (!result.data?.data) {
+        if (!isMountedRef.current) return;
         setState((prev) => ({
           ...prev,
           status: DocumentStatus.ERROR,
@@ -241,7 +261,7 @@ export default function DocumentPage() {
         return;
       }
 
-      const documentData = result.data!.data as any;
+      const documentData = result.data.data as any;
       const content = documentData.content;
       const title = documentData.title;
 
@@ -255,9 +275,12 @@ export default function DocumentPage() {
         }),
       );
 
-      // 更新页面标题
-      document.title = title;
+      // 更新页面标题 - 只在客户端执行
+      if (typeof document !== 'undefined') {
+        document.title = title;
+      }
 
+      if (!isMountedRef.current) return;
       setState((prev) => ({
         ...prev,
         status: DocumentStatus.READY,
@@ -270,7 +293,10 @@ export default function DocumentPage() {
       console.error('文档加载失败:', error);
 
       // 尝试使用缓存数据
+      const currentCache = documentCache.get(documentId);
+
       if (currentCache) {
+        if (!isMountedRef.current) return;
         setState((prev) => ({
           ...prev,
           status: DocumentStatus.READY,
@@ -283,6 +309,7 @@ export default function DocumentPage() {
         return;
       }
 
+      if (!isMountedRef.current) return;
       setState((prev) => ({
         ...prev,
         status: DocumentStatus.ERROR,
@@ -292,7 +319,7 @@ export default function DocumentPage() {
         },
       }));
     }
-  }, [documentId]); // 移除 isOffline 依赖，动态检查网络状态
+  }, [documentId, isMounted]); // 移除 documentCache 依赖避免循环
 
   // 重试逻辑
   const retry = useCallback(() => {
@@ -303,12 +330,18 @@ export default function DocumentPage() {
     fetchDocument();
   }, [state.status, checkAuth, fetchDocument]);
 
-  // 初始化 - 只在 documentId 变化时执行
+  // 初始化 - 只在客户端挂载且 documentId 存在时执行，并且只执行一次
   useEffect(() => {
-    if (!documentId) return;
+    if (!isMounted || !documentId) return;
+
+    // 避免重复加载 - 如果已经在加载或者已经成功，就不再加载
+    if (state.status !== DocumentStatus.CHECKING_AUTH) {
+      return;
+    }
+
     if (!checkAuth()) return;
     fetchDocument();
-  }, [documentId]); // 只依赖 documentId，避免循环
+  }, [documentId, isMounted, state.status]); // 添加 state.status 确保只在初始状态时执行
 
   // 注：移除预加载逻辑，因为已改为静态导入
 
@@ -431,9 +464,9 @@ export default function DocumentPage() {
 
       case DocumentStatus.READY:
         return (
-          <div className="w-full h-screen" suppressHydrationWarning>
-            {/* 离线状态指示器 */}
-            {isOffline && (
+          <div className="w-full h-screen">
+            {/* 离线状态指示器 - 只在客户端挂载后显示 */}
+            {isMounted && isOffline && (
               <div className="fixed top-0 left-0 right-0 z-50 bg-orange-500 text-white text-center py-2 text-sm">
                 ⚠️ 离线模式
               </div>

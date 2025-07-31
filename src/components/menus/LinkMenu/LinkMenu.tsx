@@ -1,15 +1,13 @@
-'use client';
-
-import React, { useState, JSX } from 'react';
-import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react/menus';
+import React, { useCallback, useState, JSX } from 'react';
 import { useEditorState } from '@tiptap/react';
+import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react/menus';
 
 import { MenuProps } from '../types';
 
 import { LinkPreviewPanel } from '@/components/panels/LinkPreviewPanel';
 import { LinkEditorPanel } from '@/components/panels';
 
-export function LinkMenu({ editor }: MenuProps): JSX.Element {
+export const LinkMenu = ({ editor }: MenuProps): JSX.Element => {
   const [showEdit, setShowEdit] = useState(false);
   const { link, target } = useEditorState({
     editor,
@@ -20,42 +18,47 @@ export function LinkMenu({ editor }: MenuProps): JSX.Element {
     },
   });
 
-  const shouldShow = () => {
+  const shouldShow = useCallback(() => {
     const isActive = editor.isActive('link');
 
     return isActive;
-  };
+  }, [editor]);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     setShowEdit(true);
-  };
+  }, []);
 
-  const onSetLink = (url: string, openInNewTab?: boolean) => {
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange('link')
-      .setLink({ href: url, target: openInNewTab ? '_blank' : '' })
-      .run();
-    setShowEdit(false);
-  };
+  const onSetLink = useCallback(
+    (url: string, openInNewTab?: boolean) => {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange('link')
+        .setLink({ href: url, target: openInNewTab ? '_blank' : '' })
+        .run();
+      setShowEdit(false);
+    },
+    [editor],
+  );
 
-  const onUnsetLink = () => {
+  const onUnsetLink = useCallback(() => {
     editor.chain().focus().extendMarkRange('link').unsetLink().run();
     setShowEdit(false);
 
     return null;
-  };
+  }, [editor]);
 
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey="linkMenu"
+      pluginKey="textMenu"
       shouldShow={shouldShow}
       updateDelay={0}
       options={{
-        placement: 'bottom',
-        offset: 8,
+        flip: false,
+        onHide: () => {
+          setShowEdit(false);
+        },
       }}
     >
       {showEdit ? (
@@ -69,6 +72,6 @@ export function LinkMenu({ editor }: MenuProps): JSX.Element {
       )}
     </BaseBubbleMenu>
   );
-}
+};
 
 export default LinkMenu;
