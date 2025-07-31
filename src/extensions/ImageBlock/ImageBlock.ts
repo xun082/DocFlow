@@ -30,29 +30,29 @@ export const ImageBlock = Image.extend({
     return {
       src: {
         default: '',
-        parseHTML: (element) => element.getAttribute('src'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: any) => element.getAttribute('src'),
+        renderHTML: (attributes: any) => ({
           src: attributes.src,
         }),
       },
       width: {
         default: '100%',
-        parseHTML: (element) => element.getAttribute('data-width'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: any) => element.getAttribute('data-width'),
+        renderHTML: (attributes: any) => ({
           'data-width': attributes.width,
         }),
       },
       align: {
         default: 'center',
-        parseHTML: (element) => element.getAttribute('data-align'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: any) => element.getAttribute('data-align'),
+        renderHTML: (attributes: any) => ({
           'data-align': attributes.align,
         }),
       },
       alt: {
         default: undefined,
-        parseHTML: (element) => element.getAttribute('alt'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: any) => element.getAttribute('alt'),
+        renderHTML: (attributes: any) => ({
           alt: attributes.alt,
         }),
       },
@@ -67,21 +67,21 @@ export const ImageBlock = Image.extend({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
   },
 
   addCommands() {
     return {
       setImageBlock:
-        (attrs) =>
-        ({ commands }) => {
+        (attrs: any) =>
+        ({ commands }: { commands: any }) => {
           return commands.insertContent({ type: 'imageBlock', attrs: { src: attrs.src } });
         },
 
       setImageBlockAt:
-        (attrs) =>
-        ({ commands }) => {
+        (attrs: any) =>
+        ({ commands }: { commands: any }) => {
           return commands.insertContentAt(attrs.pos, {
             type: 'imageBlock',
             attrs: { src: attrs.src },
@@ -89,13 +89,13 @@ export const ImageBlock = Image.extend({
         },
 
       setImageBlockAlign:
-        (align) =>
-        ({ commands }) =>
+        (align: any) =>
+        ({ commands }: { commands: any }) =>
           commands.updateAttributes('imageBlock', { align }),
 
       setImageBlockWidth:
-        (width) =>
-        ({ commands }) =>
+        (width: any) =>
+        ({ commands }: { commands: any }) =>
           commands.updateAttributes('imageBlock', {
             width: `${Math.max(0, Math.min(100, width))}%`,
           }),

@@ -6,7 +6,7 @@ import { cn } from '@/utils/utils';
 
 interface ImageBlockViewProps {
   editor: Editor;
-  getPos: () => number;
+  getPos: () => number | undefined;
   node: Node;
   updateAttributes: (attrs: Record<string, string>) => void;
 }
@@ -29,7 +29,11 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
   );
 
   const onClick = useCallback(() => {
-    editor.commands.setNodeSelection(getPos());
+    const pos = getPos();
+
+    if (pos !== undefined) {
+      editor.commands.setNodeSelection(pos);
+    }
   }, [getPos, editor.commands]);
 
   return (

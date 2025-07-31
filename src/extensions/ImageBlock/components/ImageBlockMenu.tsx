@@ -1,6 +1,6 @@
-import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react';
+import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react/menus';
+import { useEditorState } from '@tiptap/react';
 import React, { useCallback, useRef, JSX } from 'react';
-import { Instance, sticky } from 'tippy.js';
 import { v4 as uuid } from 'uuid';
 
 import { ImageBlockWidth } from './ImageBlockWidth';
@@ -8,18 +8,9 @@ import { ImageBlockWidth } from './ImageBlockWidth';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps } from '@/components/menus/types';
-import { getRenderContainer } from '@/utils/utils';
 
-export const ImageBlockMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
+export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
   const menuRef = useRef<HTMLDivElement>(null);
-  const tippyInstance = useRef<Instance | null>(null);
-
-  const getReferenceClientRect = useCallback(() => {
-    const renderContainer = getRenderContainer(editor, 'node-imageBlock');
-    const rect = renderContainer?.getBoundingClientRect() || new DOMRect(-1000, -1000, 0, 0);
-
-    return rect;
-  }, [editor]);
 
   const shouldShow = useCallback(() => {
     const isActive = editor.isActive('imageBlock');
@@ -63,20 +54,8 @@ export const ImageBlockMenu = ({ editor, appendTo }: MenuProps): JSX.Element => 
       pluginKey={`imageBlockMenu-${uuid()}`}
       shouldShow={shouldShow}
       updateDelay={0}
-      tippyOptions={{
-        offset: [0, 8],
-        popperOptions: {
-          modifiers: [{ name: 'flip', enabled: false }],
-        },
-        getReferenceClientRect,
-        onCreate: (instance: Instance) => {
-          tippyInstance.current = instance;
-        },
-        appendTo: () => {
-          return appendTo?.current;
-        },
-        plugins: [sticky],
-        sticky: 'popper',
+      options={{
+        offset: 8,
       }}
     >
       <Toolbar.Wrapper shouldShowContent={shouldShow()} ref={menuRef}>

@@ -71,7 +71,7 @@ export function useDocumentEditor({
 
           // 设置编辑器内容
           if (editor && (docData as any).content) {
-            editor.commands.setContent((docData as any).content, false);
+            editor.commands.setContent((docData as any).content);
           }
         } else {
           throw new Error('无法获取文档内容');

@@ -26,6 +26,7 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
     return {
       ...this.parent?.(),
       lowlight,
+      defaultLanguage: 'plaintext',
       HTMLAttributes: {
         class: 'hljs',
       },

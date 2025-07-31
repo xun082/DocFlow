@@ -1,4 +1,4 @@
-import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import React, { JSX } from 'react';
 
 import { isColumnGripSelected } from './utils';
@@ -8,7 +8,7 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 
-export function TableColumnMenu({ editor, appendTo }: MenuProps): JSX.Element {
+export function TableColumnMenu({ editor }: MenuProps): JSX.Element {
   const shouldShow = ({ view, state, from }: ShouldShowProps) => {
     if (!state) {
       return false;
@@ -30,18 +30,12 @@ export function TableColumnMenu({ editor, appendTo }: MenuProps): JSX.Element {
   };
 
   return (
-    <BaseBubbleMenu
+    <BubbleMenu
       editor={editor}
       pluginKey="tableColumnMenu"
       updateDelay={0}
-      tippyOptions={{
-        appendTo: () => {
-          return appendTo?.current;
-        },
-        offset: [0, 15],
-        popperOptions: {
-          modifiers: [{ name: 'flip', enabled: false }],
-        },
+      options={{
+        offset: 15,
       }}
       shouldShow={shouldShow}
     >
@@ -65,7 +59,7 @@ export function TableColumnMenu({ editor, appendTo }: MenuProps): JSX.Element {
           onClick={onDeleteColumn}
         />
       </Toolbar.Wrapper>
-    </BaseBubbleMenu>
+    </BubbleMenu>
   );
 }
 

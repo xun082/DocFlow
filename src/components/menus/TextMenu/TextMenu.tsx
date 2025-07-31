@@ -1,6 +1,7 @@
 'use client';
 
-import { BubbleMenu, Editor } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
+import { Editor } from '@tiptap/react';
 import { useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 
@@ -84,58 +85,13 @@ export function TextMenu({ editor }: { editor: Editor }) {
   return (
     <>
       <BubbleMenu
-        tippyOptions={{
+        options={{
           placement: 'top',
-          zIndex: 10000,
-          interactive: true,
-          animation: 'shift-away-subtle',
-          duration: [200, 150],
-          hideOnClick: false,
-          trigger: 'manual',
-          appendTo: () => document.body,
-          offset: [0, 8],
-          popperOptions: {
-            strategy: 'absolute',
-            modifiers: [
-              {
-                name: 'preventOverflow',
-                options: {
-                  boundary: 'viewport',
-                  padding: 16,
-                  altBoundary: true,
-                  altAxis: true,
-                  tether: false,
-                },
-              },
-              {
-                name: 'flip',
-                options: {
-                  fallbackPlacements: [
-                    'bottom',
-                    'top-start',
-                    'top-end',
-                    'bottom-start',
-                    'bottom-end',
-                  ],
-                  skipEqual: false,
-                },
-              },
-              {
-                name: 'offset',
-                options: {
-                  offset: [0, 8],
-                },
-              },
-            ],
-          },
-          aria: {
-            content: 'labelledby',
-            expanded: 'auto',
-          },
+          offset: 8,
         }}
         editor={editor}
         pluginKey="textMenu"
-        shouldShow={({ state }) => {
+        shouldShow={({ state }: { state: any }) => {
           const { selection } = state;
           const { empty } = selection;
 

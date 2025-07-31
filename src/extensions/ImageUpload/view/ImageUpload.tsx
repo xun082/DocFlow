@@ -3,16 +3,26 @@ import { useCallback } from 'react';
 
 import { ImageUploader } from './ImageUploader';
 
-export const ImageUpload = ({ getPos, editor }: { getPos: () => number; editor: Editor }) => {
+export const ImageUpload = ({
+  getPos,
+  editor,
+}: {
+  getPos: () => number | undefined;
+  editor: Editor;
+}) => {
   const onUpload = useCallback(
     (url: string) => {
       if (url) {
-        editor
-          .chain()
-          .setImageBlock({ src: url })
-          .deleteRange({ from: getPos(), to: getPos() })
-          .focus()
-          .run();
+        const pos = getPos();
+
+        if (pos !== undefined) {
+          editor
+            .chain()
+            .setImageBlock({ src: url })
+            .deleteRange({ from: pos, to: pos })
+            .focus()
+            .run();
+        }
       }
     },
     [getPos, editor],

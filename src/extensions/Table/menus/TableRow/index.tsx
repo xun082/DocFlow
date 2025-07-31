@@ -1,4 +1,4 @@
-import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import React, { JSX } from 'react';
 
 import { isRowGripSelected } from './utils';
@@ -8,7 +8,7 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 
-export function TableRowMenu({ editor, appendTo }: MenuProps): JSX.Element {
+export function TableRowMenu({ editor }: MenuProps): JSX.Element {
   const shouldShow = ({ view, state, from }: ShouldShowProps) => {
     if (!state || !from) {
       return false;
@@ -30,19 +30,13 @@ export function TableRowMenu({ editor, appendTo }: MenuProps): JSX.Element {
   };
 
   return (
-    <BaseBubbleMenu
+    <BubbleMenu
       editor={editor}
       pluginKey="tableRowMenu"
       updateDelay={0}
-      tippyOptions={{
-        appendTo: () => {
-          return appendTo?.current;
-        },
+      options={{
         placement: 'left',
-        offset: [0, 15],
-        popperOptions: {
-          modifiers: [{ name: 'flip', enabled: false }],
-        },
+        offset: 15,
       }}
       shouldShow={shouldShow}
     >
@@ -61,7 +55,7 @@ export function TableRowMenu({ editor, appendTo }: MenuProps): JSX.Element {
         />
         <PopoverMenu.Item icon="Trash" close={false} label="Delete row" onClick={onDeleteRow} />
       </Toolbar.Wrapper>
-    </BaseBubbleMenu>
+    </BubbleMenu>
   );
 }
 

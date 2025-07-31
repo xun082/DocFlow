@@ -92,12 +92,15 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     heading: false,
     horizontalRule: false,
     blockquote: false,
-    history: false,
+    undoRedo: false,
     codeBlock: false,
     paragraph: false,
     hardBreak: false,
     text: false,
-  }),
+    link: false,
+    underline: false,
+    trailingNode: false,
+  } as any),
   Details.configure({
     persist: true,
     HTMLAttributes: {
