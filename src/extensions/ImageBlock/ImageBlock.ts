@@ -1,5 +1,5 @@
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { mergeAttributes, Range } from '@tiptap/core';
+import { mergeAttributes, Range, ChainedCommands } from '@tiptap/core';
 
 import { ImageBlockView } from './components/ImageBlockView';
 import { Image } from '../Image';
@@ -30,28 +30,28 @@ export const ImageBlock = Image.extend({
     return {
       src: {
         default: '',
-        parseHTML: (element: any) => element.getAttribute('src'),
+        parseHTML: (element: Element) => element.getAttribute('src'),
         renderHTML: (attributes: any) => ({
           src: attributes.src,
         }),
       },
       width: {
         default: '100%',
-        parseHTML: (element: any) => element.getAttribute('data-width'),
+        parseHTML: (element: Element) => element.getAttribute('data-width'),
         renderHTML: (attributes: any) => ({
           'data-width': attributes.width,
         }),
       },
       align: {
         default: 'center',
-        parseHTML: (element: any) => element.getAttribute('data-align'),
+        parseHTML: (element: Element) => element.getAttribute('data-align'),
         renderHTML: (attributes: any) => ({
           'data-align': attributes.align,
         }),
       },
       alt: {
         default: undefined,
-        parseHTML: (element: any) => element.getAttribute('alt'),
+        parseHTML: (element: Element) => element.getAttribute('alt'),
         renderHTML: (attributes: any) => ({
           alt: attributes.alt,
         }),
@@ -74,14 +74,14 @@ export const ImageBlock = Image.extend({
   addCommands() {
     return {
       setImageBlock:
-        (attrs: any) =>
-        ({ commands }: { commands: any }) => {
+        (attrs: { src: string }) =>
+        ({ commands }: { commands: ChainedCommands }) => {
           return commands.insertContent({ type: 'imageBlock', attrs: { src: attrs.src } });
         },
 
       setImageBlockAt:
-        (attrs: any) =>
-        ({ commands }: { commands: any }) => {
+        (attrs: { src: string; pos: number | Range }) =>
+        ({ commands }: { commands: ChainedCommands }) => {
           return commands.insertContentAt(attrs.pos, {
             type: 'imageBlock',
             attrs: { src: attrs.src },
@@ -89,13 +89,13 @@ export const ImageBlock = Image.extend({
         },
 
       setImageBlockAlign:
-        (align: any) =>
-        ({ commands }: { commands: any }) =>
+        (align: 'left' | 'center' | 'right') =>
+        ({ commands }: { commands: ChainedCommands }) =>
           commands.updateAttributes('imageBlock', { align }),
 
       setImageBlockWidth:
-        (width: any) =>
-        ({ commands }: { commands: any }) =>
+        (width: number) =>
+        ({ commands }: { commands: ChainedCommands }) =>
           commands.updateAttributes('imageBlock', {
             width: `${Math.max(0, Math.min(100, width))}%`,
           }),

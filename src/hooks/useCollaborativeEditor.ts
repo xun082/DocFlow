@@ -3,7 +3,7 @@ import { useEditor } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 import * as Y from 'yjs';
 import { Collaboration } from '@tiptap/extension-collaboration';
-import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
+import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 
@@ -237,7 +237,7 @@ export function useCollaborativeEditor(
       ...ExtensionKit({ provider }),
       ...(doc ? [Collaboration.configure({ document: doc, field: 'content' })] : []),
       ...(provider && !isOffline && currentUser && doc
-        ? [CollaborationCursor.configure({ provider, user: currentUser })]
+        ? [CollaborationCaret.configure({ provider, user: currentUser })]
         : []),
     ],
     content: '',

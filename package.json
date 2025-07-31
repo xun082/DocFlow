@@ -41,7 +41,7 @@
     "@tiptap/extension-code-block": "^3.0.7",
     "@tiptap/extension-code-block-lowlight": "^3.0.7",
     "@tiptap/extension-collaboration": "^3.0.7",
-    "@tiptap/extension-collaboration-cursor": "^2.26.1",
+    "@tiptap/extension-collaboration-caret": "^3.0.7",
     "@tiptap/extension-color": "^3.0.7",
     "@tiptap/extension-details": "^3.0.7",
     "@tiptap/extension-details-content": "^2.26.1",

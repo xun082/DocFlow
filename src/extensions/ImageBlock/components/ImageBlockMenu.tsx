@@ -38,7 +38,7 @@ export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
   );
   const { isImageCenter, isImageLeft, isImageRight, width } = useEditorState({
     editor,
-    selector: (ctx) => {
+    selector: (ctx: { editor: typeof editor }) => {
       return {
         isImageLeft: ctx.editor.isActive('imageBlock', { align: 'left' }),
         isImageCenter: ctx.editor.isActive('imageBlock', { align: 'center' }),
@@ -55,7 +55,9 @@ export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
       shouldShow={shouldShow}
       updateDelay={0}
       options={{
+        placement: 'top',
         offset: 8,
+        flip: false,
       }}
     >
       <Toolbar.Wrapper shouldShowContent={shouldShow()} ref={menuRef}>

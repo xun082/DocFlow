@@ -10,7 +10,7 @@ export { TextStyle } from '@tiptap/extension-text-style';
 export { FontFamily } from '@tiptap/extension-font-family';
 export { Typography } from '@tiptap/extension-typography';
 export { Color } from '@tiptap/extension-color';
-export { CollaborationCursor } from '@tiptap/extension-collaboration-cursor';
+export { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 export { Subscript } from '@tiptap/extension-subscript';
 export { TableOfContents } from '@tiptap/extension-table-of-contents';
 export { Superscript } from '@tiptap/extension-superscript';
