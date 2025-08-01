@@ -100,8 +100,11 @@ export const SlashCommand = Extension.create({
         render: () => {
           let component: ReactRenderer<SlashCommandPopoverRef, any>;
 
+          let scrollHandler: (() => void) | null = null;
+
           return {
             onStart: (props: SuggestionProps) => {
+              const { view } = props.editor;
               const getReferenceClientRect = () => {
                 if (!props.clientRect) {
                   return (props.editor.storage as any)[extensionName]?.rect;
@@ -133,6 +136,14 @@ export const SlashCommand = Extension.create({
                 },
                 editor: props.editor,
               });
+
+              scrollHandler = () => {
+                component.updateProps({
+                  anchorRect: getReferenceClientRect(),
+                });
+              };
+
+              view.dom.parentElement?.parentElement?.addEventListener('scroll', scrollHandler);
             },
 
             onUpdate(props: SuggestionProps) {

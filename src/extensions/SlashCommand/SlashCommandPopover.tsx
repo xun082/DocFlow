@@ -45,7 +45,7 @@ const SlashCommandPopover = forwardRef<SlashCommandPopoverRef, SlashCommandPopov
               position: 'absolute',
               left: props.anchorRect.left + 16, // Add the offset[0] value (16)
               top: props.anchorRect.bottom + 8, // Add the offset[1] value (8)
-              zIndex: 9999,
+              zIndex: 99,
               maxWidth: '16rem',
             }}
           >
