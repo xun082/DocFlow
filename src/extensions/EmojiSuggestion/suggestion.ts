@@ -58,14 +58,11 @@ export const emojiSuggestion = {
           return new DOMRect(rect.x, yPos, rect.width, rect.height);
         };
 
-        const anchorRect = getReferenceClientRect();
-        // const anchorRect = props.clientRect?.() || new DOMRect(0, 0, 0, 0);
-
         // Create the React component with EmojiPopover
         component = new ReactRenderer(EmojiPopover, {
           props: {
             ...props,
-            anchorRect,
+            anchorRect: getReferenceClientRect(),
           },
           editor: props.editor,
         });
@@ -83,7 +80,43 @@ export const emojiSuggestion = {
 
       onUpdate(props: SuggestionProps<any>) {
         // Get the updated anchor rectangle
-        const anchorRect = props.clientRect?.() || new DOMRect(0, 0, 0, 0);
+        // const anchorRect = props.clientRect?.() || new DOMRect(0, 0, 0, 0);
+
+        const getReferenceClientRect = () => {
+          if (!props.clientRect) {
+            return (props.editor.storage as any)[extensionName]?.rect;
+          }
+
+          const rect = props.clientRect();
+
+          if (!rect) {
+            return (props.editor.storage as any)[extensionName]?.rect;
+          }
+
+          let yPos = rect.y;
+
+          if (rect.top + 300 > window.innerHeight) {
+            const diff = rect.top + 300 - window.innerHeight + 40;
+            yPos = rect.y - diff;
+          }
+
+          return new DOMRect(rect.x, yPos, rect.width, rect.height);
+        };
+
+        (props.editor.storage as any)[extensionName] = {
+          rect: props.clientRect
+            ? getReferenceClientRect()
+            : {
+                width: 0,
+                height: 0,
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+              },
+        };
+
+        const anchorRect = getReferenceClientRect();
 
         // Update the component with new props
         component.updateProps({
