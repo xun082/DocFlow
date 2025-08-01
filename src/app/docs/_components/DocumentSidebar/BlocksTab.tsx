@@ -188,6 +188,13 @@ const BlocksTab = () => {
       blockType: 'calendar',
       category: 'interactive',
     },
+    {
+      icon: 'Smile' as keyof typeof icons,
+      label: 'emoji',
+      description: '插入Emoji',
+      blockType: 'emoji',
+      category: 'interactive',
+    },
   ];
 
   // 过滤区块

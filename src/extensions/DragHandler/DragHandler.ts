@@ -100,82 +100,155 @@ export const DragHandler = Extension.create<DragHandlerOptions>({
   },
 });
 
-// Helper function to create appropriate content for different block types
-function createContentForBlockType(blockType: string) {
-  switch (blockType) {
-    case 'text':
-      return { type: 'paragraph', content: [{ type: 'text', text: '在此输入文本' }] };
-    case 'image':
-      return {
-        type: 'imageUpload',
-        attrs: {
-          placeholder: '点击上传图片',
-          maxSize: 5 * 1024 * 1024, // 5MB
-        },
-      };
-    // return { type: 'imageUpload' };
-    case 'list':
-      return {
-        type: 'bulletList',
-        content: [
-          {
-            type: 'listItem',
-            content: [
-              {
-                type: 'paragraph',
-                content: [{ type: 'text', text: '列表项' }],
-              },
-            ],
-          },
-        ],
-      };
-    case 'table':
-      return {
-        type: 'table',
-        content: [
-          {
-            type: 'tableRow',
-            content: [
-              { type: 'tableCell', content: [{ type: 'paragraph' }] },
-              { type: 'tableCell', content: [{ type: 'paragraph' }] },
-            ],
-          },
-          {
-            type: 'tableRow',
-            content: [
-              { type: 'tableCell', content: [{ type: 'paragraph' }] },
-              { type: 'tableCell', content: [{ type: 'paragraph' }] },
-            ],
-          },
-        ],
-      };
-    case 'codeblock':
-      return {
-        type: 'codeBlock',
-        attrs: {
-          language: 'javascript', // 默认语言
-        },
-        content: [],
-      };
-    case 'todolist':
-      return {
-        type: 'taskList',
-        content: [
-          {
-            type: 'taskItem',
-            attrs: {
-              checked: false,
-            },
-            content: [
-              {
-                type: 'paragraph',
-                content: [{ type: 'text', text: '待办事项' }],
-              },
-            ],
-          },
-        ],
-      };
-    default:
-      return { type: 'paragraph' };
+// 策略接口
+interface BlockContentStrategy {
+  create(): any;
+}
+
+// 文本块策略
+class TextBlockStrategy implements BlockContentStrategy {
+  create() {
+    return { type: 'paragraph', content: [{ type: 'text', text: '在此输入文本' }] };
   }
+}
+
+// 图片块策略
+class ImageBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'imageUpload',
+      attrs: {
+        placeholder: '点击上传图片',
+        maxSize: 5 * 1024 * 1024, // 5MB
+      },
+    };
+  }
+}
+
+// 列表块策略
+class ListBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'bulletList',
+      content: [
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: '列表项' }],
+            },
+          ],
+        },
+      ],
+    };
+  }
+}
+
+// 表格块策略
+class TableBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'table',
+      content: [
+        {
+          type: 'tableRow',
+          content: [
+            { type: 'tableCell', content: [{ type: 'paragraph' }] },
+            { type: 'tableCell', content: [{ type: 'paragraph' }] },
+          ],
+        },
+        {
+          type: 'tableRow',
+          content: [
+            { type: 'tableCell', content: [{ type: 'paragraph' }] },
+            { type: 'tableCell', content: [{ type: 'paragraph' }] },
+          ],
+        },
+      ],
+    };
+  }
+}
+
+// 代码块策略
+class CodeBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'codeBlock',
+      attrs: {
+        language: 'javascript', // 默认语言
+      },
+      content: [],
+    };
+  }
+}
+
+// 待办列表策略
+class TodoListBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'taskList',
+      content: [
+        {
+          type: 'taskItem',
+          attrs: {
+            checked: false,
+          },
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: '待办事项' }],
+            },
+          ],
+        },
+      ],
+    };
+  }
+}
+
+// 表情符号块策略
+class EmojiBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'paragraph',
+      content: [{ type: 'text', text: ':' }],
+      attrs: { triggerSuggestion: true },
+    };
+  }
+}
+
+// 默认块策略
+class DefaultBlockStrategy implements BlockContentStrategy {
+  create() {
+    return { type: 'paragraph' };
+  }
+}
+
+// 策略工厂
+class BlockContentStrategyFactory {
+  private static strategies = new Map<string, BlockContentStrategy>([
+    ['text', new TextBlockStrategy()],
+    ['image', new ImageBlockStrategy()],
+    ['list', new ListBlockStrategy()],
+    ['table', new TableBlockStrategy()],
+    ['codeblock', new CodeBlockStrategy()],
+    ['todolist', new TodoListBlockStrategy()],
+    ['emoji', new EmojiBlockStrategy()],
+  ]);
+
+  static getStrategy(blockType: string): BlockContentStrategy {
+    return this.strategies.get(blockType) || new DefaultBlockStrategy();
+  }
+
+  // 允许动态注册新的策略
+  static registerStrategy(blockType: string, strategy: BlockContentStrategy): void {
+    this.strategies.set(blockType, strategy);
+  }
+}
+
+// 重构后的函数
+function createContentForBlockType(blockType: string) {
+  const strategy = BlockContentStrategyFactory.getStrategy(blockType);
+
+  return strategy.create();
 }
