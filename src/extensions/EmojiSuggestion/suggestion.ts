@@ -72,7 +72,7 @@ export const emojiSuggestion = {
 
         scrollHandler = () => {
           component.updateProps({
-            anchorRect: anchorRect,
+            anchorRect: getReferenceClientRect(),
           });
         };
 
