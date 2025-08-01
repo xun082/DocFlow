@@ -34,8 +34,8 @@ const EmojiPopover = forwardRef<EmojiPopoverRef, EmojiPopoverProps>((props, ref)
           align="start"
           style={{
             position: 'absolute',
-            left: props.anchorRect.left,
-            top: props.anchorRect.bottom,
+            left: props.anchorRect.left + 16, // Add the offset[0] value (16)
+            top: props.anchorRect.bottom + 8, // Add the offset[1] value (8)
             zIndex: 9999,
           }}
         >
