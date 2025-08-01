@@ -138,6 +138,7 @@ export const SlashCommand = Extension.create({
               });
 
               scrollHandler = () => {
+                if (!getReferenceClientRect()) return;
                 component.updateProps({
                   anchorRect: getReferenceClientRect(),
                 });
