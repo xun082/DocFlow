@@ -55,3 +55,4 @@ export { MarkdownPaste } from './MarkdownPaste';
 export { ExcalidrawImage } from './ExcalidrawImage';
 
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
+export { Audio } from './Audio';

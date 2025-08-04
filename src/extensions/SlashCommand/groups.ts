@@ -188,6 +188,16 @@ export const GROUPS: Group[] = [
         },
       },
       {
+        name: 'audio',
+        label: 'Audio',
+        iconName: 'Volume2',
+        description: 'Insert an audio player',
+        aliases: ['sound', 'music'],
+        action: (editor) => {
+          editor.chain().focus().setAudio({ src: '' }).run();
+        },
+      },
+      {
         name: 'excalidraw',
         label: 'Excalidraw',
         iconName: 'Image',
