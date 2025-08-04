@@ -67,20 +67,21 @@ const FileTree: React.FC<FileTreeProps> = ({
       <div key={file.id}>
         <div
           className={cn(
-            'flex items-center py-2 px-3 text-sm cursor-pointer relative group ',
+            'flex items-center py-2 px-3 text-sm cursor-pointer relative group box-border',
             'transition-all duration-300 ease-out rounded-lg mx-2 my-0.5 hover:z-[100]',
             isSelected && [
-              'bg-gradient-to-r from-blue-500/90 via-indigo-500/90 to-blue-500/90',
-              'text-white shadow-lg shadow-blue-500/25 dark:shadow-blue-400/20',
-              'border border-blue-400/50 dark:border-blue-300/30',
-              'transform scale-[1.02]',
+              'bg-blue-500/10 dark:bg-blue-400/15',
+              'text-blue-700 dark:text-blue-300',
+              'border-2 border-blue-500 dark:border-blue-400',
+              'shadow-sm shadow-blue-500/20',
             ],
             !isSelected && [
-              'hover:bg-gradient-to-r hover:from-slate-50 hover:via-blue-50/50 hover:to-slate-50',
-              'dark:hover:from-slate-700/50 dark:hover:via-slate-600/50 dark:hover:to-slate-700/50',
-              'hover:shadow-md hover:shadow-slate-200/30 dark:hover:shadow-slate-800/20',
+              'hover:bg-gradient-to-r hover:from-blue-50/80 hover:via-blue-100/60 hover:to-blue-50/80',
+              'dark:hover:from-blue-900/20 dark:hover:via-blue-800/30 dark:hover:to-blue-900/20',
+              'hover:shadow-md hover:shadow-blue-200/40 dark:hover:shadow-blue-900/30',
               'hover:transform hover:scale-[1.01]',
-              'text-slate-700 dark:text-slate-300',
+              'text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300',
+              'border-2 border-transparent',
             ],
           )}
           style={{
@@ -98,7 +99,7 @@ const FileTree: React.FC<FileTreeProps> = ({
                   'w-5 h-5 rounded-md flex items-center justify-center group/chevron',
                   'transition-all duration-300 transform hover:scale-110',
                   isSelected
-                    ? 'hover:bg-white/20 text-white/80 hover:text-white'
+                    ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
                     : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
                 )}
                 onClick={(e) => {
@@ -174,8 +175,8 @@ const FileTree: React.FC<FileTreeProps> = ({
                 className={cn(
                   'block truncate font-medium transition-all duration-300',
                   isSelected
-                    ? 'text-white drop-shadow-sm'
-                    : 'text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100',
+                    ? 'text-blue-700 dark:text-blue-300 font-medium'
+                    : 'text-slate-700 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-blue-300',
                 )}
               >
                 {file.name}
@@ -198,7 +199,7 @@ const FileTree: React.FC<FileTreeProps> = ({
                   className={cn(
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
-                      ? 'hover:bg-white/20 text-white/80 hover:text-white'
+                      ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
                       : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
                     'shadow-sm hover:shadow-md',
                   )}
@@ -214,7 +215,7 @@ const FileTree: React.FC<FileTreeProps> = ({
                   className={cn(
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
-                      ? 'hover:bg-white/20 text-white/80 hover:text-white'
+                      ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
                       : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
                     'shadow-sm hover:shadow-md',
                   )}
@@ -240,7 +241,7 @@ const FileTree: React.FC<FileTreeProps> = ({
                 className={cn(
                   'p-1.5 rounded-lg',
                   isSelected
-                    ? 'hover:bg-white/20 text-white/80 hover:text-white'
+                    ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
                     : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
                 )}
               />
@@ -252,8 +253,7 @@ const FileTree: React.FC<FileTreeProps> = ({
             <div
               className={cn(
                 'absolute inset-0 rounded-lg pointer-events-none',
-                'bg-gradient-to-r from-blue-400/20 via-indigo-400/20 to-blue-400/20',
-                'animate-pulse',
+                'bg-blue-500/5 dark:bg-blue-400/8',
               )}
             />
           )}
