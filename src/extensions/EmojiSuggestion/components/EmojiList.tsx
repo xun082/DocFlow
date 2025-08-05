@@ -8,7 +8,6 @@ import React, {
   useEffect,
   useImperativeHandle,
   useState,
-  useMemo,
   useRef,
 } from 'react';
 import { SuggestionKeyDownProps } from '@tiptap/suggestion';
@@ -30,7 +29,7 @@ const EmojiList = forwardRef(
     const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
     // 过滤emoji列表
-    const filteredItems = useMemo(() => {
+    const getFilteredItems = () => {
       // 过滤空格
       if (!searchQuery.trim()) {
         return props.items;
@@ -46,7 +45,9 @@ const EmojiList = forwardRef(
           (item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(query)))
         );
       });
-    }, [props.items, searchQuery]);
+    };
+
+    const filteredItems = getFilteredItems();
 
     // 滚动到指定索引的表情符号
     const scrollToIndex = useCallback((index: number) => {
