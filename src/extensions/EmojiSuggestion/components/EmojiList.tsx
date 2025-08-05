@@ -31,6 +31,7 @@ const EmojiList = forwardRef(
 
     // 过滤emoji列表
     const filteredItems = useMemo(() => {
+      // 过滤空格
       if (!searchQuery.trim()) {
         return props.items;
       }
@@ -96,8 +97,6 @@ const EmojiList = forwardRef(
 
       return {
         onKeyDown: ({ event }) => {
-          console.log('event.key', event.key);
-
           if (event.key === 'ArrowUp') {
             upHandler();
 
