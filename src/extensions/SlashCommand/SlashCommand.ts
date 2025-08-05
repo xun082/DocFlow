@@ -145,6 +145,7 @@ export const SlashCommand = Extension.create({
               };
 
               view.dom.parentElement?.parentElement?.addEventListener('scroll', scrollHandler);
+              view.focus();
             },
 
             onUpdate(props: SuggestionProps) {
