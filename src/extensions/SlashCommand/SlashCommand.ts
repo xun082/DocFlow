@@ -105,8 +105,6 @@ export const SlashCommand = Extension.create({
           return {
             onStart: (props: SuggestionProps) => {
               const { view } = props.editor;
-              // 强制聚焦编辑器视图
-
               const getReferenceClientRect = () => {
                 if (!props.clientRect) {
                   return (props.editor.storage as any)[extensionName]?.rect;
