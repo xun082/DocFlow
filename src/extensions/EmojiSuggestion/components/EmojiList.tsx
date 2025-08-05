@@ -58,7 +58,12 @@ const EmojiList = forwardRef(
       }
     }, []);
 
-    useEffect(() => setSelectedIndex(0), [filteredItems]);
+    useEffect(() => {
+      // 只有当当前选中的索引超出过滤后列表范围时才重置
+      if (selectedIndex >= filteredItems.length) {
+        setSelectedIndex(Math.max(0, filteredItems.length - 1));
+      }
+    }, [filteredItems.length, selectedIndex]);
 
     const selectItem = useCallback(
       (index: number) => {
