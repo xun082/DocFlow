@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 // 导入各个tab组件
 import Folder from './folder';
@@ -31,7 +31,7 @@ const tabs: TabConfig[] = [
   { id: 'settings', icon: 'Settings', label: '设置', component: SettingsTab },
 ];
 
-const DocumentSidebar = memo(() => {
+function DocumentSidebar() {
   const { isOpen, close } = useSidebar();
   const [activeTab, setActiveTab] = useState<TabType>('folder');
   const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -135,8 +135,6 @@ const DocumentSidebar = memo(() => {
       <div className="absolute -right-4 top-0 bottom-0 w-4 pointer-events-none bg-gradient-to-r from-slate-900/10 to-transparent dark:from-slate-900/30" />
     </div>
   );
-});
-
-DocumentSidebar.displayName = 'DocumentSidebar';
+}
 
 export default DocumentSidebar;

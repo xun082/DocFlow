@@ -9,8 +9,7 @@ export interface AuthResponse {
   refresh_token?: string;
   expires_in?: number;
   refresh_expires_in?: number;
-  success: boolean;
-  message?: string;
+  user: User;
 }
 
 /**
@@ -38,7 +37,8 @@ export const authApi = {
    * @param errorHandler 自定义错误处理函数
    * @returns 用户信息，包含错误处理
    */
-  getMe: (errorHandler?: ErrorHandler) => request.get<User>('/api/v1/users/me', { errorHandler }),
+  getCurrentUser: (errorHandler?: ErrorHandler) =>
+    request.get<User>('/api/v1/auth/profile', { errorHandler }),
 
   /**
    * 发送邮箱验证码
@@ -71,12 +71,12 @@ export const authApi = {
    * @returns 认证结果，包含token等信息
    */
   githubCallback: (code: string, errorHandler?: ErrorHandler) =>
-    request.get<AuthResponse>('/api/v1/auth/callback', {
+    request.get<AuthResponse>('/api/v1/auth/github/callback', {
       params: { code },
       errorHandler,
       withCredentials: true,
-      timeout: 30000, // 增加超时到30秒，GitHub OAuth可能需要更长时间
-      retries: 2, // 允许重试2次
+      timeout: 60000, // 增加超时到60秒，GitHub OAuth可能需要更长时间
+      retries: 3, // 允许重试3次
     }),
 
   /**

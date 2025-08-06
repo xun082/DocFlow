@@ -28,6 +28,7 @@ import {
   HorizontalRule,
   ImageBlock,
   Link,
+  MarkdownPaste,
   Placeholder,
   Selection,
   SlashCommand,
@@ -52,17 +53,17 @@ import {
   UniqueID,
   DraggableBlock,
   DragHandler,
+  Audio,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
-import { CommentMark } from './CommentMark';
 import { ExcalidrawImage } from './ExcalidrawImage';
+import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 
 import uploadService from '@/services/upload';
 
 export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
-  onCommentActivated?: (commentId: string) => void;
 }
 
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
@@ -92,9 +93,15 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     heading: false,
     horizontalRule: false,
     blockquote: false,
-    history: false,
+    undoRedo: false,
     codeBlock: false,
-  }),
+    paragraph: false,
+    hardBreak: false,
+    text: false,
+    link: false,
+    underline: false,
+    trailingNode: false,
+  } as any),
   Details.configure({
     persist: true,
     HTMLAttributes: {
@@ -114,7 +121,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   Highlight.configure({ multicolor: true }),
   Underline,
-  CommentMark,
   CharacterCount.configure({ limit: 50000 }),
   TableOfContents,
   TableOfContentsNode,
@@ -152,7 +158,28 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   TextAlign.extend({
     addKeyboardShortcuts() {
-      return {};
+      return {
+        Tab: () => {
+          return this.editor.commands.insertContent('  ');
+        },
+        'Shift-Tab': () => {
+          const { state } = this.editor;
+          const { from } = state.selection;
+          const $from = state.doc.resolve(from);
+          const startOfLine = $from.start($from.depth);
+          const textBeforeCursor = state.doc.textBetween(startOfLine, from);
+
+          if (textBeforeCursor.endsWith('  ')) {
+            const deleteFrom = Math.max(startOfLine, from - 2);
+
+            return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
+          } else if (textBeforeCursor.endsWith(' ')) {
+            return this.editor.commands.deleteRange({ from: from - 1, to: from });
+          }
+
+          return false;
+        },
+      };
     },
   }).configure({
     types: ['heading', 'paragraph'],
@@ -177,6 +204,9 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     width: 2,
     class: 'ProseMirror-dropcursor border-black',
   }),
+  MarkdownPaste,
+  SelectOnlyCode,
+  Audio,
 ];
 
 export default ExtensionKit;

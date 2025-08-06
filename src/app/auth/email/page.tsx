@@ -175,10 +175,33 @@ export default function EmailLoginPage() {
 
     if (responseData && responseData.code === 201) {
       toast.success('登录成功！', {
-        description: '正在跳转到首页...',
+        description: '正在获取用户资料...',
       });
 
       saveAuthData(responseData.data);
+
+      try {
+        // 使用 getCurrentUser 接口获取用户资料
+        const { data: userResponse } = await authApi.getCurrentUser({
+          onError: (error) => {
+            console.error('获取用户资料失败:', error);
+            toast.error('获取用户资料失败，但登录成功');
+          },
+          unauthorized: () => {
+            toast.error('用户认证失败');
+
+            return;
+          },
+        });
+
+        if (userResponse?.data && typeof window !== 'undefined') {
+          console.log('User profile loaded:', userResponse.data);
+          localStorage.setItem('user_profile', JSON.stringify(userResponse.data));
+        }
+      } catch (error) {
+        console.warn('Error processing user profile:', error);
+        toast.error('获取用户资料失败，但登录成功');
+      }
 
       // 清理定时器和状态
       clearTimer();

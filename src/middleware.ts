@@ -6,24 +6,17 @@ export function middleware(request: NextRequest) {
   // 从cookie获取token
   const token = request.cookies.get('auth_token')?.value;
 
-  console.log('===MIDDLEWARE===', {
-    path: pathname,
-    hasToken: !!token,
-    userAgent: request.headers.get('user-agent')?.slice(0, 50),
-  });
-
   // 如果没有token，重定向到登录页
   if (!token) {
-    console.log('No token found, redirecting to /auth');
+    // 保存原始URL到登录页的查询参数中
+    const loginUrl = new URL('/auth', request.url);
+    loginUrl.searchParams.set('redirect_to', encodeURIComponent(pathname + request.nextUrl.search));
 
-    return NextResponse.redirect(new URL('/auth', request.url));
+    return NextResponse.redirect(loginUrl);
   }
 
   // 可以在这里添加更多的token验证逻辑
   // 比如检查token是否过期等
-
-  // Token存在，允许访问
-  console.log('Token found, allowing access to:', pathname);
 
   return NextResponse.next();
 }

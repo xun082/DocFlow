@@ -1,14 +1,13 @@
-'use client';
-
 import React, { useCallback, useState, JSX } from 'react';
-import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react';
+import { useEditorState } from '@tiptap/react';
+import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react/menus';
 
 import { MenuProps } from '../types';
 
 import { LinkPreviewPanel } from '@/components/panels/LinkPreviewPanel';
 import { LinkEditorPanel } from '@/components/panels';
 
-export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
+export const LinkMenu = ({ editor }: MenuProps): JSX.Element => {
   const [showEdit, setShowEdit] = useState(false);
   const { link, target } = useEditorState({
     editor,
@@ -52,43 +51,12 @@ export const LinkMenu = ({ editor, appendTo }: MenuProps): JSX.Element => {
   return (
     <BaseBubbleMenu
       editor={editor}
-      pluginKey="linkMenu"
+      pluginKey="textMenu"
       shouldShow={shouldShow}
       updateDelay={0}
-      tippyOptions={{
-        placement: 'bottom',
-        zIndex: 10001,
-        interactive: true,
-        appendTo: appendTo?.current || document.body,
-        offset: [0, 8],
-        popperOptions: {
-          strategy: 'absolute',
-          modifiers: [
-            {
-              name: 'preventOverflow',
-              options: {
-                boundary: 'viewport',
-                padding: 8,
-                altBoundary: true,
-                altAxis: true,
-                tether: false,
-              },
-            },
-            {
-              name: 'flip',
-              options: {
-                fallbackPlacements: ['top', 'bottom-start', 'bottom-end', 'top-start', 'top-end'],
-              },
-            },
-            {
-              name: 'offset',
-              options: {
-                offset: [0, 8],
-              },
-            },
-          ],
-        },
-        onHidden: () => {
+      options={{
+        flip: false,
+        onHide: () => {
           setShowEdit(false);
         },
       }}

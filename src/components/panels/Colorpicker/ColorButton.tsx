@@ -1,5 +1,3 @@
-import { memo, useCallback } from 'react';
-
 import { cn } from '@/utils/utils';
 
 export type ColorButtonProps = {
@@ -8,7 +6,7 @@ export type ColorButtonProps = {
   onColorChange?: (color: string) => void;
 };
 
-export const ColorButton = memo(({ color, active, onColorChange }: ColorButtonProps) => {
+export function ColorButton({ color, active, onColorChange }: ColorButtonProps) {
   const wrapperClassName = cn(
     'flex items-center justify-center px-1.5 py-1.5 rounded group',
     !active && 'hover:bg-neutral-100',
@@ -20,17 +18,15 @@ export const ColorButton = memo(({ color, active, onColorChange }: ColorButtonPr
     active && `ring-1`,
   );
 
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     if (onColorChange) {
       onColorChange(color || '');
     }
-  }, [onColorChange, color]);
+  };
 
   return (
     <button onClick={handleClick} className={wrapperClassName}>
       <div style={{ backgroundColor: color, color: color }} className={bubbleClassName}></div>
     </button>
   );
-});
-
-ColorButton.displayName = 'ColorButton';
+}

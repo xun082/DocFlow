@@ -1,6 +1,4 @@
-'use client';
-
-import DragHandle from '@tiptap-pro/extension-drag-handle-react';
+import { DragHandle } from '@tiptap/extension-drag-handle-react';
 import { Editor } from '@tiptap/react';
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useState } from 'react';
@@ -15,13 +13,13 @@ import { DropdownButton } from '@/components/ui/Dropdown';
 
 export type ContentItemMenuProps = {
   editor: Editor;
+  isEditable?: boolean;
 };
 
-export const ContentItemMenu = ({ editor }: ContentItemMenuProps) => {
+export const ContentItemMenu = ({ editor, isEditable = true }: ContentItemMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const data = useData();
   const actions = useContentItemActions(editor, data.currentNode, data.currentNodePos);
-  const { isFocused } = editor || {};
 
   useEffect(() => {
     if (menuOpen) {
@@ -33,8 +31,8 @@ export const ContentItemMenu = ({ editor }: ContentItemMenuProps) => {
 
   return (
     <DragHandle pluginKey="ContentItemMenu" editor={editor} onNodeChange={data.handleNodeChange}>
-      {isFocused && (
-        <div className="flex items-center gap-0.5 -mt-1.25">
+      {isEditable ? (
+        <div className="flex items-center gap-0.5">
           <Toolbar.Button onClick={actions.handleAdd}>
             <Icon name="Plus" />
           </Toolbar.Button>
@@ -78,7 +76,7 @@ export const ContentItemMenu = ({ editor }: ContentItemMenuProps) => {
             </Popover.Content>
           </Popover.Root>
         </div>
-      )}
+      ) : null}
     </DragHandle>
   );
 };

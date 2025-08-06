@@ -1,6 +1,6 @@
 'use client';
 
-import { EmojiItem } from '@tiptap-pro/extension-emoji';
+import { EmojiItem } from '@tiptap/extension-emoji';
 import React, {
   ForwardedRef,
   forwardRef,
@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useState,
+  useRef,
 } from 'react';
 import { SuggestionKeyDownProps } from '@tiptap/suggestion';
 
@@ -15,6 +16,7 @@ import { EmojiListProps } from '../types';
 
 import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/Panel';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/utils/utils';
 
 const EmojiList = forwardRef(
@@ -23,41 +25,74 @@ const EmojiList = forwardRef(
     ref: ForwardedRef<{ onKeyDown: (evt: SuggestionKeyDownProps) => boolean }>,
   ) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
+    const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-    useEffect(() => setSelectedIndex(0), [props.items]);
+    // 过滤emoji列表
+    const getFilteredItems = () => {
+      // 过滤空格
+      if (!searchQuery.trim()) {
+        return props.items;
+      }
+
+      const query = searchQuery.toLowerCase();
+
+      return props.items.filter((item: EmojiItem) => {
+        return (
+          item.name.toLowerCase().includes(query) ||
+          (item.shortcodes &&
+            item.shortcodes.some((code: string) => code.toLowerCase().includes(query))) ||
+          (item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+        );
+      });
+    };
+
+    const filteredItems = getFilteredItems();
+
+    // 滚动到指定索引的表情符号
+    const scrollToIndex = useCallback((index: number) => {
+      const element = itemRefs.current[index];
+
+      if (element) {
+        element.scrollIntoView({ block: 'nearest' });
+      }
+    }, []);
+
+    useEffect(() => {
+      // 只有当当前选中的索引超出过滤后列表范围时才重置
+      if (selectedIndex >= filteredItems.length) {
+        setSelectedIndex(Math.max(0, filteredItems.length - 1));
+      }
+    }, [filteredItems.length, selectedIndex]);
 
     const selectItem = useCallback(
       (index: number) => {
-        const item = props.items[index];
+        const item = filteredItems[index];
 
         if (item) {
           props.command({ name: item.name });
         }
       },
-      [props],
+      [filteredItems, props],
     );
 
     useImperativeHandle(ref, () => {
       const scrollIntoView = (index: number) => {
-        const item = props.items[index];
+        const element = itemRefs.current[index];
 
-        if (item) {
-          const node = document.querySelector(`[data-emoji-name="${item.name}"]`);
-
-          if (node) {
-            node.scrollIntoView({ block: 'nearest' });
-          }
+        if (element) {
+          element.scrollIntoView({ block: 'nearest' });
         }
       };
 
       const upHandler = () => {
-        const newIndex = (selectedIndex + props.items.length - 1) % props.items.length;
+        const newIndex = (selectedIndex + filteredItems.length - 1) % filteredItems.length;
         setSelectedIndex(newIndex);
         scrollIntoView(newIndex);
       };
 
       const downHandler = () => {
-        const newIndex = (selectedIndex + 1) % props.items.length;
+        const newIndex = (selectedIndex + 1) % filteredItems.length;
         setSelectedIndex(newIndex);
         scrollIntoView(newIndex);
       };
@@ -89,7 +124,7 @@ const EmojiList = forwardRef(
           return false;
         },
       };
-    }, [props, selectedIndex, selectItem]);
+    }, [filteredItems, selectedIndex, selectItem]);
 
     const createClickHandler = useCallback(
       (index: number) => () => selectItem(index),
@@ -101,24 +136,69 @@ const EmojiList = forwardRef(
     }
 
     return (
-      <Panel className="overflow-y-auto max-w-[18rem] max-h-[18rem]">
-        {props.items.map((item: EmojiItem, index: number) => (
-          <Button
-            variant="ghost"
-            className={cn('justify-start w-full', index === selectedIndex && 'bg-accent')}
-            size="sm"
-            key={item.name}
-            onClick={createClickHandler(index)}
-            data-emoji-name={item.name}
-          >
-            {item.fallbackImage ? (
-              <img src={item.fallbackImage} className="w-5 h-5" alt="emoji" />
-            ) : (
-              item.emoji
-            )}{' '}
-            <span className="truncate text-ellipsis">:{item.name}:</span>
-          </Button>
-        ))}
+      <Panel className="max-w-[18rem] max-h-[20rem] flex flex-col min-w-[16rem]">
+        {/* 搜索输入框 */}
+        <div className="p-2 border-b">
+          <Input
+            placeholder="搜索表情符号..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 text-sm"
+            autoFocus={true}
+            onKeyDown={(e) => {
+              // 处理键盘导航
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+
+                const newIndex = (selectedIndex + filteredItems.length - 1) % filteredItems.length;
+
+                setSelectedIndex(newIndex);
+                scrollToIndex(newIndex);
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+
+                const newIndex = (selectedIndex + 1) % filteredItems.length;
+
+                setSelectedIndex(newIndex);
+                scrollToIndex(newIndex);
+              } else if (e.key === 'Enter') {
+                e.preventDefault();
+
+                selectItem(selectedIndex);
+              }
+            }}
+          />
+        </div>
+
+        {/* 表情符号列表 */}
+        <div className="overflow-y-auto flex-1">
+          {filteredItems.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              未找到匹配的表情符号
+            </div>
+          ) : (
+            filteredItems.map((item: EmojiItem, index: number) => (
+              <Button
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+                variant="ghost"
+                className={cn('justify-start w-full', index === selectedIndex && 'bg-accent')}
+                size="sm"
+                key={item.name}
+                onClick={createClickHandler(index)}
+                data-emoji-name={item.name}
+              >
+                {item.fallbackImage ? (
+                  <img src={item.fallbackImage} className="w-5 h-5" alt="emoji" />
+                ) : (
+                  item.emoji
+                )}{' '}
+                <span className="truncate text-ellipsis">:{item.name}:</span>
+              </Button>
+            ))
+          )}
+        </div>
       </Panel>
     );
   },

@@ -121,7 +121,7 @@ export const GROUPS: Group[] = [
         description: 'Code block with syntax highlighting',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
-          editor.chain().focus().setCodeBlock().run();
+          editor.chain().focus().toggleCodeBlock().run();
         },
       },
     ],
@@ -185,6 +185,16 @@ export const GROUPS: Group[] = [
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
           editor.chain().focus().insertTableOfContents().run();
+        },
+      },
+      {
+        name: 'audio',
+        label: 'Audio',
+        iconName: 'Volume2',
+        description: 'Insert an audio player',
+        aliases: ['sound', 'music'],
+        action: (editor) => {
+          editor.chain().focus().setAudio({ src: '' }).run();
         },
       },
       {

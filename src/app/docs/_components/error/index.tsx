@@ -82,7 +82,13 @@ export function getErrorDisplay(errorType: string, message?: string): ErrorDispl
   }
 }
 
-import { DocumentResult } from '../document-service';
+// 文档结果类型定义
+interface DocumentResult {
+  data?: any;
+  error?: string | null;
+  status?: number;
+  message?: string;
+}
 
 export function useDocumentError(result: DocumentResult, documentId: string): ReactNode {
   if (!result.error) return null;

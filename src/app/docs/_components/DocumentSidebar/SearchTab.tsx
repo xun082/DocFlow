@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Icon } from '@/components/ui/Icon';
@@ -53,102 +53,100 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   const [searchMode, setSearchMode] = useState<'all' | 'files' | 'content'>('all');
 
   // 处理API返回的文档数据，转换为文件结构
-  const processDocumentsToFileStructure = useCallback(
-    (docs: DocumentResponse['owned']): FileStructure[] => {
-      const docMap = new Map<number, DocumentResponse['owned'][0]>();
-      docs.forEach((doc) => {
-        if (!doc.is_deleted) {
-          docMap.set(doc.id, doc);
-        }
-      });
+  const processDocumentsToFileStructure = (docs: DocumentResponse['owned']): FileStructure[] => {
+    const docMap = new Map<number, DocumentResponse['owned'][0]>();
+    docs.forEach((doc) => {
+      if (!doc.is_deleted) {
+        docMap.set(doc.id, doc);
+      }
+    });
 
-      const result: FileStructure[] = [];
-      const childrenMap = new Map<number, FileStructure[]>();
+    const result: FileStructure[] = [];
+    const childrenMap = new Map<number, FileStructure[]>();
 
-      docMap.forEach((doc) => {
-        childrenMap.set(doc.id, []);
-      });
+    docMap.forEach((doc) => {
+      childrenMap.set(doc.id, []);
+    });
 
-      docMap.forEach((doc) => {
-        const fileItem: FileStructure = {
-          id: String(doc.id),
-          name: doc.title,
-          type: doc.type === 'FOLDER' ? 'folder' : 'file',
-          is_starred: doc.is_starred,
-          created_at: doc.created_at,
-          updated_at: doc.updated_at,
-          parent_id: doc.parent_id ?? undefined,
-        };
+    docMap.forEach((doc) => {
+      const fileItem: FileStructure = {
+        id: String(doc.id),
+        name: doc.title,
+        type: doc.type === 'FOLDER' ? 'folder' : 'file',
+        is_starred: doc.is_starred,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at,
+        parent_id: doc.parent_id ?? undefined,
+      };
 
-        if (doc.type === 'FOLDER') {
-          fileItem.children = childrenMap.get(doc.id) || [];
-        }
-
-        if (doc.parent_id === null) {
-          result.push(fileItem);
-        } else if (docMap.has(doc.parent_id)) {
-          const parentChildren = childrenMap.get(doc.parent_id) || [];
-          parentChildren.push(fileItem);
-          childrenMap.set(doc.parent_id, parentChildren);
-        }
-      });
-
-      return result;
-    },
-    [],
-  );
-
-  // 递归搜索文件结构
-  const searchInFileStructure = useCallback(
-    (structure: FileStructure[], query: string, currentPath: string[] = []): SearchResult[] => {
-      const results: SearchResult[] = [];
-
-      for (const item of structure) {
-        const itemPath = [...currentPath, item.name];
-        const lowerName = item.name.toLowerCase();
-        const lowerQuery = query.toLowerCase();
-
-        if (lowerName.includes(lowerQuery)) {
-          const matches: SearchResult['matches'] = [];
-          let nameIndex = lowerName.indexOf(lowerQuery);
-
-          while (nameIndex !== -1) {
-            matches.push({
-              field: 'title',
-              text: item.name.substring(nameIndex, nameIndex + query.length),
-              start: nameIndex,
-              end: nameIndex + query.length,
-            });
-            nameIndex = lowerName.indexOf(lowerQuery, nameIndex + 1);
-          }
-
-          results.push({
-            id: item.id,
-            title: item.name,
-            type: item.type === 'folder' ? 'FOLDER' : 'DOCUMENT',
-            is_starred: item.is_starred,
-            updated_at: item.updated_at,
-            created_at: item.created_at,
-            parent_id: item.parent_id,
-            path: itemPath,
-            matches,
-          });
-        }
-
-        // 递归搜索子项
-        if (item.children && item.children.length > 0) {
-          const childResults = searchInFileStructure(item.children, query, itemPath);
-          results.push(...childResults);
-        }
+      if (doc.type === 'FOLDER') {
+        fileItem.children = childrenMap.get(doc.id) || [];
       }
 
-      return results;
-    },
-    [],
-  );
+      if (doc.parent_id === null) {
+        result.push(fileItem);
+      } else if (docMap.has(doc.parent_id)) {
+        const parentChildren = childrenMap.get(doc.parent_id) || [];
+        parentChildren.push(fileItem);
+        childrenMap.set(doc.parent_id, parentChildren);
+      }
+    });
+
+    return result;
+  };
+
+  // 递归搜索文件结构
+  const searchInFileStructure = (
+    structure: FileStructure[],
+    query: string,
+    currentPath: string[] = [],
+  ): SearchResult[] => {
+    const results: SearchResult[] = [];
+
+    for (const item of structure) {
+      const itemPath = [...currentPath, item.name];
+      const lowerName = item.name.toLowerCase();
+      const lowerQuery = query.toLowerCase();
+
+      if (lowerName.includes(lowerQuery)) {
+        const matches: SearchResult['matches'] = [];
+        let nameIndex = lowerName.indexOf(lowerQuery);
+
+        while (nameIndex !== -1) {
+          matches.push({
+            field: 'title',
+            text: item.name.substring(nameIndex, nameIndex + query.length),
+            start: nameIndex,
+            end: nameIndex + query.length,
+          });
+          nameIndex = lowerName.indexOf(lowerQuery, nameIndex + 1);
+        }
+
+        results.push({
+          id: item.id,
+          title: item.name,
+          type: item.type === 'folder' ? 'FOLDER' : 'DOCUMENT',
+          is_starred: item.is_starred,
+          updated_at: item.updated_at,
+          created_at: item.created_at,
+          parent_id: item.parent_id,
+          path: itemPath,
+          matches,
+        });
+      }
+
+      // 递归搜索子项
+      if (item.children && item.children.length > 0) {
+        const childResults = searchInFileStructure(item.children, query, itemPath);
+        results.push(...childResults);
+      }
+    }
+
+    return results;
+  };
 
   // 加载所有文档数据
-  const loadDocuments = useCallback(async () => {
+  const loadDocuments = async () => {
     try {
       const res = await DocumentApi.GetDocument();
 
@@ -164,7 +162,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     } catch (error) {
       console.error('Failed to load documents:', error);
     }
-  }, [processDocumentsToFileStructure]);
+  };
 
   useEffect(() => {
     if (isActive) {
@@ -173,91 +171,88 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   }, [isActive, loadDocuments]);
 
   // 实际搜索函数
-  const performSearch = useCallback(
-    async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
 
-        return;
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      let results: SearchResult[] = [];
+
+      if (searchMode === 'all' || searchMode === 'files') {
+        // 搜索文件结构
+        const fileResults = searchInFileStructure(fileStructure, query);
+        results.push(...fileResults);
       }
 
-      setIsSearching(true);
+      if (searchMode === 'all' || searchMode === 'content') {
+        // 搜索文档内容（标题）
+        const contentResults = documents
+          .filter((doc) => !doc.is_deleted)
+          .filter((doc) => {
+            const titleMatch = doc.title.toLowerCase().includes(query.toLowerCase());
 
-      try {
-        let results: SearchResult[] = [];
+            return titleMatch;
+          })
+          .map((doc) => {
+            const matches: SearchResult['matches'] = [];
+            const titleLower = doc.title.toLowerCase();
+            const queryLower = query.toLowerCase();
+            let titleIndex = titleLower.indexOf(queryLower);
 
-        if (searchMode === 'all' || searchMode === 'files') {
-          // 搜索文件结构
-          const fileResults = searchInFileStructure(fileStructure, query);
-          results.push(...fileResults);
-        }
+            while (titleIndex !== -1) {
+              matches.push({
+                field: 'title',
+                text: doc.title.substring(titleIndex, titleIndex + query.length),
+                start: titleIndex,
+                end: titleIndex + query.length,
+              });
+              titleIndex = titleLower.indexOf(queryLower, titleIndex + 1);
+            }
 
-        if (searchMode === 'all' || searchMode === 'content') {
-          // 搜索文档内容（标题）
-          const contentResults = documents
-            .filter((doc) => !doc.is_deleted)
-            .filter((doc) => {
-              const titleMatch = doc.title.toLowerCase().includes(query.toLowerCase());
+            return {
+              id: String(doc.id),
+              title: doc.title,
+              type: doc.type,
+              is_starred: doc.is_starred,
+              updated_at: doc.updated_at,
+              created_at: doc.created_at,
+              parent_id: doc.parent_id ?? undefined,
+              matches,
+            } as SearchResult;
+          });
 
-              return titleMatch;
-            })
-            .map((doc) => {
-              const matches: SearchResult['matches'] = [];
-              const titleLower = doc.title.toLowerCase();
-              const queryLower = query.toLowerCase();
-              let titleIndex = titleLower.indexOf(queryLower);
-
-              while (titleIndex !== -1) {
-                matches.push({
-                  field: 'title',
-                  text: doc.title.substring(titleIndex, titleIndex + query.length),
-                  start: titleIndex,
-                  end: titleIndex + query.length,
-                });
-                titleIndex = titleLower.indexOf(queryLower, titleIndex + 1);
-              }
-
-              return {
-                id: String(doc.id),
-                title: doc.title,
-                type: doc.type,
-                is_starred: doc.is_starred,
-                updated_at: doc.updated_at,
-                created_at: doc.created_at,
-                parent_id: doc.parent_id ?? undefined,
-                matches,
-              } as SearchResult;
-            });
-
-          // 合并结果并去重
-          const existingIds = new Set(results.map((r) => r.id));
-          const uniqueContentResults = contentResults.filter((r) => !existingIds.has(r.id));
-          results.push(...uniqueContentResults);
-        }
-
-        // 排序：收藏的在前，然后按更新时间
-        results.sort((a, b) => {
-          if (a.is_starred && !b.is_starred) return -1;
-          if (!a.is_starred && b.is_starred) return 1;
-
-          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        });
-
-        setSearchResults(results.slice(0, 20)); // 限制结果数量
-
-        // 保存搜索历史
-        if (query.trim() && !searchHistory.includes(query.trim())) {
-          setSearchHistory((prev) => [query.trim(), ...prev.slice(0, 4)]);
-        }
-      } catch (error) {
-        console.error('Search error:', error);
-        setSearchResults([]);
+        // 合并结果并去重
+        const existingIds = new Set(results.map((r) => r.id));
+        const uniqueContentResults = contentResults.filter((r) => !existingIds.has(r.id));
+        results.push(...uniqueContentResults);
       }
 
-      setIsSearching(false);
-    },
-    [documents, fileStructure, searchHistory, searchMode, searchInFileStructure],
-  );
+      // 排序：收藏的在前，然后按更新时间
+      results.sort((a, b) => {
+        if (a.is_starred && !b.is_starred) return -1;
+        if (!a.is_starred && b.is_starred) return 1;
+
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+
+      setSearchResults(results.slice(0, 20)); // 限制结果数量
+
+      // 保存搜索历史
+      if (query.trim() && !searchHistory.includes(query.trim())) {
+        setSearchHistory((prev) => [query.trim(), ...prev.slice(0, 4)]);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    }
+
+    setIsSearching(false);
+  };
 
   // 防抖搜索
   useEffect(() => {
@@ -272,29 +267,29 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-  }, []);
+  };
 
-  const clearSearch = useCallback(() => {
+  const clearSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
     setShowHistory(false);
-  }, []);
+  };
 
-  const handleInputFocus = useCallback(() => {
+  const handleInputFocus = () => {
     if (!searchQuery && searchHistory.length > 0) {
       setShowHistory(true);
     }
-  }, [searchQuery, searchHistory.length]);
+  };
 
-  const handleInputBlur = useCallback(() => {
+  const handleInputBlur = () => {
     setTimeout(() => setShowHistory(false), 150);
-  }, []);
+  };
 
   // 高亮匹配文本
-  const highlightText = useCallback((text: string, query: string) => {
+  const highlightText = (text: string, query: string) => {
     if (!query) return text;
 
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -312,10 +307,10 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
         part
       ),
     );
-  }, []);
+  };
 
   // 格式化时间
-  const formatTime = useCallback((dateString: string) => {
+  const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -326,63 +321,54 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     if (diffDays <= 7) return `${diffDays} 天前`;
 
     return date.toLocaleDateString('zh-CN');
-  }, []);
+  };
 
   // 搜索模式选项
-  const searchModeOptions = useMemo(
-    () => [
-      { value: 'all', label: '全部', icon: 'Search' },
-      { value: 'files', label: '文件', icon: 'FileText' },
-      { value: 'content', label: '内容', icon: 'Type' },
-    ],
-    [],
-  );
+  const searchModeOptions = [
+    { value: 'all', label: '全部', icon: 'Search' },
+    { value: 'files', label: '文件', icon: 'FileText' },
+    { value: 'content', label: '内容', icon: 'Type' },
+  ];
 
   // 快捷搜索选项
-  const quickSearchOptions = useMemo(
-    () => [
-      { label: '最近修改', icon: 'Clock', action: () => setSearchQuery('') },
-      {
-        label: '我的文档',
-        icon: 'User',
-        action: () => {
-          setSearchMode('content');
-          setSearchQuery('');
-        },
+  const quickSearchOptions = [
+    { label: '最近修改', icon: 'Clock', action: () => setSearchQuery('') },
+    {
+      label: '我的文档',
+      icon: 'User',
+      action: () => {
+        setSearchMode('content');
+        setSearchQuery('');
       },
-      {
-        label: '文件夹',
-        icon: 'Folder',
-        action: () => {
-          setSearchMode('files');
-          setSearchQuery('folder');
-        },
-      },
-      {
-        label: '收藏文档',
-        icon: 'Star',
-        action: () => {
-          setSearchMode('all');
-          setSearchQuery('starred');
-        },
-      },
-    ],
-    [],
-  );
-
-  const handleResultClick = useCallback(
-    (result: SearchResult) => {
-      if (result.type === 'DOCUMENT') {
-        router.push(`/docs/${result.id}`);
-      }
     },
-    [router],
-  );
+    {
+      label: '文件夹',
+      icon: 'Folder',
+      action: () => {
+        setSearchMode('files');
+        setSearchQuery('folder');
+      },
+    },
+    {
+      label: '收藏文档',
+      icon: 'Star',
+      action: () => {
+        setSearchMode('all');
+        setSearchQuery('starred');
+      },
+    },
+  ];
 
-  const handleHistoryClick = useCallback((historyQuery: string) => {
+  const handleResultClick = (result: SearchResult) => {
+    if (result.type === 'DOCUMENT') {
+      router.push(`/docs/${result.id}`);
+    }
+  };
+
+  const handleHistoryClick = (historyQuery: string) => {
     setSearchQuery(historyQuery);
     setShowHistory(false);
-  }, []);
+  };
 
   return (
     <div className="p-4 space-y-4 flex flex-col flex-1">
@@ -474,7 +460,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
             key={option.value}
             onClick={() => setSearchMode(option.value as 'all' | 'files' | 'content')}
             className={cn(
-              'flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
+              'flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer',
               searchMode === option.value
                 ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-600/50',
@@ -496,7 +482,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 快捷搜索
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 px-2">
                 {quickSearchOptions.map((item) => (
                   <button
                     key={item.label}
@@ -509,7 +495,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                       'dark:hover:from-slate-600/80 dark:hover:to-slate-700/80',
                       'border border-slate-200/50 dark:border-slate-600/50',
                       'hover:border-blue-300/50 dark:hover:border-blue-500/30',
-                      'transition-all duration-200 hover:scale-105',
+                      'transition-all duration-200 hover:scale-105 cursor-pointer',
                     )}
                   >
                     <Icon

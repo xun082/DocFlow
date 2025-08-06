@@ -1,5 +1,4 @@
 import { useEditorState } from '@tiptap/react';
-import { useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { ColumnLayout } from '../Columns';
@@ -10,31 +9,31 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { BubbleMenu } from '@/components/ui/BubbleMenu';
 
-export const ColumnsMenu = ({ editor }: MenuProps) => {
-  const getReferenceClientRect = useCallback(() => {
+export function ColumnsMenu({ editor }: MenuProps) {
+  const getReferenceClientRect = () => {
     const renderContainer = getRenderContainer(editor, 'columns');
     const rect = renderContainer?.getBoundingClientRect() || new DOMRect(-1000, -1000, 0, 0);
 
     return rect;
-  }, [editor]);
+  };
 
-  const shouldShow = useCallback(() => {
+  const shouldShow = () => {
     const isColumns = editor.isActive('columns');
 
     return isColumns;
-  }, [editor]);
+  };
 
-  const onColumnLeft = useCallback(() => {
+  const onColumnLeft = () => {
     editor.chain().focus().setLayout(ColumnLayout.SidebarLeft).run();
-  }, [editor]);
+  };
 
-  const onColumnRight = useCallback(() => {
+  const onColumnRight = () => {
     editor.chain().focus().setLayout(ColumnLayout.SidebarRight).run();
-  }, [editor]);
+  };
 
-  const onColumnTwo = useCallback(() => {
+  const onColumnTwo = () => {
     editor.chain().focus().setLayout(ColumnLayout.TwoColumn).run();
-  }, [editor]);
+  };
 
   const { isColumnLeft, isColumnRight, isColumnTwo } = useEditorState({
     editor,
@@ -68,6 +67,6 @@ export const ColumnsMenu = ({ editor }: MenuProps) => {
       </Toolbar.Wrapper>
     </BubbleMenu>
   );
-};
+}
 
 export default ColumnsMenu;

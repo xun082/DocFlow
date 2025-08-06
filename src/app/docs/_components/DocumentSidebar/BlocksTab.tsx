@@ -188,6 +188,13 @@ const BlocksTab = () => {
       blockType: 'calendar',
       category: 'interactive',
     },
+    {
+      icon: 'Smile' as keyof typeof icons,
+      label: 'emoji',
+      description: '插入Emoji',
+      blockType: 'emoji',
+      category: 'interactive',
+    },
   ];
 
   // 过滤区块
@@ -202,7 +209,7 @@ const BlocksTab = () => {
   });
 
   const handleDragStart = (event: React.DragEvent, blockType: string) => {
-    event.dataTransfer.setData('text/plain', blockType);
+    event.dataTransfer.setData('application/x-block-type', blockType);
     event.dataTransfer.effectAllowed = 'copy';
   };
 
