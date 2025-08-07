@@ -71,35 +71,56 @@ export default function DocumentPage() {
     }
   }, []);
 
-  // 获取文档内容 - 确保在客户端且有认证token后再请求
-  useEffect(() => {
-    const fetchDocument = async () => {
-      try {
-        setLoading(true);
+  // // 获取文档内容 - 确保在客户端且有认证token后再请求
+  // useEffect(() => {
+  //   const fetchDocument = async () => {
+  //     try {
+  //       setLoading(true);
 
-        const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
+  //       const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
 
-        if (result.data?.data) {
-          const documentData = result.data.data as any;
+  //       if (result.data?.data) {
+  //         const documentData = result.data.data as any;
 
-          setInitialContent(documentData.content);
+  //         setInitialContent(documentData.content);
 
-          if (typeof document !== 'undefined') {
-            document.title = documentData.title;
-          }
+  //         if (typeof document !== 'undefined') {
+  //           document.title = documentData.title;
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('文档加载失败:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   // 只在客户端发请求 - 避免服务端调用API
+  //   if (typeof window !== 'undefined' && documentId && authToken && doc) {
+  //     fetchDocument();
+  //   }
+  // }, [documentId, authToken, doc]);
+
+  const fetchDocumentContent = async () => {
+    try {
+      setLoading(true);
+
+      const result = await DocumentApi.GetDocumentContent(parseInt(documentId));
+
+      if (result.data?.data) {
+        const documentData = result.data.data as any;
+        setInitialContent(documentData.content);
+
+        if (typeof document !== 'undefined') {
+          document.title = documentData.title;
         }
-      } catch (error) {
-        console.error('文档加载失败:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    // 只在客户端发请求 - 避免服务端调用API
-    if (typeof window !== 'undefined' && documentId && authToken && doc) {
-      fetchDocument();
+    } catch (error) {
+      console.error('文档加载失败:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [documentId, authToken, doc]);
+  };
 
   // 从localStorage获取当前用户信息
   useEffect(() => {
@@ -192,6 +213,7 @@ export default function DocumentPage() {
 
         onConnect: () => {
           setConnectionStatus('syncing');
+          fetchDocumentContent();
         },
 
         onDisconnect: () => {
