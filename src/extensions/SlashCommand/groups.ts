@@ -203,8 +203,9 @@ export const GROUPS: Group[] = [
         iconName: 'Image',
         description: 'Insert an Excalidraw diagram',
         aliases: ['excalidraw'],
-        action: () => {
-          window.open(`${window.location.origin}/excalidraw`);
+        action: (editor) => {
+          editor.chain().focus().setExcalidrawImage({ type: '' }).run();
+          // window.open(`${window.location.origin}/excalidraw`);
         },
       },
     ],

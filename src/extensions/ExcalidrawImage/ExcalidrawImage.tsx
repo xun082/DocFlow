@@ -1,6 +1,8 @@
 import { Node, ReactNodeViewRenderer, NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import React from 'react';
 
+import ExcalidrawEditor from './ExcalidrawEditor';
+
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     excalidrawImage: {
@@ -10,12 +12,13 @@ declare module '@tiptap/core' {
 }
 
 // SVG 渲染组件
-const ExcalidrawImageNodeView: React.FC<NodeViewProps> = ({ node }) => {
-  const svg = node.attrs.svg || '';
+const ExcalidrawImageNodeView: React.FC<NodeViewProps> = ({}) => {
+  // const svg = node.attrs.svg || '';
 
   return (
     <NodeViewWrapper data-type="excalidraw-image">
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <ExcalidrawEditor></ExcalidrawEditor>
+      {/* <div dangerouslySetInnerHTML={{ __html: svg }} /> */}
     </NodeViewWrapper>
   );
 };
