@@ -210,6 +210,14 @@ export const SlashCommand = Extension.create({
               if (props.event.key === 'Enter' && handled) {
                 props.event.preventDefault();
                 props.event.stopPropagation();
+                //  退出的时候销毁滚动监听事件
+
+                if (scrollHandler) {
+                  props.view.dom.parentElement?.parentElement?.removeEventListener(
+                    'scroll',
+                    scrollHandler,
+                  );
+                }
 
                 return true;
               }
@@ -217,7 +225,14 @@ export const SlashCommand = Extension.create({
               return handled;
             },
 
-            onExit() {
+            onExit(props: SuggestionProps) {
+              const { view } = props.editor;
+              // 退出的时候销毁滚动监听事件
+
+              if (scrollHandler) {
+                view.dom.parentElement?.parentElement?.removeEventListener('scroll', scrollHandler);
+              }
+
               component?.destroy();
             },
           };
