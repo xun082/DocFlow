@@ -3,6 +3,7 @@
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { all, createLowlight } from 'lowlight';
 import { ReactNodeViewRenderer } from '@tiptap/react';
+import { textblockTypeInputRule } from '@tiptap/core';
 
 import CodeBlockComponent from './CodeBlockComponent';
 
@@ -39,9 +40,56 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
       onCopy: undefined,
     };
   },
+  addCommands() {
+    return {
+      ...this.parent?.(),
+      createCodeBlock:
+        () =>
+        ({ commands }: any) => {
+          console.log('createCodeBlock', commands);
+
+          return commands.insertContent({
+            type: this.name,
+            attrs: { language: 'javascript' },
+          });
+        },
+    };
+  },
+  addInputRules() {
+    // 语言缩写映射
+    const languageMap: Record<string, string> = {
+      js: 'javascript',
+      ts: 'typescript',
+      py: 'python',
+      rb: 'ruby',
+      sh: 'bash',
+      yml: 'yaml',
+      md: 'markdown',
+      jsx: 'javascript',
+      tsx: 'typescript',
+    };
+
+    return [
+      // 处理 ```语法，自动创建代码块并设置语言
+      textblockTypeInputRule({
+        find: /^```([a-z]*)?[\s\n]$/,
+        type: this.type,
+        getAttributes: (match) => {
+          const inputLanguage = match[1] || 'plaintext';
+          // 使用映射表转换语言，如果没有映射则使用原始输入
+          const language = languageMap[inputLanguage] || inputLanguage;
+
+          return { language };
+        },
+      }),
+    ];
+  },
 
   addKeyboardShortcuts() {
+    const parentShortcuts = this.parent?.() || {};
+
     return {
+      ...parentShortcuts,
       Tab: () => {
         // 检查是否在代码块中
         const { state } = this.editor;
