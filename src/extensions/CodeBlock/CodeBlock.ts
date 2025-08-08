@@ -86,10 +86,10 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
   },
 
   addKeyboardShortcuts() {
-    let lastEnterTime = 0;
-    const DOUBLE_ENTER_THRESHOLD = 500; // 500ms内的两次
+    const parentShortcuts = this.parent?.() || {};
 
     return {
+      ...parentShortcuts,
       Tab: () => {
         // 检查是否在代码块中
         const { state } = this.editor;
@@ -123,46 +123,6 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
             return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
           }
         }
-
-        return false;
-      },
-      Enter: () => {
-        const { state } = this.editor;
-        const { $from } = state.selection;
-
-        // 检查是否在代码块中
-        if ($from.parent.type.name === 'codeBlock') {
-          const currentTime = Date.now();
-          const timeDiff = currentTime - lastEnterTime;
-
-          // 如果是双击Enter（时间间隔小于阈值）
-          if (timeDiff < DOUBLE_ENTER_THRESHOLD && lastEnterTime > 0) {
-            // 双击Enter，退出代码块
-            const codeBlockEnd = $from.end();
-
-            // 使用 setTimeout 避免 flushSync 错误
-            setTimeout(() => {
-              // 在代码块后插入新段落
-              this.editor.commands.insertContentAt(codeBlockEnd, { type: 'paragraph' });
-
-              // 将光标移动到新段落
-              this.editor.commands.setTextSelection(codeBlockEnd + 1);
-            }, 0);
-
-            // 重置时间戳
-            lastEnterTime = 0;
-
-            return true;
-          } else {
-            // 单次Enter，记录时间戳并执行正常换行
-            lastEnterTime = currentTime;
-
-            return false; // 让默认的Enter行为处理
-          }
-        }
-
-        // 不在代码块中，重置时间戳
-        lastEnterTime = 0;
 
         return false;
       },
