@@ -86,6 +86,9 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
   },
 
   addKeyboardShortcuts() {
+    let lastEnterTime = 0;
+    const DOUBLE_ENTER_THRESHOLD = 500; // 500ms内的两次
+
     return {
       Tab: () => {
         // 检查是否在代码块中
@@ -120,6 +123,42 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
             return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
           }
         }
+
+        return false;
+      },
+      Enter: () => {
+        const { state } = this.editor;
+        const { $from } = state.selection;
+
+        // 检查是否在代码块中
+        if ($from.parent.type.name === 'codeBlock') {
+          const currentTime = Date.now();
+          const isDoubleEnter = currentTime - lastEnterTime < DOUBLE_ENTER_THRESHOLD;
+
+          if (isDoubleEnter) {
+            // 双击Enter，退出代码块
+            const codeBlockEnd = $from.end();
+
+            // 在代码块后插入新段落
+            this.editor.commands.insertContentAt(codeBlockEnd, { type: 'paragraph' });
+
+            // 将光标移动到新段落
+            this.editor.commands.setTextSelection(codeBlockEnd + 1);
+
+            // 重置时间戳
+            lastEnterTime = 0;
+
+            return true;
+          } else {
+            // 第一次按Enter，记录时间戳，执行正常的换行
+            lastEnterTime = currentTime;
+
+            return false; // 让默认的Enter行为执行
+          }
+        }
+
+        // 不在代码块中，重置时间戳
+        lastEnterTime = 0;
 
         return false;
       },
