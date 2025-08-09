@@ -50,11 +50,11 @@ export function LinkEditorPanel({
   return (
     <Surface className="p-2">
       <form onSubmit={state.handleSubmit} className="flex items-center gap-2">
-        <label className="flex items-center gap-2 p-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 cursor-text">
+        <label className="flex cursor-text items-center gap-2 rounded-lg bg-neutral-100 p-2 dark:bg-neutral-900">
           <Icon name="Link" className="flex-none text-black dark:text-white" />
           <input
             type="url"
-            className="flex-1 bg-transparent outline-none min-w-[12rem] text-black text-sm dark:text-white"
+            className="min-w-[12rem] flex-1 bg-transparent text-sm text-black outline-none dark:text-white"
             placeholder="Enter URL"
             value={state.url}
             onChange={state.onChange}
@@ -65,7 +65,7 @@ export function LinkEditorPanel({
         </Button>
       </form>
       <div className="mt-3">
-        <label className="flex items-center justify-start gap-2 text-sm font-semibold cursor-pointer select-none text-neutral-500 dark:text-neutral-400">
+        <label className="flex cursor-pointer items-center justify-start gap-2 text-sm font-semibold text-neutral-500 select-none dark:text-neutral-400">
           Open in new tab
           <Toggle active={state.openInNewTab} onChange={state.setOpenInNewTab} />
         </label>

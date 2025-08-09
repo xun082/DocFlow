@@ -15,5 +15,5 @@ export function Icon({ name, className, strokeWidth }: IconProps) {
     return null;
   }
 
-  return <IconComponent className={cn('w-4 h-4', className)} strokeWidth={strokeWidth || 2.5} />;
+  return <IconComponent className={cn('h-4 w-4', className)} strokeWidth={strokeWidth || 2.5} />;
 }

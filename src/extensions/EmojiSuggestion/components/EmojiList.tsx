@@ -136,9 +136,9 @@ const EmojiList = forwardRef(
     }
 
     return (
-      <Panel className="max-w-[18rem] max-h-[20rem] flex flex-col min-w-[16rem]">
+      <Panel className="flex max-h-[20rem] max-w-[18rem] min-w-[16rem] flex-col">
         {/* 搜索输入框 */}
-        <div className="p-2 border-b">
+        <div className="border-b p-2">
           <Input
             placeholder="搜索表情符号..."
             value={searchQuery}
@@ -171,7 +171,7 @@ const EmojiList = forwardRef(
         </div>
 
         {/* 表情符号列表 */}
-        <div className="overflow-y-auto flex-1">
+        <div className="flex-1 overflow-y-auto">
           {filteredItems.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               未找到匹配的表情符号
@@ -183,14 +183,14 @@ const EmojiList = forwardRef(
                   itemRefs.current[index] = el;
                 }}
                 variant="ghost"
-                className={cn('justify-start w-full', index === selectedIndex && 'bg-accent')}
+                className={cn('w-full justify-start', index === selectedIndex && 'bg-accent')}
                 size="sm"
                 key={item.name}
                 onClick={createClickHandler(index)}
                 data-emoji-name={item.name}
               >
                 {item.fallbackImage ? (
-                  <img src={item.fallbackImage} className="w-5 h-5" alt="emoji" />
+                  <img src={item.fallbackImage} className="h-5 w-5" alt="emoji" />
                 ) : (
                   item.emoji
                 )}{' '}

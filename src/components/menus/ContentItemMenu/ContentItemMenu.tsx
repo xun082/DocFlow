@@ -43,7 +43,7 @@ export const ContentItemMenu = ({ editor, isEditable = true }: ContentItemMenuPr
               </Toolbar.Button>
             </Popover.Trigger>
             <Popover.Content side="bottom" align="start" sideOffset={8}>
-              <Surface className="p-2 flex flex-col min-w-[16rem]">
+              <Surface className="flex min-w-[16rem] flex-col p-2">
                 <Popover.Close asChild>
                   <DropdownButton onClick={actions.resetTextFormatting}>
                     <Icon name="RemoveFormatting" />
@@ -66,7 +66,7 @@ export const ContentItemMenu = ({ editor, isEditable = true }: ContentItemMenuPr
                 <Popover.Close asChild>
                   <DropdownButton
                     onClick={actions.deleteNode}
-                    className="text-red-500 bg-red-500 dark:text-red-500 hover:bg-red-500 dark:hover:text-red-500 dark:hover:bg-red-500 bg-opacity-10 hover:bg-opacity-20 dark:hover:bg-opacity-20"
+                    className="bg-opacity-10 hover:bg-opacity-20 dark:hover:bg-opacity-20 bg-red-500 text-red-500 hover:bg-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-red-500"
                   >
                     <Icon name="Trash2" />
                     Delete

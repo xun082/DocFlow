@@ -118,27 +118,27 @@ const DiagramModal = ({ isOpen, onClose, onGenerate }: DiagramModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl h-5/6 flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="flex h-5/6 w-11/12 max-w-4xl flex-col rounded-lg bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-800">🎨 图表生成器</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+            className="flex h-8 w-8 items-center justify-center text-2xl font-bold text-gray-400 hover:text-gray-600"
           >
             ×
           </button>
         </div>
         <div className="flex flex-1 overflow-hidden">
-          <div className="w-1/2 p-6 border-r border-gray-200 flex flex-col">
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-4">🤖 AI 自动生成</h3>
+          <div className="flex w-1/2 flex-col border-r border-gray-200 p-6">
+            <div className="mb-6 rounded-lg bg-blue-50 p-4">
+              <h3 className="mb-4 text-sm font-medium text-gray-700">🤖 AI 自动生成</h3>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-600 mb-2">图表类型</label>
+                <label className="mb-2 block text-sm font-medium text-gray-600">图表类型</label>
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value as DiagramType)}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 >
                   {DIAGRAM_TYPE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -148,18 +148,18 @@ const DiagramModal = ({ isOpen, onClose, onGenerate }: DiagramModalProps) => {
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-600 mb-2">图表描述</label>
+                <label className="mb-2 block text-sm font-medium text-gray-600">图表描述</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="描述您想要生成的图表..."
-                  className="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="h-24 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating || !description.trim()}
-                className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                className="w-full rounded-lg bg-blue-500 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
               >
                 {isGenerating ? '🔄 AI 生成中...' : '🚀 AI 生成图表'}
               </button>
@@ -167,19 +167,19 @@ const DiagramModal = ({ isOpen, onClose, onGenerate }: DiagramModalProps) => {
             <div className="mb-4">
               <button
                 onClick={handleLoadExample}
-                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
               >
                 📝 加载示例代码
               </button>
             </div>
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
             <div className="mt-auto">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">语法参考:</h4>
-              <div className="text-xs text-gray-600 space-y-1 bg-gray-50 p-3 rounded">
+              <h4 className="mb-2 text-sm font-medium text-gray-700">语法参考:</h4>
+              <div className="space-y-1 rounded bg-gray-50 p-3 text-xs text-gray-600">
                 <p>
                   <code>A[文本]</code> - 矩形节点
                 </p>
@@ -198,8 +198,8 @@ const DiagramModal = ({ isOpen, onClose, onGenerate }: DiagramModalProps) => {
               </div>
             </div>
           </div>
-          <div className="w-1/2 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+          <div className="flex w-1/2 flex-col p-6">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700">Mermaid 代码</h3>
               <span className="text-xs text-gray-500">可手动编辑</span>
             </div>
@@ -207,21 +207,21 @@ const DiagramModal = ({ isOpen, onClose, onGenerate }: DiagramModalProps) => {
               value={mermaidCode}
               onChange={(e) => setMermaidCode(e.target.value)}
               placeholder="在这里输入或编辑 Mermaid 代码..."
-              className="flex-1 p-4 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 border-t border-gray-200 p-6">
           <button
             onClick={handleClose}
-            className="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-gray-300 px-6 py-2 text-gray-600 transition-colors hover:bg-gray-50"
           >
             取消
           </button>
           <button
             onClick={handleApply}
             disabled={!mermaidCode.trim()}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             🎨 应用到画布
           </button>

@@ -246,7 +246,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
                 variant="outline"
                 role="combobox"
                 aria-expanded={languageOpen}
-                className="w-[160px] justify-between h-8 text-xs"
+                className="h-8 w-[160px] justify-between text-xs"
               >
                 {selectedLanguage?.label || '选择语言'}
                 <ChevronsUpDownIcon className="ml-2 h-3 w-3 shrink-0 opacity-50" />

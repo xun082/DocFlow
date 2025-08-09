@@ -60,11 +60,11 @@ const SettingsTab = () => {
   ];
 
   return (
-    <div className="p-4 space-y-6 flex flex-col flex-1 overflow-y-auto">
+    <div className="flex flex-1 flex-col space-y-6 overflow-y-auto p-4">
       {settingSections.map((section) => (
         <div key={section.title} className="space-y-4">
           {/* 分组标题 */}
-          <div className="flex items-center space-x-2 pb-2 border-b border-gray-200 dark:border-gray-600">
+          <div className="flex items-center space-x-2 border-b border-gray-200 pb-2 dark:border-gray-600">
             <Icon name={section.icon as any} className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               {section.title}
@@ -80,7 +80,7 @@ const SettingsTab = () => {
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {item.label}
                     </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       {item.description}
                     </p>
                   </div>
@@ -91,7 +91,7 @@ const SettingsTab = () => {
                       <button
                         onClick={() => item.onChange(!item.value)}
                         className={cn(
-                          'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                          'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
                           item.value ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600',
                         )}
                         role="switch"
@@ -111,9 +111,9 @@ const SettingsTab = () => {
                         value={item.value}
                         onChange={(e) => item.onChange(e.target.value)}
                         className={cn(
-                          'text-sm border border-gray-200 dark:border-gray-600 rounded-md px-3 py-1.5',
-                          'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-                          'focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500',
+                          'rounded-md border border-gray-200 px-3 py-1.5 text-sm dark:border-gray-600',
+                          'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+                          'focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:focus:border-blue-400',
                         )}
                       >
                         {item.options?.map((option) => (
@@ -133,7 +133,7 @@ const SettingsTab = () => {
 
       {/* 其他设置 */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2 pb-2 border-b border-gray-200 dark:border-gray-600">
+        <div className="flex items-center space-x-2 border-b border-gray-200 pb-2 dark:border-gray-600">
           <Icon name="Settings" className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">其他设置</h3>
         </div>
@@ -148,8 +148,8 @@ const SettingsTab = () => {
             <button
               key={item.action}
               className={cn(
-                'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left',
-                'hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                'flex w-full items-center space-x-3 rounded-lg px-3 py-2 text-left',
+                'transition-colors hover:bg-gray-100 dark:hover:bg-gray-700',
                 'text-sm text-gray-700 dark:text-gray-300',
               )}
               onClick={() => {
@@ -164,8 +164,8 @@ const SettingsTab = () => {
       </div>
 
       {/* 版本信息 */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
-        <div className="text-center space-y-1">
+      <div className="border-t border-gray-200 pt-4 dark:border-gray-600">
+        <div className="space-y-1 text-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">DocFlow v1.0.0</div>
           <div className="text-xs text-gray-400 dark:text-gray-500">© 2024 DocFlow Team</div>
         </div>

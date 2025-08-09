@@ -282,7 +282,7 @@ const Page = () => {
 
   const contactMethods = [
     {
-      icon: <MessageCircle className="w-6 h-6" />,
+      icon: <MessageCircle className="h-6 w-6" />,
       title: '微信交流',
       desc: '添加微信，获取更多支持和交流',
       text: 'yunmz777',
@@ -296,7 +296,7 @@ const Page = () => {
     {
       icon: (
         <svg
-          className="w-6 h-6"
+          className="h-6 w-6"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
@@ -315,7 +315,7 @@ const Page = () => {
       borderHover: 'hover:border-blue-400/50',
     },
     {
-      icon: <Github className="w-6 h-6" />,
+      icon: <Github className="h-6 w-6" />,
       title: 'GitHub 开源',
       desc: '查看我们的开源项目和代码',
       link: 'https://github.com/xun082',
@@ -426,12 +426,12 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-black">
       {/* 动态背景 */}
       <div className="absolute inset-0">
         {/* 鼠标跟随光圈 - 使用优化的 motion value */}
         <motion.div
-          className="absolute w-96 h-96 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none will-change-transform"
+          className="pointer-events-none absolute h-96 w-96 rounded-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 blur-3xl will-change-transform"
           style={{
             x: springX,
             y: springY,
@@ -440,7 +440,7 @@ const Page = () => {
 
         {/* 静态装饰光圈 */}
         <motion.div
-          className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl will-change-transform"
+          className="absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 blur-3xl will-change-transform"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.6, 0.3],
@@ -454,7 +454,7 @@ const Page = () => {
         />
 
         <motion.div
-          className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl will-change-transform"
+          className="absolute top-3/4 right-1/4 h-96 w-96 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl will-change-transform"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.2, 0.5, 0.2],
@@ -474,18 +474,18 @@ const Page = () => {
 
       {/* Header */}
       <header className="relative z-50 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <motion.div
             className="flex items-center space-x-3"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
               <FileText className="h-5 w-5 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">DocFlow</span>
-            <span className="text-xs bg-gradient-to-r from-violet-500 to-purple-500 text-white px-3 py-1 rounded-full font-medium">
+            <span className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-3 py-1 text-xs font-medium text-white">
               开源
             </span>
           </motion.div>
@@ -501,14 +501,14 @@ const Page = () => {
               target="_blank"
               aria-label="查看 DocFlow 在 GitHub 上的源代码"
             >
-              <div className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10">
+              <div className="flex items-center space-x-2 rounded-lg border border-transparent px-4 py-2 text-gray-400 transition-colors duration-300 hover:border-white/10 hover:bg-white/5 hover:text-white">
                 <Github className="h-4 w-4" />
                 <span className="text-sm font-medium">GitHub</span>
               </div>
             </Link>
             <Button
               onClick={handleGetStarted}
-              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 hover:scale-105 transition-all duration-300 px-6 py-2.5"
+              className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-2.5 text-white shadow-lg shadow-violet-500/25 transition-all duration-300 hover:scale-105 hover:from-violet-600 hover:to-purple-700"
             >
               {isLoggedIn ? '快速开始' : '免费使用'}
             </Button>
@@ -517,8 +517,8 @@ const Page = () => {
       </header>
 
       {/* Hero Section - 主要内容 */}
-      <section className="relative px-6 flex items-center justify-center min-h-[calc(100vh-120px)]">
-        <div className="max-w-7xl mx-auto text-center relative z-10 w-full">
+      <section className="relative flex min-h-[calc(100vh-120px)] items-center justify-center px-6">
+        <div className="relative z-10 mx-auto w-full max-w-7xl text-center">
           {/* 主标题部分 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -526,12 +526,12 @@ const Page = () => {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="mb-12"
           >
-            <div className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl text-white px-4 py-2 rounded-full border border-white/10 mb-6">
+            <div className="mb-6 inline-flex items-center space-x-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-white backdrop-blur-xl">
               <Sparkles className="h-4 w-4 text-violet-400" />
               <span className="text-sm font-medium">基于 Tiptap + Yjs 构建</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="mb-6 text-5xl leading-tight font-bold md:text-7xl">
               <span className="bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent">
                 在线协作
               </span>
@@ -541,7 +541,7 @@ const Page = () => {
               </span>
             </h1>
 
-            <p className="text-lg text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="mx-auto mb-8 max-w-3xl text-lg leading-relaxed text-gray-300">
               让团队像使用 Google Docs 一样协作编辑文档
               <br />
               <span className="text-gray-400">支持实时同步、富文本编辑、版本管理</span>
@@ -553,7 +553,7 @@ const Page = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: isMounted ? 1 : 0.7, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-            className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto"
+            className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3"
           >
             {features.map((feature, index) => (
               <motion.div
@@ -581,10 +581,10 @@ const Page = () => {
                 />
 
                 {/* 主卡片 */}
-                <div className="relative bg-black/80 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden">
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/80 backdrop-blur-xl">
                   {/* 顶部装饰渐变 */}
                   <div
-                    className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient}`}
+                    className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${feature.gradient}`}
                   />
 
                   {/* 背景图案 */}
@@ -595,11 +595,11 @@ const Page = () => {
                   />
 
                   {/* 内容区域 */}
-                  <div className="relative p-6 h-full">
+                  <div className="relative h-full p-6">
                     {/* 图标区域 */}
-                    <div className="flex justify-center mb-4">
+                    <div className="mb-4 flex justify-center">
                       <motion.div
-                        className={`relative w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 ${
+                        className={`relative h-14 w-14 bg-gradient-to-br ${feature.gradient} flex items-center justify-center rounded-2xl shadow-2xl transition-all duration-500 ${
                           isMounted ? 'group-hover:scale-110' : ''
                         }`}
                         style={{
@@ -622,7 +622,7 @@ const Page = () => {
                         {/* 图标光环效果 - 只在 mounted 后显示 */}
                         {isMounted && (
                           <div
-                            className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-2xl opacity-0 group-hover:opacity-20 blur-md transition-opacity duration-500`}
+                            className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-2xl opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-20`}
                           />
                         )}
                       </motion.div>
@@ -630,9 +630,9 @@ const Page = () => {
 
                     {/* 标题 */}
                     <h2
-                      className={`text-xl font-bold text-white mb-3 transition-all duration-300 ${
+                      className={`mb-3 text-xl font-bold text-white transition-all duration-300 ${
                         isMounted
-                          ? 'group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-300'
+                          ? 'group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text group-hover:text-transparent'
                           : ''
                       }`}
                     >
@@ -641,7 +641,7 @@ const Page = () => {
 
                     {/* 描述 */}
                     <p
-                      className={`text-gray-400 text-sm mb-4 leading-relaxed transition-colors duration-300 ${
+                      className={`mb-4 text-sm leading-relaxed text-gray-400 transition-colors duration-300 ${
                         isMounted ? 'group-hover:text-gray-300' : ''
                       }`}
                     >
@@ -664,7 +664,7 @@ const Page = () => {
                           }}
                         >
                           <div
-                            className={`w-1.5 h-1.5 bg-gradient-to-r ${feature.gradient} rounded-full mr-3 flex-shrink-0 shadow-sm`}
+                            className={`h-1.5 w-1.5 bg-gradient-to-r ${feature.gradient} mr-3 flex-shrink-0 rounded-full shadow-sm`}
                           />
                           <span>{detail}</span>
                         </motion.div>
@@ -673,7 +673,7 @@ const Page = () => {
 
                     {/* 底部装饰线 */}
                     <div
-                      className={`absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r ${feature.gradient} transition-opacity duration-500 ${
+                      className={`absolute right-6 bottom-0 left-6 h-px bg-gradient-to-r ${feature.gradient} transition-opacity duration-500 ${
                         isMounted ? 'opacity-20 group-hover:opacity-40' : 'opacity-10'
                       }`}
                     />
@@ -682,7 +682,7 @@ const Page = () => {
                   {/* 悬浮时的边框光效 - 只在 mounted 后显示 */}
                   {isMounted && (
                     <div
-                      className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}
+                      className={`pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100`}
                       style={{
                         background: `linear-gradient(135deg, ${feature.glowColor}00, ${feature.glowColor}20, ${feature.glowColor}00)`,
                         boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1), 0 0 20px ${feature.glowColor}`,
@@ -697,14 +697,14 @@ const Page = () => {
       </section>
 
       {/* Contact 组件 - 联系我们部分 */}
-      <section className="relative px-6 py-24 overflow-hidden">
+      <section className="relative overflow-hidden px-6 py-24">
         {/* 背景装饰 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-violet-500/5 to-black/0" />
 
         {/* 动态背景光效 */}
         <div className="absolute inset-0">
           <motion.div
-            className="absolute top-1/2 left-1/4 w-96 h-96 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-full blur-3xl"
+            className="absolute top-1/2 left-1/4 h-96 w-96 rounded-full bg-gradient-to-r from-emerald-500/10 to-blue-500/10 blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.6, 0.3],
@@ -717,7 +717,7 @@ const Page = () => {
             }}
           />
           <motion.div
-            className="absolute top-1/3 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
+            className="absolute top-1/3 right-1/4 h-80 w-80 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl"
             animate={{
               scale: [1, 1.3, 1],
               opacity: [0.2, 0.5, 0.2],
@@ -732,18 +732,18 @@ const Page = () => {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto relative">
+        <div className="relative mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="text-center mb-16"
+            className="mb-16 text-center"
           >
             <div className="relative inline-block">
               {/* 标题背景光效 */}
               <motion.div
-                className="absolute -inset-4 bg-gradient-to-r from-violet-600/20 to-purple-600/20 rounded-2xl blur-xl"
+                className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-violet-600/20 to-purple-600/20 blur-xl"
                 animate={{
                   scale: [1, 1.05, 1],
                   opacity: [0.5, 0.8, 0.5],
@@ -754,7 +754,7 @@ const Page = () => {
                   ease: 'easeInOut',
                 }}
               />
-              <h3 className="relative text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-6">
+              <h3 className="relative mb-6 bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
                 加入社区
               </h3>
             </div>
@@ -763,7 +763,7 @@ const Page = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
+              className="mx-auto max-w-2xl text-xl leading-relaxed text-gray-300"
             >
               与开发者交流学习，共同构建更好的协作编辑器
             </motion.p>
@@ -774,7 +774,7 @@ const Page = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: '-100px' }}
-            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+            className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3"
           >
             {contactMethods.map((method, index) => (
               <motion.div
@@ -785,11 +785,11 @@ const Page = () => {
                 className={`group relative overflow-hidden rounded-3xl transition-all duration-500 ${method.borderHover}`}
               >
                 {/* 主要边框和背景 */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-white/10 rounded-3xl" />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-white/10" />
 
                 {/* 动态边框光效 */}
                 <motion.div
-                  className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                   animate={{
                     opacity: hoveredIndex === index ? 0.15 : 0,
                   }}
@@ -797,22 +797,22 @@ const Page = () => {
 
                 {/* 卡片背景渐变 */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${method.cardBg} rounded-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-gradient-to-br ${method.cardBg} rounded-3xl opacity-50 transition-opacity duration-500 group-hover:opacity-80`}
                 />
 
                 {/* 悬浮时的光晕效果 */}
                 <motion.div
-                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  className="absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                   style={{
                     boxShadow: `0 0 60px ${method.glowColor}`,
                   }}
                 />
 
-                <div className="relative p-8 backdrop-blur-xl border border-white/20 rounded-3xl h-full flex flex-col">
+                <div className="relative flex h-full flex-col rounded-3xl border border-white/20 p-8 backdrop-blur-xl">
                   {/* 图标区域 */}
-                  <div className="flex justify-center mb-6">
+                  <div className="mb-6 flex justify-center">
                     <motion.div
-                      className={`relative w-16 h-16 bg-gradient-to-br ${method.iconBg} rounded-2xl flex items-center justify-center shadow-2xl`}
+                      className={`relative h-16 w-16 bg-gradient-to-br ${method.iconBg} flex items-center justify-center rounded-2xl shadow-2xl`}
                       whileHover={{
                         scale: 1.1,
                         rotate: [0, -5, 5, 0],
@@ -824,14 +824,14 @@ const Page = () => {
                     >
                       {/* 图标背景光环 */}
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${method.iconBg} rounded-2xl opacity-50 group-hover:opacity-80 blur-sm transition-opacity duration-500`}
+                        className={`absolute inset-0 bg-gradient-to-br ${method.iconBg} rounded-2xl opacity-50 blur-sm transition-opacity duration-500 group-hover:opacity-80`}
                       />
 
                       <div className="relative text-white drop-shadow-lg">{method.icon}</div>
 
                       {/* 图标光点装饰 */}
                       <motion.div
-                        className="absolute -top-1 -right-1 w-3 h-3 bg-white/60 rounded-full blur-sm"
+                        className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white/60 blur-sm"
                         animate={{
                           scale: [1, 1.2, 1],
                           opacity: [0.6, 1, 0.6],
@@ -846,16 +846,16 @@ const Page = () => {
                   </div>
 
                   {/* 内容区域 */}
-                  <div className="text-center flex-1 flex flex-col justify-between">
+                  <div className="flex flex-1 flex-col justify-between text-center">
                     <div>
                       <motion.h3
-                        className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-200 transition-all duration-300"
+                        className="mb-3 text-2xl font-bold text-white transition-all duration-300 group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-200 group-hover:bg-clip-text group-hover:text-transparent"
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
                       >
                         {method.title}
                       </motion.h3>
-                      <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 text-base leading-relaxed mb-6">
+                      <p className="mb-6 text-base leading-relaxed text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
                         {method.desc}
                       </p>
                     </div>
@@ -865,12 +865,12 @@ const Page = () => {
                       {method.isWechat ? (
                         <motion.button
                           onClick={() => handleCopyText(method.text, 'wechat')}
-                          className={`relative overflow-hidden px-6 py-3 bg-gradient-to-r ${method.gradient} text-white rounded-xl font-medium text-base shadow-lg transition-all duration-300 group/btn w-full`}
+                          className={`relative overflow-hidden bg-gradient-to-r px-6 py-3 ${method.gradient} group/btn w-full rounded-xl text-base font-medium text-white shadow-lg transition-all duration-300`}
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.98 }}
                         >
                           {/* 按钮背景动画 */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100" />
 
                           <span className="relative flex items-center justify-center gap-2">
                             <span>{method.text}</span>
@@ -879,9 +879,9 @@ const Page = () => {
                               transition={{ duration: 0.3 }}
                             >
                               {copiedStates.wechat ? (
-                                <Check className="w-4 h-4" />
+                                <Check className="h-4 w-4" />
                               ) : (
-                                <Copy className="w-4 h-4" />
+                                <Copy className="h-4 w-4" />
                               )}
                             </motion.div>
                           </span>
@@ -892,12 +892,12 @@ const Page = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${method.text} - ${method.desc}`}
-                          className={`relative overflow-hidden px-6 py-3 bg-gradient-to-r ${method.gradient} text-white rounded-xl font-medium text-base shadow-lg transition-all duration-300 group/btn block`}
+                          className={`relative overflow-hidden bg-gradient-to-r px-6 py-3 ${method.gradient} group/btn block rounded-xl text-base font-medium text-white shadow-lg transition-all duration-300`}
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.98 }}
                         >
                           {/* 按钮背景动画 */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100" />
 
                           <span className="relative">{method.text}</span>
                         </motion.a>
@@ -906,8 +906,8 @@ const Page = () => {
                   </div>
 
                   {/* 装饰性光点 */}
-                  <div className="absolute top-4 right-4 w-2 h-2 bg-white/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute bottom-4 left-4 w-1 h-1 bg-white/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-white/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                  <div className="absolute bottom-4 left-4 h-1 w-1 rounded-full bg-white/40 opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
                 </div>
               </motion.div>
             ))}
@@ -919,22 +919,22 @@ const Page = () => {
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.8, duration: 1, ease: 'easeOut' }}
-            className="w-32 h-1 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mx-auto mt-16 opacity-50"
+            className="mx-auto mt-16 h-1 w-32 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 opacity-50"
           />
         </div>
       </section>
 
       {/* 社区项目展示 */}
-      <section className="py-24 relative">
+      <section className="relative py-24">
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-violet-500/5 to-black/0" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center space-y-6 mb-16">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-16 space-y-6 text-center">
             <motion.span
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="inline-block text-violet-400 font-medium bg-violet-500/10 border border-violet-500/20 px-6 py-2 rounded-full text-sm"
+              className="inline-block rounded-full border border-violet-500/20 bg-violet-500/10 px-6 py-2 text-sm font-medium text-violet-400"
             >
               开源项目
             </motion.span>
@@ -943,7 +943,7 @@ const Page = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ delay: 0.1, duration: 0.5, ease: 'easeOut' }}
-              className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent"
+              className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl"
             >
               更多开源项目
             </motion.h3>
@@ -953,7 +953,7 @@ const Page = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' }}
-              className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg"
+              className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg"
             >
               这些项目都是与社区的朋友们一起完成的，期待更多开发者的参与和贡献！
             </motion.p>
@@ -964,7 +964,7 @@ const Page = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: '-100px' }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+            className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3"
           >
             {projects.map((project, projectIndex) => {
               const bgElements = getBackgroundElements()[projectIndex];
@@ -973,9 +973,7 @@ const Page = () => {
                 <motion.div
                   key={project.title}
                   variants={item}
-                  className="group relative bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl
-                    overflow-hidden hover:border-white/20 transition-all duration-500
-                    hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] flex flex-col h-[480px] will-change-transform"
+                  className="group relative flex h-[480px] flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg transition-all duration-500 will-change-transform hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)]"
                   style={{
                     boxShadow: `0 0 40px ${project.cardGlow}`,
                   }}
@@ -994,7 +992,7 @@ const Page = () => {
                       {bgElements.codeElements.map((element) => (
                         <div
                           key={element.id}
-                          className="absolute text-white/10 font-mono will-change-transform"
+                          className="absolute font-mono text-white/10 will-change-transform"
                           style={element.style}
                         >
                           {element.content}
@@ -1007,7 +1005,7 @@ const Page = () => {
                       {bgElements.techElements.map((element) => (
                         <div
                           key={element.id}
-                          className="absolute text-white/20 font-bold text-lg will-change-transform"
+                          className="absolute text-lg font-bold text-white/20 will-change-transform"
                           style={element.style}
                         >
                           {element.content}
@@ -1016,20 +1014,20 @@ const Page = () => {
                     </div>
 
                     {/* 项目图标和名称区域 */}
-                    <div className="absolute inset-0 flex flex-col justify-center items-center p-6 z-10 text-center">
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
                       {/* 项目图标 */}
-                      <div className="text-6xl mb-4">{project.icon}</div>
-                      <h4 className="text-3xl font-bold text-white mb-3 drop-shadow-md tracking-tight">
+                      <div className="mb-4 text-6xl">{project.icon}</div>
+                      <h4 className="mb-3 text-3xl font-bold tracking-tight text-white drop-shadow-md">
                         {project.title}
                       </h4>
-                      <div className="flex items-center gap-6 mb-2">
+                      <div className="mb-2 flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                          <Star className="text-yellow-300 text-xl w-5 h-5" />
-                          <span className="text-white font-semibold text-lg">{project.stars}</span>
+                          <Star className="h-5 w-5 text-xl text-yellow-300" />
+                          <span className="text-lg font-semibold text-white">{project.stars}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <GitFork className="text-blue-300 text-xl w-5 h-5" />
-                          <span className="text-white font-semibold text-lg">{project.forks}</span>
+                          <GitFork className="h-5 w-5 text-xl text-blue-300" />
+                          <span className="text-lg font-semibold text-white">{project.forks}</span>
                         </div>
                       </div>
                     </div>
@@ -1039,21 +1037,21 @@ const Page = () => {
 
                     {/* 动态光效 */}
                     <div
-                      className="absolute -inset-[100px] bg-white/5 rotate-45 transform-gpu blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700 will-change-transform"
+                      className="absolute -inset-[100px] rotate-45 transform-gpu bg-white/5 opacity-30 blur-3xl transition-opacity duration-700 will-change-transform group-hover:opacity-50"
                       style={{
                         background: `linear-gradient(90deg, transparent 0%, ${project.cardGlow.replace('0.15', '0.4')} 50%, transparent 100%)`,
                       }}
                     ></div>
                   </div>
 
-                  <div className="p-6 flex-1 flex flex-col">
-                    <p className="text-gray-200 text-sm mb-6 line-clamp-3">{project.description}</p>
+                  <div className="flex flex-1 flex-col p-6">
+                    <p className="mb-6 line-clamp-3 text-sm text-gray-200">{project.description}</p>
 
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="mb-6 flex flex-wrap gap-2">
                       {project.tech.map((tech, i) => (
                         <span
                           key={`${tech}-${i}`}
-                          className={`px-3 py-1 text-xs rounded-full font-medium ${
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
                             techColors[tech] || 'bg-slate-800/50 text-slate-300'
                           }`}
                         >
@@ -1062,29 +1060,18 @@ const Page = () => {
                       ))}
                     </div>
 
-                    <div className="mt-auto text-center w-full">
+                    <div className="mt-auto w-full text-center">
                       <a
                         href={project.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`查看 ${project.title} 项目的 GitHub 源代码`}
-                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3
-                          relative overflow-hidden group/link
-                          bg-gradient-to-r from-violet-600 to-purple-600
-                          before:absolute before:inset-0
-                          before:bg-gradient-to-r before:from-violet-700 before:to-purple-700
-                          before:translate-x-[-100%] before:transition-transform before:duration-500
-                          before:ease-out hover:before:translate-x-0
-                          text-white font-medium
-                          transition-all duration-300
-                          rounded-md shadow-[0_0_0_3px_rgba(139,92,246,0.1)]
-                          hover:shadow-[0_0_0_3px_rgba(139,92,246,0.2)]
-                          active:scale-[0.98] will-change-transform"
+                        className="group/link relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-md bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 font-medium text-white shadow-[0_0_0_3px_rgba(139,92,246,0.1)] transition-all duration-300 will-change-transform before:absolute before:inset-0 before:translate-x-[-100%] before:bg-gradient-to-r before:from-violet-700 before:to-purple-700 before:transition-transform before:duration-500 before:ease-out hover:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] hover:before:translate-x-0 active:scale-[0.98]"
                       >
                         <span className="relative z-10 flex items-center gap-2">
-                          <Github className="text-xl w-5 h-5" />
+                          <Github className="h-5 w-5 text-xl" />
                           <span>查看项目</span>
-                          <ExternalLink className="text-lg w-4 h-4 transform transition-transform duration-300 group-hover/link:translate-x-1 will-change-transform" />
+                          <ExternalLink className="h-4 w-4 transform text-lg transition-transform duration-300 will-change-transform group-hover/link:translate-x-1" />
                         </span>
                       </a>
                     </div>
@@ -1097,7 +1084,7 @@ const Page = () => {
       </section>
 
       {/* FAQ 常见问题 */}
-      <section className="relative px-6 py-32 overflow-hidden">
+      <section className="relative overflow-hidden px-6 py-32">
         {/* 增强的背景装饰 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-indigo-500/3 to-black/0" />
 
@@ -1105,7 +1092,7 @@ const Page = () => {
         <div className="absolute inset-0">
           {/* 主背景光球 */}
           <motion.div
-            className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-gradient-to-r from-indigo-500/8 to-purple-500/8 rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/3 h-[600px] w-[600px] rounded-full bg-gradient-to-r from-indigo-500/8 to-purple-500/8 blur-3xl"
             animate={{
               scale: [1, 1.4, 1],
               opacity: [0.3, 0.8, 0.3],
@@ -1119,7 +1106,7 @@ const Page = () => {
             }}
           />
           <motion.div
-            className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] bg-gradient-to-r from-pink-500/8 to-violet-500/8 rounded-full blur-3xl"
+            className="absolute right-1/3 bottom-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-r from-pink-500/8 to-violet-500/8 blur-3xl"
             animate={{
               scale: [1, 1.3, 1],
               opacity: [0.2, 0.7, 0.2],
@@ -1138,7 +1125,7 @@ const Page = () => {
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-2 h-2 bg-white/20 rounded-full blur-sm"
+              className="absolute h-2 w-2 rounded-full bg-white/20 blur-sm"
               style={{
                 left: `${20 + i * 10}%`,
                 top: `${30 + i * 8}%`,
@@ -1158,19 +1145,19 @@ const Page = () => {
           ))}
         </div>
 
-        <div className="max-w-5xl mx-auto relative">
+        <div className="relative mx-auto max-w-5xl">
           {/* 超级炫酷的标题区域 */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 1, ease: 'easeOut' }}
-            className="text-center mb-20"
+            className="mb-20 text-center"
           >
             <div className="relative inline-block">
               {/* 多层次标题图标 */}
               <motion.div
-                className="flex items-center justify-center mb-8"
+                className="mb-8 flex items-center justify-center"
                 animate={{
                   y: [0, -8, 0],
                 }}
@@ -1183,7 +1170,7 @@ const Page = () => {
                 <div className="relative">
                   {/* 主图标 */}
                   <motion.div
-                    className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-2xl relative z-10"
+                    className="relative z-10 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 shadow-2xl"
                     whileHover={{
                       scale: 1.1,
                       rotate: [0, -5, 5, 0],
@@ -1193,12 +1180,12 @@ const Page = () => {
                       rotate: { duration: 0.8, ease: 'easeInOut' },
                     }}
                   >
-                    <HelpCircle className="w-10 h-10 text-white drop-shadow-lg" />
+                    <HelpCircle className="h-10 w-10 text-white drop-shadow-lg" />
                   </motion.div>
 
                   {/* 多层光环 */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl opacity-40 blur-lg"
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 opacity-40 blur-lg"
                     animate={{
                       scale: [1, 1.3, 1],
                       opacity: [0.4, 0.8, 0.4],
@@ -1210,7 +1197,7 @@ const Page = () => {
                     }}
                   />
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-pink-500 to-violet-600 rounded-3xl opacity-20 blur-2xl"
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-br from-pink-500 to-violet-600 opacity-20 blur-2xl"
                     animate={{
                       scale: [1, 1.5, 1],
                       opacity: [0.2, 0.6, 0.2],
@@ -1236,7 +1223,7 @@ const Page = () => {
                       ease: 'linear',
                     }}
                   >
-                    <Sparkles className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
+                    <Sparkles className="h-6 w-6 text-yellow-400 drop-shadow-lg" />
                   </motion.div>
 
                   <motion.div
@@ -1251,7 +1238,7 @@ const Page = () => {
                       ease: 'linear',
                     }}
                   >
-                    <Zap className="w-5 h-5 text-blue-400 drop-shadow-lg" />
+                    <Zap className="h-5 w-5 text-blue-400 drop-shadow-lg" />
                   </motion.div>
 
                   <motion.div
@@ -1267,14 +1254,14 @@ const Page = () => {
                       delay: 0.5,
                     }}
                   >
-                    <Target className="w-4 h-4 text-purple-400 drop-shadow-lg" />
+                    <Target className="h-4 w-4 text-purple-400 drop-shadow-lg" />
                   </motion.div>
                 </div>
               </motion.div>
 
               {/* 增强的主标题 */}
               <motion.div
-                className="absolute -inset-8 bg-gradient-to-r from-indigo-600/15 via-purple-600/25 to-pink-600/15 rounded-[3rem] blur-3xl"
+                className="absolute -inset-8 rounded-[3rem] bg-gradient-to-r from-indigo-600/15 via-purple-600/25 to-pink-600/15 blur-3xl"
                 animate={{
                   scale: [1, 1.1, 1],
                   opacity: [0.5, 0.9, 0.5],
@@ -1286,7 +1273,7 @@ const Page = () => {
                   ease: 'easeInOut',
                 }}
               />
-              <h3 className="relative text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-8 tracking-tight">
+              <h3 className="relative mb-8 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-5xl font-bold tracking-tight text-transparent md:text-6xl">
                 常见问题
               </h3>
             </div>
@@ -1296,11 +1283,11 @@ const Page = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
+              className="mx-auto max-w-3xl text-xl leading-relaxed text-gray-300"
             >
               快速找到你关心的问题答案，让使用更加顺畅
               <br />
-              <span className="text-gray-400 text-lg">点击问题查看详细回答</span>
+              <span className="text-lg text-gray-400">点击问题查看详细回答</span>
             </motion.p>
           </motion.div>
 
@@ -1324,7 +1311,7 @@ const Page = () => {
                 }}
               >
                 {/* 多层背景效果 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-white/8 to-white/5 rounded-3xl" />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-white/5 via-white/8 to-white/5" />
 
                 {/* 动态边框光效 */}
                 <motion.div
@@ -1357,11 +1344,11 @@ const Page = () => {
                   />
                 )}
 
-                <div className="relative backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden">
+                <div className="relative overflow-hidden rounded-3xl border border-white/20 backdrop-blur-xl">
                   {/* 问题标题区域 */}
                   <motion.button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full px-8 py-8 text-left flex items-center justify-between hover:bg-white/5 transition-all duration-500 group/btn relative overflow-hidden"
+                    className="group/btn relative flex w-full items-center justify-between overflow-hidden px-8 py-8 text-left transition-all duration-500 hover:bg-white/5"
                     whileHover={{ x: 8 }}
                     whileTap={{ scale: 0.995 }}
                     transition={{ duration: 0.3 }}
@@ -1374,10 +1361,10 @@ const Page = () => {
                       }}
                     />
 
-                    <div className="flex items-center flex-1 relative z-10">
+                    <div className="relative z-10 flex flex-1 items-center">
                       {/* 增强的问题图标 */}
                       <motion.div
-                        className={`relative w-14 h-14 bg-gradient-to-br ${faq.gradient} rounded-2xl flex items-center justify-center mr-6 shadow-xl`}
+                        className={`relative h-14 w-14 bg-gradient-to-br ${faq.gradient} mr-6 flex items-center justify-center rounded-2xl shadow-xl`}
                         whileHover={{
                           scale: 1.15,
                           rotate: [0, -8, 8, 0],
@@ -1387,7 +1374,7 @@ const Page = () => {
                           rotate: { duration: 0.8, ease: 'easeInOut' },
                         }}
                       >
-                        <span className="text-2xl relative z-10">{faq.icon}</span>
+                        <span className="relative z-10 text-2xl">{faq.icon}</span>
 
                         {/* 多层图标光环 */}
                         <motion.div
@@ -1407,7 +1394,7 @@ const Page = () => {
 
                         {/* 图标内部光点 */}
                         <motion.div
-                          className="absolute top-1 right-1 w-2 h-2 bg-white/60 rounded-full blur-sm"
+                          className="absolute top-1 right-1 h-2 w-2 rounded-full bg-white/60 blur-sm"
                           animate={{
                             scale: [1, 1.5, 1],
                             opacity: [0.6, 1, 0.6],
@@ -1439,17 +1426,17 @@ const Page = () => {
                         scale: hoveredIndex === index ? 1.1 : 1,
                       }}
                       transition={{ duration: 0.4, ease: 'easeInOut' }}
-                      className="ml-6 relative"
+                      className="relative ml-6"
                     >
                       <motion.div
-                        className={`w-12 h-12 bg-gradient-to-br ${faq.gradient} rounded-xl flex items-center justify-center shadow-lg`}
+                        className={`h-12 w-12 bg-gradient-to-br ${faq.gradient} flex items-center justify-center rounded-xl shadow-lg`}
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.2 }}
                       >
                         {expandedFAQ === index ? (
-                          <ChevronUp className="w-6 h-6 text-white" />
+                          <ChevronUp className="h-6 w-6 text-white" />
                         ) : (
-                          <ChevronDown className="w-6 h-6 text-white" />
+                          <ChevronDown className="h-6 w-6 text-white" />
                         )}
                       </motion.div>
                     </motion.div>
@@ -1474,7 +1461,7 @@ const Page = () => {
                             initial={{ scaleX: 0 }}
                             animate={{ scaleX: 1 }}
                             transition={{ duration: 0.6, ease: 'easeOut' }}
-                            className={`w-full h-0.5 bg-gradient-to-r ${faq.gradient} opacity-40 mb-6 rounded-full`}
+                            className={`h-0.5 w-full bg-gradient-to-r ${faq.gradient} mb-6 rounded-full opacity-40`}
                           />
 
                           {/* 增强的答案文本 */}
@@ -1482,11 +1469,11 @@ const Page = () => {
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.3, duration: 0.5 }}
-                            className="pl-20 relative"
+                            className="relative pl-20"
                           >
                             {/* 答案前的装饰图标 */}
                             <motion.div
-                              className={`absolute left-0 top-2 w-8 h-8 bg-gradient-to-br ${faq.gradient} rounded-lg flex items-center justify-center`}
+                              className={`absolute top-2 left-0 h-8 w-8 bg-gradient-to-br ${faq.gradient} flex items-center justify-center rounded-lg`}
                               initial={{ scale: 0, rotate: -180 }}
                               animate={{ scale: 1, rotate: 0 }}
                               transition={{ delay: 0.4, duration: 0.5, ease: 'easeOut' }}
@@ -1494,7 +1481,7 @@ const Page = () => {
                               <span className="text-sm">💡</span>
                             </motion.div>
 
-                            <p className="text-gray-300 leading-relaxed text-lg">{faq.answer}</p>
+                            <p className="text-lg leading-relaxed text-gray-300">{faq.answer}</p>
                           </motion.div>
                         </div>
                       </motion.div>
@@ -1511,15 +1498,15 @@ const Page = () => {
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 1.2, duration: 1, ease: 'easeOut' }}
-            className="flex justify-center mt-20"
+            className="mt-20 flex justify-center"
           >
             <div className="relative">
               {/* 主装饰线 */}
-              <div className="w-32 h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full" />
+              <div className="h-2 w-32 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500" />
 
               {/* 多层光晕效果 */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full blur-sm opacity-60"
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-60 blur-sm"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.6, 0.9, 0.6],
@@ -1531,7 +1518,7 @@ const Page = () => {
                 }}
               />
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30"
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-lg"
                 animate={{
                   scale: [1, 1.5, 1],
                   opacity: [0.3, 0.7, 0.3],
@@ -1548,7 +1535,7 @@ const Page = () => {
               {[...Array(6)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-1 h-1 bg-white rounded-full"
+                  className="absolute h-1 w-1 rounded-full bg-white"
                   style={{
                     left: `${10 + i * 15}%`,
                     top: '50%',
@@ -1572,11 +1559,11 @@ const Page = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative px-6 py-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
+      <footer className="relative border-t border-white/10 px-6 py-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col items-center justify-between md:flex-row">
+            <div className="mb-4 flex items-center space-x-4 md:mb-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-white">DocFlow</span>
@@ -1588,7 +1575,7 @@ const Page = () => {
                 href="https://github.com/xun082/DocFlow"
                 target="_blank"
                 aria-label="访问 DocFlow 的 GitHub 仓库"
-                className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 will-change-transform"
+                className="text-gray-400 transition-colors duration-300 will-change-transform hover:scale-110 hover:text-white"
               >
                 <Github className="h-5 w-5" />
               </Link>

@@ -52,23 +52,23 @@ export default function MessagesPage() {
   return (
     <div className="flex h-full">
       {/* 左侧消息列表 */}
-      <div className="w-80 border-r border-gray-200 flex flex-col">
+      <div className="flex w-80 flex-col border-r border-gray-200">
         {/* 头部 */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="border-b border-gray-200 p-4">
+          <div className="mb-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">消息</h1>
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-              <Plus className="w-5 h-5 text-gray-600" />
+            <button className="rounded-lg p-2 hover:bg-gray-100">
+              <Plus className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
           {/* 搜索框 */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <input
               type="text"
               placeholder="搜索 (⌘+K)"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
         </div>
@@ -78,25 +78,25 @@ export default function MessagesPage() {
           {mockMessages.map((message) => (
             <div
               key={message.id}
-              className="flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+              className="flex cursor-pointer items-center space-x-3 border-b border-gray-100 p-3 hover:bg-gray-50"
             >
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-lg">
                   {message.avatar}
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900 truncate">{message.name}</p>
+                  <p className="truncate text-sm font-medium text-gray-900">{message.name}</p>
                   <p className="text-xs text-gray-500">{message.time}</p>
                 </div>
-                <p className="text-sm text-gray-600 truncate mt-1">{message.lastMessage}</p>
+                <p className="mt-1 truncate text-sm text-gray-600">{message.lastMessage}</p>
               </div>
 
               {message.unread > 0 && (
                 <div className="flex-shrink-0">
-                  <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-red-500 rounded-full">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
                     {message.unread}
                   </span>
                 </div>
@@ -107,13 +107,13 @@ export default function MessagesPage() {
       </div>
 
       {/* 右侧聊天区域 */}
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="flex flex-1 items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
             <span className="text-2xl">💬</span>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">你的每一个好想法，都让AI惊喜</h3>
-          <p className="text-gray-600 max-w-md">选择一个对话开始聊天，或者创建新的对话</p>
+          <h3 className="mb-2 text-lg font-medium text-gray-900">你的每一个好想法，都让AI惊喜</h3>
+          <p className="max-w-md text-gray-600">选择一个对话开始聊天，或者创建新的对话</p>
         </div>
       </div>
     </div>

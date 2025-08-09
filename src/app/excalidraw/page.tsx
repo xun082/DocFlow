@@ -15,9 +15,9 @@ export const dynamic = 'force-dynamic';
 const Excalidraw = dynamicImport(async () => (await import('@excalidraw/excalidraw')).Excalidraw, {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-white">
+    <div className="flex h-full w-full items-center justify-center bg-white">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
         <p className="text-gray-600">正在加载 Excalidraw...</p>
       </div>
     </div>
@@ -154,9 +154,9 @@ export default function ExcalidrawPage() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-50">
+    <div className="flex h-screen w-full flex-col bg-gray-50">
       {/* 顶部工具栏 */}
-      <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Excalidraw 图表编辑器</h1>
           <p className="text-sm text-gray-500">创建和编辑 Mermaid 流程图</p>
@@ -164,14 +164,14 @@ export default function ExcalidrawPage() {
         <div className="flex items-center gap-3">
           {(isRendering || isExporting) && (
             <div className="flex items-center text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-blue-500"></div>
               <span className="text-sm">{isRendering ? '渲染中...' : '导出中...'}</span>
             </div>
           )}
           <button
             onClick={() => setIsModalOpen(true)}
             disabled={!excalidrawUtils}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <span>⚡</span>
             图表生成器
@@ -179,14 +179,14 @@ export default function ExcalidrawPage() {
           <button
             onClick={handleExportSVG}
             disabled={isExporting || !excalidrawUtils}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <span>📥</span>
             导出 SVG
           </button>
           <button
             onClick={handleClear}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
           >
             🗑️ 清空画布
           </button>
@@ -195,20 +195,20 @@ export default function ExcalidrawPage() {
 
       {/* 错误提示 */}
       {error && (
-        <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
       {/* 加载提示 */}
       {!excalidrawUtils && (
-        <div className="mx-6 mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-600 text-sm">正在加载绘图工具...</p>
+        <div className="mx-6 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <p className="text-sm text-blue-600">正在加载绘图工具...</p>
         </div>
       )}
 
       {/* Excalidraw 画布 */}
-      <div className="flex-1 relative" style={{ minHeight: 'calc(100vh - 4rem)' }}>
+      <div className="relative flex-1" style={{ minHeight: 'calc(100vh - 4rem)' }}>
         <div className="absolute inset-0">
           <Excalidraw
             excalidrawAPI={(api: any) => {

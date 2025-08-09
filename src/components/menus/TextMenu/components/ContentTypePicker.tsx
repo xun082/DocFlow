@@ -47,7 +47,7 @@ export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={activeItem?.id !== 'paragraph' && !!activeItem?.type}>
           <Icon name={(activeItem?.type === 'option' && activeItem.icon) || 'Pilcrow'} />
-          <Icon name="ChevronDown" className="w-2 h-2" />
+          <Icon name="ChevronDown" className="h-2 w-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
       <Dropdown.Content asChild>
@@ -60,7 +60,7 @@ export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
                   onClick={option.onClick}
                   isActive={option.isActive()}
                 >
-                  <Icon name={option.icon} className="w-4 h-4 mr-1" />
+                  <Icon name={option.icon} className="mr-1 h-4 w-4" />
                   {option.label}
                 </DropdownButton>
               );

@@ -250,7 +250,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
     return (
       <>
         {before}
-        <span className="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white font-medium">
+        <span className="bg-yellow-200 font-medium text-black dark:bg-yellow-800 dark:text-white">
           {match}
         </span>
         {after}
@@ -494,7 +494,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
       <div key={file.id}>
         <div
           className={cn(
-            'flex items-center py-1.5 px-2 text-sm cursor-pointer hover:bg-gray-100 relative group',
+            'group relative flex cursor-pointer items-center px-2 py-1.5 text-sm hover:bg-gray-100',
             isSelected && 'bg-blue-50 text-blue-600',
             isMatch && 'bg-yellow-50', // 搜索匹配项背景高亮
           )}
@@ -517,14 +517,14 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
           </div>
 
           {/* 文件/文件夹图标 */}
-          <div className="flex items-center flex-grow overflow-hidden">
+          <div className="flex flex-grow items-center overflow-hidden">
             {isFolder ? (
               <Icon
                 name={isExpanded ? 'FolderOpen' : 'Folder'}
-                className="h-4 w-4 mr-1 flex-shrink-0 text-yellow-500"
+                className="mr-1 h-4 w-4 flex-shrink-0 text-yellow-500"
               />
             ) : (
-              <Icon name="FileText" className="h-4 w-4 mr-1 flex-shrink-0 text-blue-500" />
+              <Icon name="FileText" className="mr-1 h-4 w-4 flex-shrink-0 text-blue-500" />
             )}
 
             {/* 名称/重命名输入框 */}
@@ -532,7 +532,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
               <input
                 ref={inputRef}
                 type="text"
-                className="bg-white border border-blue-300 px-1 py-0 text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                className="w-full rounded border border-blue-300 bg-white px-1 py-0 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 defaultValue={file.name}
                 onBlur={(e) => finishRenaming(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -545,12 +545,12 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
           </div>
 
           {/* 快捷操作按钮 (仅在鼠标悬停时显示) */}
-          <div className="hidden group-hover:flex items-center ml-2">
+          <div className="ml-2 hidden items-center group-hover:flex">
             {isFolder && (
               <>
                 <button
                   title="新建文件"
-                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500"
+                  className="rounded p-0.5 text-gray-500 hover:bg-gray-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     startCreateNewItem(file.id, 'file');
@@ -560,7 +560,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
                 </button>
                 <button
                   title="新建文件夹"
-                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500 ml-0.5"
+                  className="ml-0.5 rounded p-0.5 text-gray-500 hover:bg-gray-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     startCreateNewItem(file.id, 'folder');
@@ -581,21 +581,21 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
             {/* 新建项目输入框 */}
             {isAddingNewItem && (
               <div
-                className="flex items-center py-1 px-2 text-sm"
+                className="flex items-center px-2 py-1 text-sm"
                 style={{ paddingLeft: `${(depth + 2) * 8}px` }}
               >
                 <div className="mr-1 w-4"></div>
                 <Icon
                   name={newItemType === 'folder' ? 'Folder' : 'FileText'}
                   className={cn(
-                    'h-4 w-4 mr-1',
+                    'mr-1 h-4 w-4',
                     newItemType === 'folder' ? 'text-yellow-500' : 'text-blue-500',
                   )}
                 />
                 <input
                   ref={inputRef}
                   type="text"
-                  className="bg-white border border-blue-300 px-1 py-0 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                  className="rounded border border-blue-300 bg-white px-1 py-0 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
                   onBlur={finishCreateNewItem}
@@ -614,19 +614,19 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
     if (newItemFolder !== 'root') return null;
 
     return (
-      <div className="flex items-center py-1 px-2 text-sm">
-        <div className="w-4 mr-1"></div>
+      <div className="flex items-center px-2 py-1 text-sm">
+        <div className="mr-1 w-4"></div>
         <Icon
           name={newItemType === 'folder' ? 'Folder' : 'FileText'}
           className={cn(
-            'h-4 w-4 mr-1',
+            'mr-1 h-4 w-4',
             newItemType === 'folder' ? 'text-yellow-500' : 'text-blue-500',
           )}
         />
         <input
           ref={inputRef}
           type="text"
-          className="bg-white border border-blue-300 px-1 py-0 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+          className="rounded border border-blue-300 bg-white px-1 py-0 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
           onBlur={finishCreateNewItem}
@@ -641,9 +641,9 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
     if (!showSearchDropdown) return null;
 
     return (
-      <div className="absolute left-2 right-2 top-[64px] z-10 bg-white shadow-lg rounded-md border border-gray-200 max-h-[50vh] overflow-y-auto">
-        <div className="p-2 text-xs text-gray-500 border-b border-gray-200 flex items-center">
-          <Icon name="Search" className="h-3 w-3 mr-1" />
+      <div className="absolute top-[64px] right-2 left-2 z-10 max-h-[50vh] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <div className="flex items-center border-b border-gray-200 p-2 text-xs text-gray-500">
+          <Icon name="Search" className="mr-1 h-3 w-3" />
           {isSearching ? <span>搜索中...</span> : <span>找到 {searchResults.length} 个结果</span>}
         </div>
 
@@ -652,13 +652,13 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
             {searchResults.map((result) => (
               <div
                 key={result.item.id}
-                className="flex items-center p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                className="flex cursor-pointer items-center p-2 text-sm hover:bg-gray-100"
                 onClick={() => handleSearchResultClick(result)}
               >
                 <Icon
                   name={result.item.type === 'folder' ? 'Folder' : 'FileText'}
                   className={cn(
-                    'h-4 w-4 mr-2',
+                    'mr-2 h-4 w-4',
                     result.item.type === 'folder' ? 'text-yellow-500' : 'text-blue-500',
                   )}
                 />
@@ -675,7 +675,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
           </div>
         ) : (
           !isSearching && (
-            <div className="p-3 text-sm text-gray-500 text-center">未找到匹配的文件或文件夹</div>
+            <div className="p-3 text-center text-sm text-gray-500">未找到匹配的文件或文件夹</div>
           )
         )}
       </div>
@@ -709,40 +709,40 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
       <>
         <div className="fixed inset-0 z-50" onClick={closeContextMenu} />
         <div
-          className="fixed z-50 bg-white shadow-lg rounded-lg border border-gray-200 py-1 min-w-[160px]"
+          className="fixed z-50 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
           style={{ top: contextMenuPosition.y, left: contextMenuPosition.x }}
         >
           {isFolder && (
             <>
               <button
-                className="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 hover:text-blue-600 flex items-center"
+                className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => startCreateNewItem(targetFile.id, 'file')}
               >
-                <Icon name="FilePlus" className="h-4 w-4 mr-2" />
+                <Icon name="FilePlus" className="mr-2 h-4 w-4" />
                 新建文件
               </button>
               <button
-                className="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 hover:text-blue-600 flex items-center"
+                className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => startCreateNewItem(targetFile.id, 'folder')}
               >
-                <Icon name="FolderPlus" className="h-4 w-4 mr-2" />
+                <Icon name="FolderPlus" className="mr-2 h-4 w-4" />
                 新建文件夹
               </button>
-              <div className="border-t border-gray-200 my-1" />
+              <div className="my-1 border-t border-gray-200" />
             </>
           )}
           <button
-            className="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 hover:text-blue-600 flex items-center"
+            className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-blue-50 hover:text-blue-600"
             onClick={() => startRenaming(contextMenuTargetId!)}
           >
-            <Icon name="Pencil" className="h-4 w-4 mr-2" />
+            <Icon name="Pencil" className="mr-2 h-4 w-4" />
             重命名
           </button>
           <button
-            className="w-full text-left px-3 py-1.5 text-sm hover:bg-red-50 hover:text-red-600 flex items-center text-red-500"
+            className="flex w-full items-center px-3 py-1.5 text-left text-sm text-red-500 hover:bg-red-50 hover:text-red-600"
             onClick={() => deleteItem(contextMenuTargetId!)}
           >
-            <Icon name="Trash" className="h-4 w-4 mr-2" />
+            <Icon name="Trash" className="mr-2 h-4 w-4" />
             删除
           </button>
         </div>
@@ -751,69 +751,69 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white border-r border-gray-200">
+    <div className="flex h-full flex-col overflow-hidden border-r border-gray-200 bg-white">
       {/* 标题栏和工具栏 */}
       <div className="border-b border-gray-200">
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-2">
-          <h3 className="text-sm font-medium flex items-center text-gray-700">
-            <Icon name="Files" className="h-4 w-4 mr-1 text-blue-600" />
+          <h3 className="flex items-center text-sm font-medium text-gray-700">
+            <Icon name="Files" className="mr-1 h-4 w-4 text-blue-600" />
             文档
           </h3>
 
           <div className="flex space-x-1">
             {/* 工具按钮 */}
-            <div className="relative group">
+            <div className="group relative">
               <button
-                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
+                className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-500"
                 onClick={() => createNewRootItem('file')}
               >
                 <Icon name="FilePlus" className="h-4 w-4" />
               </button>
-              <div className="absolute right-0 top-full mt-1 z-30 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
-                <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+              <div className="absolute top-full right-0 z-30 mt-1 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+                <div className="rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg">
                   新建文件
                 </div>
               </div>
             </div>
 
-            <div className="relative group">
+            <div className="group relative">
               <button
-                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
+                className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-500"
                 onClick={() => createNewRootItem('folder')}
               >
                 <Icon name="FolderPlus" className="h-4 w-4" />
               </button>
-              <div className="absolute right-0 top-full mt-1 z-30 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
-                <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+              <div className="absolute top-full right-0 z-30 mt-1 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+                <div className="rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg">
                   新建文件夹
                 </div>
               </div>
             </div>
 
-            <div className="relative group">
+            <div className="group relative">
               <button
-                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
+                className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-500"
                 onClick={() => setFiles([...files])}
               >
                 <Icon name="RefreshCw" className="h-4 w-4" />
               </button>
-              <div className="absolute right-0 top-full mt-1 z-30 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
-                <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+              <div className="absolute top-full right-0 z-30 mt-1 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+                <div className="rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg">
                   刷新
                 </div>
               </div>
             </div>
 
-            <div className="relative group">
+            <div className="group relative">
               <button
-                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-colors"
+                className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-500"
                 onClick={collapseAll}
               >
                 <Icon name="FolderMinus" className="h-4 w-4" />
               </button>
-              <div className="absolute right-0 top-full mt-1 z-30 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
-                <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+              <div className="absolute top-full right-0 z-30 mt-1 origin-top-right scale-0 transform opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100">
+                <div className="rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg">
                   折叠所有文件夹
                 </div>
               </div>
@@ -822,19 +822,19 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
         </div>
 
         {/* 搜索框 */}
-        <div className="px-2 pb-2 relative">
+        <div className="relative px-2 pb-2">
           <div
             className={cn(
-              'flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5',
-              searchFocused && 'ring-2 ring-blue-500 border-blue-500',
+              'flex w-full items-center rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5',
+              searchFocused && 'border-blue-500 ring-2 ring-blue-500',
             )}
           >
-            <Icon name="Search" className="h-3.5 w-3.5 text-gray-400 mr-1" />
+            <Icon name="Search" className="mr-1 h-3.5 w-3.5 text-gray-400" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="搜索文件..."
-              className="bg-transparent text-sm w-full focus:outline-none text-gray-700"
+              className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
@@ -842,7 +842,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
             />
             {searchQuery && (
               <button
-                className="p-0.5 rounded-full hover:bg-gray-200"
+                className="rounded-full p-0.5 hover:bg-gray-200"
                 onClick={clearSearch}
                 title="清除搜索"
               >
@@ -850,7 +850,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
               </button>
             )}
             {isSearching && (
-              <div className="animate-spin h-3 w-3 border-2 border-gray-300 border-t-blue-500 rounded-full"></div>
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
             )}
           </div>
           {renderSearchDropdown()}
@@ -859,7 +859,7 @@ const FileExplorer = ({ initialFiles = defaultFiles, onFileSelect }: FileExplore
 
       {/* 文件列表 */}
       <div
-        className="flex-1 overflow-y-auto relative"
+        className="relative flex-1 overflow-y-auto"
         onClick={() => {
           // 点击空白区域，取消所有操作状态
           closeContextMenu();

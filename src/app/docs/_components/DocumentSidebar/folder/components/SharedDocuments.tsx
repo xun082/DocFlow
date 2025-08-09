@@ -90,15 +90,15 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
     <div className="border-t border-gray-200">
       {/* 标题栏 */}
       <div
-        className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50"
+        className="flex cursor-pointer items-center justify-between p-2 hover:bg-gray-50"
         onClick={onToggle}
       >
-        <h4 className="text-sm font-medium flex items-center text-gray-700">
-          <Icon name={isExpanded ? 'ChevronDown' : 'ChevronRight'} className="h-4 w-4 mr-1" />
-          <Icon name="Share2" className="h-4 w-4 mr-1 text-purple-600" />
+        <h4 className="flex items-center text-sm font-medium text-gray-700">
+          <Icon name={isExpanded ? 'ChevronDown' : 'ChevronRight'} className="mr-1 h-4 w-4" />
+          <Icon name="Share2" className="mr-1 h-4 w-4 text-purple-600" />
           分享文档
           {sharedDocs.length > 0 && (
-            <span className="ml-1 text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full">
+            <span className="ml-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-xs text-purple-600">
               {sharedDocs.length}
             </span>
           )}
@@ -106,7 +106,7 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
 
         {isExpanded && (
           <button
-            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-purple-500 transition-colors"
+            className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-purple-500"
             onClick={(e) => {
               e.stopPropagation();
               loadSharedDocuments();
@@ -123,15 +123,15 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
         <div className="pb-2">
           {loading && (
             <div className="flex items-center justify-center py-4 text-sm text-gray-500">
-              <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
+              <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
               加载中...
             </div>
           )}
 
-          {error && <div className="px-4 py-2 text-sm text-red-500 text-center">{error}</div>}
+          {error && <div className="px-4 py-2 text-center text-sm text-red-500">{error}</div>}
 
           {!loading && !error && sharedDocs.length === 0 && (
-            <div className="px-4 py-4 text-sm text-gray-500 text-center">暂无分享文档</div>
+            <div className="px-4 py-4 text-center text-sm text-gray-500">暂无分享文档</div>
           )}
 
           {!loading && !error && sharedDocs.length > 0 && (
@@ -140,7 +140,7 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
                 <div
                   key={doc.id}
                   className={cn(
-                    'mx-2 px-2 py-2 rounded-md cursor-pointer hover:bg-purple-50 border border-transparent hover:border-purple-200 transition-all',
+                    'mx-2 cursor-pointer rounded-md border border-transparent px-2 py-2 transition-all hover:border-purple-200 hover:bg-purple-50',
                     'group',
                   )}
                   onClick={() => handleDocumentClick(doc)}
@@ -150,55 +150,55 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
                     <Icon
                       name={doc.type === 'FOLDER' ? 'Folder' : 'FileText'}
                       className={cn(
-                        'h-4 w-4 mt-0.5 flex-shrink-0',
+                        'mt-0.5 h-4 w-4 flex-shrink-0',
                         doc.type === 'FOLDER' ? 'text-yellow-500' : 'text-purple-500',
                       )}
                     />
 
                     {/* 文档信息 */}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <h5 className="text-sm font-medium text-gray-900 truncate">
+                        <h5 className="truncate text-sm font-medium text-gray-900">
                           {doc.shareInfo.custom_title || doc.title}
                         </h5>
-                        <span className="text-xs text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">
+                        <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-600">
                           {getPermissionText(doc.shareInfo.permission)}
                         </span>
                       </div>
 
                       {/* 所有者信息 */}
-                      <div className="flex items-center mt-1 text-xs text-gray-500">
+                      <div className="mt-1 flex items-center text-xs text-gray-500">
                         <img
                           src={doc.owner.avatar_url}
                           alt={doc.owner.name}
-                          className="h-4 w-4 rounded-full mr-1"
+                          className="mr-1 h-4 w-4 rounded-full"
                         />
                         <span className="truncate">{doc.owner.name}</span>
                       </div>
 
                       {/* 访问信息 */}
-                      <div className="flex items-center justify-between mt-1 text-xs text-gray-400">
+                      <div className="mt-1 flex items-center justify-between text-xs text-gray-400">
                         <span>最后访问：{formatTime(doc.shareInfo.last_accessed_at)}</span>
                         <span>访问 {doc.shareInfo.access_count} 次</span>
                       </div>
 
                       {/* 分享链接信息 */}
-                      <div className="flex items-center mt-1 text-xs text-gray-400 space-x-2">
+                      <div className="mt-1 flex items-center space-x-2 text-xs text-gray-400">
                         {doc.shareInfo.share_link.has_password && (
                           <span className="flex items-center">
-                            <Icon name="Lock" className="h-3 w-3 mr-1" />
+                            <Icon name="Lock" className="mr-1 h-3 w-3" />
                             有密码
                           </span>
                         )}
                         {doc.shareInfo.share_link.expires_at && (
                           <span className="flex items-center">
-                            <Icon name="Clock" className="h-3 w-3 mr-1" />
+                            <Icon name="Clock" className="mr-1 h-3 w-3" />
                             {formatTime(doc.shareInfo.share_link.expires_at)} 过期
                           </span>
                         )}
                         {doc.shareInfo.is_favorited && (
                           <span className="flex items-center">
-                            <Icon name="Star" className="h-3 w-3 mr-1 text-yellow-400" />
+                            <Icon name="Star" className="mr-1 h-3 w-3 text-yellow-400" />
                             已收藏
                           </span>
                         )}

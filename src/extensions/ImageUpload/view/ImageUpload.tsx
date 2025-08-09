@@ -30,7 +30,7 @@ export const ImageUpload = ({
 
   return (
     <NodeViewWrapper>
-      <div className="p-0 m-0" data-drag-handle>
+      <div className="m-0 p-0" data-drag-handle>
         <ImageUploader onUpload={onUpload} />
       </div>
     </NodeViewWrapper>

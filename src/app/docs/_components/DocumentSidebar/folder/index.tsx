@@ -320,8 +320,8 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         <div className="fixed inset-0 z-50" onClick={closeContextMenu} />
         <div
           className={cn(
-            'fixed z-50 min-w-[200px] py-2 rounded-xl',
-            'bg-white/95 dark:bg-slate-800/95 backdrop-blur-lg',
+            'fixed z-50 min-w-[200px] rounded-xl py-2',
+            'bg-white/95 backdrop-blur-lg dark:bg-slate-800/95',
             'border border-slate-200/60 dark:border-slate-700/60',
             'shadow-xl shadow-slate-900/10 dark:shadow-slate-900/40',
           )}
@@ -331,48 +331,48 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
             <>
               <button
                 className={cn(
-                  'w-full text-left px-4 py-2.5 text-sm transition-all duration-200',
+                  'w-full px-4 py-2.5 text-left text-sm transition-all duration-200',
                   'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50',
                   'dark:hover:from-slate-700 dark:hover:to-slate-600',
-                  'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400',
+                  'text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400',
                   'flex items-center space-x-3',
                 )}
                 onClick={() => startCreateNewItem(targetFile.id, 'file')}
               >
-                <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-blue-400 to-indigo-500">
                   <Icon name="FilePlus" className="h-3 w-3 text-white" />
                 </div>
                 <span>新建文件</span>
               </button>
               <button
                 className={cn(
-                  'w-full text-left px-4 py-2.5 text-sm transition-all duration-200',
+                  'w-full px-4 py-2.5 text-left text-sm transition-all duration-200',
                   'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50',
                   'dark:hover:from-slate-700 dark:hover:to-slate-600',
-                  'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400',
+                  'text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400',
                   'flex items-center space-x-3',
                 )}
                 onClick={() => startCreateNewItem(targetFile.id, 'folder')}
               >
-                <div className="w-5 h-5 rounded-md bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-amber-500">
                   <Icon name="FolderPlus" className="h-3 w-3 text-white" />
                 </div>
                 <span>新建文件夹</span>
               </button>
-              <div className="border-t border-slate-200/60 dark:border-slate-600/60 my-1" />
+              <div className="my-1 border-t border-slate-200/60 dark:border-slate-600/60" />
             </>
           )}
           <button
             className={cn(
-              'w-full text-left px-4 py-2.5 text-sm transition-all duration-200',
+              'w-full px-4 py-2.5 text-left text-sm transition-all duration-200',
               'hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50',
               'dark:hover:from-slate-700 dark:hover:to-slate-600',
-              'text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400',
+              'text-slate-700 hover:text-amber-600 dark:text-slate-300 dark:hover:text-amber-400',
               'flex items-center space-x-3',
             )}
             onClick={() => startRenaming(contextMenuTargetId!)}
           >
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-orange-500">
               <Icon name="Pencil" className="h-3 w-3 text-white" />
             </div>
             <span>重命名</span>
@@ -383,11 +383,11 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full">
+    <div className="flex h-full flex-1 flex-col">
       {/* 头部工具栏 - 更精美的设计 */}
       <div
         className={cn(
-          'p-4 space-y-4',
+          'space-y-4 p-4',
           'bg-gradient-to-r from-white/90 via-slate-50/70 to-white/90',
           'dark:from-slate-800/90 dark:via-slate-700/70 dark:to-slate-800/90',
           'border-b border-slate-200/60 dark:border-slate-700/60',
@@ -413,20 +413,20 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
               { icon: 'RefreshCw', action: refreshFiles, tooltip: '刷新', color: 'green' },
               { icon: 'FolderMinus', action: collapseAll, tooltip: '折叠所有', color: 'slate' },
             ].map((item, index) => (
-              <div key={item.icon} className="relative group">
+              <div key={item.icon} className="group relative">
                 <button
                   className={cn(
-                    'p-2 rounded-xl transition-all duration-300 transform hover:scale-110 group/btn',
-                    'bg-white/80 dark:bg-slate-700/80 backdrop-blur-md',
-                    'hover:shadow-lg border border-slate-200/50 dark:border-slate-600/50',
+                    'group/btn transform rounded-xl p-2 transition-all duration-300 hover:scale-110',
+                    'bg-white/80 backdrop-blur-md dark:bg-slate-700/80',
+                    'border border-slate-200/50 hover:shadow-lg dark:border-slate-600/50',
                     item.color === 'blue' &&
-                      'hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600 hover:border-blue-300/50',
+                      'hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600',
                     item.color === 'yellow' &&
-                      'hover:bg-gradient-to-br hover:from-yellow-50 hover:to-amber-50 hover:text-amber-600 hover:border-amber-300/50',
+                      'hover:border-amber-300/50 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-amber-50 hover:text-amber-600',
                     item.color === 'green' &&
-                      'hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 hover:text-green-600 hover:border-green-300/50',
+                      'hover:border-green-300/50 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 hover:text-green-600',
                     item.color === 'slate' &&
-                      'hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 hover:text-slate-700 hover:border-slate-300/50',
+                      'hover:border-slate-300/50 hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 hover:text-slate-700',
                     'dark:hover:from-slate-600/80 dark:hover:to-slate-700/80 dark:hover:text-slate-200',
                     'text-slate-600 dark:text-slate-400',
                   )}
@@ -442,17 +442,17 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
                 {/* 精美的提示框 */}
                 <div
                   className={cn(
-                    'absolute top-full mt-2 left-1/2 transform -translate-x-1/2',
-                    'px-2 py-1 rounded-lg text-xs font-medium',
-                    'bg-slate-800 dark:bg-slate-700 text-white',
+                    'absolute top-full left-1/2 mt-2 -translate-x-1/2 transform',
+                    'rounded-lg px-2 py-1 text-xs font-medium',
+                    'bg-slate-800 text-white dark:bg-slate-700',
                     'shadow-lg shadow-slate-900/20',
-                    'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100',
-                    'transition-all duration-200 pointer-events-none',
-                    'whitespace-nowrap z-50',
+                    'scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100',
+                    'pointer-events-none transition-all duration-200',
+                    'z-50 whitespace-nowrap',
                   )}
                 >
                   {item.tooltip}
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-700 rotate-45" />
+                  <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 transform bg-slate-800 dark:bg-slate-700" />
                 </div>
               </div>
             ))}
@@ -462,7 +462,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
 
       {/* 文件树区域 */}
       <div
-        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent"
+        className="scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent flex-1 overflow-y-auto"
         onClick={() => {
           closeContextMenu();
           if (isRenaming) setIsRenaming(null);

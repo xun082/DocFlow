@@ -50,13 +50,13 @@ export const FontFamilyPicker = ({ onChange, value }: FontFamilyPickerProps) => 
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={!!currentValue?.value}>
           {currentFontLabel}
-          <Icon name="ChevronDown" className="w-2 h-2" />
+          <Icon name="ChevronDown" className="h-2 w-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
       <Dropdown.Content asChild>
         <Surface className="flex flex-col gap-1 px-2 py-4">
           {FONT_FAMILY_GROUPS.map((group) => (
-            <div className="mt-2.5 first:mt-0 gap-0.5 flex flex-col" key={group.label}>
+            <div className="mt-2.5 flex flex-col gap-0.5 first:mt-0" key={group.label}>
               <DropdownCategoryTitle>{group.label}</DropdownCategoryTitle>
               {group.options.map((font) => (
                 <DropdownButton

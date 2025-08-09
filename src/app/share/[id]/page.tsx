@@ -216,11 +216,11 @@ export default function SharePage() {
   // 加载中状态
   if (state.loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="mx-4 w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
           <div className="text-center">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">正在验证分享链接...</h2>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+            <h2 className="mb-2 text-xl font-semibold text-gray-800">正在验证分享链接...</h2>
             <p className="text-gray-600">请稍候，我们正在为您加载文档</p>
           </div>
         </div>
@@ -270,31 +270,31 @@ export default function SharePage() {
       <div
         className={`min-h-screen bg-gradient-to-br ${getErrorColor()} flex items-center justify-center`}
       >
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+        <div className="mx-4 w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
           <div className="text-center">
             <div
-              className={`w-16 h-16 ${getIconBgColor()} rounded-full flex items-center justify-center mx-auto mb-4`}
+              className={`h-16 w-16 ${getIconBgColor()} mx-auto mb-4 flex items-center justify-center rounded-full`}
             >
               {getErrorIcon()}
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">无法访问文档</h2>
-            <p className="text-gray-600 mb-6">{state.errorMessage}</p>
+            <h2 className="mb-2 text-xl font-semibold text-gray-800">无法访问文档</h2>
+            <p className="mb-6 text-gray-600">{state.errorMessage}</p>
 
             <div className="space-y-3">
               {/* 重试按钮 */}
               <button
                 onClick={handleRetry}
                 disabled={isSubmitting}
-                className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <div className="flex items-center">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     重试中...
                   </div>
                 ) : (
                   <>
-                    <RefreshCwIcon className="h-4 w-4 mr-2" />
+                    <RefreshCwIcon className="mr-2 h-4 w-4" />
                     重新尝试
                   </>
                 )}
@@ -303,16 +303,16 @@ export default function SharePage() {
               {/* 返回首页按钮 */}
               <button
                 onClick={() => (window.location.href = '/')}
-                className="w-full px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-full rounded-lg bg-gray-100 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-200"
               >
                 返回首页
               </button>
             </div>
 
             {/* 错误详情和建议 */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left">
-              <h3 className="text-sm font-medium text-gray-800 mb-2">可能的解决方案：</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
+            <div className="mt-6 rounded-lg bg-gray-50 p-4 text-left">
+              <h3 className="mb-2 text-sm font-medium text-gray-800">可能的解决方案：</h3>
+              <ul className="space-y-1 text-xs text-gray-600">
                 {state.errorType === 'notFound' && (
                   <>
                     <li>• 检查分享链接是否完整</li>
@@ -350,23 +350,23 @@ export default function SharePage() {
 
   // 需要密码验证
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
         {/* 成功访问文档 */}
         {state.documentData ? (
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <FileTextIcon className="h-8 w-8 text-green-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">文档访问成功</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="mb-2 text-xl font-semibold text-gray-800">文档访问成功</h2>
+            <p className="mb-6 text-gray-600">
               您现在可以{state.documentData.permission === 'VIEW' ? '查看' : '编辑'}此文档
             </p>
 
             {/* 文档信息卡片 */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="mb-6 rounded-lg bg-gray-50 p-4">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <div className="mr-3 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
                   <FileTextIcon className="h-6 w-6 text-blue-500" />
                 </div>
                 <div className="flex-1 text-left">
@@ -391,7 +391,7 @@ export default function SharePage() {
                   <img
                     src={state.documentData.owner.avatar_url}
                     alt={state.documentData.owner.name}
-                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                    className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
                   />
                 )}
               </div>
@@ -403,16 +403,16 @@ export default function SharePage() {
                 onClick={() => {
                   window.open(`/docs/${state.documentData!.id}`, '_blank');
                 }}
-                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
+                className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <FileTextIcon className="h-4 w-4 mr-2" />
+                <FileTextIcon className="mr-2 h-4 w-4" />
                 打开文档
               </button>
 
               {/* 返回首页按钮 */}
               <button
                 onClick={() => (window.location.href = '/')}
-                className="w-full py-2 px-4 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full rounded-lg px-4 py-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
               >
                 返回首页
               </button>
@@ -421,18 +421,18 @@ export default function SharePage() {
         ) : (
           <>
             {/* 密码验证界面 */}
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                 <LockIcon className="h-8 w-8 text-blue-500" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">受密码保护的文档</h2>
+              <h2 className="mb-2 text-xl font-semibold text-gray-800">受密码保护的文档</h2>
               <p className="text-gray-600">请输入访问密码以查看此文档</p>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               {/* 密码输入框 */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
                   访问密码
                 </label>
                 <div className="relative">
@@ -444,7 +444,7 @@ export default function SharePage() {
                     onKeyDown={handleKeyDown}
                     placeholder="请输入访问密码"
                     className={cn(
-                      'w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                      'w-full rounded-lg border px-4 py-3 pr-12 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none',
                       state.hasError && state.errorMessage.includes('密码')
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300',
@@ -455,7 +455,7 @@ export default function SharePage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 disabled:opacity-50"
                     disabled={isSubmitting}
                   >
                     {showPassword ? (
@@ -475,16 +475,16 @@ export default function SharePage() {
                 type="submit"
                 disabled={isSubmitting || !password.trim()}
                 className={cn(
-                  'w-full py-3 px-4 rounded-lg font-medium transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                  'w-full rounded-lg px-4 py-3 font-medium transition-colors',
+                  'focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
                   isSubmitting || !password.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'cursor-not-allowed bg-gray-300 text-gray-500'
                     : 'bg-blue-600 text-white hover:bg-blue-700',
                 )}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     验证中...
                   </div>
                 ) : (
@@ -503,7 +503,7 @@ export default function SharePage() {
                   }, 100);
                 }}
                 disabled={isSubmitting}
-                className="w-full py-2 px-4 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+                className="w-full rounded-lg px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 disabled:opacity-50"
               >
                 重新尝试访问（不使用密码）
               </button>
@@ -511,7 +511,7 @@ export default function SharePage() {
 
             {/* 帮助信息 */}
             <div className="mt-6 text-center">
-              <p className="text-xs text-gray-500 mb-2">如果您没有访问密码，请联系文档分享者</p>
+              <p className="mb-2 text-xs text-gray-500">如果您没有访问密码，请联系文档分享者</p>
               <button
                 onClick={() => (window.location.href = '/')}
                 className="text-xs text-blue-600 hover:text-blue-700 hover:underline"

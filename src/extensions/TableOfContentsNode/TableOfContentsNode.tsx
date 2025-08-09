@@ -20,7 +20,7 @@ export function TableOfContents({ editor, onItemClick }: TableOfContentsProps) {
   });
 
   if (content.length === 0) {
-    return <div className="text-center text-neutral-400 py-4 text-sm">添加标题创建目录</div>;
+    return <div className="py-4 text-center text-sm text-neutral-400">添加标题创建目录</div>;
   }
 
   // 根据标题级别获取样式
@@ -67,7 +67,7 @@ const TableOfNodeContent = (props: NodeViewRendererProps) => {
 
   return (
     <NodeViewWrapper>
-      <div className="p-2 -m-2 rounded-lg" contentEditable={false}>
+      <div className="-m-2 rounded-lg p-2" contentEditable={false}>
         <TableOfContents editor={editor} />
       </div>
     </NodeViewWrapper>

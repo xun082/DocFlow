@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body className="flex flex-col h-full antialiased">
+      <body className="flex h-full flex-col antialiased">
         <main className="h-full">{children}</main>
         <Toaster
           position="bottom-right"

@@ -76,12 +76,12 @@ export const AudioComponent: React.FC<ReactNodeViewProps> = ({
     return (
       <NodeViewWrapper
         className={cn(
-          'my-4 rounded-lg overflow-hidden',
+          'my-4 overflow-hidden rounded-lg',
           selected && 'ring-2 ring-blue-500 ring-offset-2',
         )}
       >
-        <div className="relative group">
-          <div className="bg-gradient-to-br from-background p-2 to-muted/50 border-2 border-dashed border-border rounded-lg hover:border-border/80 transition-all duration-200 cursor-pointer">
+        <div className="group relative">
+          <div className="cursor-pointer rounded-lg border-2 border-dashed border-border bg-gradient-to-br from-background to-muted/50 p-2 transition-all duration-200 hover:border-border/80">
             <div className="flex w-full items-center gap-2">
               <Input
                 type="url"
@@ -93,7 +93,7 @@ export const AudioComponent: React.FC<ReactNodeViewProps> = ({
               <Button
                 variant="default"
                 size="sm"
-                className="w-[100px] h-8"
+                className="h-8 w-[100px]"
                 onClick={() => {
                   if (audioUrl.trim()) {
                     updateAttributes({ src: audioUrl.trim() });
@@ -102,7 +102,7 @@ export const AudioComponent: React.FC<ReactNodeViewProps> = ({
                 }}
                 disabled={!audioUrl.trim()}
               >
-                <Link className="w-4 h-4 mr-2" />
+                <Link className="mr-2 h-4 w-4" />
                 添加音频
               </Button>
             </div>

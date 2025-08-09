@@ -106,7 +106,7 @@ const FileItemMenu = ({
     <div className={cn('relative', className)}>
       <button
         ref={buttonRef}
-        className="p-1 rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+        className="rounded-full p-1 text-gray-500 opacity-0 transition-colors group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-700"
         onClick={handleMenuClick}
         title="更多操作"
       >
@@ -116,19 +116,19 @@ const FileItemMenu = ({
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-1 z-50 bg-white shadow-lg rounded-lg border border-gray-200 py-1 min-w-[140px]"
+          className="absolute top-full right-0 z-50 mt-1 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
         >
           {menuItems.map((item, index) => (
             <div key={item.label}>
-              {item.divider && index > 0 && <div className="border-t border-gray-200 my-1" />}
+              {item.divider && index > 0 && <div className="my-1 border-t border-gray-200" />}
               <button
                 className={cn(
-                  'w-full text-left px-3 py-2 text-sm flex items-center transition-colors',
+                  'flex w-full items-center px-3 py-2 text-left text-sm transition-colors',
                   item.className,
                 )}
                 onClick={() => handleMenuItemClick(item.action)}
               >
-                <Icon name={item.icon as any} className="h-4 w-4 mr-2" />
+                <Icon name={item.icon as any} className="mr-2 h-4 w-4" />
                 {item.label}
               </button>
             </div>

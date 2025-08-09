@@ -2,13 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { JSONContent } from '@tiptap/core';
 import * as Y from 'yjs';
 import { Collaboration } from '@tiptap/extension-collaboration';
 import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
+import { isEqual, debounce } from 'lodash-es';
+
+import Syllabus, { SyllabusTitle } from '../_components/Syllabus';
 
 import { DocumentApi } from '@/services/document';
 import { ExtensionKit } from '@/extensions/extension-kit';
@@ -57,6 +60,13 @@ export default function DocumentPage() {
   const hasUnsyncedChangesRef = useRef(false);
   const providerRef = useRef<HocuspocusProvider | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
+
+  // Editor编辑器的容器元素
+  const editorContaiRef = useRef<HTMLDivElement>(null);
+  const titleRefs = useRef<HTMLElement[]>(null);
+
+  const [syllabusTitle, setsyllabusTitle] = useState<SyllabusTitle[]>([]);
+  const [syllabusLightId, setSyllabusLightId] = useState('');
 
   // 目录切换函数
   const toggleToc = () => {
@@ -339,6 +349,26 @@ export default function DocumentPage() {
     immediatelyRender: false,
     shouldRerenderOnTransaction: false, // 避免每次事务都重新渲染
   });
+  // 编辑器状态
+  const editorState = useEditorState({
+    editor: editor,
+    selector(context) {
+      const nodes = context.editor?.$nodes('heading');
+
+      return nodes;
+    },
+    equalityFn(a, b) {
+      const equals = isEqual(a, b);
+
+      if (equals) {
+        // 收集所有标题 dom
+        const dom = a?.map((e) => e.element);
+        titleRefs.current = dom!;
+      }
+
+      return equals;
+    },
+  });
 
   // 设置初始内容
   useEffect(() => {
@@ -354,14 +384,26 @@ export default function DocumentPage() {
     }
   }, [editor, initialContent, isLocalLoaded]);
 
+  useEffect(() => {
+    if (editorState) {
+      const editData = editorState.map<SyllabusTitle>((e) => {
+        return {
+          id: e.attributes.id,
+          textCont: e.textContent,
+        };
+      });
+      setsyllabusTitle(editData);
+    }
+  }, [editorState]);
+
   const isFullyLoaded = isLocalLoaded && isServerSynced;
   const isReady = editor && isFullyLoaded && !loading && doc;
 
   if (!isClientReady || loading || !doc) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400">
             {!isClientReady ? '正在初始化...' : '正在加载文档编辑器...'}
           </p>
@@ -370,9 +412,38 @@ export default function DocumentPage() {
     );
   }
 
+  // 检测标题范围的大小
+  const titleRange = 250;
+  // 滚动方案
+  const scrollLightHandler = debounce(() => {
+    if (titleRefs.current) {
+      const titles = titleRefs.current;
+
+      for (let i = 0; i < titleRefs.current.length; i++) {
+        const elRect = titles[i].getBoundingClientRect();
+
+        if (elRect.top >= 0 && elRect.top <= titleRange) {
+          setSyllabusLightId(titles[i].id);
+
+          break;
+        }
+
+        if (
+          elRect.top < 0 &&
+          titles[i + 1] &&
+          titles[i + 1].getBoundingClientRect().top > titleRange
+        ) {
+          setSyllabusLightId(titles[i].id);
+
+          break;
+        }
+      }
+    }
+  }, 80);
+
   return (
     <div
-      className="h-screen flex flex-col bg-white dark:bg-gray-900"
+      className="flex h-screen flex-col bg-white dark:bg-gray-900"
       ref={menuContainerRef}
       suppressHydrationWarning
     >
@@ -392,14 +463,18 @@ export default function DocumentPage() {
 
       {/* 主内容区域 */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 relative">
-          <div className="h-full overflow-y-auto">
+        <div className="relative flex-1">
+          <div
+            ref={editorContaiRef}
+            onScroll={scrollLightHandler}
+            className="h-full overflow-y-auto"
+          >
             {isReady ? (
               <EditorContent editor={editor} className="prose-container h-full pl-14" />
             ) : (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                  <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                   <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
                 </div>
               </div>
@@ -409,10 +484,14 @@ export default function DocumentPage() {
 
         {/* 目录侧边栏 */}
         {isTocOpen && isReady && (
-          <div className="w-80 border-l border-slate-200/60 dark:border-slate-800/60 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
+          <div className="w-80 overflow-hidden border-l border-slate-200/60 bg-white/95 backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-950/95">
             <TableOfContents isOpen={isTocOpen} editor={editor} />
           </div>
         )}
+
+        <div className="flex-[0 0 0] w-56 px-4 pt-8">
+          <Syllabus lightId={syllabusLightId} syllabusTitle={syllabusTitle} />
+        </div>
       </div>
 
       {/* 编辑器菜单 */}
