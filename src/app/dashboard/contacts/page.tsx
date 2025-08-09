@@ -92,17 +92,17 @@ export default function ContactsPage() {
   return (
     <div className="flex h-full">
       {/* 左侧部门列表 */}
-      <div className="w-64 border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-900 mb-4">通讯录</h1>
+      <div className="flex w-64 flex-col border-r border-gray-200">
+        <div className="border-b border-gray-200 p-4">
+          <h1 className="mb-4 text-xl font-semibold text-gray-900">通讯录</h1>
 
           {/* 搜索框 */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <input
               type="text"
               placeholder="搜索联系人"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function ContactsPage() {
           {departments.map((dept, index) => (
             <button
               key={index}
-              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 text-left"
+              className="flex w-full items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50"
             >
               <span className="text-lg">{dept.icon}</span>
               <div className="flex-1">
@@ -125,17 +125,17 @@ export default function ContactsPage() {
       </div>
 
       {/* 右侧联系人列表 */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         {/* 头部操作栏 */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Building className="w-5 h-5 text-gray-600" />
+              <Building className="h-5 w-5 text-gray-600" />
               <h2 className="text-lg font-semibold text-gray-900">全公司</h2>
               <span className="text-sm text-gray-500">({mockContacts.length} 人)</span>
             </div>
-            <button className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              <Plus className="w-4 h-4" />
+            <button className="flex items-center space-x-2 rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">
+              <Plus className="h-4 w-4" />
               <span>添加联系人</span>
             </button>
           </div>
@@ -143,46 +143,46 @@ export default function ContactsPage() {
 
         {/* 联系人列表 */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-4">
+          <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2 xl:grid-cols-3">
             {mockContacts.map((contact) => (
               <div
                 key={contact.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start space-x-3">
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-xl">
                       {contact.avatar}
                     </div>
                     <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(contact.status)} rounded-full border-2 border-white`}
+                      className={`absolute -right-1 -bottom-1 h-4 w-4 ${getStatusColor(contact.status)} rounded-full border-2 border-white`}
                     ></div>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">{contact.name}</h3>
-                    <p className="text-xs text-gray-600 truncate">{contact.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{contact.department}</p>
-                    <p className="text-xs text-green-600 mt-1">{getStatusText(contact.status)}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold text-gray-900">{contact.name}</h3>
+                    <p className="truncate text-xs text-gray-600">{contact.title}</p>
+                    <p className="truncate text-xs text-gray-500">{contact.department}</p>
+                    <p className="mt-1 text-xs text-green-600">{getStatusText(contact.status)}</p>
                   </div>
                 </div>
 
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center space-x-2 text-xs text-gray-600">
-                    <Phone className="w-3 h-3" />
+                    <Phone className="h-3 w-3" />
                     <span>{contact.phone}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-xs text-gray-600">
-                    <Mail className="w-3 h-3" />
+                    <Mail className="h-3 w-3" />
                     <span className="truncate">{contact.email}</span>
                   </div>
                 </div>
 
                 <div className="mt-3 flex space-x-2">
-                  <button className="flex-1 px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+                  <button className="flex-1 rounded bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100">
                     发消息
                   </button>
-                  <button className="flex-1 px-3 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100">
+                  <button className="flex-1 rounded bg-gray-50 px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">
                     视频通话
                   </button>
                 </div>

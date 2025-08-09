@@ -4,7 +4,7 @@ import { cn } from '@/utils/utils';
 
 export const DropdownCategoryTitle = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="text-[.65rem] font-semibold mb-1.5 uppercase text-neutral-400 px-2">
+    <div className="mb-1.5 px-2 text-[.65rem] font-semibold text-neutral-400 uppercase">
       {children}
     </div>
   );

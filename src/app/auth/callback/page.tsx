@@ -191,33 +191,33 @@ function CallbackContent() {
   }, [searchParams, router, mounted]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="w-full max-w-md p-10 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-gray-100 bg-white p-10 shadow-xl">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">GitHub认证</h1>
+          <h1 className="mb-2 text-2xl font-bold text-gray-800">GitHub认证</h1>
 
-          <div className="flex flex-col items-center justify-center space-y-4 mt-6">
+          <div className="mt-6 flex flex-col items-center justify-center space-y-4">
             {state === 'loading' && (
               <div className="flex flex-col items-center">
-                <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+                <Loader2 className="mb-4 h-12 w-12 animate-spin text-blue-500" />
                 <p className="text-lg font-medium text-gray-700">{status}</p>
               </div>
             )}
 
             {state === 'success' && (
               <div className="flex flex-col items-center">
-                <CheckCircle className="h-14 w-14 text-green-500 mb-4" />
+                <CheckCircle className="mb-4 h-14 w-14 text-green-500" />
                 <p className="text-lg font-medium text-gray-700">{status}</p>
               </div>
             )}
 
             {state === 'error' && (
               <div className="flex flex-col items-center">
-                <AlertCircle className="h-14 w-14 text-red-500 mb-4" />
-                <p className="text-lg font-medium text-gray-700 text-center mb-4">{status}</p>
+                <AlertCircle className="mb-4 h-14 w-14 text-red-500" />
+                <p className="mb-4 text-center text-lg font-medium text-gray-700">{status}</p>
                 <div className="flex space-x-3">
                   <button
-                    className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                    className="rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
                     onClick={() => {
                       setState('loading');
                       setStatus('重新尝试认证...');
@@ -228,7 +228,7 @@ function CallbackContent() {
                     重试
                   </button>
                   <button
-                    className="py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    className="rounded-lg bg-gray-500 px-4 py-2 text-white transition-colors hover:bg-gray-600"
                     onClick={() => router.push('/auth')}
                   >
                     返回登录
@@ -247,12 +247,12 @@ export default function AuthCallback() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-          <div className="w-full max-w-md p-10 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div className="w-full max-w-md space-y-6 rounded-2xl border border-gray-100 bg-white p-10 shadow-xl">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">GitHub认证</h1>
-              <div className="flex flex-col items-center justify-center mt-6">
-                <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+              <h1 className="mb-2 text-2xl font-bold text-gray-800">GitHub认证</h1>
+              <div className="mt-6 flex flex-col items-center justify-center">
+                <Loader2 className="mb-4 h-12 w-12 animate-spin text-blue-500" />
                 <p className="text-lg font-medium text-gray-700">加载中...</p>
               </div>
             </div>

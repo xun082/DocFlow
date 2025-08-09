@@ -164,7 +164,7 @@ const UserSelector = ({
     <div className={cn('relative', className)}>
       <div
         className={cn(
-          'min-h-[42px] w-full border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white',
+          'min-h-[42px] w-full rounded-md border border-gray-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500',
           'flex flex-wrap items-center gap-1 p-2',
           !canAddMore && 'bg-gray-50',
         )}
@@ -173,10 +173,10 @@ const UserSelector = ({
         {selectedUsers.map((user) => (
           <div
             key={user.id}
-            className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm"
+            className="flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-sm text-blue-800"
           >
             {user.avatar_url && (
-              <img src={user.avatar_url} alt={user.name} className="w-4 h-4 rounded-full" />
+              <img src={user.avatar_url} alt={user.name} className="h-4 w-4 rounded-full" />
             )}
             <span>{user.name}</span>
             <button
@@ -202,7 +202,7 @@ const UserSelector = ({
             }}
             onBlur={() => setIsOpen(false)}
             placeholder={selectedUsers.length === 0 ? placeholder : ''}
-            className="flex-1 min-w-[120px] outline-none bg-transparent text-sm"
+            className="min-w-[120px] flex-1 bg-transparent text-sm outline-none"
             disabled={!canAddMore}
           />
         )}
@@ -215,37 +215,37 @@ const UserSelector = ({
       {isOpen && (searchResults.length > 0 || isSearching || searchQuery) && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg"
         >
           {isSearching ? (
             <div className="flex items-center justify-center p-3">
-              <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
+              <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
               <span className="text-sm text-gray-500">搜索中...</span>
             </div>
           ) : searchResults.length > 0 ? (
             <div>
-              <div className="p-2 text-xs text-gray-500 border-b border-gray-200">
+              <div className="border-b border-gray-200 p-2 text-xs text-gray-500">
                 找到 {searchResults.length} 个用户
               </div>
               {searchResults.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-3 p-3 hover:bg-gray-50"
                   onClick={() => handleSelectUser(user)}
                 >
                   <div className="flex-shrink-0">
                     {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full" />
+                      <img src={user.avatar_url} alt={user.name} className="h-8 w-8 rounded-full" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
                         <Icon name="User" className="h-4 w-4 text-gray-500" />
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{user.name}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-gray-900">{user.name}</div>
                     {user.email && (
-                      <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                      <div className="truncate text-xs text-gray-500">{user.email}</div>
                     )}
                   </div>
                   {user.location && <div className="text-xs text-gray-400">{user.location}</div>}
@@ -253,7 +253,7 @@ const UserSelector = ({
               ))}
             </div>
           ) : searchQuery && !isSearching ? (
-            <div className="p-3 text-sm text-gray-500 text-center">未找到匹配的用户</div>
+            <div className="p-3 text-center text-sm text-gray-500">未找到匹配的用户</div>
           ) : null}
         </div>
       )}

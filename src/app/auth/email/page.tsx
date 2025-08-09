@@ -231,8 +231,8 @@ export default function EmailLoginPage() {
   const isLoginDisabled = !isValid || isSubmitting;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-100 bg-white p-10 shadow-xl">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">邮箱验证码登录</h1>
           <p className="mt-3 text-gray-600">请输入您的邮箱和验证码</p>
@@ -252,7 +252,7 @@ export default function EmailLoginPage() {
               autoComplete="email"
             />
             {errors.email && (
-              <div className="flex items-center space-x-1 text-red-600 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-red-600">
                 <AlertCircle className="h-4 w-4" />
                 <span>{errors.email.message}</span>
               </div>
@@ -277,7 +277,7 @@ export default function EmailLoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="whitespace-nowrap min-w-[100px]"
+                className="min-w-[100px] whitespace-nowrap"
                 onClick={handleSendCode}
                 disabled={isSendCodeDisabled}
               >
@@ -285,13 +285,13 @@ export default function EmailLoginPage() {
               </Button>
             </div>
             {errors.code && (
-              <div className="flex items-center space-x-1 text-red-600 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-red-600">
                 <AlertCircle className="h-4 w-4" />
                 <span>{errors.code.message}</span>
               </div>
             )}
             {countdown > 0 && !errors.code && (
-              <div className="flex items-center space-x-1 text-blue-600 text-sm">
+              <div className="flex items-center space-x-1 text-sm text-blue-600">
                 <CheckCircle className="h-4 w-4" />
                 <span>验证码已发送，{countdown}秒后可重新发送</span>
               </div>
@@ -300,7 +300,7 @@ export default function EmailLoginPage() {
 
           <Button
             type="submit"
-            className="w-full flex items-center justify-center py-4 px-4 space-x-3 text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-md disabled:opacity-50 disabled:transform-none"
+            className="flex w-full transform items-center justify-center space-x-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-4 text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-indigo-600 disabled:transform-none disabled:opacity-50"
             disabled={isLoginDisabled}
           >
             <Mail className="mr-2 h-5 w-5" />

@@ -19,7 +19,7 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
+      <div className="bg-opacity-80 flex min-h-[10rem] items-center justify-center rounded-lg p-8">
         <Spinner className="text-neutral-500" size={1.5} />
       </div>
     );
@@ -38,9 +38,9 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
       onDragLeave={onDragLeave}
       contentEditable={false}
     >
-      <Icon name="Image" className="w-12 h-12 mb-4 text-black dark:text-white opacity-20" />
+      <Icon name="Image" className="mb-4 h-12 w-12 text-black opacity-20 dark:text-white" />
       <div className="flex flex-col items-center justify-center gap-2">
-        <div className="text-sm font-medium text-center text-neutral-400 dark:text-neutral-500">
+        <div className="text-center text-sm font-medium text-neutral-400 dark:text-neutral-500">
           {draggedInside ? 'Drop image here' : 'Drag and drop or'}
         </div>
         <div>
@@ -51,7 +51,7 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
         </div>
       </div>
       <input
-        className="w-0 h-0 overflow-hidden opacity-0"
+        className="h-0 w-0 overflow-hidden opacity-0"
         ref={ref}
         type="file"
         accept=".jpg,.jpeg,.png,.webp,.gif"

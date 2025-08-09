@@ -36,9 +36,9 @@ function UserAvatar({
   total: number;
 }) {
   return (
-    <div className="relative group" style={{ zIndex: 50 + (total - index) }}>
+    <div className="group relative" style={{ zIndex: 50 + (total - index) }}>
       <div
-        className="relative w-8 h-8 rounded-full border-2 shadow-sm hover:scale-110 transition-all duration-200 cursor-pointer bg-white dark:bg-gray-800"
+        className="relative h-8 w-8 cursor-pointer rounded-full border-2 bg-white shadow-sm transition-all duration-200 hover:scale-110 dark:bg-gray-800"
         style={{
           borderColor: user.color || '#3B82F6',
           borderWidth: user.id === currentUser?.id ? '2.5px' : '2px',
@@ -48,7 +48,7 @@ function UserAvatar({
           <img
             src={user.avatar}
             alt={user.name}
-            className="w-full h-full object-cover rounded-full"
+            className="h-full w-full rounded-full object-cover"
             onError={(e) => {
               const target = e.currentTarget;
               target.style.display = 'none';
@@ -60,7 +60,7 @@ function UserAvatar({
         ) : null}
 
         <div
-          className={`absolute inset-0 flex items-center justify-center text-white font-semibold text-xs rounded-full ${
+          className={`absolute inset-0 flex items-center justify-center rounded-full text-xs font-semibold text-white ${
             user.avatar ? 'hidden' : 'flex'
           }`}
           style={{ backgroundColor: user.color || '#3B82F6' }}
@@ -69,23 +69,23 @@ function UserAvatar({
         </div>
 
         <div
-          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"
+          className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm dark:border-gray-800"
           style={{ backgroundColor: user.color || '#10B981' }}
         />
       </div>
 
       {/* 桌面端悬停提示 */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999] hidden lg:block">
+      <div className="pointer-events-none absolute top-full left-1/2 z-[9999] mt-2 hidden -translate-x-1/2 transform rounded-lg bg-gray-900 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 lg:block">
         <div className="flex items-center space-x-2">
           <div
-            className="w-2 h-2 rounded-full"
+            className="h-2 w-2 rounded-full"
             style={{ backgroundColor: user.color || '#10B981' }}
           />
           <span className="font-medium">{user.name}</span>
-          {user.id === currentUser?.id && <span className="text-green-400 text-xs">(您)</span>}
+          {user.id === currentUser?.id && <span className="text-xs text-green-400">(您)</span>}
         </div>
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2">
-          <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 transform">
+          <div className="h-0 w-0 border-r-4 border-b-4 border-l-4 border-transparent border-b-gray-900" />
         </div>
       </div>
     </div>
@@ -168,14 +168,14 @@ export default function DocumentHeader({
   };
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px] relative !z-100000">
+    <div className="relative !z-100000 flex min-h-[60px] items-center justify-between border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-900">
       {/* 左侧：侧边栏切换按钮、目录按钮和文档标题 */}
-      <div className="flex items-center space-x-3 min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center space-x-3">
         <div className="flex items-center space-x-1">
           <button
             type="button"
             onClick={toggleSidebar}
-            className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+            className="flex-shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
             aria-label={isSidebarOpen ? '隐藏侧边栏' : '显示侧边栏'}
           >
             <Icon name={isSidebarOpen ? 'PanelLeftClose' : 'PanelLeft'} />
@@ -186,20 +186,17 @@ export default function DocumentHeader({
             <button
               type="button"
               onClick={toggleToc}
-              className={`
-                flex-shrink-0 p-2 rounded-lg transition-all duration-300 hover:scale-105
-                ${
-                  isTocOpen
-                    ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/50 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
-                }
-              `}
+              className={`flex-shrink-0 rounded-lg p-2 transition-all duration-300 hover:scale-105 ${
+                isTocOpen
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:hover:bg-indigo-950/50'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+              } `}
               aria-label={isTocOpen ? '隐藏目录' : '显示目录'}
             >
               <div className="relative">
-                <Icon name="List" className="w-4 h-4" />
+                <Icon name="List" className="h-4 w-4" />
                 {isTocOpen && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full animate-pulse" />
+                  <div className="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-gradient-to-r from-indigo-500 to-blue-500" />
                 )}
               </div>
             </button>
@@ -207,15 +204,15 @@ export default function DocumentHeader({
         </div>
 
         {/* 文档标题 */}
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+        <h1 className="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">
           {isCollaborationMode ? '协作文档' : '文档编辑器'}
         </h1>
 
         {/* 协作状态指示器 */}
         {isCollaborationMode && (
-          <div className="flex items-center space-x-2 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center space-x-2">
             <div
-              className={`w-2 h-2 rounded-full ${
+              className={`h-2 w-2 rounded-full ${
                 connectionStatus === 'connected'
                   ? 'bg-green-500'
                   : connectionStatus === 'error'
@@ -231,14 +228,14 @@ export default function DocumentHeader({
       </div>
 
       {/* 右侧：协作用户列表和编辑器信息 */}
-      <div className="flex items-center space-x-4 flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center space-x-4">
         {/* 统一的协作用户显示 */}
         {isCollaborationMode && allUsers.length > 0 && (
           <div className="flex items-center space-x-3">
             {/* 桌面端显示完整信息 */}
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden items-center space-x-2 lg:flex">
               <svg
-                className="w-4 h-4 text-green-500 flex-shrink-0"
+                className="h-4 w-4 flex-shrink-0 text-green-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -267,7 +264,7 @@ export default function DocumentHeader({
 
               {/* 更多用户计数 */}
               {allUsers.length > 5 && (
-                <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-sm ml-1">
+                <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-gray-100 text-xs font-semibold text-gray-600 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
                   +{allUsers.length - 5}
                 </div>
               )}
@@ -277,7 +274,7 @@ export default function DocumentHeader({
             <div className="text-sm text-gray-600 dark:text-gray-400">
               {allUsers.length === 1 ? (
                 currentUser && allUsers[0].id === currentUser.id ? (
-                  <span className="text-blue-600 dark:text-blue-400 hidden sm:inline">
+                  <span className="hidden text-blue-600 sm:inline dark:text-blue-400">
                     只有您在线
                   </span>
                 ) : (
@@ -295,14 +292,14 @@ export default function DocumentHeader({
 
         {/* 编辑器信息 */}
         {editor && (
-          <div className="hidden lg:flex items-center space-x-4">
+          <div className="hidden items-center space-x-4 lg:flex">
             <EditorInfo editor={editor} />
           </div>
         )}
 
         {/* 非协作模式的简单状态 */}
         {!isCollaborationMode && provider && (
-          <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+          <div className="hidden text-sm text-gray-500 sm:block dark:text-gray-400">
             协作状态: {provider.connected ? '已连接' : '未连接'}
           </div>
         )}

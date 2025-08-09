@@ -24,38 +24,38 @@ const navItems: NavItem[] = [
   {
     name: '消息',
     href: '/dashboard/messages',
-    icon: <MessageCircle className="w-5 h-5" />,
+    icon: <MessageCircle className="h-5 w-5" />,
   },
   {
     name: '日历',
     href: '/dashboard/calendar',
-    icon: <Calendar className="w-5 h-5" />,
+    icon: <Calendar className="h-5 w-5" />,
   },
   {
     name: '文档',
     href: '/docs',
-    icon: <FileText className="w-5 h-5" />,
+    icon: <FileText className="h-5 w-5" />,
     external: true,
   },
   {
     name: '视频会议',
     href: '/dashboard/meeting',
-    icon: <Video className="w-5 h-5" />,
+    icon: <Video className="h-5 w-5" />,
   },
   {
     name: '通讯录',
     href: '/dashboard/contacts',
-    icon: <Users className="w-5 h-5" />,
+    icon: <Users className="h-5 w-5" />,
   },
   {
     name: '设置',
     href: '/dashboard/settings',
-    icon: <Settings className="w-5 h-5" />,
+    icon: <Settings className="h-5 w-5" />,
   },
   {
     name: '更多',
     href: '/dashboard/more',
-    icon: <MoreHorizontal className="w-5 h-5" />,
+    icon: <MoreHorizontal className="h-5 w-5" />,
   },
 ];
 
@@ -69,12 +69,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* 侧边栏 */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+      <div className="flex w-64 flex-col border-r border-gray-200 bg-white shadow-sm">
         {/* Logo/Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="border-b border-gray-200 p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">DF</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <span className="text-sm font-semibold text-white">DF</span>
             </div>
             <span className="font-semibold text-gray-900">DocFlow</span>
           </div>
@@ -96,14 +96,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <li key={item.name}>
                   <LinkComponent
                     {...linkProps}
-                    className={`
-                      flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                      }
-                    `}
+                    className={`flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'border-r-2 border-blue-700 bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    } `}
                   >
                     <span className={isActive ? 'text-blue-700' : 'text-gray-500'}>
                       {item.icon}
@@ -117,10 +114,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
 
         {/* 用户信息 */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="border-t border-gray-200 p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-700 font-medium text-sm">U</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+              <span className="text-sm font-medium text-gray-700">U</span>
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">用户</p>
@@ -131,7 +128,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto bg-white">{children}</main>
       </div>
     </div>

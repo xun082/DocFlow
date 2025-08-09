@@ -45,7 +45,7 @@ export const Tooltip = ({
         </RadixTooltip.Trigger>
         <RadixTooltip.Portal>
           <RadixTooltip.Content
-            className="flex items-center gap-2 px-2.5 py-1 bg-white border border-neutral-100 rounded-lg shadow-sm z-[999]"
+            className="z-[999] flex items-center gap-2 rounded-lg border border-neutral-100 bg-white px-2.5 py-1 shadow-sm"
             sideOffset={8}
           >
             {title && <span className="text-xs font-medium text-neutral-500">{title}</span>}

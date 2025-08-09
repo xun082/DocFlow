@@ -214,7 +214,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* 文件信息 */}
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-3 rounded-lg bg-gray-50 p-3">
             <Icon
               name={file.type === 'folder' ? 'Folder' : 'FileText'}
               className={cn(
@@ -258,14 +258,14 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              <Icon name={showAdvanced ? 'ChevronDown' : 'ChevronRight'} className="h-4 w-4 mr-1" />
+              <Icon name={showAdvanced ? 'ChevronDown' : 'ChevronRight'} className="mr-1 h-4 w-4" />
               高级选项
             </button>
 
             {showAdvanced && (
-              <div className="space-y-4 pl-5 border-l-2 border-gray-100">
+              <div className="space-y-4 border-l-2 border-gray-100 pl-5">
                 {/* 密码保护 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">密码保护（可选）</label>
@@ -274,12 +274,12 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                       type={showPassword ? 'text' : 'password'}
                       {...register('password')}
                       placeholder="设置访问密码"
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute top-1/2 right-3 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
                     >
                       {showPassword ? (
                         <EyeOffIcon className="h-4 w-4" />
@@ -300,7 +300,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                     <button
                       type="button"
                       onClick={() => setShowCalendar(!showCalendar)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-left flex items-center justify-between"
+                      className="flex w-full items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-left focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                       <span className={watchedValues.expiresAt ? 'text-gray-900' : 'text-gray-500'}>
                         {watchedValues.expiresAt
@@ -311,7 +311,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                     </button>
 
                     {showCalendar && (
-                      <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg">
+                      <div className="absolute top-full left-0 z-50 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg">
                         <Calendar
                           mode="single"
                           selected={watchedValues.expiresAt}
@@ -319,7 +319,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                           disabled={(date) => date < new Date()}
                           initialFocus
                         />
-                        <div className="p-3 border-t border-gray-200">
+                        <div className="border-t border-gray-200 p-3">
                           <button
                             type="button"
                             onClick={() => {
@@ -363,27 +363,27 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
 
           {/* 分享链接显示 */}
           {shareUrl && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
               <div className="flex items-start justify-between">
-                <div className="flex-1 mr-3">
-                  <p className="text-sm font-medium text-green-800 mb-1">分享链接已生成</p>
-                  <p className="text-xs text-green-600 break-all font-mono bg-green-100 p-2 rounded">
+                <div className="mr-3 flex-1">
+                  <p className="mb-1 text-sm font-medium text-green-800">分享链接已生成</p>
+                  <p className="rounded bg-green-100 p-2 font-mono text-xs break-all text-green-600">
                     {shareUrl}
                   </p>
                   {selectedUsers.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-xs text-green-700 mb-1">已分享给以下用户：</p>
+                      <p className="mb-1 text-xs text-green-700">已分享给以下用户：</p>
                       <div className="flex flex-wrap gap-1">
                         {selectedUsers.map((user) => (
                           <span
                             key={user.id}
-                            className="inline-flex items-center gap-1 bg-green-200 text-green-800 px-2 py-1 rounded text-xs"
+                            className="inline-flex items-center gap-1 rounded bg-green-200 px-2 py-1 text-xs text-green-800"
                           >
                             {user.avatar_url && (
                               <img
                                 src={user.avatar_url}
                                 alt={user.name}
-                                className="w-3 h-3 rounded-full"
+                                className="h-3 w-3 rounded-full"
                               />
                             )}
                             {user.name}
@@ -396,9 +396,9 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors flex items-center"
+                  className="flex items-center rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700"
                 >
-                  <Icon name="Copy" className="h-3 w-3 mr-1" />
+                  <Icon name="Copy" className="mr-1 h-3 w-3" />
                   复制
                 </button>
               </div>
@@ -409,16 +409,16 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
+              className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoading && <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />}
+              {isLoading && <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />}
               {shareUrl ? '重新生成链接' : '创建分享链接'}
             </button>
           </DialogFooter>

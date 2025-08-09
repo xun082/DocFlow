@@ -73,15 +73,15 @@ export function TableOfContents({ editor, isOpen = true }: TableOfContentsProps)
   }
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-950">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
       {/* 简洁的目录列表 */}
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 clean-scrollbar">
+      <div className="clean-scrollbar flex-1 space-y-1 overflow-y-auto px-4 py-6">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-              <Icon name="List" className="w-8 h-8 text-gray-400" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+              <Icon name="List" className="h-8 w-8 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">暂无目录</p>
+            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">暂无目录</p>
             <p className="text-xs text-gray-400 dark:text-gray-500">添加标题来生成目录</p>
           </div>
         ) : (
@@ -102,47 +102,41 @@ export function TableOfContents({ editor, isOpen = true }: TableOfContentsProps)
 
                   <button
                     onClick={() => scrollToHeading(item.pos, item.id)}
-                    className={`
-                      w-full text-left group relative rounded-lg transition-all duration-200
-                      ${
-                        isActive
-                          ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50'
-                      }
-                    `}
+                    className={`group relative w-full rounded-lg text-left transition-all duration-200 ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300'
+                        : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900/50'
+                    } `}
                     style={{ paddingLeft: `${paddingLeft}px` }}
                   >
                     {/* 活动指示器 */}
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-blue-500 rounded-r-sm" />
+                      <div className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 transform rounded-r-sm bg-blue-500" />
                     )}
 
                     <div className="flex items-center py-2.5 pr-3">
                       {/* 简洁图标 */}
-                      <div className="flex-shrink-0 mr-3">
+                      <div className="mr-3 flex-shrink-0">
                         {item.level === 1 && (
                           <div
-                            className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-400'}`}
+                            className={`h-2 w-2 rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-400'}`}
                           />
                         )}
                         {item.level === 2 && (
                           <div
-                            className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-blue-400' : 'bg-gray-300'}`}
+                            className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-blue-400' : 'bg-gray-300'}`}
                           />
                         )}
                         {item.level >= 3 && (
                           <div
-                            className={`w-1 h-1 rounded-full ${isActive ? 'bg-blue-300' : 'bg-gray-300'}`}
+                            className={`h-1 w-1 rounded-full ${isActive ? 'bg-blue-300' : 'bg-gray-300'}`}
                           />
                         )}
                       </div>
 
                       {/* 标题文本 */}
                       <span
-                        className={`
-                        flex-1 text-sm leading-relaxed truncate
-                        ${item.level === 1 ? 'font-semibold' : item.level === 2 ? 'font-medium' : 'font-normal'}
-                      `}
+                        className={`flex-1 truncate text-sm leading-relaxed ${item.level === 1 ? 'font-semibold' : item.level === 2 ? 'font-medium' : 'font-normal'} `}
                       >
                         {item.text}
                       </span>
@@ -157,7 +151,7 @@ export function TableOfContents({ editor, isOpen = true }: TableOfContentsProps)
 
       {/* 简洁的底部统计 */}
       {items.length > 0 && (
-        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="border-t border-gray-200 px-4 py-3 dark:border-gray-700">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>共 {items.length} 个标题</span>
             <div className="flex items-center space-x-2">
@@ -167,7 +161,7 @@ export function TableOfContents({ editor, isOpen = true }: TableOfContentsProps)
                 return count > 0 ? (
                   <span key={level} className="flex items-center space-x-1">
                     <span>H{level}</span>
-                    <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded text-xs">
+                    <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                       {count}
                     </span>
                   </span>

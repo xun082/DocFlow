@@ -30,7 +30,7 @@ export const FontSizePicker = ({ onChange, value }: FontSizePickerProps) => {
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={!!currentValue?.value}>
           {currentSizeLabel}
-          <Icon name="ChevronDown" className="w-2 h-2" />
+          <Icon name="ChevronDown" className="h-2 w-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
       <Dropdown.Content asChild>

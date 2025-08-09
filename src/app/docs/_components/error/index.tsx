@@ -16,27 +16,27 @@ export interface ErrorPageProps {
 
 export function ErrorPage({ errorDisplay, documentId, errorType, status }: ErrorPageProps) {
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="text-center max-w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-        <div className="text-red-500 text-6xl mb-4">⚠️</div>
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+    <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-md rounded-lg bg-white p-6 text-center shadow-lg dark:bg-gray-800">
+        <div className="mb-4 text-6xl text-red-500">⚠️</div>
+        <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-200">
           {errorDisplay.title}
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{errorDisplay.message}</p>
-        <div className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{errorDisplay.message}</p>
+        <div className="mb-4 text-xs text-gray-500 dark:text-gray-500">
           文档ID: {documentId} | 错误类型: {errorType} {status && `| 状态码: ${status}`}
         </div>
         {errorDisplay.actionUrl ? (
           <a
             href={errorDisplay.actionUrl}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors inline-block"
+            className="inline-block rounded-md bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600"
           >
             {errorDisplay.actionText || '重试'}
           </a>
         ) : (
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            className="rounded-md bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600"
           >
             重新加载
           </button>

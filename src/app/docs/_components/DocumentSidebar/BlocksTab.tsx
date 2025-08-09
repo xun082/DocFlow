@@ -29,10 +29,10 @@ const BlockItem: React.FC<BlockItemProps> = ({
   return (
     <div
       className={cn(
-        'group p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600',
-        'rounded-lg hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer transition-all duration-200',
+        'group border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800',
+        'cursor-pointer rounded-lg transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-500',
         'hover:shadow-sm active:scale-[0.98]',
-        isDragging && 'opacity-50 scale-95',
+        isDragging && 'scale-95 opacity-50',
       )}
       draggable
       onDragStart={(e) => {
@@ -46,19 +46,19 @@ const BlockItem: React.FC<BlockItemProps> = ({
       <div className="flex items-start space-x-3">
         <div
           className={cn(
-            'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-            'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-            'group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors',
+            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
+            'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+            'transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50',
           )}
         >
           <Icon name={icon} className="h-5 w-5" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 dark:text-gray-100 dark:group-hover:text-blue-400">
             {label}
           </h4>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+          <p className="mt-1 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
             {description}
           </p>
         </div>
@@ -66,7 +66,7 @@ const BlockItem: React.FC<BlockItemProps> = ({
         <div className="flex-shrink-0">
           <Icon
             name="GripVertical"
-            className="h-4 w-4 text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 transition-colors"
+            className="h-4 w-4 text-gray-300 transition-colors group-hover:text-gray-400 dark:text-gray-600 dark:group-hover:text-gray-500"
           />
         </div>
       </div>
@@ -219,7 +219,7 @@ const BlocksTab = () => {
   };
 
   return (
-    <div className="p-4 space-y-4 flex flex-col h-full">
+    <div className="flex h-full flex-col space-y-4 p-4">
       {/* 搜索框 */}
       <div className="relative">
         <input
@@ -227,9 +227,9 @@ const BlocksTab = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
-            'w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600',
-            'focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20',
-            'rounded-lg py-2 pl-9 pr-3 text-sm transition-colors',
+            'w-full border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800',
+            'focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:focus:border-blue-400',
+            'rounded-lg py-2 pr-3 pl-9 text-sm transition-colors',
             'placeholder:text-gray-400 dark:placeholder:text-gray-500',
             'text-gray-900 dark:text-gray-100',
           )}
@@ -237,13 +237,13 @@ const BlocksTab = () => {
         />
         <Icon
           name="Search"
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500"
+          className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400 dark:text-gray-500"
         />
       </div>
 
       {/* 分类筛选 */}
       <div className="space-y-2">
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <div className="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
           分类
         </div>
         <div className="flex flex-wrap gap-1">
@@ -252,10 +252,10 @@ const BlocksTab = () => {
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               className={cn(
-                'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer',
+                'flex cursor-pointer items-center space-x-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors',
                 selectedCategory === category.id
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600',
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600',
               )}
             >
               <Icon name={category.icon as any} className="h-3 w-3" />
@@ -266,28 +266,28 @@ const BlocksTab = () => {
       </div>
 
       {/* 使用说明 */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
         <div className="flex items-start space-x-2">
           <Icon
             name="Info"
-            className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+            className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
           />
           <div className="text-xs text-blue-700 dark:text-blue-300">
-            <p className="font-medium mb-1">使用方法：</p>
+            <p className="mb-1 font-medium">使用方法：</p>
             <p>点击区块插入到编辑器，或拖拽到指定位置</p>
           </div>
         </div>
       </div>
 
       {/* 区块列表 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
           区块 ({filteredBlocks.length})
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {filteredBlocks.length === 0 ? (
-            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+            <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
               {searchQuery ? '未找到匹配的区块' : '该分类下暂无区块'}
             </div>
           ) : (

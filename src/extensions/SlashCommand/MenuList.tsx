@@ -161,7 +161,7 @@ export const MenuList = React.forwardRef((props: MenuListProps, ref) => {
   return (
     <Surface
       ref={scrollContainer}
-      className="text-black max-h-[min(80vh,24rem)] overflow-auto flex-wrap mb-8 p-3 w-72 bg-white border border-neutral-100 shadow-lg rounded-xl"
+      className="mb-8 max-h-[min(80vh,24rem)] w-72 flex-wrap overflow-auto rounded-xl border border-neutral-100 bg-white p-3 text-black shadow-lg"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={{
@@ -173,7 +173,7 @@ export const MenuList = React.forwardRef((props: MenuListProps, ref) => {
         {props.items.map((group, groupIndex: number) => (
           <React.Fragment key={`${group.title}-${groupIndex}-wrapper`}>
             <div
-              className="text-neutral-400 text-xs col-[1/-1] mx-2 mt-4 font-semibold tracking-wider select-none uppercase first:mt-1"
+              className="col-[1/-1] mx-2 mt-4 text-xs font-semibold tracking-wider text-neutral-400 uppercase select-none first:mt-1"
               key={`${group.title}-${groupIndex}`}
             >
               {group.title}
@@ -190,7 +190,7 @@ export const MenuList = React.forwardRef((props: MenuListProps, ref) => {
                   selectedGroupIndex === groupIndex && selectedCommandIndex === commandIndex
                 }
                 onClick={createCommandClickHandler(groupIndex, commandIndex)}
-                className="hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 rounded-lg my-0.5"
+                className="my-0.5 rounded-lg transition-colors duration-150 hover:bg-blue-50 hover:text-blue-600"
               >
                 <Icon name={command.iconName} className="mr-2 text-neutral-500" />
                 <span className="font-medium">{command.label}</span>

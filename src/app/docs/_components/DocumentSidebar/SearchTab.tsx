@@ -299,7 +299,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
       regex.test(part) ? (
         <mark
           key={index}
-          className="bg-yellow-200 dark:bg-yellow-700 text-gray-900 dark:text-white px-0.5 rounded"
+          className="rounded bg-yellow-200 px-0.5 text-gray-900 dark:bg-yellow-700 dark:text-white"
         >
           {part}
         </mark>
@@ -371,7 +371,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   };
 
   return (
-    <div className="p-4 space-y-4 flex flex-col flex-1">
+    <div className="flex flex-1 flex-col space-y-4 p-4">
       {/* 搜索输入框 */}
       <div className="relative">
         <div className="relative">
@@ -382,11 +382,11 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             className={cn(
-              'w-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md',
+              'w-full bg-white/90 backdrop-blur-md dark:bg-slate-800/90',
               'border border-slate-200/60 dark:border-slate-600/60',
               'focus:border-blue-500/70 dark:focus:border-blue-400/70',
               'focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20',
-              'rounded-xl py-3 pl-11 pr-11 text-sm transition-all duration-200',
+              'rounded-xl py-3 pr-11 pl-11 text-sm transition-all duration-200',
               'placeholder:text-slate-400 dark:placeholder:text-slate-500',
               'text-slate-900 dark:text-slate-100',
               'shadow-sm hover:shadow-md focus:shadow-lg',
@@ -398,15 +398,15 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
           <Icon
             name="Search"
-            className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500"
+            className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 transform text-slate-400 dark:text-slate-500"
           />
 
           {searchQuery && (
             <button
               onClick={clearSearch}
               className={cn(
-                'absolute right-3 top-1/2 transform -translate-y-1/2',
-                'w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-600/80',
+                'absolute top-1/2 right-3 -translate-y-1/2 transform',
+                'h-6 w-6 rounded-lg bg-slate-200/80 dark:bg-slate-600/80',
                 'hover:bg-slate-300 dark:hover:bg-slate-500',
                 'flex items-center justify-center transition-all duration-200',
                 'hover:scale-105',
@@ -420,8 +420,8 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
         {/* 搜索加载指示器 */}
         {isSearching && (
-          <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+          <div className="absolute top-1/2 right-12 -translate-y-1/2 transform">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
           </div>
         )}
 
@@ -429,21 +429,21 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
         {showHistory && searchHistory.length > 0 && (
           <div
             className={cn(
-              'absolute top-full left-0 right-0 mt-2 z-50',
-              'bg-white/95 dark:bg-slate-800/95 backdrop-blur-md',
+              'absolute top-full right-0 left-0 z-50 mt-2',
+              'bg-white/95 backdrop-blur-md dark:bg-slate-800/95',
               'border border-slate-200/60 dark:border-slate-600/60',
               'rounded-xl shadow-lg',
               'py-2',
             )}
           >
-            <div className="px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200/50 dark:border-slate-600/50 mb-1">
+            <div className="mb-1 border-b border-slate-200/50 px-3 py-1 text-xs font-medium text-slate-500 dark:border-slate-600/50 dark:text-slate-400">
               搜索历史
             </div>
             {searchHistory.map((historyQuery, index) => (
               <button
                 key={index}
                 onClick={() => handleHistoryClick(historyQuery)}
-                className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 flex items-center space-x-2"
+                className="flex w-full items-center space-x-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-slate-700/50"
               >
                 <Icon name="Clock" className="h-3 w-3 text-slate-400" />
                 <span>{historyQuery}</span>
@@ -454,16 +454,16 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
       </div>
 
       {/* 搜索模式切换 */}
-      <div className="flex items-center space-x-1 bg-slate-100/80 dark:bg-slate-700/60 p-1 rounded-lg">
+      <div className="flex items-center space-x-1 rounded-lg bg-slate-100/80 p-1 dark:bg-slate-700/60">
         {searchModeOptions.map((option) => (
           <button
             key={option.value}
             onClick={() => setSearchMode(option.value as 'all' | 'files' | 'content')}
             className={cn(
-              'flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer',
+              'flex cursor-pointer items-center space-x-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200',
               searchMode === option.value
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-600/50',
+                ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-600 dark:text-blue-400'
+                : 'text-slate-600 hover:bg-white/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-600/50 dark:hover:text-slate-200',
             )}
           >
             <Icon name={option.icon as any} className="h-3 w-3" />
@@ -479,7 +479,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
           <div className="space-y-6">
             {/* 快捷搜索 */}
             <div className="space-y-3">
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                 快捷搜索
               </div>
               <div className="grid grid-cols-2 gap-2 px-2">
@@ -488,21 +488,21 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                     key={item.label}
                     onClick={item.action}
                     className={cn(
-                      'flex flex-col items-center justify-center p-3 rounded-xl text-center group',
+                      'group flex flex-col items-center justify-center rounded-xl p-3 text-center',
                       'bg-gradient-to-br from-slate-50/80 to-slate-100/60',
                       'dark:from-slate-700/60 dark:to-slate-800/60',
                       'hover:from-blue-50 hover:to-indigo-50',
                       'dark:hover:from-slate-600/80 dark:hover:to-slate-700/80',
                       'border border-slate-200/50 dark:border-slate-600/50',
                       'hover:border-blue-300/50 dark:hover:border-blue-500/30',
-                      'transition-all duration-200 hover:scale-105 cursor-pointer',
+                      'cursor-pointer transition-all duration-200 hover:scale-105',
                     )}
                   >
                     <Icon
                       name={item.icon as any}
-                      className="h-5 w-5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-1"
+                      className="mb-1 h-5 w-5 text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400"
                     />
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <span className="text-xs font-medium text-slate-600 group-hover:text-blue-600 dark:text-slate-300 dark:group-hover:text-blue-400">
                       {item.label}
                     </span>
                   </button>
@@ -512,7 +512,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
             {/* 搜索提示 */}
             <div className="space-y-3">
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                 搜索技巧
               </div>
               <div className="space-y-2">
@@ -535,16 +535,16 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
           </div>
         ) : (
           // 搜索结果
-          <div className="flex flex-col h-full">
-            <div className="space-y-3 flex-1 overflow-auto">
+          <div className="flex h-full flex-col">
+            <div className="flex-1 space-y-3 overflow-auto">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
                 </div>
                 {searchResults.length > 0 && (
                   <button
                     onClick={clearSearch}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     清除
                   </button>
@@ -553,16 +553,16 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
               {isSearching ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="text-center space-y-3">
-                    <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto" />
+                  <div className="space-y-3 text-center">
+                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                     <div className="text-sm text-slate-500 dark:text-slate-400">搜索中...</div>
                   </div>
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="text-center py-12 space-y-3">
+                <div className="space-y-3 py-12 text-center">
                   <Icon
                     name="Search"
-                    className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto"
+                    className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600"
                   />
                   <div className="text-sm text-slate-500 dark:text-slate-400">未找到相关文档</div>
                   <div className="text-xs text-slate-400 dark:text-slate-500">
@@ -576,19 +576,19 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                       key={result.id}
                       onClick={() => handleResultClick(result)}
                       className={cn(
-                        'w-full p-3 rounded-xl text-left group transition-all duration-200',
-                        'bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm',
+                        'group w-full rounded-xl p-3 text-left transition-all duration-200',
+                        'bg-white/80 backdrop-blur-sm dark:bg-slate-800/60',
                         'hover:bg-gradient-to-r hover:from-blue-50/90 hover:to-indigo-50/70',
                         'dark:hover:from-slate-700/80 dark:hover:to-slate-800/90',
                         'border border-slate-200/50 dark:border-slate-600/40',
                         'hover:border-blue-300/60 dark:hover:border-blue-500/40',
-                        'hover:shadow-md hover:scale-[1.02]',
+                        'hover:scale-[1.02] hover:shadow-md',
                       )}
                     >
                       <div className="flex items-start space-x-3">
                         <div
                           className={cn(
-                            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
+                            'mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg',
                             result.type === 'FOLDER'
                               ? 'bg-amber-100 dark:bg-amber-900/30'
                               : 'bg-blue-100 dark:bg-blue-900/30',
@@ -605,15 +605,15 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                           />
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center space-x-2">
+                            <h4 className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">
                               {highlightText(result.title, searchQuery)}
                             </h4>
                             {result.is_starred && (
                               <Icon
                                 name="Star"
-                                className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0"
+                                className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500"
                               />
                             )}
                           </div>
@@ -626,7 +626,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
                             {/* 文件路径显示 */}
                             {result.path && result.path.length > 1 && (
-                              <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center space-x-1">
+                              <div className="flex items-center space-x-1 text-xs text-slate-400 dark:text-slate-500">
                                 <Icon name="Folder" className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">
                                   {result.path.slice(0, -1).join(' / ')}
@@ -635,7 +635,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
                             )}
 
                             {result.matches.length > 0 && (
-                              <div className="text-xs text-slate-600 dark:text-slate-300 opacity-75 flex items-center space-x-1">
+                              <div className="flex items-center space-x-1 text-xs text-slate-600 opacity-75 dark:text-slate-300">
                                 <Icon name="Search" className="h-3 w-3 flex-shrink-0" />
                                 <span>
                                   在 {result.matches[0].field === 'title' ? '标题' : '内容'}{' '}
