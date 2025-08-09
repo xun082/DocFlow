@@ -401,9 +401,9 @@ export default function DocumentPage() {
 
   if (!isClientReady || loading || !doc) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400">
             {!isClientReady ? '正在初始化...' : '正在加载文档编辑器...'}
           </p>
@@ -443,7 +443,7 @@ export default function DocumentPage() {
 
   return (
     <div
-      className="h-screen flex flex-col bg-white dark:bg-gray-900"
+      className="flex h-screen flex-col bg-white dark:bg-gray-900"
       ref={menuContainerRef}
       suppressHydrationWarning
     >
@@ -463,7 +463,7 @@ export default function DocumentPage() {
 
       {/* 主内容区域 */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <div
             ref={editorContaiRef}
             onScroll={scrollLightHandler}
@@ -472,9 +472,9 @@ export default function DocumentPage() {
             {isReady ? (
               <EditorContent editor={editor} className="prose-container h-full pl-14" />
             ) : (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <div className="inline-block animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                  <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                   <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
                 </div>
               </div>
@@ -484,7 +484,7 @@ export default function DocumentPage() {
 
         {/* 目录侧边栏 */}
         {isTocOpen && isReady && (
-          <div className="w-80 border-l border-slate-200/60 dark:border-slate-800/60 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
+          <div className="w-80 overflow-hidden border-l border-slate-200/60 bg-white/95 backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-950/95">
             <TableOfContents isOpen={isTocOpen} editor={editor} />
           </div>
         )}
