@@ -10,9 +10,11 @@ import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { isEqual, debounce } from 'lodash-es';
+import { Menu } from 'lucide-react';
 
 import Syllabus, { SyllabusTitle } from '../_components/Syllabus';
 
+import { Button } from '@/components/ui/button';
 import { DocumentApi } from '@/services/document';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
@@ -35,6 +37,12 @@ interface CollaborationUser {
 }
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'syncing' | 'error';
+
+// 侧边栏宽度常量
+const SIDEBAR_WIDTH = {
+  COLLAPSED: 0,
+  COMPACT: 200,
+} as const;
 
 export default function DocumentPage() {
   const params = useParams();
@@ -67,6 +75,7 @@ export default function DocumentPage() {
 
   const [syllabusTitle, setsyllabusTitle] = useState<SyllabusTitle[]>([]);
   const [syllabusLightId, setSyllabusLightId] = useState('');
+  const [sidebarWidth, setSidebarWidth] = useState<number>(SIDEBAR_WIDTH.COMPACT);
 
   // 目录切换函数
   const toggleToc = () => {
@@ -129,6 +138,14 @@ export default function DocumentPage() {
       console.error('文档加载失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSidebar = () => {
+    if (sidebarWidth === SIDEBAR_WIDTH.COLLAPSED) {
+      setSidebarWidth(SIDEBAR_WIDTH.COMPACT);
+    } else {
+      setSidebarWidth(SIDEBAR_WIDTH.COLLAPSED);
     }
   };
 
@@ -489,8 +506,36 @@ export default function DocumentPage() {
           </div>
         )}
 
-        <div className="flex-[0 0 0] w-56 px-4 pt-8">
-          <Syllabus lightId={syllabusLightId} syllabusTitle={syllabusTitle} />
+        {/* 折叠状态的悬浮菜单按钮 */}
+        {sidebarWidth === SIDEBAR_WIDTH.COLLAPSED && (
+          <Button
+            variant="secondary"
+            size="icon"
+            className="mt-8 z-50 size-8 shadow-lg"
+            onClick={toggleSidebar}
+          >
+            <Menu />
+          </Button>
+        )}
+
+        {/* 侧边栏容器 */}
+        <div
+          className={`flex-[0 0 0] ${sidebarWidth > 0 ? 'px-2' : 'px-0'} box-border pt-8 border-l-2 border-slate-200/60 dark:border-slate-800/60 transition-all duration-300 ease-in-out`}
+          style={{ width: `${sidebarWidth}px` }}
+        >
+          {sidebarWidth > SIDEBAR_WIDTH.COLLAPSED && (
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="size-8 cursor-pointer mb-1"
+                onClick={toggleSidebar}
+              >
+                <Menu />
+              </Button>
+              <Syllabus lightId={syllabusLightId} syllabusTitle={syllabusTitle} />
+            </>
+          )}
         </div>
       </div>
 
