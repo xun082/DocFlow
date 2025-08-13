@@ -136,4 +136,25 @@
     object-fit: cover;
     display: block;
   }
+
+  /* Mathematics styles */
+  .ProseMirror .katex {
+    @apply text-inherit;
+  }
+
+  .ProseMirror .katex-display {
+    @apply my-4;
+  }
+
+  .ProseMirror .katex-display > .katex {
+    @apply text-center;
+  }
+
+  .ProseMirror [data-type='inlineMath'] {
+    @apply inline-block;
+  }
+
+  .ProseMirror [data-type='blockMath'] {
+    @apply block my-4;
+  }
 }

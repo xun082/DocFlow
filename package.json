@@ -93,6 +93,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.12.1",
+    "katex": "^0.16.22",
     "lodash-es": "^4.17.21",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.511.0",
