@@ -93,6 +93,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.12.1",
+    "katex": "^0.16.22",
     "lodash-es": "^4.17.21",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.511.0",
@@ -187,5 +188,6 @@
     "node": ">=20",
     "pnpm": ">=9.0.0"
   },
-  "engineStrict": true
+  "engineStrict": true,
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

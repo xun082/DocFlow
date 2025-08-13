@@ -2,6 +2,7 @@
 
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { isChangeOrigin } from '@tiptap/extension-collaboration';
+import { Mathematics } from '@tiptap/extension-mathematics';
 
 import {
   BlockquoteFigure,
@@ -207,6 +208,14 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   MarkdownPaste,
   SelectOnlyCode,
   Audio,
+  Mathematics.configure({
+    katexOptions: {
+      throwOnError: false,
+      displayMode: false,
+      output: 'html',
+      trust: false,
+    },
+  }),
 ];
 
 export default ExtensionKit;
