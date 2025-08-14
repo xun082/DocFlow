@@ -24,6 +24,7 @@ import { TableOfContents } from '@/app/docs/_components/TableOfContents';
 import { useSidebar } from '@/stores/sidebarStore';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
+import { ImageMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
@@ -544,6 +545,7 @@ export default function DocumentPage() {
         <>
           <ContentItemMenu editor={editor} />
           <LinkMenu editor={editor} appendTo={menuContainerRef} />
+          <ImageMenu editor={editor} />
           <TextMenu editor={editor} />
           <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
           <TableRowMenu editor={editor} appendTo={menuContainerRef} />
