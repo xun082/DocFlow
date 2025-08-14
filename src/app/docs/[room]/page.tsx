@@ -24,10 +24,10 @@ import { TableOfContents } from '@/app/docs/_components/TableOfContents';
 import { useSidebar } from '@/stores/sidebarStore';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
-import { ImageMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
+import { ImageMenu } from '@/extensions/ImageBlock/menus';
 
 // 类型定义
 interface CollaborationUser {

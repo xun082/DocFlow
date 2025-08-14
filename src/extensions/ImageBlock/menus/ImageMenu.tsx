@@ -2,11 +2,10 @@ import React, { JSX, useCallback, useEffect, useRef, useState } from 'react';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react/menus';
 
-import { MenuProps } from '../types';
-
 import { Surface } from '@/components/ui/Surface';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
+import { MenuProps } from '@/components/menus/types';
 
 export const ImageMenu = ({ editor }: MenuProps): JSX.Element | null => {
   const shouldShow = useCallback(() => editor.isActive('imageBlock'), [editor]);
