@@ -99,12 +99,14 @@ export const SlashCommand = Extension.create({
         },
         render: () => {
           let component: ReactRenderer<SlashCommandPopoverRef, any>;
-
           let scrollHandler: (() => void) | null = null;
+          let editorRef: Editor | null = null;
 
           return {
             onStart: (props: SuggestionProps) => {
               const { view } = props.editor;
+              editorRef = props.editor;
+
               const getReferenceClientRect = () => {
                 if (!props.clientRect) {
                   return (props.editor.storage as any)[extensionName]?.rect;
@@ -218,6 +220,17 @@ export const SlashCommand = Extension.create({
                     scrollHandler,
                   );
                 }
+
+                // 取消监听函数并销毁组件
+                if (scrollHandler && editorRef) {
+                  editorRef.view.dom.parentElement?.parentElement?.removeEventListener(
+                    'scroll',
+                    scrollHandler,
+                  );
+                  scrollHandler = null;
+                }
+
+                component?.destroy();
 
                 return true;
               }
