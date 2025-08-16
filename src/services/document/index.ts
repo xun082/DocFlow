@@ -1,3 +1,5 @@
+import { JSONContent } from '@tiptap/core';
+
 import request, { ErrorHandler } from '../request';
 import {
   CreateDocumentDto,
@@ -60,6 +62,15 @@ export const DocumentApi = {
       errorHandler,
       params: {
         title: data.title,
+      },
+    }),
+
+  // 保存文档内容
+  SaveDocumentContent: (documentId: number, content: JSONContent, errorHandler?: ErrorHandler) =>
+    request.put<{ success: boolean }>(`/api/v1/documents/${documentId}/content`, {
+      errorHandler,
+      params: {
+        content,
       },
     }),
 
