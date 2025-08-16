@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { DndContext, DragStartEvent, MeasuringStrategy, PointerSensor } from '@dnd-kit/core';
+import { useSensor, useSensors } from '@dnd-kit/core';
+import { restrictToParentElement } from '@dnd-kit/modifiers';
 
 import { FileExplorerProps, FileItem } from './type';
 import ShareDialog from './ShareDialog';
@@ -15,13 +18,154 @@ import DocumentApi from '@/services/document';
 import { DocumentResponse } from '@/services/document/type';
 
 // 默认文件结构，可以根据需求修改
-const defaultFiles: FileItem[] = [];
+// 模拟文件
+const defaultFiles: FileItem[] = [
+  {
+    id: '1',
+    type: 'file',
+    name: '1',
+    partentId: '',
+    order: 1,
+    children: [],
+    depth: 0,
+    collapsed: false,
+  },
+  {
+    id: '2',
+    type: 'file',
+    partentId: '',
+    children: [],
+    name: '2',
+    order: 2,
+    depth: 0,
+    collapsed: false,
+  },
+  {
+    id: '3',
+    type: 'file',
+    partentId: '',
+    children: [],
+    name: '3',
+    order: 3,
+    collapsed: false,
+    depth: 0,
+  },
+  {
+    id: '4',
+    type: 'folder',
+    partentId: '',
+    name: '4',
+    order: 4,
+    collapsed: false,
+    depth: 0,
+    children: [
+      {
+        id: '6',
+        type: 'file',
+        name: '6',
+        order: 1,
+        children: [],
+        depth: 1,
+        collapsed: false,
+        partentId: '4',
+      },
+      {
+        id: '7',
+        type: 'file',
+        name: '7',
+        order: 2,
+        depth: 1,
+        children: [],
+        collapsed: false,
+        partentId: '4',
+      },
+      {
+        id: '8',
+        type: 'file',
+        children: [],
+        name: '8',
+        order: 3,
+        depth: 1,
+        partentId: '4',
+        collapsed: false,
+      },
+      {
+        id: '9',
+        type: 'folder',
+        name: '9',
+        depth: 1,
+        order: 0,
+        partentId: '4',
+        children: [
+          {
+            id: '10',
+            name: '10',
+            type: 'file',
+            order: 0,
+            partentId: '9',
+            depth: 2,
+            collapsed: false,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: '5',
+    type: 'file',
+    name: '5',
+    order: 5,
+    depth: 0,
+    children: [],
+    collapsed: false,
+    partentId: '',
+  },
+];
+
+// 扁平所有文件
+function flattenTreeFile(treeFile: FileItem[], partent: string, depth = 0): FileItem[] {
+  return treeFile.reduce<FileItem[]>((accmulator, current, index) => {
+    if (current.type === 'folder') {
+      return [
+        ...accmulator,
+        { ...current, partentId: partent, depth: depth, order: index },
+        ...flattenTreeFile(current.children!, current.id, current.depth + 1),
+      ];
+    } else {
+      return [...accmulator, { ...current, partentId: partent, depth: depth }];
+    }
+  }, []);
+}
+
+//
+
+// 移除子节点
+function removeChildrenOf(files: FileItem[], ids: string[]) {
+  const excludeParentIds = [...ids];
+
+  return files.filter((item) => {
+    if (item.partentId && excludeParentIds.includes(item.partentId)) {
+      if (item.children && item.children.length > 0) {
+        excludeParentIds.push(item.id);
+      }
+
+      return false;
+    }
+
+    return true;
+  });
+}
+
+// 递归函数 找出文件具体的路径的
+function recusionFile(file: FileItem, parent_id: string) {}
 
 const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [files, setFiles] = useState<FileItem[]>(initialFiles);
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({}); // 文件夹是否展开
+  const [activeFileId, setactiveFileId] = useState<string>('');
+  const [overId, setOverId] = useState('');
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(
     null,
@@ -60,6 +204,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         id: String(doc.id),
         name: doc.title,
         type: doc.type === 'FOLDER' ? 'folder' : 'file',
+        order: doc.sort_order,
         is_starred: doc.is_starred,
         created_at: doc.created_at,
         updated_at: doc.updated_at,
@@ -91,7 +236,9 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           const documentResponse = res.data.data as DocumentResponse;
           const apiDocuments = documentResponse.owned || [];
           const convertedFiles = processApiDocuments(apiDocuments);
-          setFiles(convertedFiles);
+          // setFiles(convertedFiles);
+          // 模拟文件
+          setFiles(defaultFiles);
 
           if (!isInitialLoad && selectedFileId) {
             const findFileById = (items: FileItem[], id: string): boolean => {
@@ -128,6 +275,28 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     [selectedFileId, processApiDocuments],
   );
 
+  // memo稳定数据列表渲染
+  const fileListMemo = useMemo(() => {
+    // 扁平化每一个文件
+    const flattenFile = flattenTreeFile(files, '', 0);
+    console.log(flattenFile);
+
+    // 处理折叠的情况
+    const expandedFiles = flattenFile.reduce<string[]>((acc, item) => {
+      if (!expandedFolders[item.id] && item.children && item.children.length > 0) {
+        return [...acc, item.id];
+      } else {
+        return [...acc];
+      }
+    }, []);
+
+    // 处理节点被删除的情况
+    return removeChildrenOf(
+      flattenFile,
+      activeFileId ? [activeFileId, ...expandedFiles] : expandedFiles,
+    );
+  }, [files, expandedFolders]);
+
   const refreshFiles = useCallback(() => loadFiles(false), [loadFiles]);
 
   useEffect(() => {
@@ -156,7 +325,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
 
       if (findFileById(files, fileId)) {
         setSelectedFileId(fileId);
-        // 展开包含该文件的父文件夹逻辑...
       }
     } else {
       setSelectedFileId(null);
@@ -166,6 +334,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   // 文件夹操作
   const toggleFolder = useCallback((folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
     setExpandedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
   }, []);
 
@@ -235,25 +404,63 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     [closeContextMenu],
   );
 
-  const finishCreateNewItem = useCallback(async () => {
-    if (!newItemFolder || !newItemType || !newItemName.trim()) {
-      setNewItemFolder(null);
-      setNewItemType(null);
+  // 完成创建文件夹
+  const finishCreateNewItem = useCallback(
+    async (file: FileItem) => {
+      if (!newItemFolder || !newItemType || !newItemName.trim()) {
+        setNewItemFolder(null);
+        setNewItemType(null);
 
-      return;
-    }
+        return;
+      }
 
-    const success = await fileOperations.handleCreate(
-      newItemName,
-      newItemType,
-      newItemFolder === 'root' ? undefined : newItemFolder,
-    );
+      console.log(file);
 
-    if (success) {
-      setNewItemFolder(null);
-      setNewItemType(null);
-    }
-  }, [newItemFolder, newItemType, newItemName, fileOperations]);
+      // 区分是否顶级创建
+      if (file.id) {
+        // 组装新文件的信息
+        const newFiledepth = file.depth + 1;
+        const newFilePartent = file.id;
+        const order = 0;
+
+        file.children!.push({
+          id: Math.random().toString(16),
+          name: newItemName,
+          type: newItemType,
+          children: [],
+          partentId: newFilePartent,
+          order,
+          depth: newFiledepth,
+        });
+
+        setFiles([...files]);
+      } else {
+        files.push({
+          id: Math.random().toString(16),
+          name: newItemName,
+          type: newItemType,
+          partentId: '',
+          order: 0,
+          depth: 0,
+          children: [],
+        });
+
+        setFiles([...files]);
+      }
+
+      // const success = await fileOperations.handleCreate(
+      //   newItemName,
+      //   newItemType,
+      //   newItemFolder === 'root' ? undefined : newItemFolder,
+      // );
+
+      // if (success) {
+      //   setNewItemFolder(null);
+      //   setNewItemType(null);
+      // }
+    },
+    [newItemFolder, newItemType, newItemName, fileOperations],
+  );
 
   const cancelCreateNewItem = useCallback(() => {
     setNewItemFolder(null);
@@ -278,6 +485,8 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   );
 
   const collapseAll = useCallback(() => setExpandedFolders({}), []);
+
+  // root下面创建新文件
   const createNewRootItem = useCallback(
     (type: 'file' | 'folder') => startCreateNewItem('root', type),
     [startCreateNewItem],
@@ -382,6 +591,24 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     );
   };
 
+  // 配置sensor 根据距离判断是点击还是拖动 否则无法触发点击事件
+  const sensor = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
+
+  // dnd 修饰符限制移动范围
+  const dndModiifer = [restrictToParentElement];
+
+  const onDndDragStart = (e: DragStartEvent) => {
+    if (e.active.data.current!.isFolder && e.active.data.current!.isExpanded) {
+      toggleFolder(e.active.data.current!.id, e.activatorEvent as any);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* 头部工具栏 - 更精美的设计 */}
@@ -459,44 +686,57 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           </div>
         </div>
       </div>
-
-      {/* 文件树区域 */}
-      <div
-        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent"
-        onClick={() => {
-          closeContextMenu();
-          if (isRenaming) setIsRenaming(null);
-
-          if (newItemFolder) {
-            setNewItemFolder(null);
-            setNewItemType(null);
-          }
+      {/* 拖拽上下文 */}
+      <DndContext
+        sensors={sensor}
+        modifiers={dndModiifer}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
         }}
+        onDragStart={onDndDragStart}
       >
-        <FileTree
-          files={files}
-          expandedFolders={expandedFolders}
-          selectedFileId={selectedFileId}
-          isRenaming={isRenaming}
-          newItemFolder={newItemFolder}
-          newItemType={newItemType}
-          newItemName={newItemName}
-          onFileSelect={handleFileSelect}
-          onToggleFolder={toggleFolder}
-          onContextMenu={handleContextMenu}
-          onStartCreateNewItem={startCreateNewItem}
-          onFinishRenaming={finishRenaming}
-          onFinishCreateNewItem={finishCreateNewItem}
-          onCancelCreateNewItem={cancelCreateNewItem}
-          onKeyDown={handleKeyDown}
-          onSetNewItemName={setNewItemName}
-          onShare={handleShare}
-          onDelete={fileOperations.handleDelete}
-          onRename={handleRename}
-          onDuplicate={fileOperations.handleDuplicate}
-          onDownload={fileOperations.handleDownload}
-        />
-      </div>
+        {/* 文件树区域 */}
+        <div
+          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent"
+          onClick={() => {
+            closeContextMenu();
+            if (isRenaming) setIsRenaming(null);
+
+            if (newItemFolder) {
+              setNewItemFolder(null);
+              setNewItemType(null);
+            }
+          }}
+        >
+          {/* 文件树 */}
+          <FileTree
+            files={fileListMemo}
+            expandedFolders={expandedFolders}
+            selectedFileId={selectedFileId}
+            isRenaming={isRenaming}
+            newItemFolder={newItemFolder}
+            newItemType={newItemType}
+            newItemName={newItemName}
+            setfiles={setFiles}
+            onFileSelect={handleFileSelect}
+            onToggleFolder={toggleFolder}
+            onContextMenu={handleContextMenu}
+            onStartCreateNewItem={startCreateNewItem}
+            onFinishRenaming={finishRenaming}
+            onFinishCreateNewItem={finishCreateNewItem}
+            onCancelCreateNewItem={cancelCreateNewItem}
+            onKeyDown={handleKeyDown}
+            onSetNewItemName={setNewItemName}
+            onShare={handleShare}
+            onDelete={fileOperations.handleDelete}
+            onRename={handleRename}
+            onDuplicate={fileOperations.handleDuplicate}
+            onDownload={fileOperations.handleDownload}
+          />
+        </div>
+      </DndContext>
 
       {/* 分享文档栏目 */}
       <SharedDocuments

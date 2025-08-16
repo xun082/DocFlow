@@ -115,6 +115,7 @@ export default [
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
     },
     settings: {
       react: {
