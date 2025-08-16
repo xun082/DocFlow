@@ -101,8 +101,6 @@ interface DocumentHeaderProps {
   provider?: any;
   connectedUsers?: CollaborationUser[];
   currentUser?: CollaborationUser | null;
-  connectionStatus?: string;
-  isOffline?: boolean;
 }
 
 export default function DocumentHeader({
@@ -114,8 +112,6 @@ export default function DocumentHeader({
   provider,
   connectedUsers = [],
   currentUser,
-  connectionStatus,
-  isOffline = false,
 }: DocumentHeaderProps) {
   // 判断是否为协作模式
   const isCollaborationMode = provider && Array.isArray(connectedUsers);
@@ -125,47 +121,6 @@ export default function DocumentHeader({
     ...connectedUsers,
     ...(currentUser && !connectedUsers.find((u) => u.id === currentUser.id) ? [currentUser] : []),
   ];
-
-  // 获取连接状态显示文本
-  const getConnectionStatusText = () => {
-    if (isOffline) return '离线模式';
-    if (!provider) return '';
-
-    switch (connectionStatus) {
-      case 'connected':
-        return '协作中';
-      case 'connecting':
-        return '连接中...';
-      case 'syncing':
-        return '同步中...';
-      case 'disconnected':
-        return '已断开';
-      case 'error':
-        return '连接失败';
-      default:
-        return '未连接';
-    }
-  };
-
-  // 获取连接状态颜色
-  const getConnectionStatusColor = () => {
-    if (isOffline) return 'text-yellow-600 dark:text-yellow-400';
-    if (!provider) return '';
-
-    switch (connectionStatus) {
-      case 'connected':
-        return 'text-green-600 dark:text-green-400';
-      case 'connecting':
-      case 'syncing':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'disconnected':
-        return 'text-yellow-600 dark:text-yellow-400';
-      case 'error':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-gray-500 dark:text-gray-400';
-    }
-  };
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px] relative !z-100000">
@@ -214,17 +169,9 @@ export default function DocumentHeader({
         {/* 协作状态指示器 */}
         {isCollaborationMode && (
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                connectionStatus === 'connected'
-                  ? 'bg-green-500'
-                  : connectionStatus === 'error'
-                    ? 'bg-red-500'
-                    : 'bg-yellow-500'
-              }`}
-            />
-            <span className={`text-sm font-medium ${getConnectionStatusColor()} hidden sm:inline`}>
-              {getConnectionStatusText()}
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-sm font-medium text-green-600 dark:text-green-400 hidden sm:inline">
+              协作中
             </span>
           </div>
         )}
@@ -297,13 +244,6 @@ export default function DocumentHeader({
         {editor && (
           <div className="hidden lg:flex items-center space-x-4">
             <EditorInfo editor={editor} />
-          </div>
-        )}
-
-        {/* 非协作模式的简单状态 */}
-        {!isCollaborationMode && provider && (
-          <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-            协作状态: {provider.connected ? '已连接' : '未连接'}
           </div>
         )}
       </div>
