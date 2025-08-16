@@ -3,7 +3,7 @@ export type FileItem = {
   id: string;
   name: string;
   type: 'file' | 'folder';
-  parentId?: string; // 标记父级id
+  parentId?: string | null; // 标记父级id
   collapsed?: boolean; // 默认为false 只有文件夹且文件夹折叠才为true
   order?: number; // 排序顺序
   children?: FileItem[]; // 子节点
