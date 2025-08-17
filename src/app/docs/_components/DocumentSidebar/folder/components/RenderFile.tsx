@@ -6,6 +6,7 @@ import styles from './File.module.css';
 import { FileTreeProps } from './FileTree';
 import { FileItem } from '../type';
 import FileItemMenu from '../FileItemMenu';
+import { DropPlaceHolder } from './PlaceHolder';
 
 import { cn } from '@/utils/utils';
 import { Icon } from '@/components/ui/Icon';
@@ -62,6 +63,7 @@ export const RenderFile: React.FC<
 
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: id,
+
     data: {
       id: id,
       isFolder,
@@ -80,7 +82,7 @@ export const RenderFile: React.FC<
       className={cn(styles.Wrapper, isDragging && styles.indicator)}
       style={{ '--left-spacing': ` ${depth * 16}px ` } as React.CSSProperties}
     >
-      <div {...listeners} style={style}>
+      <div style={style} {...listeners}>
         <div
           className={cn(
             'flex items-center py-2 px-3 text-sm cursor-pointer relative group box-border',
@@ -99,7 +101,7 @@ export const RenderFile: React.FC<
               'text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300',
               'border-2 border-transparent',
             ],
-            isOverlay && '  border-lime-500 border-2  bg-zinc-50',
+            isOverlay && '  border-lime-500 border-2 ',
             styles.TreeItem,
           )}
           style={{
@@ -275,10 +277,9 @@ export const RenderFile: React.FC<
             />
           )}
         </div>
-
         {/* 如果是展开的文件夹，则递归渲染其子项 */}
         {isFolder && isExpanded && (
-          <div className="relative">
+          <div className=" relative">
             {/* 连接线 */}
             <div
               className={cn(
@@ -288,7 +289,6 @@ export const RenderFile: React.FC<
               )}
               style={{ marginLeft: `${depth * 16}px`, height: `${folderLineHeight}px` }}
             ></div>
-
             <div className="relative">
               {/* 新建项目输入框 */}
               {isAddingNewItem && (

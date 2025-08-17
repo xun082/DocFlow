@@ -15,8 +15,8 @@
     position: relative;
     padding: 0;
     height: 5px;
-    border-color: #2389ff;
-    background-color: #56a1f8;
+    border-color: oklch(0.81 0.1 252);
+    background-color: oklch(0.79 0.1 275);
 
     &:before {
       position: absolute;

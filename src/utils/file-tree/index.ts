@@ -7,19 +7,37 @@ export function getDragDepth(offset: number, indentationWidth: number) {
   return Math.round(offset / indentationWidth);
 }
 
+export function getOverPath(file: FileItem, isExpand: boolean) {
+  // 如果是文件夹且展开的话则就是文件夹的深度 +1 如果是文件则直接返回相同的深度
+
+  if (file.type === 'folder') {
+    if (isExpand) {
+      return file.depth + 1;
+    }
+  }
+
+  return file.depth;
+}
+
+/**
+ * 拖拽条的位置计算
+ * @param items
+ * @param activeId
+ * @param overId
+ * @returns
+ */
 export function getProjection(
   items: FileItem[],
   activeId: string,
   overId: string,
+  expandedFolders: Record<string, any>,
   dragOffset: number,
   indentationWidth: number,
 ) {
   const overItemIndex = items.findIndex(({ id }) => id === overId);
 
   const activeItemIndex = items.findIndex(({ id }) => id === activeId);
-
   const activeItem = items[activeItemIndex];
-
   const newItems = arrayMove(items, activeItemIndex, overItemIndex);
 
   const previousItem = newItems[overItemIndex - 1];
@@ -27,8 +45,9 @@ export function getProjection(
   const nextItem = newItems[overItemIndex + 1];
 
   const dragDepth = getDragDepth(dragOffset, indentationWidth);
-
   const projectedDepth = activeItem.depth + dragDepth;
+
+  // const projectedDepth = getOverPath(items[overItemIndex], !!expandedFolders[overItemIndex]);
   const maxDepth = getMaxDepth({
     previousItem,
   });
@@ -90,18 +109,18 @@ export function getMinDepth({ nextItem }: { nextItem: FileItem }) {
  */
 export function flattenTreeFile(
   treeFile: FileItem[],
-  partent: string | null = null,
+  parent: string | null = null,
   depth = 0,
 ): FileItem[] {
   return treeFile.reduce<FileItem[]>((accmulator, current, index) => {
     if (current.type === 'folder') {
       return [
         ...accmulator,
-        { ...current, partentId: partent, depth: depth, order: index },
+        { ...current, parentId: parent, depth: depth, index: index },
         ...flattenTreeFile(current.children!, current.id, current.depth + 1),
       ];
     } else {
-      return [...accmulator, { ...current, partentId: partent, depth: depth }];
+      return [...accmulator, { ...current, parentId: parent, depth: depth }];
     }
   }, []);
 }
@@ -144,15 +163,10 @@ export function buildTree(flattenedItems: FileItem[]): FileItem[] {
     const parentId = item.parentId ?? 'root';
 
     const parent = nodes[parentId] ?? findItem(items, parentId);
-    console.log('parentId parent', parentId, parent);
 
     nodes[id] = { id, children, type, name, depth };
 
-    /**
-     * 解决吞文件问题
-     */
     if (parent && parent.type === 'folder') {
-      console.log('first');
       parent.children?.push(item);
     } else {
       root.children?.push(item);

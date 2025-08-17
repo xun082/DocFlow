@@ -5,7 +5,7 @@ export type FileItem = {
   type: 'file' | 'folder';
   parentId?: string | null; // 标记父级id
   collapsed?: boolean; // 默认为false 只有文件夹且文件夹折叠才为true
-  order?: number; // 排序顺序
+  index?: number; // dndSort要求的显示顺序
   children?: FileItem[]; // 子节点
   depth: number; // 缩进层级
   is_starred?: boolean;

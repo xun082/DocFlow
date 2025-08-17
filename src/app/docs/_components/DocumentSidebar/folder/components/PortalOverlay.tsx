@@ -15,7 +15,7 @@ export default function PortalOverlay({
   const adjustTranslate: Modifier = ({ transform }) => {
     return {
       ...transform,
-      y: transform.y - 15,
+      y: transform.y - 25,
     };
   };
 

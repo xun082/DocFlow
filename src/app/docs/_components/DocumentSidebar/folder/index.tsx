@@ -1,16 +1,14 @@
-'use client';
-
 import React, { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   closestCenter,
   DndContext,
   DragEndEvent,
-  DragMoveEvent,
   DragOverEvent,
   DragStartEvent,
   MeasuringStrategy,
   PointerSensor,
+  DragMoveEvent,
 } from '@dnd-kit/core';
 import { useSensor, useSensors } from '@dnd-kit/core';
 import { restrictToParentElement } from '@dnd-kit/modifiers';
@@ -127,6 +125,8 @@ const defaultFiles: FileItem[] = [
   },
 ];
 
+export const TRASH_ID = 'void';
+
 function dndStateReducer(
   state: {
     overId: string | null;
@@ -137,13 +137,13 @@ function dndStateReducer(
 ) {
   switch (type) {
     case 'setOverId':
-      return { ...state, overId: data };
+      return { ...state, overId: data as string };
     case 'setActiveId':
-      return { ...state, activeId: data };
+      return { ...state, activeId: data as string };
     case 'setOffsetLeft':
       return {
         ...state,
-        offsetLeft: data,
+        offsetLeft: data as number,
       };
     case 'resetState':
       return { overId: null, activeId: null, offsetLeft: 0 };
@@ -156,8 +156,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   const router = useRouter();
   const pathname = usePathname();
   const [files, setFiles] = useState<FileItem[]>(initialFiles);
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({}); // 文件夹是否展开
-  const [activeFileId, setactiveFileId] = useState<string | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [dndState, dndStateDispatch] = useReducer(dndStateReducer, {
     activeId: null,
@@ -180,8 +179,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
 
   // 分享文档展开状态
   const [sharedDocsExpanded, setSharedDocsExpanded] = useState(false);
-
-  const indentationWidth = 16;
 
   // 处理API返回的文档数据，将其转换为组件所需的格式
   const processApiDocuments = useCallback((documents: DocumentResponse['owned']): FileItem[] => {
@@ -251,7 +248,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
             };
 
             if (!findFileById(convertedFiles, selectedFileId)) {
-              setactiveFileId(null);
+              setSelectedFileId(null);
             }
           }
 
@@ -275,7 +272,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     [selectedFileId, processApiDocuments],
   );
 
-  // memo稳定数据列表渲染
   const memoFileList = useMemo(() => {
     // 扁平化每一个文件
     const flattenFile = flattenTreeFile(files);
@@ -289,11 +285,12 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       }
     }, []);
 
-    // 处理节点被删除的情况
-    return removeChildrenOf(
+    const items = removeChildrenOf(
       flattenFile,
-      activeFileId ? [activeFileId, ...expandedFiles] : expandedFiles,
+      dndState.activeId ? [dndState.activeId, ...expandedFiles] : expandedFiles,
     );
+
+    return items;
   }, [files, expandedFolders, dndState.activeId]);
 
   const refreshFiles = useCallback(() => loadFiles(false), [loadFiles]);
@@ -437,7 +434,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           name: newItemName,
           type: newItemType,
           parentId: '',
-          order: 0,
+          index: 0,
           depth: 0,
           children: [],
         });
@@ -445,16 +442,16 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         setFiles([...files]);
       }
 
-      // const success = await fileOperations.handleCreate(
-      //   newItemName,
-      //   newItemType,
-      //   newItemFolder === 'root' ? undefined : newItemFolder,
-      // );
+      const success = await fileOperations.handleCreate(
+        newItemName,
+        newItemType,
+        newItemFolder === 'root' ? undefined : newItemFolder,
+      );
 
-      // if (success) {
-      //   setNewItemFolder(null);
-      //   setNewItemType(null);
-      // }
+      if (success) {
+        setNewItemFolder(null);
+        setNewItemType(null);
+      }
     },
     [newItemFolder, newItemType, newItemName, fileOperations],
   );
@@ -588,7 +585,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
     );
   };
 
-  // 配置sensor 根据距离判断是点击还是拖动 否则无法触发点击事件
   const sensor = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -596,9 +592,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       },
     }),
   );
-
-  // dnd 修饰符限制移动范围
-  const dndModiifer = [restrictToParentElement];
 
   const onDndDragStart = (e: DragStartEvent) => {
     dndStateDispatch({
@@ -619,17 +612,27 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
   const onDndDragOver = ({ over }: DragOverEvent) => {
     dndStateDispatch({
       type: 'setOverId',
-      data: over?.id ?? null,
+      data: (over?.id as string) ?? null,
     });
+  };
+
+  const onDndMove = ({ delta }: DragMoveEvent) => {
+    dndStateDispatch({ type: 'setOffsetLeft', data: delta.x });
   };
 
   const projected =
     dndState.activeId && dndState.overId
-      ? getProjection(memoFileList, dndState.activeId, dndState.overId, dndState.offsetLeft, 16)
+      ? getProjection(
+          memoFileList,
+          dndState.activeId,
+          dndState.overId,
+          expandedFolders,
+          dndState.offsetLeft,
+          16,
+        )
       : null;
 
   function handleDragEnd({ active, over }: DragEndEvent) {
-    debugger;
     dndStateDispatch({ type: 'resetState', data: '' });
 
     if (projected && over) {
@@ -646,10 +649,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
 
       setFiles(newItems);
     }
-  }
-
-  function handleDragMove({ delta }: DragMoveEvent) {
-    dndStateDispatch({ type: 'setOffsetLeft', data: delta.x });
   }
 
   return (
@@ -732,8 +731,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
       {/* 拖拽上下文 */}
       <DndContext
         sensors={sensor}
-        modifiers={dndModiifer}
-        onDragMove={handleDragMove}
+        // modifiers={dndModiifer}
         measuring={{
           droppable: {
             strategy: MeasuringStrategy.Always,
@@ -743,6 +741,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         onDragStart={onDndDragStart}
         onDragOver={onDndDragOver}
         onDragEnd={handleDragEnd}
+        onDragMove={onDndMove}
       >
         {/* 文件树区域 */}
         <div
@@ -773,7 +772,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
             onFileSelect={handleFileSelect}
             onToggleFolder={toggleFolder}
             onContextMenu={handleContextMenu}
-            setactiveFileId={setactiveFileId}
             onStartCreateNewItem={startCreateNewItem}
             onFinishRenaming={finishRenaming}
             onFinishCreateNewItem={finishCreateNewItem}

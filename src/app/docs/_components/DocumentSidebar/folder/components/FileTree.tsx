@@ -25,9 +25,7 @@ export interface FileTreeProps {
     data: string;
   }>;
   newItemName: string;
-  activeFileId: string | null;
   setfiles: Dispatch<SetStateAction<FileItem[]>>;
-  setactiveFileId: Dispatch<SetStateAction<string | null>>;
   onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
