@@ -27,104 +27,104 @@ import { DocumentResponse } from '@/services/document/type';
 import { buildTree, flattenTreeFile, getProjection, removeChildrenOf } from '@/utils/file-tree';
 
 // 默认文件结构，可以根据需求修改
-const defaultFiles: FileItem[] = [
-  {
-    id: '1',
-    type: 'file',
-    name: '1',
-    order: 1,
-    children: [],
-    depth: 0,
-    collapsed: false,
-  },
-  {
-    id: '2',
-    type: 'file',
-    children: [],
-    name: '2',
-    order: 2,
-    depth: 0,
-    collapsed: false,
-  },
-  {
-    id: '3',
-    type: 'file',
-    children: [],
-    name: '3',
-    order: 3,
-    collapsed: false,
-    depth: 0,
-  },
-  {
-    id: '4',
-    type: 'folder',
-    name: '4',
-    order: 4,
-    collapsed: false,
-    depth: 0,
-    children: [
-      {
-        id: '6',
-        type: 'file',
-        name: '6',
-        order: 1,
-        children: [],
-        depth: 1,
-        collapsed: false,
-        parentId: '4',
-      },
-      {
-        id: '7',
-        type: 'file',
-        name: '7',
-        order: 2,
-        depth: 1,
-        children: [],
-        collapsed: false,
-        parentId: '4',
-      },
-      {
-        id: '8',
-        type: 'file',
-        children: [],
-        name: '8',
-        order: 3,
-        depth: 1,
-        parentId: '4',
-        collapsed: false,
-      },
-      {
-        id: '9',
-        type: 'folder',
-        name: '9',
-        depth: 1,
-        order: 0,
-        parentId: '4',
-        children: [
-          {
-            id: '10',
-            name: '10',
-            type: 'file',
-            order: 0,
-            parentId: '9',
-            depth: 2,
-            collapsed: false,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: '5',
-    type: 'file',
-    name: '5',
-    order: 5,
-    depth: 0,
-    children: [],
-    collapsed: false,
-  },
-];
-
+// const defaultFiles: FileItem[] = [
+//   {
+//     id: '1',
+//     type: 'file',
+//     name: '1',
+//     order: 1,
+//     children: [],
+//     depth: 0,
+//     collapsed: false,
+//   },
+//   {
+//     id: '2',
+//     type: 'file',
+//     children: [],
+//     name: '2',
+//     order: 2,
+//     depth: 0,
+//     collapsed: false,
+//   },
+//   {
+//     id: '3',
+//     type: 'file',
+//     children: [],
+//     name: '3',
+//     order: 3,
+//     collapsed: false,
+//     depth: 0,
+//   },
+//   {
+//     id: '4',
+//     type: 'folder',
+//     name: '4',
+//     order: 4,
+//     collapsed: false,
+//     depth: 0,
+//     children: [
+//       {
+//         id: '6',
+//         type: 'file',
+//         name: '6',
+//         order: 1,
+//         children: [],
+//         depth: 1,
+//         collapsed: false,
+//         parentId: '4',
+//       },
+//       {
+//         id: '7',
+//         type: 'file',
+//         name: '7',
+//         order: 2,
+//         depth: 1,
+//         children: [],
+//         collapsed: false,
+//         parentId: '4',
+//       },
+//       {
+//         id: '8',
+//         type: 'file',
+//         children: [],
+//         name: '8',
+//         order: 3,
+//         depth: 1,
+//         parentId: '4',
+//         collapsed: false,
+//       },
+//       {
+//         id: '9',
+//         type: 'folder',
+//         name: '9',
+//         depth: 1,
+//         order: 0,
+//         parentId: '4',
+//         children: [
+//           {
+//             id: '10',
+//             name: '10',
+//             type: 'file',
+//             order: 0,
+//             parentId: '9',
+//             depth: 2,
+//             collapsed: false,
+//           },
+//         ],
+//       },
+//     ],
+//   },
+//   {
+//     id: '5',
+//     type: 'file',
+//     name: '5',
+//     order: 5,
+//     depth: 0,
+//     children: [],
+//     collapsed: false,
+//   },
+// ];
+const defaultFiles: FileItem[] = [];
 export const TRASH_ID = 'void';
 
 function dndStateReducer(
@@ -233,9 +233,9 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           const documentResponse = res.data.data as DocumentResponse;
           const apiDocuments = documentResponse.owned || [];
           const convertedFiles = processApiDocuments(apiDocuments);
-          // setFiles(convertedFiles);
           // 模拟文件
-          setFiles(defaultFiles);
+          // setFiles(defaultFiles);
+          setFiles(convertedFiles);
 
           if (!isInitialLoad && selectedFileId) {
             const findFileById = (items: FileItem[], id: string): boolean => {
