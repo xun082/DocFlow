@@ -11,7 +11,6 @@ import {
   DragMoveEvent,
 } from '@dnd-kit/core';
 import { useSensor, useSensors } from '@dnd-kit/core';
-import { restrictToParentElement } from '@dnd-kit/modifiers';
 import { arrayMove } from '@dnd-kit/sortable';
 
 import { FileExplorerProps, FileItem } from './type';
@@ -415,7 +414,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         // 组装新文件的信息
         const newFiledepth = file.depth + 1;
         const newFilePartent = file.id;
-        const order = 0;
 
         file.children!.push({
           id: Math.random().toString(16),
@@ -423,7 +421,6 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
           type: newItemType,
           children: [],
           parentId: newFilePartent,
-          order,
           depth: newFiledepth,
         });
 

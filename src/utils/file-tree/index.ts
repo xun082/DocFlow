@@ -1,5 +1,4 @@
 import { arrayMove } from '@dnd-kit/sortable';
-import { XmlFragment } from 'yjs';
 
 import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
 

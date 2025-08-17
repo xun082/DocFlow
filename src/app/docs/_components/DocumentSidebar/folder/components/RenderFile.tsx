@@ -6,7 +6,6 @@ import styles from './File.module.css';
 import { FileTreeProps } from './FileTree';
 import { FileItem } from '../type';
 import FileItemMenu from '../FileItemMenu';
-import { DropPlaceHolder } from './PlaceHolder';
 
 import { cn } from '@/utils/utils';
 import { Icon } from '@/components/ui/Icon';
