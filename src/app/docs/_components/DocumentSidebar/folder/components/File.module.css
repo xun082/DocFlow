@@ -1,0 +1,41 @@
+/* 缩短拖拽条宽度 */
+
+.Wrapper {
+  padding-left: var(--left-spacing);
+}
+
+/* 拖拽条 */
+.indicator {
+  opacity: 1;
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+
+  .TreeItem {
+    position: relative;
+    padding: 0;
+    height: 5px;
+    border-color: oklch(0.81 0.1 252);
+    background-color: oklch(0.79 0.1 275);
+
+    &:before {
+      position: absolute;
+      left: -8px;
+      top: -4px;
+      display: block;
+      content: '';
+      width: 12px;
+      height: 12px;
+    }
+
+    > * {
+      /* Items are hidden using height and opacity to retain focus */
+      opacity: 0;
+      height: 0;
+    }
+  }
+}
+
+/* 占位 */
+.TreeItem {
+}
