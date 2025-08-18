@@ -22,7 +22,7 @@ export default function UserProfile() {
   }, []);
 
   if (!profile) {
-    return <Surface className="p-8 text-center">未找到个人资料</Surface>;
+    return <Surface className="p-8 text-center">个人资料加载中...</Surface>;
   }
 
   return (
