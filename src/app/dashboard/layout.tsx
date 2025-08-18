@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import {
   MessageCircle,
+  User,
   Users,
   FileText,
   Calendar,
@@ -46,6 +47,11 @@ const navItems: NavItem[] = [
     name: '通讯录',
     href: '/dashboard/contacts',
     icon: <Users className="w-5 h-5" />,
+  },
+  {
+    name: '个人资料',
+    href: '/dashboard/user',
+    icon: <User className="w-5 h-5" />,
   },
   {
     name: '设置',

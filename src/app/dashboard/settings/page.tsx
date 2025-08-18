@@ -1,12 +1,6 @@
-import { User, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { Bell, Shield, Palette, Globe } from 'lucide-react';
 
 const settingsCategories = [
-  {
-    id: 'profile',
-    name: '个人资料',
-    icon: <User className="w-5 h-5" />,
-    description: '管理你的个人信息和头像',
-  },
   {
     id: 'notifications',
     name: '通知设置',
