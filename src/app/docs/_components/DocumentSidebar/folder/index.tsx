@@ -204,6 +204,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         is_starred: doc.is_starred,
         created_at: doc.created_at,
         updated_at: doc.updated_at,
+        depth: 0, // 初始深度为0，后续会在构建树结构时更新
       };
 
       if (doc.type === 'FOLDER') {
@@ -218,6 +219,19 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         childrenMap.set(doc.parent_id, parentChildren);
       }
     });
+
+    // 递归设置深度
+    const setDepthRecursively = (items: FileItem[], depth: number = 0) => {
+      items.forEach((item) => {
+        item.depth = depth;
+
+        if (item.children && item.children.length > 0) {
+          setDepthRecursively(item.children, depth + 1);
+        }
+      });
+    };
+
+    setDepthRecursively(result);
 
     return result;
   }, []);
@@ -465,7 +479,7 @@ const Folder = ({ initialFiles = defaultFiles, onFileSelect }: FileExplorerProps
         if (isRenaming) {
           finishRenaming((e.target as HTMLInputElement).value);
         } else if (newItemFolder) {
-          finishCreateNewItem();
+          finishCreateNewItem({} as FileItem);
         }
       } else if (e.key === 'Escape') {
         if (isRenaming) setIsRenaming(null);

@@ -115,7 +115,7 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
                 'text-white shadow-lg shadow-green-500/30',
                 'hover:from-green-600 hover:to-emerald-700',
               )}
-              onClick={onFinishCreateNewItem}
+              onClick={() => onFinishCreateNewItem({} as FileItem)}
               title="确认"
             >
               <Icon name="Check" className="h-3.5 w-3.5" />
