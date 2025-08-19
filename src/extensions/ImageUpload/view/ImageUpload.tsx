@@ -18,8 +18,8 @@ export const ImageUpload = ({
         if (pos !== undefined) {
           editor
             .chain()
+            .deleteRange({ from: pos, to: pos + 1 })
             .setImageBlock({ src: url })
-            .deleteRange({ from: pos, to: pos })
             .focus()
             .run();
         }
