@@ -1,6 +1,9 @@
-import { Suspense } from 'react';
+'use client';
+
+import { Suspense, useEffect } from 'react';
 
 import DocumentSidebar from '@/app/docs/_components/DocumentSidebar';
+import { useSidebar } from '@/stores/sidebarStore';
 
 // 优化的加载组件 - 与 TabSidebar 保持一致的样式
 function SidebarSkeleton() {
@@ -74,6 +77,13 @@ interface DocsLayoutProps {
 }
 
 export default function DocsLayout({ children }: DocsLayoutProps) {
+  const { open } = useSidebar();
+
+  // 强制打开侧边栏，防止在编辑页面关闭后侧边栏无法显示问题
+  useEffect(() => {
+    open();
+  }, []); // 空依赖数组确保只在组件挂载时执行一次
+
   return (
     <div className="flex h-screen bg-white dark:bg-slate-900 overflow-hidden">
       {/* 侧边栏区域 - 可调整宽度设计 */}
