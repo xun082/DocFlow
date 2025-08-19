@@ -308,7 +308,7 @@ export default function DocumentPage() {
           <div
             ref={editorContaiRef}
             onScroll={scrollLightHandler}
-            className="h-full overflow-y-auto"
+            className="h-full overflow-y-auto relative w-full"
           >
             <EditorContent editor={editor} className="prose-container h-full pl-14" />
           </div>
