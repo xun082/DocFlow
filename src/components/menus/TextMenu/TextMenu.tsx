@@ -61,7 +61,7 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
       className={selecting ? 'hidden' : ''}
       options={{
         placement: 'top-start',
-        offset: 8,
+        offset: 60,
         shift: {
           padding: 8,
         },
