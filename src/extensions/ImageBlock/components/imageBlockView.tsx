@@ -46,8 +46,6 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
           />
         </div>
       </div>
-      {/* 增加这行会导致，上传图片的时候没办法替换 uplaoad 节点, 导致图片无法显示 所以将这个放在移到Editer外 */}
-      {/* <ImageBlockMenu editor={editor} /> */}
     </NodeViewWrapper>
   );
 };

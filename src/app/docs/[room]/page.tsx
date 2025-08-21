@@ -25,7 +25,7 @@ import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
-import { ImageBlockMenu } from '@/extensions/ImageBlock/components/ImageBlockMenu';
+import { ImageBlockMenu } from '@/components/menus';
 
 // 类型定义
 interface CollaborationUser {

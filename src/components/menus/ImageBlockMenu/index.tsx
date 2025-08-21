@@ -3,7 +3,7 @@ import { useEditorState } from '@tiptap/react';
 import React, { useCallback, useRef, JSX } from 'react';
 import { v4 as uuid } from 'uuid';
 
-import { ImageBlockWidth } from './ImageBlockWidth';
+import { ImageBlockWidth } from '../../../extensions/ImageBlock/components/ImageBlockWidth';
 
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
