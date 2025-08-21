@@ -20,7 +20,6 @@ import {
   Dropcursor,
   Emoji,
   Figcaption,
-  FileHandler,
   Focus,
   FontFamily,
   FontSize,
@@ -60,8 +59,6 @@ import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { ExcalidrawImage } from './ExcalidrawImage';
 import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
-
-import uploadService from '@/services/upload';
 
 export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
@@ -132,27 +129,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   ExcalidrawImage,
   DraggableBlock,
   DragHandler,
-  FileHandler.configure({
-    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-    onDrop: (currentEditor, files, pos) => {
-      files.forEach(async (file) => {
-        const url = await uploadService.uploadImage(file);
-
-        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
-      });
-    },
-    onPaste: (currentEditor, files) => {
-      files.forEach(async (file) => {
-        const url = await uploadService.uploadImage(file);
-
-        return currentEditor
-          .chain()
-          .setImageBlockAt({ pos: currentEditor.state.selection.anchor, src: url })
-          .focus()
-          .run();
-      });
-    },
-  }),
   Emoji.configure({
     enableEmoticons: true,
     suggestion: emojiSuggestion,
