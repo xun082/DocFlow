@@ -61,12 +61,18 @@ export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
       }}
     >
       <Toolbar.Wrapper shouldShowContent={shouldShow()} ref={menuRef}>
-        <Toolbar.Button tooltip="Align image left" active={isImageLeft} onClick={onAlignImageLeft}>
+        <Toolbar.Button
+          className="cursor-pointer"
+          tooltip="Align image left"
+          active={isImageLeft}
+          onClick={onAlignImageLeft}
+        >
           <Icon name="AlignHorizontalDistributeStart" />
         </Toolbar.Button>
         <Toolbar.Button
           tooltip="Align image center"
           active={isImageCenter}
+          className="cursor-pointer"
           onClick={onAlignImageCenter}
         >
           <Icon name="AlignHorizontalDistributeCenter" />
@@ -75,6 +81,7 @@ export const ImageBlockMenu = ({ editor }: MenuProps): JSX.Element => {
           tooltip="Align image right"
           active={isImageRight}
           onClick={onAlignImageRight}
+          className="cursor-pointer"
         >
           <Icon name="AlignHorizontalDistributeEnd" />
         </Toolbar.Button>
