@@ -169,3 +169,9 @@ export interface GetDocumentContentResponse {
   };
   timestamp: number;
 }
+
+// 移动文档的请求类型
+export interface MoveDocumentsDto {
+  document_ids: number[];
+  target_folder_id: number;
+}
