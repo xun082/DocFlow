@@ -14,3 +14,27 @@ export interface User {
   updated_at: string;
   website_url?: string;
 }
+
+export interface ImageUploadResponse {
+  fileUrl: string;
+  fileHash: string;
+  processedFileName: string;
+  originalMimeType: string;
+  processedMimeType: string;
+  imageKitFileId: string;
+}
+
+export interface SearchUsersResponse {
+  users: User[];
+  total: number;
+  timestamp: number;
+}
+
+export interface UpdateUserDto {
+  name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  location: string | null;
+  website_url: string | null;
+  company: string | null;
+}
