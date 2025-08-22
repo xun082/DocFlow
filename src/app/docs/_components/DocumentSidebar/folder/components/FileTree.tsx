@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useRef } from 'react';
+import React, { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FileItem } from '../type';
@@ -20,18 +20,13 @@ export interface FileTreeProps {
     overId: string | null;
     activeId: string | null;
   };
-  dndStateDispatch: Dispatch<{
-    type: string;
-    data: string;
-  }>;
   newItemName: string;
-  setfiles: Dispatch<SetStateAction<FileItem[]>>;
   onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
   onStartCreateNewItem: (folderId: string, type: 'file' | 'folder') => void;
   onFinishRenaming: (newName: string) => void;
-  onFinishCreateNewItem: (file: FileItem) => void;
+  onFinishCreateNewItem: () => void;
   onCancelCreateNewItem: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onSetNewItemName: (name: string) => void;
@@ -115,7 +110,7 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
                 'text-white shadow-lg shadow-green-500/30',
                 'hover:from-green-600 hover:to-emerald-700',
               )}
-              onClick={() => onFinishCreateNewItem({} as FileItem)}
+              onClick={() => onFinishCreateNewItem()}
               title="确认"
             >
               <Icon name="Check" className="h-3.5 w-3.5" />

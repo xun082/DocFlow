@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -105,13 +105,10 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
   }, [showCalendar]);
 
   // 处理用户选择变化
-  const handleUserSelectionChange = useCallback(
-    (users: User[]) => {
-      setSelectedUsers(users);
-      setValue('selectedUsers', users);
-    },
-    [setValue],
-  );
+  const handleUserSelectionChange = (users: User[]) => {
+    setSelectedUsers(users);
+    setValue('selectedUsers', users);
+  };
 
   const onSubmit = async (data: ShareFormData) => {
     setIsLoading(true);

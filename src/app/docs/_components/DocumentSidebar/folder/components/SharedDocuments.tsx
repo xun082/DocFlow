@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Icon } from '@/components/ui/Icon';
@@ -18,7 +18,7 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
   const [error, setError] = useState<string | null>(null);
 
   // 加载分享文档
-  const loadSharedDocuments = useCallback(async () => {
+  const loadSharedDocuments = async () => {
     if (!isExpanded) return; // 只有展开时才加载
 
     setLoading(true);
@@ -38,22 +38,19 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
     } finally {
       setLoading(false);
     }
-  }, [isExpanded]);
+  };
 
   // 当展开状态改变时加载数据
   useEffect(() => {
     loadSharedDocuments();
-  }, [loadSharedDocuments]);
+  }, [isExpanded]);
 
   // 处理文档点击
-  const handleDocumentClick = useCallback(
-    (doc: SharedDocumentItem) => {
-      if (doc.type === 'FILE') {
-        router.push(`/docs/${doc.id}`);
-      }
-    },
-    [router],
-  );
+  const handleDocumentClick = (doc: SharedDocumentItem) => {
+    if (doc.type === 'FILE') {
+      router.push(`/docs/${doc.id}`);
+    }
+  };
 
   // 格式化时间
   const formatTime = (timeString: string) => {

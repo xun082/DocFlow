@@ -1,50 +1,62 @@
-import React, { Ref, useMemo } from 'react';
+import React, { Ref } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import styles from './File.module.css';
-import { FileTreeProps } from './FileTree';
 import { FileItem } from '../type';
 import FileItemMenu from '../FileItemMenu';
+import { useFileActions } from '../hooks/useFileActions';
 
+import { useFileStore } from '@/stores/fileStore';
 import { cn } from '@/utils/utils';
 import { Icon } from '@/components/ui/Icon';
 
-export const RenderFile: React.FC<
-  {
-    file: FileItem;
-    isOverlay?: boolean;
-    depth?: number;
-    inputRef?: Ref<HTMLInputElement>;
-    id: string;
-  } & Omit<FileTreeProps, 'FileTreeProps' | 'projected' | 'dndState'>
-> = ({
+export const RenderFile: React.FC<{
+  file: FileItem;
+  isOverlay?: boolean;
+  depth?: number;
+  inputRef?: Ref<HTMLInputElement>;
+  id: string;
+  onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
+  onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
+  onContextMenu: (e: React.MouseEvent, fileId: string) => void;
+  onFinishRenaming: (newName: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onRename: (file: FileItem) => void;
+  onShare: (file: FileItem) => void;
+  onDelete: (file: FileItem) => void;
+  onDuplicate: (file: FileItem) => void;
+  onDownload: (file: FileItem) => void;
+}> = ({
   file,
   inputRef,
   depth = 0,
   id,
   isOverlay,
-  onRename,
-  newItemType,
-  selectedFileId,
   onFileSelect,
-  onShare,
-  onKeyDown,
-  onDuplicate,
-  onSetNewItemName,
-  newItemName,
-  onDelete,
-  expandedFolders,
-  onStartCreateNewItem,
-  onFinishRenaming,
-  onContextMenu,
-  onCancelCreateNewItem,
-  onDownload,
   onToggleFolder,
-  onFinishCreateNewItem,
-  isRenaming,
-  newItemFolder,
+  onContextMenu,
+  onFinishRenaming,
+  onKeyDown,
+  onRename,
+  onShare,
+  onDelete,
+  onDuplicate,
+  onDownload,
 }): React.ReactElement => {
+  // Use store state directly
+  const {
+    expandedFolders,
+    selectedFileId,
+    isRenaming,
+    newItemFolder,
+    newItemType,
+    newItemName,
+    setNewItemName,
+  } = useFileStore();
+
+  // Use file actions hook
+  const { startCreateNewItem, finishCreateNewItem, cancelCreateNewItem } = useFileActions();
+
   const isFolder = file.type === 'folder';
   const isExpanded = isFolder && expandedFolders[file.id];
   const isSelected = selectedFileId === file.id;
@@ -54,15 +66,14 @@ export const RenderFile: React.FC<
   const FileItemHeight = 46;
 
   // 计算有多少个子文件 渲染侧边连接线高度
-  const folderLineHeight = useMemo(() => {
+  const folderLineHeight = (() => {
     if (typeof expandedFolders[file.id] != 'undefined' && expandedFolders[file.id]) {
       return file.children!.length * FileItemHeight;
     }
-  }, [expandedFolders]);
+  })();
 
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: id,
-
     data: {
       id: id,
       isFolder,
@@ -78,8 +89,21 @@ export const RenderFile: React.FC<
   return (
     <div
       ref={setNodeRef}
-      className={cn(styles.Wrapper, isDragging && styles.indicator)}
-      style={{ '--left-spacing': ` ${depth * 16}px ` } as React.CSSProperties}
+      className={cn(
+        // Wrapper styles - left padding based on depth
+        'relative',
+        // Drag indicator styles
+        isDragging && [
+          'opacity-100 relative z-[1] -mb-px',
+          // TreeItem drag styles
+          '[&>div>div]:relative [&>div>div]:p-0 [&>div>div]:h-[5px]',
+          '[&>div>div]:border-[oklch(0.81_0.1_252)] [&>div>div]:bg-[oklch(0.79_0.1_275)]',
+          '[&>div>div]:before:absolute [&>div>div]:before:left-[-8px] [&>div>div]:before:top-[-4px]',
+          '[&>div>div]:before:block [&>div>div]:before:content-[""] [&>div>div]:before:w-3 [&>div>div]:before:h-3',
+          '[&>div>div>*]:opacity-0 [&>div>div>*]:h-0',
+        ],
+      )}
+      style={{ paddingLeft: `${depth * 16}px` }}
     >
       <div style={style} {...listeners}>
         <div
@@ -100,8 +124,7 @@ export const RenderFile: React.FC<
               'text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300',
               'border-2 border-transparent',
             ],
-            isOverlay && '  border-lime-500 border-2 ',
-            styles.TreeItem,
+            isOverlay && 'border-lime-500 border-2',
           )}
           style={{
             animationDelay: `${depth * 50}ms`,
@@ -223,7 +246,7 @@ export const RenderFile: React.FC<
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onStartCreateNewItem(file.id, 'file');
+                    startCreateNewItem(file.id, 'file');
                   }}
                 >
                   <Icon name="FilePlus" className="h-3.5 w-3.5" />
@@ -239,7 +262,7 @@ export const RenderFile: React.FC<
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onStartCreateNewItem(file.id, 'folder');
+                    startCreateNewItem(file.id, 'folder');
                   }}
                 >
                   <Icon name="FolderPlus" className="h-3.5 w-3.5" />
@@ -330,7 +353,7 @@ export const RenderFile: React.FC<
                         'shadow-lg shadow-green-200/30 dark:shadow-green-800/20',
                       )}
                       value={newItemName}
-                      onChange={(e) => onSetNewItemName(e.target.value)}
+                      onChange={(e) => setNewItemName(e.target.value)}
                       onKeyDown={onKeyDown}
                       autoFocus
                       placeholder={`${newItemType === 'folder' ? '文件夹' : '文件'}名称`}
@@ -343,7 +366,7 @@ export const RenderFile: React.FC<
                           'text-white shadow-lg shadow-green-500/30',
                           'hover:from-green-600 hover:to-emerald-700',
                         )}
-                        onClick={() => onFinishCreateNewItem(file)}
+                        onClick={() => finishCreateNewItem()}
                         title="确认"
                       >
                         <Icon name="Check" className="h-3.5 w-3.5" />
@@ -355,7 +378,7 @@ export const RenderFile: React.FC<
                           'text-white shadow-lg shadow-red-500/30',
                           'hover:from-red-600 hover:to-pink-700',
                         )}
-                        onClick={onCancelCreateNewItem}
+                        onClick={cancelCreateNewItem}
                         title="取消"
                       >
                         <Icon name="X" className="h-3.5 w-3.5" />

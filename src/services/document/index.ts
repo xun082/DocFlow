@@ -107,6 +107,19 @@ export const DocumentApi = {
         password: data.password,
       },
     }),
+
+  // 移动文档
+  MoveDocuments: (
+    data: { document_ids: number[]; target_folder_id: number },
+    errorHandler?: ErrorHandler,
+  ) =>
+    request.put<{ success: boolean }>('/api/v1/documents/move', {
+      errorHandler,
+      params: {
+        document_ids: data.document_ids,
+        target_folder_id: data.target_folder_id,
+      },
+    }),
 };
 
 export default DocumentApi;
