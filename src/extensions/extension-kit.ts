@@ -16,7 +16,7 @@ import {
   HardBreak,
   Paragraph,
   Text,
-  Image,
+  // Image,
   Dropcursor,
   Emoji,
   Figcaption,
@@ -72,7 +72,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   HardBreak,
   Paragraph,
   Text,
-  Image,
+  // Image,
   Columns,
   TaskList,
   TaskItem.configure({
@@ -163,7 +163,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
 
             // 遍历文档找到具有该base64 URL的图片节点并更新
             const { state } = currentEditor;
-            let targetPos = null;
+            let targetPos: any = null;
 
             state.doc.descendants((node, pos) => {
               if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
@@ -174,10 +174,14 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
             });
 
             if (targetPos !== null) {
+              // 直接更新属性，不使用 setNodeSelection
               currentEditor
                 .chain()
-                .setNodeSelection(targetPos)
-                .updateAttributes('imageBlock', { src: serverUrl })
+                .command(({ tr }) => {
+                  tr.setNodeMarkup(targetPos, undefined, { src: serverUrl });
+
+                  return true;
+                })
                 .focus()
                 .run();
             }

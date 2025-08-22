@@ -1,4 +1,4 @@
-import { mergeAttributes, Range, ChainedCommands, nodeInputRule } from '@tiptap/core';
+import { mergeAttributes, Range, ChainedCommands } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import ImageBlockView from './components/imageBlockView';
@@ -14,8 +14,6 @@ declare module '@tiptap/core' {
     };
   }
 }
-
-export const inputRegex = /(?:^|\s)(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))$/;
 
 export const ImageBlock = Image.extend({
   name: 'imageBlock',
@@ -63,9 +61,17 @@ export const ImageBlock = Image.extend({
 
   parseHTML() {
     return [
-      {
-        tag: 'img[src*="tiptap.dev"]:not([src^="data:"]), img[src*="windows.net"]:not([src^="data:"])',
-      },
+      // {
+      //   tag: 'img[src]:not([src^="http"]):not([src^="//"])',
+      //   getAttrs: (element: HTMLElement) => {
+      //     const src = (element as HTMLElement).getAttribute('src')?.trim();
+      //     // 确保不是外部链接
+      //     if (src && !src.startsWith('http') && !src.startsWith('//')) {
+      //       return { src };
+      //     }
+      //     return false;
+      //   },
+      // },
     ];
   },
 
@@ -102,22 +108,6 @@ export const ImageBlock = Image.extend({
             width: `${Math.max(0, Math.min(100, width))}%`,
           }),
     };
-  },
-
-  addInputRules() {
-    return [
-      nodeInputRule({
-        find: inputRegex,
-        type: this.type,
-        getAttributes: (match) => {
-          console.log('textblockTypeInputRule', match);
-
-          const [, , alt, src, title] = match;
-
-          return { src, alt, title };
-        },
-      }),
-    ];
   },
 
   addNodeView() {
