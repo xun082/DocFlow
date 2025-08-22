@@ -54,11 +54,14 @@ import {
   DraggableBlock,
   DragHandler,
   Audio,
+  FileHandler,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { ExcalidrawImage } from './ExcalidrawImage';
 import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
+
+import uploadService from '@/services/upload';
 
 export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
@@ -129,6 +132,66 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   ExcalidrawImage,
   DraggableBlock,
   DragHandler,
+  FileHandler.configure({
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    onDrop: (currentEditor, files, pos) => {
+      files.forEach(async (file) => {
+        const url = await uploadService.uploadImage(file);
+
+        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
+      });
+    },
+    onPaste: (currentEditor, files) => {
+      files.forEach(async (file) => {
+        const pos = currentEditor.state.selection.anchor;
+        // 先显示 base64 预览
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+          const base64Url = e.target?.result as string;
+
+          // 插入 base64 图片作为预览
+          currentEditor.chain().setImageBlockAt({ pos, src: base64Url }).focus().run();
+
+          try {
+            // 后台上传文件
+            const serverUrl = await uploadService.uploadImage(file);
+
+            // 遍历文档找到具有该base64 URL的图片节点并更新
+            const { state } = currentEditor;
+            let targetPos = null;
+
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
+                targetPos = pos;
+
+                return false; // 停止遍历
+              }
+            });
+
+            if (targetPos !== null) {
+              currentEditor
+                .chain()
+                .setNodeSelection(targetPos)
+                .updateAttributes('imageBlock', { src: serverUrl })
+                .focus()
+                .run();
+            }
+          } catch (error) {
+            console.error('图片上传失败:', error);
+            // 上传失败时保持 base64 预览
+          }
+        };
+
+        reader.onerror = () => {
+          console.error('文件读取失败');
+        };
+
+        reader.readAsDataURL(file);
+      });
+    },
+  }),
+
   Emoji.configure({
     enableEmoticons: true,
     suggestion: emojiSuggestion,

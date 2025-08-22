@@ -3,26 +3,23 @@ import toast from 'react-hot-toast';
 
 import uploadService from '@/services/upload';
 
-export const useUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
+export const useUploader = () => {
   const [loading, setLoading] = useState(false);
 
-  const uploadFile = useCallback(
-    async (file: File) => {
-      setLoading(true);
+  const uploadFile = useCallback(async (file: File) => {
+    setLoading(true);
 
-      try {
-        const url = await uploadService.uploadImage(file);
+    try {
+      const url = await uploadService.uploadImage(file);
 
-        onUpload(url);
-      } catch (errPayload: any) {
-        const error = errPayload?.response?.data?.error || 'Something went wrong';
-        toast.error(error);
-      }
+      return url;
+    } catch (errPayload: any) {
+      const error = errPayload?.response?.data?.error || 'Something went wrong';
+      toast.error(error);
+    }
 
-      setLoading(false);
-    },
-    [onUpload],
-  );
+    setLoading(false);
+  }, []);
 
   return { loading, uploadFile };
 };

@@ -1,4 +1,5 @@
 import { ChangeEvent, useCallback } from 'react';
+import { Editor } from '@tiptap/core';
 
 import { useDropZone, useFileUpload, useUploader } from './hooks';
 
@@ -6,14 +7,79 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
+import uploadService from '@/services/upload';
 
-export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
-  const { loading, uploadFile } = useUploader({ onUpload });
+export const ImageUploader = ({
+  getPos,
+  editor,
+}: {
+  getPos: () => number | undefined;
+  editor: Editor;
+}) => {
+  const { loading, uploadFile } = useUploader();
   const { handleUploadClick, ref } = useFileUpload();
   const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({ uploader: uploadFile });
 
   const onFileChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => (e.target.files ? uploadFile(e.target.files[0]) : null),
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files?.[0]) {
+        const file = e.target.files[0];
+        const pos = getPos();
+        console.log('pos', pos);
+
+        // 先显示 base64 预览
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+          const base64Url = e.target?.result as string;
+
+          // 插入 base64 图片作为预览
+          editor
+            .chain()
+            .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+            .setImageBlock({ src: base64Url })
+            .focus()
+            .run();
+
+          try {
+            // 后台上传文件
+            const serverUrl = await uploadService.uploadImage(file);
+
+            // 遍历文档找到具有该base64 URL的图片节点并更新
+            const { state } = editor;
+            let targetPos = null;
+
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
+                targetPos = pos;
+
+                return false; // 停止遍历
+              }
+            });
+
+            if (targetPos !== null) {
+              editor
+                .chain()
+                .setNodeSelection(targetPos)
+                .updateAttributes('imageBlock', { src: serverUrl })
+                .focus()
+                .run();
+            }
+          } catch (error) {
+            console.error('图片上传失败:', error);
+            // 上传失败时保持 base64 预览
+          }
+        };
+
+        reader.onerror = () => {
+          console.error('文件读取失败');
+        };
+
+        reader.readAsDataURL(file);
+
+        // 立即调用 onBase64 进行本地预览
+      }
+    },
     [uploadFile],
   );
 
