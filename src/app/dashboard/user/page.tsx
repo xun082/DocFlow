@@ -124,12 +124,6 @@ export default function UserProfile() {
                 const file = e.target.files?.[0];
                 if (!file) return;
 
-                if (file.size > 5 * 1024 * 1024) {
-                  toast.error('图片大小不能超过5MB');
-
-                  return;
-                }
-
                 try {
                   const { data, error } = await UserApi.uploadImage(file);
 
@@ -139,11 +133,36 @@ export default function UserProfile() {
                     return;
                   }
 
-                  setForm((prev) => ({
-                    ...prev,
-                    avatar_url: data.data.fileUrl,
-                  }));
-                  await handleSubmit(new Event('submit') as any);
+                  const imageUrl = data.data.fileUrl;
+
+                  setLoading(true);
+
+                  try {
+                    await UserApi.updateUser({
+                      ...form,
+                      avatar_url: imageUrl,
+                    });
+
+                    setForm((prev) => ({
+                      ...prev,
+                      avatar_url: imageUrl,
+                    }));
+
+                    setProfile((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            avatar_url: imageUrl,
+                          }
+                        : null,
+                    );
+
+                    toast.success('头像更新成功');
+                  } catch {
+                    toast.error('更新失败');
+                  } finally {
+                    setLoading(false);
+                  }
                 } catch {
                   toast.error('上传头像失败');
                 }
@@ -210,7 +229,7 @@ export default function UserProfile() {
           className="w-40 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold shadow"
           disabled={loading}
         >
-          {loading ? '保存中...' : '保存更新'}
+          {loading ? '保存中...' : '来个Star☆'}
         </button>
       </form>
 
