@@ -9,6 +9,7 @@ interface FileState {
   files: FileItem[];
   expandedFolders: Record<string, boolean>;
   selectedFileId: string | null;
+  isLoading: boolean;
 
   // UI 状态
   isRenaming: string | null;
@@ -25,6 +26,7 @@ interface FileState {
   setFiles: (files: FileItem[]) => void;
   setExpandedFolders: (folders: Record<string, boolean>) => void;
   setSelectedFileId: (id: string | null) => void;
+  setIsLoading: (loading: boolean) => void;
   toggleFolder: (folderId: string) => void;
   collapseAll: () => void;
 
@@ -52,6 +54,7 @@ export const useFileStore = create<FileState>((set, get) => ({
   files: [],
   expandedFolders: {},
   selectedFileId: null,
+  isLoading: false,
 
   // UI 状态
   isRenaming: null,
@@ -68,6 +71,7 @@ export const useFileStore = create<FileState>((set, get) => ({
   setFiles: (files) => set({ files }),
   setExpandedFolders: (folders) => set({ expandedFolders: folders }),
   setSelectedFileId: (id) => set({ selectedFileId: id }),
+  setIsLoading: (loading) => set({ isLoading: loading }),
   toggleFolder: (folderId) =>
     set((state) => ({
       expandedFolders: {
@@ -147,8 +151,16 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   // 加载文件列表
   loadFiles: async (isInitialLoad = false) => {
-    const { selectedFileId, processApiDocuments, setFiles, setExpandedFolders, setSelectedFileId } =
-      get();
+    const {
+      selectedFileId,
+      processApiDocuments,
+      setFiles,
+      setExpandedFolders,
+      setSelectedFileId,
+      setIsLoading,
+    } = get();
+
+    setIsLoading(true);
 
     try {
       const res = await DocumentApi.GetDocument();
@@ -190,6 +202,8 @@ export const useFileStore = create<FileState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error);
+    } finally {
+      setIsLoading(false);
     }
   },
 

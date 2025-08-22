@@ -1,4 +1,4 @@
-import React, { Ref, useMemo } from 'react';
+import React, { Ref } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -66,11 +66,11 @@ export const RenderFile: React.FC<{
   const FileItemHeight = 46;
 
   // 计算有多少个子文件 渲染侧边连接线高度
-  const folderLineHeight = useMemo(() => {
+  const folderLineHeight = (() => {
     if (typeof expandedFolders[file.id] != 'undefined' && expandedFolders[file.id]) {
       return file.children!.length * FileItemHeight;
     }
-  }, [expandedFolders]);
+  })();
 
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: id,

@@ -8,6 +8,16 @@ interface ToolbarProps {
   onCreateFolder: () => void;
   onRefresh: () => void;
   onCollapseAll: () => void;
+  isLoading?: boolean;
+}
+
+interface ToolbarItem {
+  icon: string;
+  action: () => void;
+  tooltip: string;
+  color: string;
+  disabled?: boolean;
+  isAnimating?: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -15,31 +25,37 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onCreateFolder,
   onRefresh,
   onCollapseAll,
+  isLoading = false,
 }) => {
-  const toolbarItems = [
+  const toolbarItems: ToolbarItem[] = [
     {
       icon: 'FilePlus',
       action: onCreateFile,
       tooltip: '新建文件',
       color: 'blue',
+      disabled: isLoading,
     },
     {
       icon: 'FolderPlus',
       action: onCreateFolder,
       tooltip: '新建文件夹',
       color: 'yellow',
+      disabled: isLoading,
     },
     {
-      icon: 'RefreshCw',
+      icon: isLoading ? 'Loader' : 'RefreshCw',
       action: onRefresh,
-      tooltip: '刷新',
+      tooltip: isLoading ? '刷新中...' : '刷新',
       color: 'green',
+      disabled: isLoading,
+      isAnimating: isLoading,
     },
     {
       icon: 'FolderMinus',
       action: onCollapseAll,
       tooltip: '折叠所有',
       color: 'slate',
+      disabled: isLoading,
     },
   ];
 
@@ -56,7 +72,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-1">
           {toolbarItems.map((item, index) => (
-            <div key={item.icon} className="relative group">
+            <div key={`${item.icon}-${index}`} className="relative group">
               <button
                 className={cn(
                   'p-2 rounded-xl transition-all duration-300 transform hover:scale-110 group/btn',
@@ -72,13 +88,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     'hover:bg-gradient-to-br hover:from-slate-50 hover:to-slate-100 hover:text-slate-700 hover:border-slate-300/50',
                   'dark:hover:from-slate-600/80 dark:hover:to-slate-700/80 dark:hover:text-slate-200',
                   'text-slate-600 dark:text-slate-400',
+                  item.disabled && 'opacity-50 cursor-not-allowed hover:scale-100',
                 )}
-                onClick={item.action}
+                onClick={item.disabled ? undefined : item.action}
+                disabled={item.disabled}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <Icon
                   name={item.icon as any}
-                  className="h-4 w-4 transition-transform duration-200 group-hover/btn:scale-110"
+                  className={cn(
+                    'h-4 w-4 transition-transform duration-200 group-hover/btn:scale-110',
+                    item.isAnimating && 'animate-spin',
+                  )}
                 />
               </button>
 

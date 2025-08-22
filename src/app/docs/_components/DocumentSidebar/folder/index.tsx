@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { closestCenter, DndContext, MeasuringStrategy, PointerSensor } from '@dnd-kit/core';
 import { useSensor, useSensors } from '@dnd-kit/core';
@@ -11,6 +11,7 @@ import SharedDocuments from './components/SharedDocuments';
 import FileTree from './components/FileTree';
 import Toolbar from './components/Toolbar';
 import ContextMenu from './components/ContextMenu';
+import LoadingSkeleton from './components/LoadingSkeleton';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useContextMenu } from './hooks/useContextMenu';
@@ -36,6 +37,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
     shareDialogOpen,
     shareDialogFile,
     sharedDocsExpanded,
+    isLoading,
     setSelectedFileId,
     setIsRenaming,
     setNewItemFolder,
@@ -68,7 +70,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
     findTargetFile,
   } = useContextMenu();
 
-  const memoFileList = useMemo(() => {
+  const memoFileList = (() => {
     const flattenFile = flattenTreeFile(files);
     const expandedFiles = flattenFile.reduce<string[]>((acc, item) => {
       if (!expandedFolders[item.id] && item.children && item.children.length > 0) {
@@ -81,7 +83,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
     const items = removeChildrenOf(flattenFile, expandedFiles);
 
     return items;
-  }, [files, expandedFolders]);
+  })();
 
   // 使用拖拽钩子
   const { dndState, onDragStart, onDragOver, onDragMove, handleDragEnd } = useDragAndDrop(
@@ -212,12 +214,13 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
 
   return (
     <div className="flex flex-col flex-1 h-full">
-      {/* 头部工具栏 */}
+      {/* 头部工具栏 - 始终显示 */}
       <Toolbar
         onCreateFile={() => createNewRootItem('file')}
         onCreateFolder={() => createNewRootItem('folder')}
         onRefresh={refreshFiles}
         onCollapseAll={collapseAll}
+        isLoading={isLoading}
       />
 
       {/* 拖拽上下文 */}
@@ -236,7 +239,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
       >
         {/* 文件树区域 */}
         <div
-          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent"
+          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent relative"
           onClick={() => {
             closeContextMenu();
             if (isRenaming) setIsRenaming(null);
@@ -247,31 +250,48 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
             }
           }}
         >
-          <FileTree
-            files={memoFileList}
-            projected={projected}
-            expandedFolders={expandedFolders}
-            selectedFileId={selectedFileId}
-            dndState={dndState}
-            isRenaming={isRenaming}
-            newItemFolder={newItemFolder}
-            newItemType={newItemType}
-            newItemName={newItemName}
-            onFileSelect={handleFileSelect}
-            onToggleFolder={toggleFolder}
-            onContextMenu={handleContextMenu}
-            onStartCreateNewItem={startCreateNewItem}
-            onFinishRenaming={finishRenaming}
-            onFinishCreateNewItem={finishCreateNewItem}
-            onCancelCreateNewItem={cancelCreateNewItem}
-            onKeyDown={handleKeyDown}
-            onSetNewItemName={setNewItemName}
-            onShare={handleShare}
-            onDelete={fileOperations.handleDelete}
-            onRename={handleRename}
-            onDuplicate={fileOperations.handleDuplicate}
-            onDownload={fileOperations.handleDownload}
-          />
+          {/* 如果没有文件数据，只在文件树区域显示骨架屏 */}
+          {files.length === 0 ? (
+            <LoadingSkeleton />
+          ) : (
+            <>
+              {/* 加载指示器 */}
+              {isLoading && (
+                <div className="absolute top-2 right-2 z-10">
+                  <div className="flex items-center space-x-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
+                    <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">刷新中...</span>
+                  </div>
+                </div>
+              )}
+
+              <FileTree
+                files={memoFileList}
+                projected={projected}
+                expandedFolders={expandedFolders}
+                selectedFileId={selectedFileId}
+                dndState={dndState}
+                isRenaming={isRenaming}
+                newItemFolder={newItemFolder}
+                newItemType={newItemType}
+                newItemName={newItemName}
+                onFileSelect={handleFileSelect}
+                onToggleFolder={toggleFolder}
+                onContextMenu={handleContextMenu}
+                onStartCreateNewItem={startCreateNewItem}
+                onFinishRenaming={finishRenaming}
+                onFinishCreateNewItem={finishCreateNewItem}
+                onCancelCreateNewItem={cancelCreateNewItem}
+                onKeyDown={handleKeyDown}
+                onSetNewItemName={setNewItemName}
+                onShare={handleShare}
+                onDelete={fileOperations.handleDelete}
+                onRename={handleRename}
+                onDuplicate={fileOperations.handleDuplicate}
+                onDownload={fileOperations.handleDownload}
+              />
+            </>
+          )}
         </div>
       </DndContext>
 

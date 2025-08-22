@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
@@ -32,100 +32,85 @@ const UserSelector = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 搜索用户
-  const searchUsers = useCallback(
-    async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        setIsSearching(false);
+  const searchUsers = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
 
-        return;
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      const response = await UserApi.searchUsers(query, 10, 0);
+
+      if (response?.data?.data?.users) {
+        // 过滤掉已选中的用户
+        const filteredUsers = response.data.data.users.filter(
+          (user) => !selectedUsers.some((selected) => selected.id === user.id),
+        );
+        setSearchResults(filteredUsers);
       }
-
-      setIsSearching(true);
-
-      try {
-        const response = await UserApi.searchUsers(query, 10, 0);
-
-        if (response?.data?.data?.users) {
-          // 过滤掉已选中的用户
-          const filteredUsers = response.data.data.users.filter(
-            (user) => !selectedUsers.some((selected) => selected.id === user.id),
-          );
-          setSearchResults(filteredUsers);
-        }
-      } catch (error) {
-        console.error('搜索用户失败:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    },
-    [selectedUsers],
-  );
+    } catch (error) {
+      console.error('搜索用户失败:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // 处理搜索输入
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const query = e.target.value;
-      setSearchQuery(query);
-      setIsOpen(true);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setIsOpen(true);
 
-      // 防抖搜索
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
+    // 防抖搜索
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-      searchTimeoutRef.current = setTimeout(() => {
-        searchUsers(query);
-      }, 300);
-    },
-    [searchUsers],
-  );
+    searchTimeoutRef.current = setTimeout(() => {
+      searchUsers(query);
+    }, 300);
+  };
 
   // 选择用户
-  const handleSelectUser = useCallback(
-    (user: User) => {
-      if (maxSelections && selectedUsers.length >= maxSelections) {
-        return;
-      }
+  const handleSelectUser = (user: User) => {
+    if (maxSelections && selectedUsers.length >= maxSelections) {
+      return;
+    }
 
-      const newSelectedUsers = [...selectedUsers, user];
-      onSelectionChange(newSelectedUsers);
-      setSearchQuery('');
-      setSearchResults([]);
-      setIsOpen(false);
+    const newSelectedUsers = [...selectedUsers, user];
+    onSelectionChange(newSelectedUsers);
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsOpen(false);
 
-      // 重新聚焦输入框
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    },
-    [selectedUsers, onSelectionChange, maxSelections],
-  );
+    // 重新聚焦输入框
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   // 移除选中的用户
-  const handleRemoveUser = useCallback(
-    (userId: number) => {
-      const newSelectedUsers = selectedUsers.filter((user) => user.id !== userId);
-      onSelectionChange(newSelectedUsers);
-    },
-    [selectedUsers, onSelectionChange],
-  );
+  const handleRemoveUser = (userId: number) => {
+    const newSelectedUsers = selectedUsers.filter((user) => user.id !== userId);
+    onSelectionChange(newSelectedUsers);
+  };
 
   // 处理键盘事件
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearchQuery('');
-      } else if (e.key === 'Backspace' && !searchQuery && selectedUsers.length > 0) {
-        // 如果输入框为空且按退格键，删除最后一个选中的用户
-        e.preventDefault();
-        handleRemoveUser(selectedUsers[selectedUsers.length - 1].id);
-      }
-    },
-    [searchQuery, selectedUsers, handleRemoveUser],
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+      setSearchQuery('');
+    } else if (e.key === 'Backspace' && !searchQuery && selectedUsers.length > 0) {
+      // 如果输入框为空且按退格键，删除最后一个选中的用户
+      e.preventDefault();
+      handleRemoveUser(selectedUsers[selectedUsers.length - 1].id);
+    }
+  };
 
   // 点击外部关闭下拉框
   useEffect(() => {
