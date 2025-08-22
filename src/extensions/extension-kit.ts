@@ -150,8 +150,12 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
         reader.onload = async (e) => {
           const base64Url = e.target?.result as string;
 
-          // 插入 base64 图片作为预览
-          currentEditor.chain().setImageBlockAt({ pos, src: base64Url }).focus().run();
+          currentEditor
+            .chain()
+            .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+            .setImageBlock({ src: base64Url })
+            .focus()
+            .run();
 
           try {
             // 后台上传文件
