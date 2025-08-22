@@ -58,6 +58,9 @@ export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) =>
 
   const onDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault(); // 立即阻止默认行为
+      e.stopPropagation();
+
       setDraggedInside(false);
 
       if (e.dataTransfer.files.length === 0) {
@@ -65,7 +68,6 @@ export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) =>
       }
 
       const fileList = e.dataTransfer.files;
-
       const files: File[] = [];
 
       for (let i = 0; i < fileList.length; i += 1) {
@@ -80,10 +82,7 @@ export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) =>
         return;
       }
 
-      e.preventDefault();
-
       const filteredFiles = files.filter((f) => f.type.indexOf('image') !== -1);
-
       const file = filteredFiles.length > 0 ? filteredFiles[0] : undefined;
 
       if (file) {
@@ -93,13 +92,22 @@ export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) =>
     [uploader],
   );
 
-  const onDragEnter = () => {
+  const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const onDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setDraggedInside(true);
-  };
+  }, []);
 
-  const onDragLeave = () => {
+  const onDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setDraggedInside(false);
-  };
+  }, []);
 
-  return { isDragging, draggedInside, onDragEnter, onDragLeave, onDrop };
+  return { isDragging, draggedInside, onDragEnter, onDragLeave, onDragOver, onDrop };
 };
