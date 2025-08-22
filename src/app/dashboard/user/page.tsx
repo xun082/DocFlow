@@ -102,7 +102,7 @@ export default function UserProfile() {
                 <img
                   src={form.avatar_url}
                   alt={form.name}
-                  className="w-28 h-28 rounded-full object-center object-cover border-4 border-blue-100 shadow"
+                  className="w-full h-full rounded-full object-center object-cover border-4 border-blue-100 shadow"
                   style={{ aspectRatio: '1/1' }}
                 />
               ) : (
