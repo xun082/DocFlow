@@ -1,5 +1,5 @@
 import request, { ErrorHandler } from '../request';
-import { ImageUploadResponse, SearchUsersResponse, UpdateUserDto } from './type';
+import { SearchUsersResponse, UpdateUserDto } from './type';
 export const UserApi = {
   /**
    * 搜索用户
@@ -24,22 +24,6 @@ export const UserApi = {
     return request.put('/api/v1/users', {
       errorHandler,
       params: data,
-    });
-  },
-
-  /**
-   * 上传图片
-   * @param file 图片文件
-   * @param errorHandler 自定义错误处理函数
-   * @returns 上传结果
-   */
-  uploadImage: async (file: File, errorHandler?: ErrorHandler) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return request.post<ImageUploadResponse>('/api/v1/upload/image', {
-      params: formData,
-      errorHandler,
     });
   },
 };

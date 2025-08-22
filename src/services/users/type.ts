@@ -31,10 +31,10 @@ export interface SearchUsersResponse {
 }
 
 export interface UpdateUserDto {
-  name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  location: string | null;
-  website_url: string | null;
-  company: string | null;
+  name?: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  website_url?: string | null;
+  company?: string | null;
 }

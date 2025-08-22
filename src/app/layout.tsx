@@ -4,6 +4,9 @@ import { Toaster } from 'sonner';
 import 'cal-sans';
 import '@/styles/index.css';
 
+import { QueryProvider } from '@/components/providers/QueryProvider';
+import { AuthProvider } from '@/components/providers/AuthProvider';
+
 import '@fontsource/inter/100.css';
 import '@fontsource/inter/200.css';
 import '@fontsource/inter/300.css';
@@ -59,17 +62,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className="flex flex-col h-full antialiased">
-        <main className="h-full">{children}</main>
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              fontFamily:
-                'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif',
-            },
-          }}
-        />
+        <QueryProvider>
+          <AuthProvider>
+            <main className="h-full">{children}</main>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  fontFamily:
+                    'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif',
+                },
+              }}
+            />
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

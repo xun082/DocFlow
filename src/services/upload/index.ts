@@ -205,42 +205,17 @@ export class UploadService {
   }
 
   /**
-   * 测试服务器连接
-   */
-  async testConnection() {
-    const result = await request.get<{ status: string }>(`${this.baseUrl}/health`, {
-      timeout: 5000,
-      errorHandler: (error) => {
-        console.error('测试服务器连接时出错:', error);
-      },
-    });
-
-    if (result.error) {
-      throw new Error(result.error);
-    }
-
-    return result.data?.data?.status === 'ok';
-  }
-
-  /**
    * 上传图片或GIF
    * @param file 要上传的图片文件
    * @param token 授权token（可选）
    * @returns 图片URL字符串
    */
-  async uploadImage(file: File, token?: string): Promise<string> {
+  async uploadImage(file: File): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const headers: Record<string, string> = {};
-
-    if (token) {
-      headers['Authorization'] = token;
-    }
-
     const { data, error } = await request.post<UploadImageData>('/api/v1/upload/avatar', {
       params: formData,
-      headers,
     });
 
     if (error || !data?.data?.fileUrl) {

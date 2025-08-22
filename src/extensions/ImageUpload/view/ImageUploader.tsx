@@ -2,7 +2,7 @@ import { ChangeEvent, useCallback } from 'react';
 
 import { useDropZone, useFileUpload, useUploader } from './hooks';
 
-import { Spinner } from '@/components/ui/Spinner';
+import Spinner from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
@@ -20,7 +20,7 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
-        <Spinner className="text-neutral-500" size={1.5} />
+        <Spinner className="text-neutral-500" size="lg" />
       </div>
     );
   }

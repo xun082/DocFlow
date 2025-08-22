@@ -2,68 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
-import {
-  MessageCircle,
-  User,
-  Users,
-  FileText,
-  Calendar,
-  Video,
-  Settings,
-  MoreHorizontal,
-} from 'lucide-react';
+import { ReactNode, useState } from 'react';
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: ReactNode;
-  external?: boolean;
-}
-
-const navItems: NavItem[] = [
-  {
-    name: '消息',
-    href: '/dashboard/messages',
-    icon: <MessageCircle className="w-5 h-5" />,
-  },
-  {
-    name: '日历',
-    href: '/dashboard/calendar',
-    icon: <Calendar className="w-5 h-5" />,
-  },
-  {
-    name: '文档',
-    href: '/docs',
-    icon: <FileText className="w-5 h-5" />,
-    external: true,
-  },
-  {
-    name: '视频会议',
-    href: '/dashboard/meeting',
-    icon: <Video className="w-5 h-5" />,
-  },
-  {
-    name: '通讯录',
-    href: '/dashboard/contacts',
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    name: '个人资料',
-    href: '/dashboard/user',
-    icon: <User className="w-5 h-5" />,
-  },
-  {
-    name: '设置',
-    href: '/dashboard/settings',
-    icon: <Settings className="w-5 h-5" />,
-  },
-  {
-    name: '更多',
-    href: '/dashboard/more',
-    icon: <MoreHorizontal className="w-5 h-5" />,
-  },
-];
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getPageTitle, NAV_ITEMS } from '@/utils/constants/navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -71,11 +13,18 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* 侧边栏 */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+      <div
+        className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 bg-white shadow-sm border-r border-gray-200 flex flex-col lg:w-64 lg:block ${sidebarOpen ? 'block' : 'hidden lg:block'}`}
+      >
         {/* Logo/Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -89,55 +38,65 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* 导航菜单 */}
         <nav className="flex-1 py-4">
           <ul className="space-y-1 px-3">
-            {navItems.map((item) => {
-              const isActive = item.external
-                ? false
-                : pathname === item.href || pathname.startsWith(item.href + '/');
+            {NAV_ITEMS.map((item) => {
+              // 判断当前项是否激活
+              const isActive =
+                !item.external &&
+                (pathname === item.href ||
+                  (pathname.startsWith(item.href + '/') && item.href !== '/dashboard') ||
+                  (item.href === '/dashboard' && pathname === '/dashboard'));
 
-              const linkProps = item.external ? { href: item.href } : { href: item.href };
-
-              const LinkComponent = item.external ? 'a' : Link;
+              // 根据是否为外部链接选择合适的组件
+              const NavLink = item.external ? 'a' : Link;
 
               return (
                 <li key={item.name}>
-                  <LinkComponent
-                    {...linkProps}
+                  <NavLink
+                    href={item.href}
                     className={`
-                      flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
+                      transition-all duration-200 ease-in-out
                       ${
                         isActive
                           ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                           : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                       }
                     `}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noopener noreferrer' : undefined}
                   >
-                    <span className={isActive ? 'text-blue-700' : 'text-gray-500'}>
+                    <span
+                      className={`
+                        mr-3 transition-colors duration-200
+                        ${isActive ? 'text-blue-700' : 'text-gray-500 group-hover:text-gray-700'}
+                      `}
+                    >
                       {item.icon}
                     </span>
                     <span>{item.name}</span>
-                  </LinkComponent>
+                  </NavLink>
                 </li>
               );
             })}
           </ul>
         </nav>
-
-        {/* 用户信息 */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-700 font-medium text-sm">U</span>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">用户</p>
-              <p className="text-xs text-gray-500">在线</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 主内容区域 */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <DashboardHeader
+          onMenuToggle={toggleSidebar}
+          showMenuButton={true}
+          pageTitle={getPageTitle(pathname)}
+          key={pathname} // 添加 key 属性，确保路径变化时组件重新渲染
+        />
+        {/* 调试信息 */}
+        <div className="hidden">
+          当前路径: {pathname}, 标题: {getPageTitle(pathname)}
+        </div>
+
+        {/* 主内容 */}
         <main className="flex-1 overflow-y-auto bg-white">{children}</main>
       </div>
     </div>

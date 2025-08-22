@@ -4,8 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
-import authApi from '@/services/auth';
-import { saveAuthData } from '@/utils/cookie';
+import { useGitHubLogin, useTokenLogin } from '@/hooks/useAuth';
 
 function CallbackContent() {
   const [status, setStatus] = useState('处理中...');
@@ -13,6 +12,9 @@ function CallbackContent() {
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const gitHubLoginMutation = useGitHubLogin();
+  const tokenLoginMutation = useTokenLogin();
 
   // 确保组件在客户端挂载
   useEffect(() => {
@@ -56,41 +58,7 @@ function CallbackContent() {
     }
 
     // 默认跳转到首页
-    return '/';
-  };
-
-  // 统一处理认证成功逻辑
-  const handleAuthSuccess = async (authData: any) => {
-    saveAuthData(authData);
-    setStatus('登录成功! 正在获取用户资料...');
-    setState('success');
-
-    try {
-      // 使用 getCurrentUser 接口获取用户资料
-      const { data: userResponse } = await authApi.getCurrentUser({
-        onError: (error) => {
-          console.error('获取用户资料失败:', error);
-          setStatus('获取用户资料失败，但登录成功');
-        },
-        unauthorized: () => {
-          setStatus('用户认证失败');
-          setState('error');
-        },
-      });
-
-      if (userResponse?.data && typeof window !== 'undefined') {
-        console.log('User profile loaded:', userResponse.data);
-        localStorage.setItem('user_profile', JSON.stringify(userResponse.data));
-        setStatus('登录成功! 正在跳转...');
-      }
-    } catch (error) {
-      console.warn('Error processing user profile:', error);
-      setStatus('获取用户资料失败，但登录成功');
-    }
-
-    // 跳转到原来的页面
-    const redirectUrl = getRedirectUrl();
-    setTimeout(() => router.push(redirectUrl), 1000);
+    return '/dashboard';
   };
 
   useEffect(() => {
@@ -121,10 +89,16 @@ function CallbackContent() {
             refresh_expires_in: searchParams.get('refresh_expires_in')
               ? parseInt(searchParams.get('refresh_expires_in')!)
               : undefined,
-            success: true,
           };
 
-          await handleAuthSuccess(authData);
+          setStatus('登录成功! 正在获取用户资料...');
+          setState('success');
+
+          // 使用 React Query 处理登录
+          tokenLoginMutation.mutate({
+            authData,
+            redirectUrl: getRedirectUrl(),
+          });
 
           return;
         }
@@ -141,35 +115,34 @@ function CallbackContent() {
 
         setStatus('正在与GitHub服务器通信...');
 
-        const { data, error } = await authApi.githubCallback(code, {
-          onError: (error) => {
-            // 处理不同类型的错误
-            if (error instanceof Error) {
-              if (error.message.includes('超时') || error.message.includes('timeout')) {
-                setStatus('GitHub认证超时，请重试或检查网络连接');
-              } else if (error.message.includes('网络')) {
-                setStatus('网络连接错误，请检查您的网络设置');
-              } else {
-                setStatus(`认证失败: ${error.message}`);
-              }
-            }
+        // 使用 React Query 处理 GitHub 登录
+        gitHubLoginMutation.mutate(
+          {
+            code,
+            redirectUrl: getRedirectUrl(),
           },
-        });
+          {
+            onSuccess: () => {
+              setStatus('登录成功! 正在跳转...');
+              setState('success');
+            },
+            onError: (error) => {
+              if (error instanceof Error) {
+                if (error.message.includes('超时') || error.message.includes('timeout')) {
+                  setStatus('GitHub认证超时，请重试或检查网络连接');
+                } else if (error.message.includes('网络')) {
+                  setStatus('网络连接错误，请检查您的网络设置');
+                } else {
+                  setStatus(`认证失败: ${error.message}`);
+                }
+              } else {
+                setStatus(`登录失败: ${String(error)}`);
+              }
 
-        if (error) {
-          setStatus(`登录失败: ${error}`);
-          setState('error');
-
-          return;
-        }
-
-        // 从API响应中获取实际的数据
-        if (data && data.code === 200) {
-          await handleAuthSuccess(data.data);
-        } else {
-          setStatus(`登录失败: ${data?.message || '未知错误'}`);
-          setState('error');
-        }
+              setState('error');
+            },
+          },
+        );
       } catch (e) {
         if (e instanceof Error) {
           if (e.message.includes('Failed to fetch') || e.message.includes('Network')) {
@@ -188,7 +161,7 @@ function CallbackContent() {
     };
 
     processAuth();
-  }, [searchParams, router, mounted]);
+  }, [searchParams, router, mounted, gitHubLoginMutation, tokenLoginMutation]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
