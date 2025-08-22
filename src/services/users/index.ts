@@ -1,30 +1,5 @@
 import request, { ErrorHandler } from '../request';
-import { User } from './type';
-
-export interface ImageUploadResponse {
-  fileUrl: string;
-  fileHash: string;
-  processedFileName: string;
-  originalMimeType: string;
-  processedMimeType: string;
-  imageKitFileId: string;
-}
-
-export interface SearchUsersResponse {
-  users: User[];
-  total: number;
-  timestamp: number;
-}
-
-export interface UpdateUserDto {
-  name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  location: string | null;
-  website_url: string | null;
-  company: string | null;
-}
-
+import { ImageUploadResponse, SearchUsersResponse, UpdateUserDto } from './type';
 export const UserApi = {
   /**
    * 搜索用户
