@@ -1,9 +1,9 @@
 import { ChangeEvent, useCallback } from 'react';
 import { Editor } from '@tiptap/core';
 
-import { useDropZone, useFileUpload, useUploader } from './hooks';
+import { useDropZone, useFileUpload } from './hooks';
 
-import { Spinner } from '@/components/ui/Spinner';
+// import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
@@ -16,9 +16,8 @@ export const ImageUploader = ({
   getPos: () => number | undefined;
   editor: Editor;
 }) => {
-  const { loading, uploadFile } = useUploader();
+  // const { loading, uploadFile } = useUploader();
   const { handleUploadClick, ref } = useFileUpload();
-  const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({ uploader: uploadFile });
 
   const uploadAndReplaceImage = async (file: File, base64Url: string) => {
     const serverUrl = await uploadService.uploadImage(file);
@@ -42,42 +41,53 @@ export const ImageUploader = ({
         .run();
     }
   };
+  // 处理图片文件的方法
+  const handleImageFile = useCallback(
+    (file: File) => {
+      const pos = getPos();
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        const base64Url = e.target?.result as string;
+        editor
+          .chain()
+          .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+          .setImageBlock({ src: base64Url })
+          .focus()
+          .run();
+
+        uploadAndReplaceImage(file, base64Url);
+      };
+
+      reader.onerror = () => {
+        console.error('文件读取失败');
+      };
+
+      reader.readAsDataURL(file);
+    },
+    [getPos, editor, uploadAndReplaceImage],
+  );
+
+  const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({
+    uploader: handleImageFile,
+  });
   const onFileChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files?.[0]) {
         const file = e.target.files[0];
-        const pos = getPos();
-        const reader = new FileReader();
-
-        reader.onload = async (e) => {
-          const base64Url = e.target?.result as string;
-          editor
-            .chain()
-            .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
-            .setImageBlock({ src: base64Url })
-            .focus()
-            .run();
-
-          uploadAndReplaceImage(file, base64Url);
-        };
-
-        reader.onerror = () => {
-          console.error('文件读取失败');
-        };
-
-        reader.readAsDataURL(file);
+        handleImageFile(file);
       }
     },
-    [uploadFile],
+    [handleImageFile],
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
-        <Spinner className="text-neutral-500" size={1.5} />
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
+  //       <Spinner className="text-neutral-500" size={1.5} />
+  //     </div>
+  //   );
+  // }
 
   const wrapperClass = cn(
     'flex flex-col items-center justify-center px-8 py-10 rounded-lg bg-opacity-80',
