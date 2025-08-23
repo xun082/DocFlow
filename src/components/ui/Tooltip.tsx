@@ -3,7 +3,14 @@
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import React, { JSX } from 'react';
 
-import { TooltipProps } from './types';
+interface TooltipProps {
+  children?: string | React.ReactNode;
+  enabled?: boolean;
+  title?: string;
+  shortcut?: string[];
+  tippyOptions?: Record<string, unknown>; // Kept for backward compatibility
+  content?: React.ReactNode;
+}
 
 const isMac =
   typeof window !== 'undefined' ? navigator.platform.toUpperCase().indexOf('MAC') >= 0 : false;

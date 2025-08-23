@@ -136,7 +136,7 @@ export default function EmailLoginPage() {
       return;
     }
 
-    if (data && data.code === 201) {
+    if (data && data.code === 200) {
       toast.success('验证码已发送', {
         description: `验证码已发送到 ${watchedEmail}，请查收`,
       });

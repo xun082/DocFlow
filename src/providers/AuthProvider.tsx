@@ -26,7 +26,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
-        // 尝试预取用户数据
+        // 简单预取数据，让 useUserQuery 的 placeholderData 处理本地缓存
         queryClient.prefetchQuery({
           queryKey: userQueryKeys.profile(),
           queryFn: async () => {
@@ -35,6 +35,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (error || !data?.data) {
               throw new Error(error || '获取用户信息失败');
             }
+
+            // 更新本地存储
+            localStorage.setItem('user_profile', JSON.stringify(data.data));
 
             return data.data;
           },

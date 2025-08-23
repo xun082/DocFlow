@@ -6,7 +6,7 @@ export type ToggleProps = {
   size?: 'small' | 'large';
 };
 
-export function Toggle({ onChange, active = false, size = 'large' }: ToggleProps) {
+export default function Toggle({ onChange, active = false, size = 'large' }: ToggleProps) {
   const state = active ? 'checked' : 'unchecked';
   const value = active ? 'on' : 'off';
 

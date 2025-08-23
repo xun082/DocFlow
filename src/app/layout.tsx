@@ -4,8 +4,8 @@ import { Toaster } from 'sonner';
 import 'cal-sans';
 import '@/styles/index.css';
 
-import { QueryProvider } from '@/components/providers/QueryProvider';
-import { AuthProvider } from '@/components/providers/AuthProvider';
+import { QueryProvider } from '@/providers/QueryProvider';
+import { AuthProvider } from '@/providers/AuthProvider';
 
 import '@fontsource/inter/100.css';
 import '@fontsource/inter/200.css';
