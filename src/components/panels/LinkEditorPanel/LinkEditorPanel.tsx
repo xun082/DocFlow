@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { Surface } from '@/components/ui/Surface';
-import { Toggle } from '@/components/ui/Toggle';
+import Toggle from '@/components/ui/Toggle';
 
 export type LinkEditorPanelProps = {
   initialUrl?: string;

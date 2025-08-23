@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import authApi from '@/services/auth';
-import { saveAuthData } from '@/utils/cookie';
 import { ErrorHandler } from '@/services/request';
+import { useEmailLogin } from '@/hooks/useAuth';
 
 // 验证码长度配置
 const CODE_LENGTH = 6;
@@ -32,8 +32,8 @@ type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
 
 export default function EmailLoginPage() {
   const router = useRouter();
+  const emailLoginMutation = useEmailLogin();
   const [countdown, setCountdown] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
 
   // 使用 ref 保存定时器 ID，避免内存泄漏
@@ -136,7 +136,7 @@ export default function EmailLoginPage() {
       return;
     }
 
-    if (data && data.code === 201) {
+    if (data && data.code === 200) {
       toast.success('验证码已发送', {
         description: `验证码已发送到 ${watchedEmail}，请查收`,
       });
@@ -151,71 +151,26 @@ export default function EmailLoginPage() {
   // 处理登录提交
   const onSubmit = async (data: EmailLoginFormData) => {
     // 防止重复提交
-    if (isSubmitting) {
+    if (emailLoginMutation.isPending) {
       return;
     }
-
-    setIsSubmitting(true);
 
     console.log('开始登录请求:', { email: data.email, code: data.code });
 
-    const { data: responseData, error } = await authApi.emailCodeLogin(
+    // 使用 React Query mutation
+    emailLoginMutation.mutate(
       { email: data.email, code: data.code },
-      errorHandler,
+      {
+        onSuccess: () => {
+          // 清理定时器
+          clearTimer();
+        },
+        onError: (error) => {
+          console.error('登录失败:', error);
+          // 错误处理已在 useEmailLogin hook 中处理
+        },
+      },
     );
-
-    console.log('登录响应:', { responseData, error });
-
-    if (error) {
-      console.error('登录失败:', error);
-      setIsSubmitting(false);
-
-      return;
-    }
-
-    if (responseData && responseData.code === 201) {
-      toast.success('登录成功！', {
-        description: '正在获取用户资料...',
-      });
-
-      saveAuthData(responseData.data);
-
-      try {
-        // 使用 getCurrentUser 接口获取用户资料
-        const { data: userResponse } = await authApi.getCurrentUser({
-          onError: (error) => {
-            console.error('获取用户资料失败:', error);
-            toast.error('获取用户资料失败，但登录成功');
-          },
-          unauthorized: () => {
-            toast.error('用户认证失败');
-
-            return;
-          },
-        });
-
-        if (userResponse?.data && typeof window !== 'undefined') {
-          console.log('User profile loaded:', userResponse.data);
-          localStorage.setItem('user_profile', JSON.stringify(userResponse.data));
-        }
-      } catch (error) {
-        console.warn('Error processing user profile:', error);
-        toast.error('获取用户资料失败，但登录成功');
-      }
-
-      // 清理定时器和状态
-      clearTimer();
-
-      // 延迟跳转，让用户看到成功消息
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
-    } else {
-      console.error('登录响应异常:', responseData);
-      toast.error(responseData?.message || '登录失败，请检查验证码是否正确');
-    }
-
-    setIsSubmitting(false);
   };
 
   // 处理验证码输入变化（只允许数字）
@@ -228,7 +183,7 @@ export default function EmailLoginPage() {
   const isSendCodeDisabled = !watchedEmail || !!errors.email || isSendingCode || countdown > 0;
 
   // 检查登录按钮是否应该禁用
-  const isLoginDisabled = !isValid || isSubmitting;
+  const isLoginDisabled = !isValid || emailLoginMutation.isPending;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -304,7 +259,7 @@ export default function EmailLoginPage() {
             disabled={isLoginDisabled}
           >
             <Mail className="mr-2 h-5 w-5" />
-            <span className="text-base">{isSubmitting ? '登录中...' : '登录'}</span>
+            <span className="text-base">{emailLoginMutation.isPending ? '登录中...' : '登录'}</span>
           </Button>
         </form>
 
@@ -313,7 +268,7 @@ export default function EmailLoginPage() {
             variant="link"
             className="text-gray-500 hover:text-gray-700"
             onClick={() => router.push('/auth')}
-            disabled={isSubmitting}
+            disabled={emailLoginMutation.isPending}
           >
             返回登录页
           </Button>
