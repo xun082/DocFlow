@@ -78,7 +78,27 @@ export function saveAuthData(authData: {
  * @returns token字符串或null
  */
 export function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    // 优先从localStorage获取
+    const localToken = localStorage.getItem('auth_token');
+
+    if (localToken) {
+      return localToken;
+    }
+  }
+
+  // fallback到cookie
   return getCookie('auth_token');
+}
+
+/**
+ * 验证token是否存在且有效
+ * @returns boolean
+ */
+export function hasValidAuthToken(): boolean {
+  const token = getAuthToken();
+
+  return !!(token && token.length > 0 && token !== 'undefined' && token !== 'null');
 }
 
 /**
