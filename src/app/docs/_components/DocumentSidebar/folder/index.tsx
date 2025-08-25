@@ -250,8 +250,8 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
             }
           }}
         >
-          {/* 如果没有文件数据，只在文件树区域显示骨架屏 */}
-          {files.length === 0 ? (
+          {/* 如果没有文件数据且不在创建新项目时显示骨架屏 */}
+          {files.length === 0 && !newItemFolder ? (
             <LoadingSkeleton />
           ) : (
             <>
