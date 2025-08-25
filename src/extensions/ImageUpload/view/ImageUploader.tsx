@@ -1,20 +1,92 @@
-import { ChangeEvent, useCallback } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
+import { Editor } from '@tiptap/core';
 
-import { useDropZone, useFileUpload, useUploader } from './hooks';
+import { useDropZone, useFileUpload } from './hooks';
 
 import Spinner from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
+import uploadService from '@/services/upload';
 
-export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
-  const { loading, uploadFile } = useUploader({ onUpload });
+export const ImageUploader = ({
+  getPos,
+  editor,
+}: {
+  getPos: () => number | undefined;
+  editor: Editor;
+}) => {
+  // const { loading, uploadFile } = useUploader();
   const { handleUploadClick, ref } = useFileUpload();
-  const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({ uploader: uploadFile });
 
+  const [loading, setLoading] = useState(false);
+
+  const uploadAndReplaceImage = async (file: File, base64Url: string) => {
+    const serverUrl = await uploadService.uploadImage(file);
+    const { state } = editor;
+    let targetPos = null;
+
+    state.doc.descendants((node, pos) => {
+      if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
+        targetPos = pos;
+
+        return false; // 停止遍历
+      }
+    });
+
+    if (targetPos !== null) {
+      editor
+        .chain()
+        .setNodeSelection(targetPos)
+        .updateAttributes('imageBlock', { src: serverUrl })
+        .focus()
+        .run();
+    }
+  };
+  // 处理图片文件的方法
+  const handleImageFile = useCallback(
+    (file: File) => {
+      const pos = getPos();
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        setLoading(true);
+
+        const base64Url = e.target?.result as string;
+        editor
+          .chain()
+          .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+          .setImageBlock({ src: base64Url })
+          .focus()
+          .run();
+
+        uploadAndReplaceImage(file, base64Url);
+      };
+
+      reader.onloadend = () => {
+        setLoading(false);
+      };
+
+      reader.onerror = () => {
+        console.error('文件读取失败');
+      };
+
+      reader.readAsDataURL(file);
+    },
+    [getPos, editor, uploadAndReplaceImage],
+  );
+
+  const { draggedInside, onDragOver, onDrop, onDragEnter, onDragLeave } = useDropZone({
+    uploader: handleImageFile,
+  });
   const onFileChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => (e.target.files ? uploadFile(e.target.files[0]) : null),
-    [uploadFile],
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files?.[0]) {
+        const file = e.target.files[0];
+        handleImageFile(file);
+      }
+    },
+    [handleImageFile],
   );
 
   if (loading) {
@@ -34,8 +106,9 @@ export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void })
     <div
       className={wrapperClass}
       onDrop={onDrop}
-      onDragOver={onDragEnter}
+      onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
+      onDragOver={onDragOver} // 添加这一行
       contentEditable={false}
     >
       <Icon name="Image" className="w-12 h-12 mb-4 text-black dark:text-white opacity-20" />

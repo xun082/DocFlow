@@ -61,9 +61,17 @@ export const ImageBlock = Image.extend({
 
   parseHTML() {
     return [
-      {
-        tag: 'img[src*="tiptap.dev"]:not([src^="data:"]), img[src*="windows.net"]:not([src^="data:"])',
-      },
+      // {
+      //   tag: 'img[src]:not([src^="http"]):not([src^="//"])',
+      //   getAttrs: (element: HTMLElement) => {
+      //     const src = (element as HTMLElement).getAttribute('src')?.trim();
+      //     // 确保不是外部链接
+      //     if (src && !src.startsWith('http') && !src.startsWith('//')) {
+      //       return { src };
+      //     }
+      //     return false;
+      //   },
+      // },
     ];
   },
 

@@ -16,7 +16,7 @@ import {
   HardBreak,
   Paragraph,
   Text,
-  Image,
+  // Image,
   Dropcursor,
   Emoji,
   Figcaption,
@@ -54,11 +54,14 @@ import {
   DraggableBlock,
   DragHandler,
   Audio,
+  FileHandler,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { ExcalidrawImage } from './ExcalidrawImage';
 import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
+
+import uploadService from '@/services/upload';
 
 export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
@@ -69,7 +72,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   HardBreak,
   Paragraph,
   Text,
-  Image,
+  // Image,
   Columns,
   TaskList,
   TaskItem.configure({
@@ -129,6 +132,74 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   ExcalidrawImage,
   DraggableBlock,
   DragHandler,
+  FileHandler.configure({
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    onDrop: (currentEditor, files, pos) => {
+      files.forEach(async (file) => {
+        const url = await uploadService.uploadImage(file);
+
+        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
+      });
+    },
+    onPaste: (currentEditor, files) => {
+      files.forEach(async (file) => {
+        const pos = currentEditor.state.selection.anchor;
+        // 先显示 base64 预览
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+          const base64Url = e.target?.result as string;
+
+          currentEditor
+            .chain()
+            .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+            .setImageBlock({ src: base64Url })
+            .focus()
+            .run();
+
+          try {
+            // 后台上传文件
+            const serverUrl = await uploadService.uploadImage(file);
+
+            // 遍历文档找到具有该base64 URL的图片节点并更新
+            const { state } = currentEditor;
+            let targetPos: any = null;
+
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
+                targetPos = pos;
+
+                return false; // 停止遍历
+              }
+            });
+
+            if (targetPos !== null) {
+              // 直接更新属性，不使用 setNodeSelection
+              currentEditor
+                .chain()
+                .command(({ tr }) => {
+                  tr.setNodeMarkup(targetPos, undefined, { src: serverUrl });
+
+                  return true;
+                })
+                .focus()
+                .run();
+            }
+          } catch (error) {
+            console.error('图片上传失败:', error);
+            // 上传失败时保持 base64 预览
+          }
+        };
+
+        reader.onerror = () => {
+          console.error('文件读取失败');
+        };
+
+        reader.readAsDataURL(file);
+      });
+    },
+  }),
+
   Emoji.configure({
     enableEmoticons: true,
     suggestion: emojiSuggestion,
