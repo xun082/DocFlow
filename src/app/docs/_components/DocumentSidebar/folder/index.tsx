@@ -16,6 +16,15 @@ import { useFileOperations } from './hooks/useFileOperations';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useContextMenu } from './hooks/useContextMenu';
 
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useFileStore } from '@/stores/fileStore';
 import { flattenTreeFile, getProjection, removeChildrenOf } from '@/utils/file-tree';
 
@@ -322,6 +331,56 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
           }}
         />
       )}
+
+      {/* 删除确认对话框 */}
+      <Dialog open={fileOperations.showDeleteDialog} onOpenChange={fileOperations.cancelDelete}>
+        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white/95 backdrop-blur-sm border border-slate-200/50 shadow-lg transition-all">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="text-xl font-semibold flex items-center space-x-2 text-red-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="animate-bounce"
+              >
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>确认删除</span>
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-slate-600">
+              您确定要删除{' '}
+              <span className="font-medium text-slate-900">
+                "{fileOperations.fileToDelete?.name}"
+              </span>{' '}
+              吗？
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="p-6 pt-4 bg-slate-50/50 border-t border-slate-200/50 flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={fileOperations.cancelDelete}
+              className="flex-1 bg-transparent hover:bg-slate-100 transition-colors"
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={fileOperations.confirmDelete}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white transition-colors"
+            >
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

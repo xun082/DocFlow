@@ -123,7 +123,7 @@ export default function DocumentHeader({
   ];
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px] relative !z-100000">
+    <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px] relative z-10">
       {/* 左侧：侧边栏切换按钮、目录按钮和文档标题 */}
       <div className="flex items-center space-x-3 min-w-0 flex-1">
         <div className="flex items-center space-x-1">
