@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 import { FileItem } from '../type';
 
@@ -12,9 +13,15 @@ interface UseFileOperationsReturn {
   handleDelete: (file: FileItem) => Promise<void>;
   handleRename: (fileId: string, newName: string) => Promise<void>;
   handleCreate: (name: string, type: 'file' | 'folder', parentId?: string) => Promise<boolean>;
+  showDeleteDialog: boolean;
+  fileToDelete: FileItem | null;
+  confirmDelete: () => Promise<void>;
+  cancelDelete: () => void;
 }
 
 export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOperationsReturn => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
   // 处理文件分享
   const handleShare = (file: FileItem) => {
     // 这个会在主组件中处理，因为涉及到状态管理
@@ -66,24 +73,41 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
   };
 
   // 处理文件删除
-  const handleDelete = async (file: FileItem) => {
-    if (confirm(`确定要删除 "${file.name}" 吗？`)) {
-      try {
-        const response = await DocumentApi.DeleteDocument({
-          document_id: parseInt(file.id),
-          permanent: false, // 软删除
-        });
+  const handleDelete = (file: FileItem) => {
+    setFileToDelete(file);
+    setShowDeleteDialog(true);
+  };
 
-        if (response?.data?.data?.success) {
-          // 刷新文件列表
-          await refreshFiles();
-          toast.success(`文件 "${file.name}" 已删除`);
-        }
-      } catch (error) {
-        console.error('删除文件失败:', error);
+  const confirmDelete = async () => {
+    if (!fileToDelete) return;
+
+    try {
+      setShowDeleteDialog(false);
+
+      const fileName = fileToDelete.name;
+      const response = await DocumentApi.DeleteDocument({
+        document_id: parseInt(fileToDelete.id),
+        permanent: false, // 软删除
+      });
+
+      if (response?.data?.code === 200) {
+        toast.success(`文件 "${fileName}" 已删除`);
+        // 先清空状态，再刷新列表
+        setFileToDelete(null);
+        await refreshFiles();
+      } else {
         toast.error('删除文件失败，请重试');
       }
+    } catch (error) {
+      console.error('删除文件失败:', error);
+      toast.error('删除文件失败，请重试');
+      setShowDeleteDialog(true);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteDialog(false);
+    setFileToDelete(null);
   };
 
   // 处理文件重命名
@@ -121,6 +145,14 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
 
       const response = await DocumentApi.CreateDocument(createParams);
 
+      if (response?.data?.code === 200) {
+        // 刷新文件列表
+        await refreshFiles();
+        toast.success(`${type === 'folder' ? '文件夹' : '文件'} "${name}" 创建成功`);
+
+        return true;
+      }
+
       if (response?.data?.code === 201) {
         // 刷新文件列表
         await refreshFiles();
@@ -142,8 +174,19 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     handleShare,
     handleDownload,
     handleDuplicate,
-    handleDelete,
+    handleDelete: async (file: FileItem) => {
+      handleDelete(file);
+
+      return new Promise<void>((resolve) => {
+        // 这个 Promise 会在 confirmDelete 或 cancelDelete 中被处理
+        resolve();
+      });
+    },
     handleRename,
     handleCreate,
+    showDeleteDialog,
+    fileToDelete,
+    confirmDelete,
+    cancelDelete,
   };
 };
