@@ -1,13 +1,12 @@
-import { ChangeEvent, useCallback, useState } from 'react';
+import { ChangeEvent, useCallback } from 'react';
 import { Editor } from '@tiptap/core';
 
-import { useDropZone, useFileUpload } from './hooks';
+import { useDropZone, useFileUpload, useImgUpload } from './hooks';
 
 import Spinner from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
-import uploadService from '@/services/upload';
 
 export const ImageUploader = ({
   getPos,
@@ -16,64 +15,16 @@ export const ImageUploader = ({
   getPos: () => number | undefined;
   editor: Editor;
 }) => {
-  // const { loading, uploadFile } = useUploader();
   const { handleUploadClick, ref } = useFileUpload();
+  const { isUploading, uploadImage } = useImgUpload();
 
-  const [loading, setLoading] = useState(false);
-
-  const uploadAndReplaceImage = async (file: File, base64Url: string) => {
-    const serverUrl = await uploadService.uploadImage(file);
-    const { state } = editor;
-    let targetPos = null;
-
-    state.doc.descendants((node, pos) => {
-      if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
-        targetPos = pos;
-
-        return false; // 停止遍历
-      }
-    });
-
-    if (targetPos !== null) {
-      editor
-        .chain()
-        .setNodeSelection(targetPos)
-        .updateAttributes('imageBlock', { src: serverUrl })
-        .focus()
-        .run();
-    }
-  };
   // 处理图片文件的方法
   const handleImageFile = useCallback(
     (file: File) => {
       const pos = getPos();
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        setLoading(true);
-
-        const base64Url = e.target?.result as string;
-        editor
-          .chain()
-          .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
-          .setImageBlock({ src: base64Url })
-          .focus()
-          .run();
-
-        uploadAndReplaceImage(file, base64Url);
-      };
-
-      reader.onloadend = () => {
-        setLoading(false);
-      };
-
-      reader.onerror = () => {
-        console.error('文件读取失败');
-      };
-
-      reader.readAsDataURL(file);
+      uploadImage(file, editor, pos);
     },
-    [getPos, editor, uploadAndReplaceImage],
+    [getPos, editor],
   );
 
   const { draggedInside, onDragOver, onDrop, onDragEnter, onDragLeave } = useDropZone({
@@ -89,7 +40,7 @@ export const ImageUploader = ({
     [handleImageFile],
   );
 
-  if (loading) {
+  if (isUploading) {
     return (
       <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
         <Spinner className="text-neutral-500" size="lg" />
