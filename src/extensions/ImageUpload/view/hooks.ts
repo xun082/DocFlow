@@ -1,4 +1,4 @@
-import { DragEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { DragEvent, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useMutation } from '@tanstack/react-query';
 import { Editor } from '@tiptap/core';
@@ -8,7 +8,7 @@ import { uploadService } from '@/services/upload';
 export const useUploader = () => {
   const [loading, setLoading] = useState(false);
 
-  const uploadFile = useCallback(async (file: File) => {
+  const uploadFile = async (file: File) => {
     setLoading(true);
 
     try {
@@ -21,7 +21,7 @@ export const useUploader = () => {
     }
 
     setLoading(false);
-  }, []);
+  };
 
   return { loading, uploadFile };
 };
@@ -29,9 +29,9 @@ export const useUploader = () => {
 export const useFileUpload = () => {
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = useCallback(() => {
+  const handleUploadClick = () => {
     fileInput.current?.click();
-  }, []);
+  };
 
   return { ref: fileInput, handleUploadClick };
 };
@@ -58,58 +58,55 @@ export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) =>
     };
   }, []);
 
-  const onDrop = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault(); // 立即阻止默认行为
-      e.stopPropagation();
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // 立即阻止默认行为
+    e.stopPropagation();
 
-      setDraggedInside(false);
+    setDraggedInside(false);
 
-      if (e.dataTransfer.files.length === 0) {
-        return;
+    if (e.dataTransfer.files.length === 0) {
+      return;
+    }
+
+    const fileList = e.dataTransfer.files;
+    const files: File[] = [];
+
+    for (let i = 0; i < fileList.length; i += 1) {
+      const item = fileList.item(i);
+
+      if (item) {
+        files.push(item);
       }
+    }
 
-      const fileList = e.dataTransfer.files;
-      const files: File[] = [];
+    if (files.some((file) => file.type.indexOf('image') === -1)) {
+      return;
+    }
 
-      for (let i = 0; i < fileList.length; i += 1) {
-        const item = fileList.item(i);
+    const filteredFiles = files.filter((f) => f.type.indexOf('image') !== -1);
+    const file = filteredFiles.length > 0 ? filteredFiles[0] : undefined;
 
-        if (item) {
-          files.push(item);
-        }
-      }
+    if (file) {
+      uploader(file);
+    }
+  };
 
-      if (files.some((file) => file.type.indexOf('image') === -1)) {
-        return;
-      }
-
-      const filteredFiles = files.filter((f) => f.type.indexOf('image') !== -1);
-      const file = filteredFiles.length > 0 ? filteredFiles[0] : undefined;
-
-      if (file) {
-        uploader(file);
-      }
-    },
-    [uploader],
-  );
-
-  const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-  }, []);
+  };
 
-  const onDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
+  const onDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDraggedInside(true);
-  }, []);
+  };
 
-  const onDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+  const onDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDraggedInside(false);
-  }, []);
+  };
 
   return { isDragging, draggedInside, onDragEnter, onDragLeave, onDragOver, onDrop };
 };
@@ -192,18 +189,15 @@ export const useImgUpload = () => {
   });
 
   // 封装上传函数
-  const uploadImage = useCallback(
-    async (file: File, editor: Editor, pos: number | undefined) => {
-      try {
-        const imageUrl = await uploadMutation.mutateAsync({ file, editor, pos });
+  const uploadImage = async (file: File, editor: Editor, pos: number | undefined) => {
+    try {
+      const imageUrl = await uploadMutation.mutateAsync({ file, editor, pos });
 
-        return imageUrl;
-      } catch (error) {
-        throw error;
-      }
-    },
-    [uploadMutation],
-  );
+      return imageUrl;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   return {
     // 上传函数
