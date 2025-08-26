@@ -16,12 +16,13 @@ export const ImageUploader = ({
   editor: Editor;
 }) => {
   const { handleUploadClick, ref } = useFileUpload();
-  const { isUploading, uploadImage } = useImgUpload({ editor, getPos });
+  const { isUploading, uploadImage } = useImgUpload();
 
   // 处理图片文件的方法
   const handleImageFile = useCallback(
     (file: File) => {
-      uploadImage(file);
+      const pos = getPos();
+      uploadImage(file, editor, pos);
     },
     [getPos, editor],
   );
