@@ -25,10 +25,13 @@ import {
   Target,
 } from 'lucide-react';
 
+import useAnalytics from '@/hooks/useAnalysis';
 import { Button } from '@/components/ui/button';
 import { getCookie } from '@/utils/cookie';
 
 const Page = () => {
+  useAnalytics();
+
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
