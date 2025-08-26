@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useState } from 'react';
+import { ChangeEvent, useCallback } from 'react';
 import { Editor } from '@tiptap/core';
 
 import { useDropZone, useFileUpload } from './hooks';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 import uploadService from '@/services/upload';
+import { useImgUpload } from '@/hooks/useImgUpload';
 
 export const ImageUploader = ({
   getPos,
@@ -18,8 +19,9 @@ export const ImageUploader = ({
 }) => {
   // const { loading, uploadFile } = useUploader();
   const { handleUploadClick, ref } = useFileUpload();
+  const { isUploading, uploadImage } = useImgUpload({ editor, getPos });
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   const uploadAndReplaceImage = async (file: File, base64Url: string) => {
     const serverUrl = await uploadService.uploadImage(file);
@@ -46,32 +48,33 @@ export const ImageUploader = ({
   // 处理图片文件的方法
   const handleImageFile = useCallback(
     (file: File) => {
-      const pos = getPos();
-      const reader = new FileReader();
+      uploadImage(file);
+      // const pos = getPos();
+      // const reader = new FileReader();
 
-      reader.onload = async (e) => {
-        setLoading(true);
+      // reader.onload = async (e) => {
+      //   setLoading(true);
 
-        const base64Url = e.target?.result as string;
-        editor
-          .chain()
-          .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
-          .setImageBlock({ src: base64Url })
-          .focus()
-          .run();
+      //   const base64Url = e.target?.result as string;
+      //   editor
+      //     .chain()
+      //     .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+      //     .setImageBlock({ src: base64Url })
+      //     .focus()
+      //     .run();
 
-        uploadAndReplaceImage(file, base64Url);
-      };
+      //   uploadAndReplaceImage(file, base64Url);
+      // };
 
-      reader.onloadend = () => {
-        setLoading(false);
-      };
+      // reader.onloadend = () => {
+      //   setLoading(false);
+      // };
 
-      reader.onerror = () => {
-        console.error('文件读取失败');
-      };
+      // reader.onerror = () => {
+      //   console.error('文件读取失败');
+      // };
 
-      reader.readAsDataURL(file);
+      // reader.readAsDataURL(file);
     },
     [getPos, editor, uploadAndReplaceImage],
   );
@@ -89,7 +92,7 @@ export const ImageUploader = ({
     [handleImageFile],
   );
 
-  if (loading) {
+  if (isUploading) {
     return (
       <div className="flex items-center justify-center p-8 rounded-lg min-h-[10rem] bg-opacity-80">
         <Spinner className="text-neutral-500" size="lg" />
