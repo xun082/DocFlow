@@ -144,12 +144,12 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     onPaste: (currentEditor, files) => {
       files.forEach(async (file) => {
         const pos = currentEditor.state.selection.anchor;
-        // 先显示 base64 预览
-        const reader = new FileReader();
 
-        reader.onload = async (e) => {
-          const base64Url = e.target?.result as string;
+        try {
+          // 先显示 base64 预览
+          const base64Url = await readFileAsDataURL(file);
 
+          // 插入预览图片
           currentEditor
             .chain()
             .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
@@ -157,46 +157,66 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
             .focus()
             .run();
 
-          try {
-            // 后台上传文件
-            const serverUrl = await uploadService.uploadImage(file);
+          // 后台上传文件
+          const serverUrl = await uploadService.uploadImage(file);
 
-            // 遍历文档找到具有该base64 URL的图片节点并更新
-            const { state } = currentEditor;
-            let targetPos: any = null;
+          // 查找并更新图片节点
+          const targetPos = findImageNodeByUrl(currentEditor.state, base64Url);
 
-            state.doc.descendants((node, pos) => {
-              if (node.type.name === 'imageBlock' && node.attrs.src === base64Url) {
-                targetPos = pos;
-
-                return false; // 停止遍历
-              }
-            });
-
-            if (targetPos !== null) {
-              // 直接更新属性，不使用 setNodeSelection
-              currentEditor
-                .chain()
-                .command(({ tr }) => {
-                  tr.setNodeMarkup(targetPos, undefined, { src: serverUrl });
-
-                  return true;
-                })
-                .focus()
-                .run();
-            }
-          } catch (error) {
-            console.error('图片上传失败:', error);
-            // 上传失败时保持 base64 预览
+          if (targetPos !== null) {
+            updateImageNode(currentEditor, targetPos, serverUrl);
           }
-        };
-
-        reader.onerror = () => {
-          console.error('文件读取失败');
-        };
-
-        reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('图片处理失败:', error);
+          // 可以在这里添加用户友好的错误提示
+        }
       });
+
+      // 辅助函数：将文件读取为 DataURL
+      function readFileAsDataURL(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            const result = e.target?.result as string;
+            resolve(result);
+          };
+
+          reader.onerror = () => {
+            reject(new Error('文件读取失败'));
+          };
+
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // 辅助函数：查找图片节点
+      function findImageNodeByUrl(state: any, url: string): number | null {
+        let targetPos: number | null = null;
+
+        state.doc.descendants((node: any, pos: number) => {
+          if (node.type.name === 'imageBlock' && node.attrs.src === url) {
+            targetPos = pos;
+
+            return false; // 停止遍历
+          }
+        });
+
+        return targetPos;
+      }
+
+      // 辅助函数：更新图片节点
+      function updateImageNode(editor: any, pos: number, newSrc: string): void {
+        editor
+          .chain()
+          .command(({ tr }: { tr: any }) => {
+            tr.setNodeMarkup(pos, undefined, { src: newSrc });
+
+            return true;
+          })
+          .focus()
+          .run();
+      }
     },
   }),
 
