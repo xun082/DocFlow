@@ -392,3 +392,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.collaboration-carets__label {
+  position: absolute;
+}

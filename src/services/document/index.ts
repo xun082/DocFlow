@@ -9,10 +9,11 @@ import {
   DeleteDocumentDto,
   RenameDocumentDto,
   DuplicateDocumentDto,
-  SharedDocumentsResponse,
+  // SharedDocumentsResponse,
   AccessSharedDocumentDto,
   AccessSharedDocumentResponse,
   GetDocumentContentResponse,
+  SharedDocumentItem,
 } from './type';
 
 export const DocumentApi = {
@@ -97,7 +98,7 @@ export const DocumentApi = {
 
   // 获取通过分享链接访问过的文档
   GetSharedDocuments: (errorHandler?: ErrorHandler) =>
-    request.get<SharedDocumentsResponse>('/api/v1/documents/shared-via-link', { errorHandler }),
+    request.get<SharedDocumentItem[]>('/api/v1/documents/shared-via-link', { errorHandler }),
 
   // 通过分享链接访问文档
   AccessSharedDocument: (data: AccessSharedDocumentDto, errorHandler?: ErrorHandler) =>

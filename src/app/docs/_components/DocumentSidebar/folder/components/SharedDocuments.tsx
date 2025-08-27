@@ -28,7 +28,7 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
       const response = await DocumentApi.GetSharedDocuments();
 
       if (response?.data?.code === 200) {
-        setSharedDocs(response.data.data.data || []);
+        setSharedDocs(response.data.data || []);
       } else {
         setError('加载失败');
       }
