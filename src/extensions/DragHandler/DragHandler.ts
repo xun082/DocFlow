@@ -217,6 +217,26 @@ class EmojiBlockStrategy implements BlockContentStrategy {
   }
 }
 
+class AudioBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'audio',
+      attrs: {
+        src: '',
+        title: '音频文件',
+      },
+    };
+  }
+}
+
+// 增加分割线
+
+class HorizontalRulerBlockStrategy implements BlockContentStrategy {
+  create() {
+    return { type: 'horizontalRule' };
+  }
+}
+
 // 默认块策略
 class DefaultBlockStrategy implements BlockContentStrategy {
   create() {
@@ -234,6 +254,8 @@ class BlockContentStrategyFactory {
     ['codeblock', new CodeBlockStrategy()],
     ['todolist', new TodoListBlockStrategy()],
     ['emoji', new EmojiBlockStrategy()],
+    ['audio', new AudioBlockStrategy()],
+    ['divider', new HorizontalRulerBlockStrategy()],
   ]);
 
   static getStrategy(blockType: string): BlockContentStrategy {
