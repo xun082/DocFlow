@@ -392,3 +392,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+.collaboration-carets__label {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  position: absolute;
+  top: -2em !important;
+  font-style: normal;
+  font-weight: 600;
+  left: 0px !important;
+  white-space: nowrap;
+}
+
+.collaboration-carets__caret {
+  border-width: 1px;
+  position: relative;
+}

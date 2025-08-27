@@ -54,12 +54,12 @@ export interface DocumentResponse {
 }
 
 // 通过分享链接访问的文档响应
-export interface SharedDocumentsResponse {
-  data: SharedDocumentItem[];
-  code: number;
-  message: string;
-  timestamp: number;
-}
+// export interface SharedDocumentsResponse {
+//   data: SharedDocumentItem[];
+//   code: number;
+//   message: string;
+//   timestamp: number;
+// }
 
 export interface CreateDocumentDto {
   title: string;

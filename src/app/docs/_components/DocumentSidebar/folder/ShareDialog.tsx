@@ -124,7 +124,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
 
       const response = await DocumentApi.CreateShareLink(parseInt(file.id), shareData);
 
-      if (response?.data?.code === 201 && response?.data?.data) {
+      if (response?.data?.code === 200 && response?.data?.data) {
         // 根据实际返回的数据结构构建分享链接
         const shareId = response.data.data.id;
         let shareUrl = `${window.location.origin}/share/${shareId}`;
