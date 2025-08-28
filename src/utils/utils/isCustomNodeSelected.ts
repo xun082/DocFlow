@@ -9,6 +9,7 @@ import {
   CodeBlock,
   ExcalidrawImage,
   Audio,
+  AI,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -43,6 +44,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     TableOfContentsNode.name,
     ExcalidrawImage.name,
     Audio.name,
+    AI.name,
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);

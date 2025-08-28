@@ -55,6 +55,7 @@ import {
   DragHandler,
   Audio,
   FileHandler,
+  AI,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -67,6 +68,7 @@ export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
 }
 
+// 在ExtensionKit数组中添加
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
   HardBreak,
@@ -282,6 +284,12 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
       output: 'html',
       trust: false,
     },
+  }),
+  AI.configure({
+    model: 'gpt-3.5-turbo',
+    maxTokens: 1000,
+    temperature: 0.7,
+    showLoading: true,
   }),
 ];
 

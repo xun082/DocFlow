@@ -208,6 +208,16 @@ export const GROUPS: Group[] = [
           // window.open(`${window.location.origin}/excalidraw`);
         },
       },
+      {
+        name: 'ai',
+        label: 'AI Assistant',
+        iconName: 'Bot',
+        description: 'Insert an AI assistant block',
+        aliases: ['ai', 'assistant', 'gpt'],
+        action: (editor) => {
+          editor.chain().focus().setAI({ prompt: '', context: '' }).run();
+        },
+      },
     ],
   },
 ];
