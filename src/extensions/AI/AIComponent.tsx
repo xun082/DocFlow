@@ -26,7 +26,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => (
     <textarea
       className={cn(
-        'flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base text-gray-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none scrollbar-thin scrollbar-thumb-[#444444] scrollbar-track-transparent hover:scrollbar-thumb-[#555555] caret-white',
+        'flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base text-gray-700 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none scrollbar-thin scrollbar-thumb-[#D1D5DB] scrollbar-track-transparent hover:scrollbar-thumb-[#9CA3AF] caret-gray-700',
         className,
       )}
       ref={ref}
@@ -46,9 +46,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', ...props }, ref) => {
     const variantClasses = {
-      default: 'bg-white hover:bg-white/80 text-black',
-      outline: 'border border-[#444444] bg-transparent hover:bg-[#3A3A40]',
-      ghost: 'bg-transparent hover:bg-[#3A3A40]',
+      default: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
+      outline: 'border border-[#666666] bg-transparent hover:bg-[#4A4A50]',
+      ghost: 'bg-transparent hover:bg-[#4A4A50]',
     };
     const sizeClasses = {
       default: 'h-10 px-4 py-2',
@@ -130,12 +130,12 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   }, [prompt]);
 
   useEffect(() => {
-    // Auto-focus textarea on component mount and state changes
-    if (textareaRef.current && !isLoading && !isRecording) {
-      textareaRef.current.focus();
-    }
+    setTimeout(() => {
+      if (textareaRef.current && !isLoading && !isRecording) {
+        textareaRef.current.focus();
+      }
+    }, 100);
 
-    // Listen for clicks outside the component
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
         editor.chain().focus().insertContent(response).run();
@@ -169,13 +169,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
       const formattedPrompt = messagePrefix ? `${messagePrefix}${prompt}]` : prompt;
       const mockResponse = `AI响应：基于提示 "${formattedPrompt}" 生成的内容...`;
-
       setResponse(mockResponse);
-
-      // 获取当前的pos，
-      // const pos = editor.view.state.selection.from;
-      // 向上插入一个文本节点
-      // editor.chain().focus().insertContent(mockResponse).run();
       console.log('AI响应:', response);
       updateAttributes({
         prompt,
@@ -269,10 +263,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     return (
       <NodeViewWrapper className="ai-block">
         <div className="w-full max-w-4xl mx-auto p-4">
-          <div className="rounded-3xl border border-[#444444] bg-[#1F2023] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300">
+          <div className="rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-blue-400 text-sm font-medium">AI is writing</span>
+                <span className="text-gray-600 text-sm font-medium">AI is writing</span>
                 <div className="flex items-center gap-1">
                   <div
                     className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
@@ -291,7 +285,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full text-[#9CA3AF] hover:text-[#D1D5DB] hover:bg-gray-600/30"
+                className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
                 onClick={() => {
                   setIsLoading(false);
                   updateAttributes({ loading: false });
@@ -315,7 +309,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         <div
           ref={componentRef}
           className={cn(
-            'rounded-3xl border border-[#444444] bg-[#1F2023] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300',
+            'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
           )}
         >
           <div
@@ -328,7 +322,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
               <div className="flex items-center justify-center py-6">
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-gray-300">AI正在思考中...</span>
+                  <span className="text-sm text-gray-600">AI正在思考中...</span>
                 </div>
               </div>
             ) : (
@@ -383,7 +377,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-[#9CA3AF] hover:text-[#D1D5DB] hover:bg-gray-600/30"
+              className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
               onClick={() => uploadInputRef.current?.click()}
               disabled={isLoading || isRecording}
             >
@@ -399,10 +393,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                     key={buttonConfig.id}
                     onClick={buttonConfig.onClick}
                     className={cn(
-                      'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
+                      'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
                       buttonConfig.isActive
                         ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                        : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
+                        : 'text-[#6B7280] hover:text-[#374151]',
                     )}
                     style={{
                       color: buttonConfig.isActive ? buttonConfig.color : undefined,
@@ -508,10 +502,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
               className={cn(
                 'h-8 w-8 rounded-full transition-all duration-200',
                 isRecording
-                  ? 'bg-transparent hover:bg-gray-600/30 text-red-500 hover:text-red-400'
+                  ? 'bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-600'
                   : hasContent
-                    ? 'bg-white hover:bg-white/80 text-[#1F2023]'
-                    : 'bg-transparent hover:bg-gray-600/30 text-[#9CA3AF] hover:text-[#D1D5DB]',
+                    ? 'bg-gray-700 hover:bg-gray-800 text-white'
+                    : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
               )}
               onClick={() => {
                 if (isRecording) setIsRecording(false);
@@ -521,13 +515,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
               disabled={isLoading && !hasContent}
             >
               {isLoading ? (
-                <Square className="h-4 w-4 fill-[#1F2023] animate-pulse" />
+                <Square className="h-4 w-4 fill-white animate-pulse" />
               ) : isRecording ? (
                 <StopCircle className="h-5 w-5 text-red-500" />
               ) : hasContent ? (
-                <ArrowUp className="h-4 w-4 text-[#1F2023]" />
+                <ArrowUp className="h-4 w-4 text-white" />
               ) : (
-                <Mic className="h-5 w-5 text-[#1F2023] transition-colors" />
+                <Mic className="h-5 w-5 text-white transition-colors" />
               )}
             </Button>
           </div>
