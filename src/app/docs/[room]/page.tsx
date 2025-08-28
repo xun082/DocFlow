@@ -2,18 +2,18 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import * as Y from 'yjs';
 import { Collaboration } from '@tiptap/extension-collaboration';
 import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
-import { isEqual, debounce } from 'lodash-es';
-import { Menu } from 'lucide-react';
+// import { isEqual, debounce } from 'lodash-es';
+// import { Menu } from 'lucide-react';
 
-import Syllabus, { SyllabusTitle } from '../_components/Syllabus';
+// import Syllabus, { SyllabusTitle } from '../_components/Syllabus';
 
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
@@ -35,12 +35,6 @@ interface CollaborationUser {
   avatar: string;
 }
 
-// 侧边栏宽度常量
-const SIDEBAR_WIDTH = {
-  COLLAPSED: 0,
-  COMPACT: 200,
-} as const;
-
 export default function DocumentPage() {
   const params = useParams();
   const documentId = params?.room as string;
@@ -61,11 +55,6 @@ export default function DocumentPage() {
 
   // Editor编辑器的容器元素
   const editorContaiRef = useRef<HTMLDivElement>(null);
-  const titleRefs = useRef<HTMLElement[]>(null);
-
-  const [syllabusTitle, setsyllabusTitle] = useState<SyllabusTitle[]>([]);
-  const [syllabusLightId, setSyllabusLightId] = useState('');
-  const [sidebarWidth, setSidebarWidth] = useState<number>(SIDEBAR_WIDTH.COMPACT);
 
   // 目录切换函数
   const toggleToc = () => {
@@ -79,14 +68,6 @@ export default function DocumentPage() {
       setIsMounted(true);
     }
   }, []);
-
-  const toggleSidebar = () => {
-    if (sidebarWidth === SIDEBAR_WIDTH.COLLAPSED) {
-      setSidebarWidth(SIDEBAR_WIDTH.COMPACT);
-    } else {
-      setSidebarWidth(SIDEBAR_WIDTH.COLLAPSED);
-    }
-  };
 
   // 获取当前用户信息
   useEffect(() => {
@@ -211,39 +192,6 @@ export default function DocumentPage() {
     },
     [doc, provider, currentUser],
   );
-  // 编辑器状态
-  const editorState = useEditorState({
-    editor: editor,
-    selector(context) {
-      const nodes = context.editor?.$nodes('heading');
-
-      return nodes;
-    },
-    equalityFn(a, b) {
-      const equals = isEqual(a, b);
-
-      if (equals) {
-        // 收集所有标题 dom
-        const dom = a?.map((e) => e.element);
-        titleRefs.current = dom!;
-      }
-
-      return equals;
-    },
-  });
-
-  // 大纲目录状态
-  useEffect(() => {
-    if (editorState) {
-      const editData = editorState.map<SyllabusTitle>((e) => {
-        return {
-          id: e.attributes.id,
-          textCont: e.textContent,
-        };
-      });
-      setsyllabusTitle(editData);
-    }
-  }, [editorState]);
 
   if (!isMounted || !doc || !editor) {
     return (
@@ -255,35 +203,6 @@ export default function DocumentPage() {
       </div>
     );
   }
-
-  // 检测标题范围的大小
-  const titleRange = 250;
-  // 滚动方案
-  const scrollLightHandler = debounce(() => {
-    if (titleRefs.current) {
-      const titles = titleRefs.current;
-
-      for (let i = 0; i < titleRefs.current.length; i++) {
-        const elRect = titles[i].getBoundingClientRect();
-
-        if (elRect.top >= 0 && elRect.top <= titleRange) {
-          setSyllabusLightId(titles[i].id);
-
-          break;
-        }
-
-        if (
-          elRect.top < 0 &&
-          titles[i + 1] &&
-          titles[i + 1].getBoundingClientRect().top > titleRange
-        ) {
-          setSyllabusLightId(titles[i].id);
-
-          break;
-        }
-      }
-    }
-  }, 80);
 
   return (
     <div
@@ -308,7 +227,7 @@ export default function DocumentPage() {
         <div className="flex-1 relative">
           <div
             ref={editorContaiRef}
-            onScroll={scrollLightHandler}
+            // onScroll={scrollLightHandler}
             className="h-full overflow-y-auto relative w-full"
           >
             <EditorContent editor={editor} className="prose-container h-full pl-14" />
@@ -321,38 +240,6 @@ export default function DocumentPage() {
             <TableOfContents isOpen={isTocOpen} editor={editor} />
           </div>
         )}
-
-        {/* 折叠状态的悬浮菜单按钮 */}
-        {sidebarWidth === SIDEBAR_WIDTH.COLLAPSED && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="mt-8 z-50 size-8 shadow-lg"
-            onClick={toggleSidebar}
-          >
-            <Menu />
-          </Button>
-        )}
-
-        {/* 侧边栏容器 */}
-        <div
-          className={`flex-[0 0 0] ${sidebarWidth > 0 ? 'px-2' : 'px-0'} box-border pt-8 border-l-2 border-slate-200/60 dark:border-slate-800/60 transition-all duration-300 ease-in-out`}
-          style={{ width: `${sidebarWidth}px` }}
-        >
-          {sidebarWidth > SIDEBAR_WIDTH.COLLAPSED && (
-            <>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="size-8 cursor-pointer mb-1"
-                onClick={toggleSidebar}
-              >
-                <Menu />
-              </Button>
-              <Syllabus lightId={syllabusLightId} syllabusTitle={syllabusTitle} />
-            </>
-          )}
-        </div>
       </div>
 
       {/* 编辑器菜单 */}
