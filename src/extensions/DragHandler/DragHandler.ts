@@ -237,6 +237,15 @@ class HorizontalRulerBlockStrategy implements BlockContentStrategy {
   }
 }
 
+// 增加ai模块
+class AIBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'ai',
+    };
+  }
+}
+
 // 默认块策略
 class DefaultBlockStrategy implements BlockContentStrategy {
   create() {
@@ -256,6 +265,7 @@ class BlockContentStrategyFactory {
     ['emoji', new EmojiBlockStrategy()],
     ['audio', new AudioBlockStrategy()],
     ['divider', new HorizontalRulerBlockStrategy()],
+    ['ai', new AIBlockStrategy()],
   ]);
 
   static getStrategy(blockType: string): BlockContentStrategy {

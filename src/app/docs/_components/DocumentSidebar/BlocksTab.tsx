@@ -195,6 +195,14 @@ const BlocksTab = () => {
       blockType: 'emoji',
       category: 'interactive',
     },
+    // 插入ai组件
+    {
+      icon: 'Bot' as keyof typeof icons,
+      label: 'AI',
+      description: '插入AI组件',
+      blockType: 'ai',
+      category: 'interactive',
+    },
   ];
 
   // 过滤区块
