@@ -118,8 +118,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
 
-  console.log('🚀 ~ node:', node);
-
   // Combined effects for textarea management and click outside handling
   useEffect(() => {
     // Auto-resize textarea
