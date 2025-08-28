@@ -41,7 +41,7 @@ declare module '@tiptap/core' {
       /**
        * Insert an AI block
        */
-      setAI: (options: { prompt: string; context?: string }) => ReturnType;
+      setAI: (options: { prompt: string; context?: string; op?: string }) => ReturnType;
     };
   }
 }

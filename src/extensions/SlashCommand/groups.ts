@@ -2,8 +2,40 @@ import { Group } from './types';
 
 export const GROUPS: Group[] = [
   {
+    name: 'ai',
+    title: 'AI',
+    commands: [
+      {
+        name: 'askAI',
+        label: 'Ask AI',
+        iconName: 'Bot',
+        description: 'Insert an AI assistant block',
+        aliases: ['ai', 'assistant', 'gpt'],
+        action: (editor) => {
+          editor.chain().focus().setAI({ prompt: '', context: '', op: 'ask' }).run();
+        },
+      },
+      {
+        name: 'continueWriting',
+        label: 'Continue Writing',
+        iconName: 'Bot',
+        description: 'AI continues writing based on context',
+        aliases: ['continue', 'write'],
+        action: (editor) => {
+          const previousNode = editor.state.doc.resolve(editor.state.selection.anchor - 1).node();
+          const previousNodeContent = previousNode.textContent;
+          editor
+            .chain()
+            .focus()
+            .setAI({ prompt: '', context: previousNodeContent, op: 'continue' })
+            .run();
+        },
+      },
+    ],
+  },
+  {
     name: 'format',
-    title: 'Format',
+    title: 'Style',
     commands: [
       {
         name: 'heading1',
@@ -206,16 +238,6 @@ export const GROUPS: Group[] = [
         action: (editor) => {
           editor.chain().focus().setExcalidrawImage({ type: '' }).run();
           // window.open(`${window.location.origin}/excalidraw`);
-        },
-      },
-      {
-        name: 'ai',
-        label: 'AI Assistant',
-        iconName: 'Bot',
-        description: 'Insert an AI assistant block',
-        aliases: ['ai', 'assistant', 'gpt'],
-        action: (editor) => {
-          editor.chain().focus().setAI({ prompt: '', context: '' }).run();
         },
       },
     ],
