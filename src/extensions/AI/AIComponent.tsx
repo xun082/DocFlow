@@ -363,7 +363,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     <NodeViewWrapper className="ai-block">
       {/* 返回值显示 */}
       <div className="mb-2">{animatedText}</div>
-      <div onClick={handleGenerateAI}>测试</div>
       <div className="w-full max-w-4xl mx-auto">
         {/* AI Input Box */}
         {isLoading ? (
