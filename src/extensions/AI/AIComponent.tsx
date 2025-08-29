@@ -183,11 +183,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         contentString = extractTextContent() + '\n' + prompt;
       }
 
+      console.log('🚀 ~ handleGenerateAI ~ contentString:', contentString);
+
       const result = await AiApi.ContinueWriting({
         documentId: documentId || 'unknown',
-        content: contentString,
-        // content:
-        // '在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页',
+        // content: contentString,
+        content:
+          '在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页',
         apiKey: 'sk-fqpemyrugvjqakmexzsafpjaaqlvnzebvzubbtikgurqoths',
         model: 'Qwen/QwQ-32B',
       });
