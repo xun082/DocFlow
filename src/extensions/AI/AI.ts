@@ -117,6 +117,19 @@ export const AI = Node.create<AIOptions>({
           };
         },
       },
+      op: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('data-op'),
+        renderHTML: (attributes) => {
+          if (!attributes.op) {
+            return {};
+          }
+
+          return {
+            'data-op': attributes.op,
+          };
+        },
+      },
     };
   },
 

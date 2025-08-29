@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
@@ -13,6 +14,8 @@ import {
   FolderCode,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import { AiApi } from '@/services/ai';
 
 // Utility function for className merging
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
@@ -107,6 +110,10 @@ interface ActionButtonConfig {
 }
 
 export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
+  console.log('🚀 ~ editor:', node.attrs);
+
+  const params = useParams();
+  const documentId = params?.room as string;
   const [prompt, setPrompt] = useState(node.attrs.context || '');
   const [isLoading, setIsLoading] = useState(node.attrs.loading || false);
   const [response, setResponse] = useState(node.attrs.response || '');
@@ -118,9 +125,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
 
-  // Combined effects for textarea management and click outside handling
   useEffect(() => {
-    // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 240)}px`;
@@ -148,30 +153,56 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   }, [isLoading, isRecording, editor, response]);
 
   const handleGenerateAI = async () => {
+    // 获取所有文本节点的文案
     if (!prompt.trim()) return;
 
     setIsLoading(true);
     updateAttributes({ loading: true });
 
     try {
-      // 这里应该调用你的AI服务API
-      // 示例：const result = await aiService.generate({ prompt, context: node.attrs.context });
+      // 提取编辑器中的文本内容
+      let contentString: string = ' ';
 
-      // 模拟AI响应
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const extractTextContent = (): string => {
+        const textContents: string[] = [];
 
-      let messagePrefix = '';
-      if (showSearch) messagePrefix = '[Search: ';
-      else if (showThink) messagePrefix = '[Think: ';
-      else if (showCanvas) messagePrefix = '[Canvas: ';
+        editor.state.doc.descendants((node) => {
+          if (node.type.name === 'paragraph' && node.textContent.trim()) {
+            textContents.push(node.textContent.trim());
+          }
 
-      const formattedPrompt = messagePrefix ? `${messagePrefix}${prompt}]` : prompt;
-      const mockResponse = `AI响应：基于提示 "${formattedPrompt}" 生成的内容...`;
-      setResponse(mockResponse);
+          return true;
+        });
+
+        return textContents.join('\n');
+      };
+
+      if (node.attrs.op === 'continue') {
+        contentString = extractTextContent();
+      } else {
+        contentString = extractTextContent() + '\n' + prompt;
+      }
+
+      const result = await AiApi.ContinueWriting({
+        documentId: documentId || 'unknown',
+        content: contentString,
+        // content:
+        // '在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页',
+        apiKey: 'sk-fqpemyrugvjqakmexzsafpjaaqlvnzebvzubbtikgurqoths',
+        model: 'Qwen/QwQ-32B',
+      });
+
+      if (result.data && !result.data.data.hasErrors) {
+        setResponse(result.data.data.content);
+      } else {
+        const errorMessage = result.data?.data.errorMessage || result.error || '生成内容失败';
+        setResponse(`错误：${errorMessage}`);
+      }
+
       console.log('AI响应:', response);
       updateAttributes({
         prompt,
-        response: mockResponse,
+        response: response,
         loading: false,
       });
     } catch (error) {

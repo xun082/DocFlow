@@ -11,3 +11,16 @@ export interface CorrectTextResponse {
   hasErrors: boolean;
   errorMessage?: string;
 }
+
+export interface ContinueWritingParams {
+  documentId: string;
+  content: string;
+  apiKey: string;
+  model: string;
+}
+
+export interface ContinueWritingResponse {
+  content: string;
+  hasErrors: boolean;
+  errorMessage?: string;
+}
