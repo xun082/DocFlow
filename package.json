@@ -125,6 +125,8 @@
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "typeit": "^8.8.7",
+    "typeit-react": "^2.7.8",
     "ua-parser-js": "^2.0.4",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",

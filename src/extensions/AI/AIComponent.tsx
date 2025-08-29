@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { AiApi } from '@/services/ai';
+import { useAnimatedText } from './useAnimatedText';
 
 // Utility function for className merging
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
@@ -110,13 +110,12 @@ interface ActionButtonConfig {
 }
 
 export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
-  console.log('🚀 ~ editor:', node.attrs);
-
   const params = useParams();
   const documentId = params?.room as string;
   const [prompt, setPrompt] = useState(node.attrs.context || '');
   const [isLoading, setIsLoading] = useState(node.attrs.loading || false);
   const [response, setResponse] = useState(node.attrs.response || '');
+
   const [isRecording, setIsRecording] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showThink, setShowThink] = useState(false);
@@ -124,6 +123,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
+  const [animatedText, setText] = useAnimatedText();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -185,28 +185,102 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
       console.log('🚀 ~ handleGenerateAI ~ contentString:', contentString);
 
-      const result = await AiApi.ContinueWriting({
+      // SSE流式数据处理
+      const requestData = {
         documentId: documentId || 'unknown',
-        // content: contentString,
         content:
-          '在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页',
+          '"在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页。"',
         apiKey: '',
         model: 'Qwen/QwQ-32B',
-      });
+      };
 
-      if (result.data && !result.data.data.hasErrors) {
-        setResponse(result.data.data.content);
-      } else {
-        const errorMessage = result.data?.data.errorMessage || result.error || '生成内容失败';
-        setResponse(`错误：${errorMessage}`);
+      let accumulatedResponse = '';
+
+      // 先发送POST请求启动流式处理
+      try {
+        const response = await fetch('https://api.codecrack.cn/api/v1/ai/continue-writing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // 获取流式响应
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+          throw new Error('无法获取响应流');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+
+              if (data === '[DONE]') {
+                setIsLoading(false);
+                console.log('AI响应完成:', accumulatedResponse);
+
+                return;
+              }
+
+              try {
+                const parsedData = JSON.parse(data);
+
+                // 检查是否有choices数组和delta内容
+                if (parsedData.choices && parsedData.choices.length > 0) {
+                  const choice = parsedData.choices[0];
+
+                  // 检查finish_reason来判断是否完成
+                  if (choice.finish_reason === 'stop') {
+                    // 流式传输完成
+                    console.log('结束');
+                    setIsLoading(false);
+
+                    return;
+                  } else if (choice.delta && choice.delta.content) {
+                    // 累积接收到的内容
+                    accumulatedResponse += choice.delta.content;
+
+                    if (choice.delta.content) {
+                      setText(choice.delta.content);
+                    }
+
+                    setResponse(accumulatedResponse);
+                  }
+                }
+              } catch (parseError) {
+                console.error('解析SSE数据失败:', parseError);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('POST请求失败:', error);
+        setResponse('错误：请求失败');
+        setIsLoading(false);
+
+        return;
       }
-
-      console.log('AI响应:', response);
-      updateAttributes({
-        prompt,
-        response: response,
-        loading: false,
-      });
     } catch (error) {
       console.error('AI生成失败:', error);
       updateAttributes({ loading: false });
@@ -227,10 +301,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       handleGenerateAI();
     }
   };
-
-  // const onblur = () => {
-  //   editor.chain().focus().insertContent(response).run();
-  // };
 
   const handleToggleChange = (value: string) => {
     if (value === 'search') {
@@ -289,275 +359,270 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
   const hasContent = prompt.trim() !== '';
 
-  // 当 isLoading 为 true 时，显示简化的加载状态
-  if (isLoading) {
-    return (
-      <NodeViewWrapper className="ai-block">
-        <div className="w-full max-w-4xl mx-auto p-4">
-          <div className="rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-gray-600 text-sm font-medium">AI is writing</span>
-                <div className="flex items-center gap-1">
-                  <div
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                    style={{ animationDelay: '0ms' }}
-                  />
-                  <div
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                    style={{ animationDelay: '200ms' }}
-                  />
-                  <div
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                    style={{ animationDelay: '400ms' }}
-                  />
+  return (
+    <NodeViewWrapper className="ai-block">
+      {/* 返回值显示 */}
+      <div className="mb-2">{animatedText}</div>
+      <div onClick={handleGenerateAI}>测试</div>
+      <div className="w-full max-w-4xl mx-auto">
+        {/* AI Input Box */}
+        {isLoading ? (
+          <div className="w-full max-w-4xl mx-auto p-4">
+            <div className="rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-600 text-sm font-medium">AI is writing</span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
+                      style={{ animationDelay: '200ms' }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
+                      style={{ animationDelay: '400ms' }}
+                    />
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
+                  onClick={() => {
+                    setIsLoading(false);
+                    updateAttributes({ loading: false });
+                  }}
+                >
+                  <Square className="h-4 w-4" />
+                </Button>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            ref={componentRef}
+            className={cn(
+              'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
+            )}
+          >
+            <div
+              className={cn(
+                'transition-all duration-300',
+                isRecording ? 'h-0 overflow-hidden opacity-0' : 'opacity-100',
+              )}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-gray-600">AI正在思考中...</span>
+                  </div>
+                </div>
+              ) : (
+                <Textarea
+                  ref={textareaRef}
+                  value={prompt}
+                  onChange={handlePromptChange}
+                  onKeyDown={handleKeyDown}
+                  className="text-base"
+                  disabled={isLoading || isRecording}
+                  placeholder="输入你的AI提示词..."
+                />
+              )}
+            </div>
+
+            {/* Voice Recording Indicator */}
+            <div
+              className={cn(
+                'flex flex-col items-center justify-center w-full transition-all duration-300 py-3',
+                isRecording ? 'opacity-100' : 'opacity-0 h-0',
+              )}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="font-mono text-sm text-white/80">00:00</span>
+              </div>
+              <div className="w-full h-10 flex items-center justify-center gap-0.5 px-4">
+                {[...Array(32)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-0.5 rounded-full bg-white/50 animate-pulse"
+                    style={{
+                      height: `${Math.max(15, Math.random() * 100)}%`,
+                      animationDelay: `${i * 0.05}s`,
+                      animationDuration: `${0.5 + Math.random() * 0.5}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                multiple={false}
+              />
+
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-                onClick={() => {
-                  setIsLoading(false);
-                  updateAttributes({ loading: false });
-                }}
+                onClick={() => uploadInputRef.current?.click()}
+                disabled={isLoading || isRecording}
               >
-                <Square className="h-4 w-4" />
+                <Paperclip className="h-5 w-5" />
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {actionButtons.slice(0, 2).map((buttonConfig) => {
+                  const IconComponent = buttonConfig.icon;
+
+                  return (
+                    <button
+                      key={buttonConfig.id}
+                      onClick={buttonConfig.onClick}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
+                        buttonConfig.isActive
+                          ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
+                          : 'text-[#6B7280] hover:text-[#374151]',
+                      )}
+                      style={{
+                        color: buttonConfig.isActive ? buttonConfig.color : undefined,
+                      }}
+                      disabled={buttonConfig.disabled}
+                    >
+                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                        <motion.div
+                          animate={{
+                            rotate: buttonConfig.isActive ? 360 : 0,
+                            scale: buttonConfig.isActive ? 1.1 : 1,
+                          }}
+                          whileHover={{
+                            rotate: buttonConfig.isActive ? 360 : 15,
+                            scale: 1.1,
+                            transition: { type: 'spring', stiffness: 300, damping: 10 },
+                          }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                        >
+                          <IconComponent
+                            className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
+                          />
+                        </motion.div>
+                      </div>
+                      <AnimatePresence>
+                        {buttonConfig.isActive && (
+                          <motion.span
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 'auto', opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
+                            style={{ color: buttonConfig.color }}
+                          >
+                            {buttonConfig.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  );
+                })}
+
+                <CustomDivider />
+
+                {actionButtons.slice(2).map((buttonConfig) => {
+                  const IconComponent = buttonConfig.icon;
+
+                  return (
+                    <button
+                      key={buttonConfig.id}
+                      onClick={buttonConfig.onClick}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
+                        buttonConfig.isActive
+                          ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
+                          : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
+                      )}
+                      style={{
+                        color: buttonConfig.isActive ? buttonConfig.color : undefined,
+                      }}
+                      disabled={buttonConfig.disabled}
+                    >
+                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                        <motion.div
+                          animate={{
+                            rotate: buttonConfig.isActive ? 360 : 0,
+                            scale: buttonConfig.isActive ? 1.1 : 1,
+                          }}
+                          whileHover={{
+                            rotate: buttonConfig.isActive ? 360 : 15,
+                            scale: 1.1,
+                            transition: { type: 'spring', stiffness: 300, damping: 10 },
+                          }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                        >
+                          <IconComponent
+                            className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
+                          />
+                        </motion.div>
+                      </div>
+                      <AnimatePresence>
+                        {buttonConfig.isActive && (
+                          <motion.span
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 'auto', opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
+                            style={{ color: buttonConfig.color }}
+                          >
+                            {buttonConfig.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="default"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-full transition-all duration-200',
+                  isRecording
+                    ? 'bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-600'
+                    : hasContent
+                      ? 'bg-gray-700 hover:bg-gray-800 text-white'
+                      : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
+                )}
+                onClick={() => {
+                  if (isRecording) setIsRecording(false);
+                  else if (hasContent) handleGenerateAI();
+                  else setIsRecording(true);
+                }}
+                disabled={isLoading && !hasContent}
+              >
+                {isLoading ? (
+                  <Square className="h-4 w-4 fill-white animate-pulse" />
+                ) : isRecording ? (
+                  <StopCircle className="h-5 w-5 text-red-500" />
+                ) : hasContent ? (
+                  <ArrowUp className="h-4 w-4 text-white" />
+                ) : (
+                  <Mic className="h-5 w-5 text-white transition-colors" />
+                )}
               </Button>
             </div>
           </div>
-        </div>
-      </NodeViewWrapper>
-    );
-  }
-
-  return (
-    <NodeViewWrapper className="ai-block">
-      {/* 返回值显示 */}
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="mb-2">{response}</div>
-        {/* AI Input Box */}
-        <div
-          ref={componentRef}
-          className={cn(
-            'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
-          )}
-        >
-          <div
-            className={cn(
-              'transition-all duration-300',
-              isRecording ? 'h-0 overflow-hidden opacity-0' : 'opacity-100',
-            )}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-gray-600">AI正在思考中...</span>
-                </div>
-              </div>
-            ) : (
-              <Textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={handlePromptChange}
-                onKeyDown={handleKeyDown}
-                className="text-base"
-                disabled={isLoading || isRecording}
-                placeholder="输入你的AI提示词..."
-              />
-            )}
-          </div>
-
-          {/* Voice Recording Indicator */}
-          <div
-            className={cn(
-              'flex flex-col items-center justify-center w-full transition-all duration-300 py-3',
-              isRecording ? 'opacity-100' : 'opacity-0 h-0',
-            )}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-mono text-sm text-white/80">00:00</span>
-            </div>
-            <div className="w-full h-10 flex items-center justify-center gap-0.5 px-4">
-              {[...Array(32)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 rounded-full bg-white/50 animate-pulse"
-                  style={{
-                    height: `${Math.max(15, Math.random() * 100)}%`,
-                    animationDelay: `${i * 0.05}s`,
-                    animationDuration: `${0.5 + Math.random() * 0.5}s`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <input
-              ref={uploadInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              multiple={false}
-            />
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-              onClick={() => uploadInputRef.current?.click()}
-              disabled={isLoading || isRecording}
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {actionButtons.slice(0, 2).map((buttonConfig) => {
-                const IconComponent = buttonConfig.icon;
-
-                return (
-                  <button
-                    key={buttonConfig.id}
-                    onClick={buttonConfig.onClick}
-                    className={cn(
-                      'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
-                      buttonConfig.isActive
-                        ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                        : 'text-[#6B7280] hover:text-[#374151]',
-                    )}
-                    style={{
-                      color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                    }}
-                    disabled={buttonConfig.disabled}
-                  >
-                    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                      <motion.div
-                        animate={{
-                          rotate: buttonConfig.isActive ? 360 : 0,
-                          scale: buttonConfig.isActive ? 1.1 : 1,
-                        }}
-                        whileHover={{
-                          rotate: buttonConfig.isActive ? 360 : 15,
-                          scale: 1.1,
-                          transition: { type: 'spring', stiffness: 300, damping: 10 },
-                        }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                      >
-                        <IconComponent
-                          className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                        />
-                      </motion.div>
-                    </div>
-                    <AnimatePresence>
-                      {buttonConfig.isActive && (
-                        <motion.span
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: 'auto', opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                          style={{ color: buttonConfig.color }}
-                        >
-                          {buttonConfig.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                );
-              })}
-
-              <CustomDivider />
-
-              {actionButtons.slice(2).map((buttonConfig) => {
-                const IconComponent = buttonConfig.icon;
-
-                return (
-                  <button
-                    key={buttonConfig.id}
-                    onClick={buttonConfig.onClick}
-                    className={cn(
-                      'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
-                      buttonConfig.isActive
-                        ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                        : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
-                    )}
-                    style={{
-                      color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                    }}
-                    disabled={buttonConfig.disabled}
-                  >
-                    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                      <motion.div
-                        animate={{
-                          rotate: buttonConfig.isActive ? 360 : 0,
-                          scale: buttonConfig.isActive ? 1.1 : 1,
-                        }}
-                        whileHover={{
-                          rotate: buttonConfig.isActive ? 360 : 15,
-                          scale: 1.1,
-                          transition: { type: 'spring', stiffness: 300, damping: 10 },
-                        }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                      >
-                        <IconComponent
-                          className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                        />
-                      </motion.div>
-                    </div>
-                    <AnimatePresence>
-                      {buttonConfig.isActive && (
-                        <motion.span
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: 'auto', opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                          style={{ color: buttonConfig.color }}
-                        >
-                          {buttonConfig.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              variant="default"
-              size="icon"
-              className={cn(
-                'h-8 w-8 rounded-full transition-all duration-200',
-                isRecording
-                  ? 'bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-600'
-                  : hasContent
-                    ? 'bg-gray-700 hover:bg-gray-800 text-white'
-                    : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
-              )}
-              onClick={() => {
-                if (isRecording) setIsRecording(false);
-                else if (hasContent) handleGenerateAI();
-                else setIsRecording(true);
-              }}
-              disabled={isLoading && !hasContent}
-            >
-              {isLoading ? (
-                <Square className="h-4 w-4 fill-white animate-pulse" />
-              ) : isRecording ? (
-                <StopCircle className="h-5 w-5 text-red-500" />
-              ) : hasContent ? (
-                <ArrowUp className="h-4 w-4 text-white" />
-              ) : (
-                <Mic className="h-5 w-5 text-white transition-colors" />
-              )}
-            </Button>
-          </div>
-        </div>
-
+        )}
         {/* AI Response */}
       </div>
     </NodeViewWrapper>
