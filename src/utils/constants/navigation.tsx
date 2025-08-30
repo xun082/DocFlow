@@ -9,6 +9,7 @@ import {
   Settings,
   MoreHorizontal,
   LayoutDashboard,
+  BookOpen,
 } from 'lucide-react';
 
 // 导航项接口
@@ -41,6 +42,11 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/docs',
     icon: <FileText className="w-5 h-5" />,
     external: true,
+  },
+  {
+    name: '知识库',
+    href: '/dashboard/knowledge',
+    icon: <BookOpen className="w-5 h-5" />,
   },
   {
     name: '视频会议',
@@ -79,6 +85,7 @@ export const PAGE_TITLE_MAP: Record<string, string> = {
   '/dashboard/user': '个人资料',
   '/dashboard/settings': '系统设置',
   '/dashboard/more': '更多功能',
+  '/dashboard/knowledge': '知识库管理',
   '/docs': '文档管理',
 };
 
@@ -89,6 +96,7 @@ export const PAGE_DESCRIPTION_MAP: Record<string, string> = {
   '/dashboard/messages': '查看和管理您的消息',
   '/dashboard/calendar': '管理您的日程安排',
   '/dashboard/settings': '配置您的偏好设置',
+  '/dashboard/knowledge': '管理和组织您的知识库内容',
 };
 
 // 获取页面标题的函数

@@ -10,6 +10,7 @@ function CallbackContent() {
   const [status, setStatus] = useState('处理中...');
   const [state, setState] = useState<'loading' | 'success' | 'error'>('loading');
   const [mounted, setMounted] = useState(false);
+  const [authProcessed, setAuthProcessed] = useState(false); // 添加认证处理标记
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -62,10 +63,12 @@ function CallbackContent() {
   };
 
   useEffect(() => {
-    // 只有在客户端挂载后才执行认证处理
-    if (!mounted) return;
+    // 只有在客户端挂载后才执行认证处理，且未处理过认证
+    if (!mounted || authProcessed) return;
 
     const processAuth = async () => {
+      setAuthProcessed(true); // 标记认证处理已开始
+
       try {
         // 检查searchParams是否存在
         if (!searchParams) {
@@ -161,7 +164,7 @@ function CallbackContent() {
     };
 
     processAuth();
-  }, [searchParams, router, mounted, gitHubLoginMutation, tokenLoginMutation]);
+  }, [searchParams, router, mounted, authProcessed]); // 添加 authProcessed 依赖项
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
