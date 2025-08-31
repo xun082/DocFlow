@@ -11,7 +11,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ className }) => {
     <div className={cn('h-full flex flex-col', className)}>
       {/* 文件列表骨架 */}
       <div className="flex-1 overflow-hidden p-2 space-y-2">
-        {Array.from({ length: 12 }).map((_, index) => {
+        {Array.from({ length: 5 }).map((_, index) => {
           // 使用确定性的值替代随机值，避免水合问题
           const depth = index % 3;
           const isFolder = index % 5 === 0;
