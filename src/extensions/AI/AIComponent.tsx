@@ -12,82 +12,18 @@ import {
   Globe,
   BrainCog,
   FolderCode,
+  BrainCircuit,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useAnimatedText } from './useAnimatedText';
+import { useAnimatedText } from './components/useAnimatedText';
+import CustomDivider from './components/CustomDivider';
+import ModelSelector from './components/ModelSelector';
+import Textarea from './components/Textarea';
+import Button from './components/Button';
+import AILoadingStatus from './components/AILoadingStatus';
 
-// Utility function for className merging
-const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
-
-// Textarea Component
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  className?: string;
-}
-
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => (
-    <textarea
-      className={cn(
-        'flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base text-gray-700 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none scrollbar-thin scrollbar-thumb-[#D1D5DB] scrollbar-track-transparent hover:scrollbar-thumb-[#9CA3AF] caret-gray-700',
-        className,
-      )}
-      ref={ref}
-      rows={1}
-      {...props}
-    />
-  ),
-);
-Textarea.displayName = 'Textarea';
-
-// Button Component
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
-}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'default', ...props }, ref) => {
-    const variantClasses = {
-      default: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-      outline: 'border border-[#666666] bg-transparent hover:bg-[#4A4A50]',
-      ghost: 'bg-transparent hover:bg-[#4A4A50]',
-    };
-    const sizeClasses = {
-      default: 'h-10 px-4 py-2',
-      sm: 'h-8 px-3 text-sm',
-      lg: 'h-12 px-6',
-      icon: 'h-8 w-8 rounded-full aspect-[1/1]',
-    };
-
-    return (
-      <button
-        className={cn(
-          'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
-          variantClasses[variant],
-          sizeClasses[size],
-          className,
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  },
-);
-Button.displayName = 'Button';
-
-// Custom Divider Component
-const CustomDivider: React.FC = () => (
-  <div className="relative h-6 w-[1.5px] mx-1">
-    <div
-      className="absolute inset-0 bg-gradient-to-t from-transparent via-[#9b87f5]/70 to-transparent rounded-full"
-      style={{
-        clipPath:
-          'polygon(0% 0%, 100% 0%, 100% 40%, 140% 50%, 100% 60%, 100% 100%, 0% 100%, 0% 60%, -40% 50%, 0% 40%)',
-      }}
-    />
-  </div>
-);
+import { cn } from '@/utils/utils';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -115,7 +51,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const [prompt, setPrompt] = useState(node.attrs.context || '');
   const [isLoading, setIsLoading] = useState(node.attrs.loading || false);
   const [response, setResponse] = useState(node.attrs.response || '');
-
+  const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
   const [isRecording, setIsRecording] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showThink, setShowThink] = useState(false);
@@ -139,17 +75,17 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       }
     }, 100);
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-        editor.chain().focus().insertContent(response).run();
-      }
-    };
+    // const handleClickOutside = (event: MouseEvent) => {
+    //   if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
+    //     editor.chain().focus().insertContent(response).run();
+    //   }
+    // };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // document.addEventListener('mousedown', handleClickOutside);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    // return () => {
+    //   document.removeEventListener('mousedown', handleClickOutside);
+    // };
   }, [isLoading, isRecording, editor, response]);
 
   const handleGenerateAI = async () => {
@@ -183,15 +119,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         contentString = extractTextContent() + '\n' + prompt;
       }
 
-      console.log('🚀 ~ handleGenerateAI ~ contentString:', contentString);
-
       // SSE流式数据处理
       const requestData = {
         documentId: documentId || 'unknown',
-        content:
-          '"在前端或服务端开发中，处理“用户访问不存在路由”的情况是必不可少的。它既影响用户体验，也关系到 SEO 与服务器正确返回状态。一般来说，SPA、SSR 和静态托管环境下的实现方式会有所不同，需要根据场景采用相应的策略。\n\n我们先给个总原则：\n\n- 客户端路由（SPA）：用“兜底路由（catch-all）”匹配一切未命中的路径，渲染你的 `NotFound` 组件。不要做 302/301“重定向”；SPA 内部只是显示 404 页。\n\n- SSR/服务端：除了渲染 404 页面，还要返回 HTTP 404 状态码，这样对 SEO/爬虫/CDN 都正确。\n\n- 静态托管/反向代理：配置服务器的 404 页面或 “history fallback”，避免刷新直接 404 白页。"',
-        apiKey: '',
-        model: 'Qwen/QwQ-32B',
+        content: contentString,
+        apiKey: 'sk-phjxmuhdlfheyxzqdhviixdpkjarcsqysncucualaflbqohw',
+        // model: 'Qwen/QwQ-32B',
+        model: selectedModel,
       };
 
       let accumulatedResponse = '';
@@ -355,9 +289,20 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       disabled: isLoading || isRecording,
       onClick: handleCanvasToggle,
     },
+    {
+      id: 'model',
+      label: 'Model',
+      icon: BrainCircuit, // 需确保已导入该图标
+      color: '#7C3AED',
+      bgColor: 'bg-[#7C3AED]/20',
+      hoverBgColor: 'hover:bg-[#7C3AED]/30',
+      isActive: showCanvas,
+      disabled: isLoading || isRecording,
+      onClick: () => {},
+    },
   ];
 
-  const hasContent = prompt.trim() !== '';
+  const hasContent = prompt?.trim() !== '';
 
   return (
     <NodeViewWrapper className="ai-block">
@@ -366,40 +311,12 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       <div className="w-full max-w-4xl mx-auto">
         {/* AI Input Box */}
         {isLoading ? (
-          <div className="w-full max-w-4xl mx-auto p-4">
-            <div className="rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-600 text-sm font-medium">AI is writing</span>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                      style={{ animationDelay: '0ms' }}
-                    />
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                      style={{ animationDelay: '200ms' }}
-                    />
-                    <div
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"
-                      style={{ animationDelay: '400ms' }}
-                    />
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-                  onClick={() => {
-                    setIsLoading(false);
-                    updateAttributes({ loading: false });
-                  }}
-                >
-                  <Square className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <AILoadingStatus
+            onCancel={() => {
+              setIsLoading(false);
+              updateAttributes({ loading: false });
+            }}
+          />
         ) : (
           <div
             ref={componentRef}
@@ -537,6 +454,18 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                 <CustomDivider />
 
                 {actionButtons.slice(2).map((buttonConfig) => {
+                  if (buttonConfig.id === 'model') {
+                    return (
+                      <ModelSelector
+                        key={buttonConfig.id}
+                        selectedModel={selectedModel}
+                        setSelectedModel={setSelectedModel}
+                        disabled={buttonConfig.disabled}
+                        buttonConfig={buttonConfig}
+                      />
+                    );
+                  }
+
                   const IconComponent = buttonConfig.icon;
 
                   return (
