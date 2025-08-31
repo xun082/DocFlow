@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Plus, Upload, AlertCircle, FileText, File, X } from 'lucide-react';
+import { Plus, Upload, FileText, File, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import * as mammoth from 'mammoth';
@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 
 interface CreateKnowledgeDialogProps {
@@ -54,7 +53,7 @@ export function CreateKnowledgeDialog({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ file: File; content: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -168,7 +167,6 @@ export function CreateKnowledgeDialog({
       if (!files || files.length === 0) return;
 
       setIsProcessing(true);
-      setSubmitError(null);
 
       try {
         const validFileData: { file: File; content: string }[] = [];
@@ -240,7 +238,7 @@ export function CreateKnowledgeDialog({
 
         toast.success(`成功处理 ${validFileData.length} 个文件，新增 ${totalWordCount} 个字`);
       } catch (error) {
-        console.error('File processing error:', error);
+        // 移除 console.error，只显示 toast 提示
         toast.error(error instanceof Error ? error.message : '文件处理失败');
       } finally {
         setIsProcessing(false);
@@ -258,7 +256,6 @@ export function CreateKnowledgeDialog({
   const resetForm = useCallback(() => {
     setTitle('');
     setContent('');
-    setSubmitError(null);
     setUploadedFiles([]);
 
     if (fileInputRef.current) {
@@ -300,47 +297,74 @@ export function CreateKnowledgeDialog({
   const handleSubmit = useCallback(async () => {
     if (isProcessing) return;
 
-    setSubmitError(null);
     setIsProcessing(true);
 
-    try {
-      // Zod验证
-      const schema = z.object({
-        apiKey: z.string().min(1),
-        title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
-        content: z.string().min(1, '内容不能为空'),
-      });
+    // Zod验证
+    const schema = z.object({
+      apiKey: z.string().min(1, 'API Key 不能为空'),
+      title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
+      content: z.string().min(1, '内容不能为空'),
+    });
 
-      const validatedData = schema.parse({
-        apiKey: API_KEY,
-        title: title.trim(),
-        content: content.trim(),
-      });
+    const validationResult = schema.safeParse({
+      apiKey: API_KEY,
+      title: title.trim(),
+      content: content.trim(),
+    });
 
-      const response = await KnowledgeApi.CreateKnowledge(validatedData as CreateKnowledge);
+    if (!validationResult.success) {
+      const errorMsg = validationResult.error.errors[0].message;
+      toast.error(errorMsg);
+      setIsProcessing(false);
 
-      if (response.error) {
-        throw new Error(response.error);
-      }
+      return;
+    }
 
+    const response = await KnowledgeApi.CreateKnowledge(validationResult.data as CreateKnowledge, {
+      onError: (error: unknown) => {
+        const errorMsg = error instanceof Error ? error.message : '创建知识库失败';
+        toast.error(errorMsg);
+        setIsProcessing(false);
+      },
+      unauthorized: () => {
+        toast.error('API Key 无效或已过期，请检查配置或联系管理员');
+        setIsProcessing(false);
+      },
+      forbidden: () => {
+        toast.error('API Key 权限不足，请联系管理员获取正确的权限');
+        setIsProcessing(false);
+      },
+      serverError: () => {
+        toast.error('服务器内部错误，请稍后重试或联系技术支持');
+        setIsProcessing(false);
+      },
+      networkError: () => {
+        toast.error('网络连接失败，请检查网络连接后重试');
+        setIsProcessing(false);
+      },
+      default: (error: unknown) => {
+        const errorMsg = error instanceof Error ? error.message : '请求失败，请稍后重试';
+        toast.error(errorMsg);
+        setIsProcessing(false);
+      },
+    });
+
+    if (response.error) {
+      // 如果有错误但没有被 errorHandler 处理，显示通用错误
+      toast.error(response.error);
+      setIsProcessing(false);
+
+      return;
+    }
+
+    if (response.data) {
       toast.success('知识库创建成功！');
       resetForm();
       onOpenChange(false);
       onSuccess?.();
-    } catch (error) {
-      let errorMsg = '创建知识库失败';
-
-      if (error instanceof z.ZodError) {
-        errorMsg = error.errors[0].message;
-      } else if (error instanceof Error) {
-        errorMsg = error.message;
-      }
-
-      setSubmitError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setIsProcessing(false);
     }
+
+    setIsProcessing(false);
   }, [content, title, isProcessing, resetForm, onOpenChange, onSuccess]);
 
   const contentSize = new Blob([content]).size;
@@ -353,17 +377,14 @@ export function CreateKnowledgeDialog({
           <DialogTitle>添加知识库</DialogTitle>
           <DialogDescription>
             创建新的知识库，支持手动输入或上传文档文件（MD、TXT、PDF、DOCX）
+            <br />
+            <span className="text-xs text-muted-foreground mt-1 block">
+              如遇到权限问题，请检查 API Key 配置是否正确
+            </span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {submitError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
-          )}
-
           {/* 标题输入 */}
           <div className="space-y-2">
             <Label htmlFor="title">标题 *</Label>
