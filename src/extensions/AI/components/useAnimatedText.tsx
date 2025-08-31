@@ -23,7 +23,8 @@ export function useAnimatedText(): [ReactElement, SetTextFunction] {
 
   const el = (
     <TypeIt
-      options={{ cursor: false }}
+      element="p"
+      options={{ cursor: false, breakLines: true }}
       getAfterInit={(i: any) => {
         setInstance(i);
 

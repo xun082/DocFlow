@@ -68,6 +68,12 @@ export type ErrorHandler =
       default?: (error: unknown) => void;
     };
 
+// interface SSECallback<T> {
+//   onData: (data: T) => void;
+//   onError?: (error: string) => void;
+//   onComplete?: () => void;
+// }
+
 class Request {
   baseURL: string;
   defaultTimeout: number;
@@ -486,6 +492,45 @@ class Request {
     );
   }
 
+  async sse(
+    url: string,
+    params: Params,
+    callback: (response: Response) => void,
+  ): Promise<(() => void) | undefined> {
+    const controller = new AbortController();
+    const fullUrl = this.baseURL + url;
+
+    try {
+      const req = this.interceptorsRequest({
+        url: fullUrl,
+        method: 'POST',
+        params: params.params,
+        headers: params.headers,
+        withCredentials: params.withCredentials,
+      });
+
+      const response = await fetch(req.url, {
+        ...req.options,
+      });
+
+      console.log('SSE连接成功:', response);
+
+      if (!response.ok) {
+        throw new RequestError(
+          HTTP_STATUS_MESSAGES[response.status] || 'SSE连接失败',
+          fullUrl,
+          response.status,
+          response.statusText,
+        );
+      }
+
+      callback(response);
+
+      return () => controller.abort();
+    } catch (error) {
+      console.error('SSE连接异常:', error);
+    }
+  }
   /**
    * 创建取消令牌
    */

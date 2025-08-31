@@ -14,7 +14,9 @@ import Textarea from './components/Textarea';
 import Button from './components/Button';
 import AILoadingStatus from './components/AILoadingStatus';
 
+import { AiApi } from '@/services/ai';
 import { cn } from '@/utils/utils';
+// import { ContinueWritingResponse } from '@/services/ai/type';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -66,137 +68,137 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   }, [isLoading, editor, response]);
 
   const handleGenerateAI = async () => {
-    // 获取所有文本节点的文案
     if (!prompt?.trim()) return;
 
     setIsLoading(true);
     updateAttributes({ loading: true });
 
     try {
-      // 提取编辑器中的文本内容
-      let contentString: string = ' ';
+      // 获取所有文本节点的文案
+      if (!prompt?.trim()) return;
 
-      const extractTextContent = (): string => {
-        const textContents: string[] = [];
+      setIsLoading(true);
+      updateAttributes({ loading: true });
 
-        editor.state.doc.descendants((node) => {
-          if (node.type.name === 'paragraph' && node.textContent?.trim()) {
-            textContents.push(node.textContent?.trim());
-          }
-
-          return true;
-        });
-
-        return textContents.join('\n');
-      };
-
-      if (node.attrs.op === 'continue') {
-        contentString = extractTextContent();
-      } else {
-        contentString = extractTextContent() + '\n' + prompt;
-      }
-
-      // SSE流式数据处理
-      const requestData = {
-        documentId: documentId || 'unknown',
-        content: contentString,
-        apiKey: 'sk-akaemjzequsiwfzyfpijamrnsuvvfeicsbtsqnzqshfvxexv',
-        // model: 'Qwen/QwQ-32B',
-        model: selectedModel,
-      };
-
-      let accumulatedResponse = '';
-
-      // 先发送POST请求启动流式处理
       try {
-        const response = await fetch('https://api.codecrack.cn/api/v1/ai/continue-writing', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
+        // 提取编辑器中的文本内容
+        let contentString: string = ' ';
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const extractTextContent = (): string => {
+          const textContents: string[] = [];
+
+          editor.state.doc.descendants((node) => {
+            if (node.type.name === 'paragraph' && node.textContent?.trim()) {
+              textContents.push(node.textContent?.trim());
+            }
+
+            return true;
+          });
+
+          return textContents.join('\n');
+        };
+
+        if (node.attrs.op === 'continue') {
+          contentString = extractTextContent();
+        } else {
+          contentString = extractTextContent() + '\n' + prompt;
         }
 
-        // 获取流式响应
-        const reader = response.body?.getReader();
+        // SSE流式数据处理
+        const requestData = {
+          documentId: documentId,
+          content: contentString,
+          apiKey: 'sk-akaemjzequsiwfzyfpijamrnsuvvfeicsbtsqnzqshfvxexv', // 从环境变量获取
+          model: selectedModel,
+        };
 
-        if (!reader) {
-          throw new Error('无法获取响应流');
-        }
-
-        const decoder = new TextDecoder();
+        let accumulatedResponse = '';
         let buffer = '';
 
-        while (true) {
-          const { done, value } = await reader.read();
+        AiApi.ContinueWriting(requestData, async (response: Response) => {
+          // 获取流式响应
+          const reader = response.body?.getReader();
 
-          if (done) {
-            break;
+          if (!reader) {
+            throw new Error('无法获取响应流');
           }
 
-          buffer += decoder.decode(value, { stream: true });
+          const decoder = new TextDecoder();
 
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
+          while (true) {
+            const { done, value } = await reader.read();
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+            if (done) {
+              break;
+            }
 
-              if (data === '[DONE]') {
-                setIsLoading(false);
-                console.log('AI响应完成:', accumulatedResponse);
+            buffer += decoder.decode(value, {
+              stream: true,
+            });
 
-                return;
-              }
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
 
-              try {
-                const parsedData = JSON.parse(data);
+            let lineString = '';
+            console.log('lines', lines);
 
-                // 检查是否有choices数组和delta内容
-                if (parsedData.choices && parsedData.choices.length > 0) {
-                  const choice = parsedData.choices[0];
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
 
-                  // 检查finish_reason来判断是否完成
-                  if (choice.finish_reason === 'stop') {
-                    // 流式传输完成
-                    console.log('结束');
-                    setIsLoading(false);
+                if (data === '[DONE]') {
+                  setIsLoading(false);
+                  console.log('AI响应完成:', accumulatedResponse);
 
-                    return;
-                  } else if (choice.delta && choice.delta.content) {
-                    // 累积接收到的内容
-                    accumulatedResponse += choice.delta.content;
-
-                    if (choice.delta.content) {
-                      setText(choice.delta.content);
-                    }
-
-                    setResponse(accumulatedResponse);
-                  }
+                  return;
                 }
-              } catch (parseError) {
-                console.error('解析SSE数据失败:', parseError);
+
+                try {
+                  const parsedData = JSON.parse(data);
+
+                  // 检查是否有choices数组和delta内容
+                  if (parsedData.choices && parsedData.choices.length > 0) {
+                    const choice = parsedData.choices[0];
+
+                    // 检查finish_reason来判断是否完成
+                    if (choice.finish_reason === 'stop') {
+                      // 流式传输完成
+                      console.log('结束');
+                      setIsLoading(false);
+
+                      return;
+                    } else if (choice.delta && choice.delta.content) {
+                      // 累积接收到的内容
+                      accumulatedResponse += choice.delta.content;
+
+                      if (choice.delta.content) {
+                      }
+
+                      lineString += choice.delta.content;
+                      setResponse(accumulatedResponse);
+                    }
+                  }
+
+                  setText(lineString);
+                } catch (parseError) {
+                  console.error('解析SSE数据失败:', parseError);
+                }
               }
             }
           }
-        }
-      } catch (error) {
-        console.error('POST请求失败:', error);
-        setResponse('错误：请求失败');
-        setIsLoading(false);
+        });
 
-        return;
+        // 组件卸载时中止请求
+        // return () => abortController.abort();
+      } catch (error) {
+        console.error('初始化失败:', error);
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error('AI生成失败:', error);
-      updateAttributes({ loading: false });
-    } finally {
+      console.error('请求过程中出错:', error);
       setIsLoading(false);
+      setResponse('错误：请求过程中出错');
+      updateAttributes({ loading: false });
     }
   };
 
