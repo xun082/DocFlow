@@ -54,7 +54,7 @@ export const useFileStore = create<FileState>((set, get) => ({
   files: [],
   expandedFolders: {},
   selectedFileId: null,
-  isLoading: false,
+  isLoading: true,
 
   // UI 状态
   isRenaming: null,

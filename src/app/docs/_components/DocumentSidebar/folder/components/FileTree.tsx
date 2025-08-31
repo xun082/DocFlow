@@ -60,16 +60,18 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
 
     return (
       <div
+        data-new-item-container
         className={cn(
           'flex items-center py-2 px-3 text-sm mx-2 my-0.5',
           'bg-gradient-to-r from-green-50 via-emerald-50/80 to-green-50',
           'dark:from-green-900/20 dark:via-emerald-900/20 dark:to-green-900/20',
           'border border-green-200/60 dark:border-green-700/50 rounded-lg',
           'shadow-md shadow-green-200/20 dark:shadow-green-800/20',
+          'overflow-hidden', // 防止内容溢出
         )}
+        onClick={(e) => e.stopPropagation()} // 阻止事件冒泡
       >
-        <div className="w-5 h-5 mr-2 flex-shrink-0"></div>
-        <div className="w-6 h-6 mr-3 flex-shrink-0 flex items-center justify-center">
+        <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
           <div
             className={cn(
               'w-5 h-5 rounded-md flex items-center justify-center',
@@ -83,7 +85,9 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
             />
           </div>
         </div>
-        <div className="flex-1 flex items-center space-x-2">
+        <div className="flex-1 flex items-center space-x-2 min-w-0">
+          {' '}
+          {/* 添加 min-w-0 防止溢出 */}
           <input
             ref={inputRef}
             type="text"
@@ -95,10 +99,12 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
               'px-3 py-2 text-sm rounded-lg transition-all duration-300',
               'text-slate-900 dark:text-slate-100',
               'shadow-lg shadow-green-200/30 dark:shadow-green-800/20',
+              'min-w-0', // 防止输入框过宽
             )}
             value={newItemName}
             onChange={(e) => onSetNewItemName(e.target.value)}
             onKeyDown={onKeyDown}
+            onClick={(e) => e.stopPropagation()} // 阻止点击输入框时退出
             autoFocus
             placeholder={`${newItemType === 'folder' ? '文件夹' : '文件'}名称`}
           />

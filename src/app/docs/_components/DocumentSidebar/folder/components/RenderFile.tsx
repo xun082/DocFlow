@@ -132,9 +132,9 @@ export const RenderFile: React.FC<{
           onClick={(e) => (isFolder ? onToggleFolder(file.id, e) : onFileSelect(file, e))}
           onContextMenu={(e) => onContextMenu(e, file.id)}
         >
-          {/* 展开/折叠图标 - 精美设计 */}
-          <div className="mr-2 w-5 h-5 flex-shrink-0 flex items-center justify-center">
-            {isFolder && (
+          {/* 展开/折叠图标 - 只为文件夹显示 */}
+          {isFolder && (
+            <div className="mr-2 w-5 h-5 flex-shrink-0 flex items-center justify-center">
               <button
                 className={cn(
                   'w-5 h-5 rounded-md flex items-center justify-center group/chevron',
@@ -158,8 +158,8 @@ export const RenderFile: React.FC<{
                   )}
                 />
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 文件/文件夹图标 - 更精美的设计 */}
           <div className="w-6 h-6 mr-3 flex-shrink-0 flex items-center justify-center">
@@ -324,8 +324,7 @@ export const RenderFile: React.FC<{
                   )}
                   style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
                 >
-                  <div className="w-5 h-5 mr-2 flex-shrink-0"></div>
-                  <div className="w-6 h-6 mr-3 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
                     <div
                       className={cn(
                         'w-5 h-5 rounded-md flex items-center justify-center',

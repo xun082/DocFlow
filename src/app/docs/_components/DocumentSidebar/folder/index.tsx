@@ -249,19 +249,63 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
         {/* 文件树区域 */}
         <div
           className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent relative"
-          onClick={() => {
-            closeContextMenu();
-            if (isRenaming) setIsRenaming(null);
+          onClick={(e) => {
+            // 检查点击的是否是新建输入框区域
+            const target = e.target as HTMLElement;
+            const isNewItemInput = target.closest('[data-new-item-container]');
 
-            if (newItemFolder) {
-              setNewItemFolder(null);
-              setNewItemType(null);
+            if (!isNewItemInput) {
+              closeContextMenu();
+              if (isRenaming) setIsRenaming(null);
+
+              if (newItemFolder) {
+                setNewItemFolder(null);
+                setNewItemType(null);
+              }
             }
           }}
         >
-          {/* 如果没有文件数据且不在创建新项目时显示骨架屏 */}
-          {files.length === 0 && !newItemFolder ? (
+          {/* 根据加载状态和文件数量显示不同内容 */}
+          {isLoading ? (
             <LoadingSkeleton />
+          ) : files.length === 0 && !newItemFolder && !isLoading ? (
+            <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-slate-400 dark:text-slate-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+                暂无文档
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-48">
+                点击上方的新建按钮创建您的第一个文档
+              </p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => createNewRootItem('file')}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
+                >
+                  新建文档
+                </button>
+                <button
+                  onClick={() => createNewRootItem('folder')}
+                  className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
+                >
+                  新建文件夹
+                </button>
+              </div>
+            </div>
           ) : (
             <>
               {/* 加载指示器 */}
