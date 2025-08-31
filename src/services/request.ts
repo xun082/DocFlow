@@ -176,21 +176,41 @@ class Request {
     const status = res.status;
     const statusText = res.statusText;
 
-    // 处理非 JSON 响应类型（如文件下载等）
+    // 首先检查 HTTP 状态码，无论响应类型如何
+    if (!res.ok) {
+      // 尝试获取错误信息
+      let errorMessage = HTTP_STATUS_MESSAGES[status] || `HTTP 错误: ${status} ${statusText}`;
+      let errorData = null;
+
+      try {
+        const contentType = res.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await res.json();
+
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } else {
+          const textData = await res.text();
+
+          if (textData) {
+            errorMessage = textData;
+          }
+        }
+      } catch {
+        // 如果无法解析错误信息，使用默认消息
+      }
+
+      throw new RequestError(errorMessage, url, status, statusText, errorData);
+    }
+
+    // 处理成功响应的不同类型
     const contentType = res.headers.get('content-type');
 
     if (contentType && !contentType.includes('application/json')) {
-      if (res.ok) {
-        // 对于成功的非 JSON 响应，直接返回原始响应
-        return res as unknown as T;
-      } else {
-        throw new RequestError(
-          HTTP_STATUS_MESSAGES[status] || `HTTP 错误: ${status} ${statusText}`,
-          url,
-          status,
-          statusText,
-        );
-      }
+      // 对于成功的非 JSON 响应，直接返回原始响应
+      return res as unknown as T;
     }
 
     try {
@@ -274,28 +294,25 @@ class Request {
     // 处理 RequestError
     if (error instanceof RequestError) {
       // 执行特定状态码的处理函数
-      if (handlers) {
-        if (error.status) {
-          // 特定状态码的处理
-          if (handlers[error.status]) {
-            handlers[error.status](error);
-          } else if (error.status === 401 && handlers.unauthorized) {
-            handlers.unauthorized();
-          } else if (error.status === 403 && handlers.forbidden) {
-            handlers.forbidden();
-          } else if (error.status >= 500 && handlers.serverError) {
-            handlers.serverError();
-          }
+      if (handlers && error.status) {
+        // 特定状态码的处理
+        if (handlers[error.status]) {
+          handlers[error.status](error);
+        } else if (error.status === 401 && handlers.unauthorized) {
+          handlers.unauthorized();
+        } else if (error.status === 403 && handlers.forbidden) {
+          handlers.forbidden();
+        } else if (error.status >= 500 && handlers.serverError) {
+          handlers.serverError();
+        } else if (handlers.default) {
+          handlers.default(error);
         }
+      } else if (handlers?.default) {
+        handlers.default(error);
       }
 
       // 返回格式化的错误消息
       return error.message || fallbackMessage;
-    }
-
-    // 处理其他类型错误
-    if (handlers?.default) {
-      handlers.default(error);
     }
 
     // 处理网络错误
@@ -314,6 +331,11 @@ class Request {
     // 处理取消请求
     if (error instanceof DOMException && error.name === 'AbortError') {
       return '请求已取消';
+    }
+
+    // 处理其他类型错误
+    if (handlers?.default) {
+      handlers.default(error);
     }
 
     // 返回通用错误消息
@@ -344,9 +366,8 @@ class Request {
         errorHandler(error);
       } else if (errorHandler?.onError) {
         errorHandler.onError(error);
-      } else {
-        console.error('Request error:', error);
       }
+      // 移除默认的 console.error，让调用方决定如何处理错误
 
       // 提供错误状态码，方便调用者进行更细粒度的处理
       const status = error instanceof RequestError ? error.status : undefined;
@@ -381,18 +402,23 @@ class Request {
     });
 
     const requestFn = async () => {
-      const fetchPromise = fetch(req.url, { ...req.options, signal });
+      try {
+        const fetchPromise = fetch(req.url, { ...req.options, signal });
 
-      let res: Response;
+        let res: Response;
 
-      if (timeout) {
-        const timeoutPromise = this.createTimeoutPromise(timeout);
-        res = await Promise.race([fetchPromise, timeoutPromise]);
-      } else {
-        res = await fetchPromise;
+        if (timeout) {
+          const timeoutPromise = this.createTimeoutPromise(timeout);
+          res = await Promise.race([fetchPromise, timeoutPromise]);
+        } else {
+          res = await fetchPromise;
+        }
+
+        return this.interceptorsResponse<T>(res, fullUrl);
+      } catch (error) {
+        // 确保所有错误都被正确抛出，不在这里输出到控制台
+        throw error;
       }
-
-      return this.interceptorsResponse<T>(res, fullUrl);
     };
 
     return this.executeWithRetry(requestFn, retries, retryDelay);
