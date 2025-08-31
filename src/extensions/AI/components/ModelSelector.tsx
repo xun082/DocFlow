@@ -69,7 +69,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             {option.label}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
       </DropdownMenuContent>
     </DropdownMenu>
   );

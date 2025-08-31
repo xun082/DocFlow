@@ -3,19 +3,10 @@ import { useParams } from 'next/navigation';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
-import {
-  ArrowUp,
-  Paperclip,
-  Square,
-  StopCircle,
-  Mic,
-  Globe,
-  BrainCog,
-  FolderCode,
-  BrainCircuit,
-} from 'lucide-react';
+import { ArrowUp, Paperclip, Square, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { createActionButtons } from './actionButtons';
 import { useAnimatedText } from './components/useAnimatedText';
 import CustomDivider from './components/CustomDivider';
 import ModelSelector from './components/ModelSelector';
@@ -32,19 +23,6 @@ interface AIComponentProps {
   editor: Editor;
 }
 
-// 按钮配置接口
-interface ActionButtonConfig {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-  hoverBgColor: string;
-  isActive: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-}
-
 export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
   const params = useParams();
   const documentId = params?.room as string;
@@ -52,7 +30,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const [isLoading, setIsLoading] = useState(node.attrs.loading || false);
   const [response, setResponse] = useState(node.attrs.response || '');
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
-  const [isRecording, setIsRecording] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showThink, setShowThink] = useState(false);
   const [showCanvas, setShowCanvas] = useState(false);
@@ -70,27 +47,27 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
   useEffect(() => {
     setTimeout(() => {
-      if (textareaRef.current && !isLoading && !isRecording) {
+      if (textareaRef.current && !isLoading) {
         textareaRef.current.focus();
       }
     }, 100);
 
-    // const handleClickOutside = (event: MouseEvent) => {
-    //   if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-    //     editor.chain().focus().insertContent(response).run();
-    //   }
-    // };
+    const handleClickOutside = (event: MouseEvent) => {
+      if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
+        editor.chain().focus().insertContent(response).run();
+      }
+    };
 
-    // document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
-    // return () => {
-    //   document.removeEventListener('mousedown', handleClickOutside);
-    // };
-  }, [isLoading, isRecording, editor, response]);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLoading, editor, response]);
 
   const handleGenerateAI = async () => {
     // 获取所有文本节点的文案
-    if (!prompt.trim()) return;
+    if (!prompt?.trim()) return;
 
     setIsLoading(true);
     updateAttributes({ loading: true });
@@ -103,8 +80,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         const textContents: string[] = [];
 
         editor.state.doc.descendants((node) => {
-          if (node.type.name === 'paragraph' && node.textContent.trim()) {
-            textContents.push(node.textContent.trim());
+          if (node.type.name === 'paragraph' && node.textContent?.trim()) {
+            textContents.push(node.textContent?.trim());
           }
 
           return true;
@@ -123,7 +100,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       const requestData = {
         documentId: documentId || 'unknown',
         content: contentString,
-        apiKey: 'sk-phjxmuhdlfheyxzqdhviixdpkjarcsqysncucualaflbqohw',
+        apiKey: 'sk-akaemjzequsiwfzyfpijamrnsuvvfeicsbtsqnzqshfvxexv',
         // model: 'Qwen/QwQ-32B',
         model: selectedModel,
       };
@@ -255,49 +232,27 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   };
 
   // 按钮配置数据
-  const actionButtons: ActionButtonConfig[] = [
-    {
-      id: 'search',
-      label: 'Search',
-      icon: Globe,
-      color: '#10B981',
-      bgColor: 'bg-[#10B981]/20',
-      hoverBgColor: 'hover:bg-[#10B981]/30',
-      isActive: showSearch,
-      disabled: isLoading || isRecording,
-      onClick: () => handleToggleChange('search'),
-    },
-    {
-      id: 'think',
-      label: 'Think',
-      icon: BrainCog,
-      color: '#8B5CF6',
-      bgColor: 'bg-[#8B5CF6]/20',
-      hoverBgColor: 'hover:bg-[#8B5CF6]/30',
-      isActive: showThink,
-      disabled: isLoading || isRecording,
-      onClick: () => handleToggleChange('think'),
-    },
-    {
-      id: 'canvas',
-      label: 'Canvas',
-      icon: FolderCode,
-      color: '#F97316',
-      bgColor: 'bg-[#F97316]/20',
-      hoverBgColor: 'hover:bg-[#F97316]/30',
-      isActive: showCanvas,
-      disabled: isLoading || isRecording,
-      onClick: handleCanvasToggle,
-    },
+  const baseButtons = createActionButtons(
+    showSearch,
+    showThink,
+    showCanvas,
+    () => handleToggleChange('search'),
+    () => handleToggleChange('think'),
+    handleCanvasToggle,
+    isLoading,
+  );
+
+  const actionButtons = [
+    ...baseButtons,
     {
       id: 'model',
       label: 'Model',
-      icon: BrainCircuit, // 需确保已导入该图标
+      icon: BrainCircuit,
       color: '#7C3AED',
       bgColor: 'bg-[#7C3AED]/20',
       hoverBgColor: 'hover:bg-[#7C3AED]/30',
       isActive: showCanvas,
-      disabled: isLoading || isRecording,
+      disabled: isLoading,
       onClick: () => {},
     },
   ];
@@ -324,12 +279,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
               'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
             )}
           >
-            <div
-              className={cn(
-                'transition-all duration-300',
-                isRecording ? 'h-0 overflow-hidden opacity-0' : 'opacity-100',
-              )}
-            >
+            <div className={cn('transition-all duration-300')}>
               {isLoading ? (
                 <div className="flex items-center justify-center py-6">
                   <div className="flex items-center gap-3">
@@ -344,36 +294,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                   onChange={handlePromptChange}
                   onKeyDown={handleKeyDown}
                   className="text-base"
-                  disabled={isLoading || isRecording}
+                  disabled={isLoading}
                   placeholder="输入你的AI提示词..."
                 />
               )}
-            </div>
-
-            {/* Voice Recording Indicator */}
-            <div
-              className={cn(
-                'flex flex-col items-center justify-center w-full transition-all duration-300 py-3',
-                isRecording ? 'opacity-100' : 'opacity-0 h-0',
-              )}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="font-mono text-sm text-white/80">00:00</span>
-              </div>
-              <div className="w-full h-10 flex items-center justify-center gap-0.5 px-4">
-                {[...Array(32)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-0.5 rounded-full bg-white/50 animate-pulse"
-                    style={{
-                      height: `${Math.max(15, Math.random() * 100)}%`,
-                      animationDelay: `${i * 0.05}s`,
-                      animationDuration: `${0.5 + Math.random() * 0.5}s`,
-                    }}
-                  />
-                ))}
-              </div>
             </div>
 
             {/* Actions */}
@@ -391,7 +315,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                 size="icon"
                 className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
                 onClick={() => uploadInputRef.current?.click()}
-                disabled={isLoading || isRecording}
+                disabled={isLoading}
               >
                 <Paperclip className="h-5 w-5" />
               </Button>
@@ -402,7 +326,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
                   return (
                     <button
-                      key={buttonConfig.id}
+                      key={buttonConfig.id + '-action'}
                       onClick={buttonConfig.onClick}
                       className={cn(
                         'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
@@ -456,13 +380,18 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                 {actionButtons.slice(2).map((buttonConfig) => {
                   if (buttonConfig.id === 'model') {
                     return (
-                      <ModelSelector
-                        key={buttonConfig.id}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
-                        disabled={buttonConfig.disabled}
-                        buttonConfig={buttonConfig}
-                      />
+                      <div
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ModelSelector
+                          key={buttonConfig.id}
+                          selectedModel={selectedModel}
+                          setSelectedModel={setSelectedModel}
+                          disabled={buttonConfig.disabled}
+                          buttonConfig={buttonConfig}
+                        />
+                      </div>
                     );
                   }
 
@@ -525,27 +454,21 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                 size="icon"
                 className={cn(
                   'h-8 w-8 rounded-full transition-all duration-200',
-                  isRecording
-                    ? 'bg-transparent hover:bg-gray-200/50 text-red-500 hover:text-red-600'
-                    : hasContent
-                      ? 'bg-gray-700 hover:bg-gray-800 text-white'
-                      : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
+                  hasContent
+                    ? 'bg-gray-700 hover:bg-gray-800 text-white'
+                    : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
                 )}
                 onClick={() => {
-                  if (isRecording) setIsRecording(false);
-                  else if (hasContent) handleGenerateAI();
-                  else setIsRecording(true);
+                  if (hasContent) handleGenerateAI();
                 }}
                 disabled={isLoading && !hasContent}
               >
                 {isLoading ? (
                   <Square className="h-4 w-4 fill-white animate-pulse" />
-                ) : isRecording ? (
-                  <StopCircle className="h-5 w-5 text-red-500" />
                 ) : hasContent ? (
                   <ArrowUp className="h-4 w-4 text-white" />
                 ) : (
-                  <Mic className="h-5 w-5 text-white transition-colors" />
+                  <span className="h-5 w-5 flex items-center justify-center text-white">?</span>
                 )}
               </Button>
             </div>
