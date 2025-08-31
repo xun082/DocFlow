@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect } from 'react';
 import {
   MessageCircle,
   Users,
@@ -7,22 +10,19 @@ import {
   TrendingUp,
   Clock,
   Plus,
+  Wifi,
 } from 'lucide-react';
 
-const quickStats = [
+import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
+
+// 静态数据
+const staticStats = [
   {
     name: '未读消息',
     value: '12',
     icon: <MessageCircle className="w-6 h-6" />,
     color: 'bg-blue-500',
     change: '+2',
-  },
-  {
-    name: '团队成员',
-    value: '25',
-    icon: <Users className="w-6 h-6" />,
-    color: 'bg-green-500',
-    change: '+3',
   },
   {
     name: '今日会议',
@@ -108,6 +108,15 @@ const upcomingEvents = [
 ];
 
 export default function DashboardPage() {
+  const { isConnected, isConnecting, onlineUsers, connect } = useNotificationSocket();
+
+  // 自动连接WebSocket
+  useEffect(() => {
+    if (!isConnected && !isConnecting) {
+      connect();
+    }
+  }, [isConnected, isConnecting, connect]);
+
   const currentTime = new Date().toLocaleString('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -115,6 +124,19 @@ export default function DashboardPage() {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  // 动态生成统计数据，包含实时在线用户数
+  const quickStats = [
+    ...staticStats,
+    {
+      name: '在线用户',
+      value: isConnected ? onlineUsers.length.toString() : '--',
+      icon: <Wifi className="w-6 h-6" />,
+      color: isConnected ? 'bg-green-500' : 'bg-gray-400',
+      change: isConnected ? `${onlineUsers.length > 0 ? '+' : ''}${onlineUsers.length}` : '--',
+      status: isConnected ? 'connected' : 'disconnected',
+    },
+  ];
 
   return (
     <div className="p-6">
@@ -127,21 +149,44 @@ export default function DashboardPage() {
       {/* 数据统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {quickStats.map((stat, index) => (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
+          <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 relative">
             <div className="flex items-center justify-between mb-4">
               <div
-                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}
+                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white relative`}
               >
                 {stat.icon}
+                {/* 在线状态指示器 */}
+                {stat.name === '在线用户' && (
+                  <div
+                    className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                      isConnected ? 'bg-green-400 animate-pulse' : 'bg-gray-400'
+                    }`}
+                  ></div>
+                )}
               </div>
-              <div className="flex items-center text-green-600 text-sm">
+              <div
+                className={`flex items-center text-sm ${
+                  stat.name === '在线用户' && !isConnected ? 'text-gray-400' : 'text-green-600'
+                }`}
+              >
                 <TrendingUp className="w-4 h-4 mr-1" />
                 {stat.change}
               </div>
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-              <p className="text-sm text-gray-600">{stat.name}</p>
+              <p className="text-sm text-gray-600 flex items-center">
+                {stat.name}
+                {stat.name === '在线用户' && (
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {isConnected ? '实时' : '离线'}
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         ))}
@@ -188,6 +233,61 @@ export default function DashboardPage() {
 
         {/* 侧边栏 */}
         <div className="space-y-6">
+          {/* 在线用户 */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Wifi
+                  className={`w-4 h-4 mr-2 ${isConnected ? 'text-green-500' : 'text-gray-400'}`}
+                />
+                在线用户
+              </h3>
+              <span
+                className={`text-sm px-2 py-1 rounded-full ${
+                  isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {isConnected ? onlineUsers.length : 0}
+              </span>
+            </div>
+
+            {isConnected ? (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {onlineUsers.length > 0 ? (
+                  onlineUsers.slice(0, 5).map((user: any, index: number) => (
+                    <div
+                      key={user.id || index}
+                      className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                      </div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">暂无其他在线用户</p>
+                )}
+                {onlineUsers.length > 5 && (
+                  <div className="text-center pt-2">
+                    <span className="text-xs text-gray-500">
+                      还有 {onlineUsers.length - 5} 人在线
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Wifi className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">WebSocket 未连接</p>
+                <p className="text-xs text-gray-400 mt-1">无法获取实时用户信息</p>
+              </div>
+            )}
+          </div>
+
           {/* 今日日程 */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">

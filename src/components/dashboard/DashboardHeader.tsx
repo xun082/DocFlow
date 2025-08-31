@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, User, Settings, LogOut, HelpCircle, Menu, ChevronDown } from 'lucide-react';
+import {
+  Bell,
+  User,
+  Settings,
+  LogOut,
+  HelpCircle,
+  Menu,
+  ChevronDown,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 
 import { getPageDescription, PAGE_TITLE_MAP } from '@/utils/constants/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -16,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useUserQuery, useLogoutMutation, getLocalUserData } from '@/hooks/useUserQuery';
+import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
 
 interface DashboardHeaderProps {
   onMenuToggle?: () => void;
@@ -72,6 +83,17 @@ export default function DashboardHeader({
   const logoutMutation = useLogoutMutation();
   const [notifications] = useState(mockNotifications);
   const [localUserData, setLocalUserData] = useState<any>(undefined);
+
+  // WebSocket 连接
+  const {
+    isConnected,
+    isConnecting,
+    error,
+    currentUser: wsUser,
+    onlineUsers,
+    connect,
+    disconnect,
+  } = useNotificationSocket();
 
   // 加载本地用户数据作为fallback
   useEffect(() => {
@@ -133,8 +155,94 @@ export default function DashboardHeader({
           </div>
         </div>
 
-        {/* 右侧：通知、帮助、用户头像 */}
+        {/* 右侧：WebSocket状态、通知、帮助、用户头像 */}
         <div className="flex items-center space-x-3">
+          {/* WebSocket 状态指示器 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-gray-100 flex items-center space-x-2"
+              >
+                {isConnected ? (
+                  <Wifi className="h-4 w-4 text-green-600" />
+                ) : isConnecting ? (
+                  <Wifi className="h-4 w-4 text-yellow-600 animate-pulse" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-red-600" />
+                )}
+                <span className="hidden md:inline text-xs">
+                  {isConnected ? '已连接' : isConnecting ? '连接中' : '未连接'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>WebSocket 连接状态</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+
+              <div className="p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">连接状态:</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      isConnected
+                        ? 'text-green-600'
+                        : isConnecting
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
+                    }`}
+                  >
+                    {isConnected ? '已连接' : isConnecting ? '连接中...' : '未连接'}
+                  </span>
+                </div>
+
+                {wsUser && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">当前用户:</span>
+                    <span className="text-sm font-medium">{wsUser.name}</span>
+                  </div>
+                )}
+
+                {isConnected && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">在线用户:</span>
+                    <span className="text-sm font-medium">{onlineUsers.length}人</span>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded">错误: {error}</div>
+                )}
+              </div>
+
+              <DropdownMenuSeparator />
+
+              <div className="p-2 flex gap-2">
+                {!isConnected && !isConnecting && (
+                  <Button onClick={connect} size="sm" className="flex-1 text-xs">
+                    重新连接
+                  </Button>
+                )}
+                {isConnected && (
+                  <Button
+                    onClick={disconnect}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs"
+                  >
+                    断开连接
+                  </Button>
+                )}
+              </div>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-center text-gray-500 cursor-default">
+                WebSocket 连接管理
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* 帮助按钮 */}
           <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-gray-100">
             <HelpCircle className="h-5 w-5 text-gray-600" />
