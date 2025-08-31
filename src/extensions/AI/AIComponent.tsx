@@ -16,7 +16,6 @@ import AILoadingStatus from './components/AILoadingStatus';
 
 import { AiApi } from '@/services/ai';
 import { cn } from '@/utils/utils';
-// import { ContinueWritingResponse } from '@/services/ai/type';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -38,7 +37,9 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
-  const [animatedText, setText] = useAnimatedText();
+  const [animatedText, setText] = useAnimatedText(editor);
+  const [accumulatedResponse, setAccumulatedResponse] = useState('');
+  const abortRef = useRef<() => void | undefined>(undefined);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -112,10 +113,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
           model: selectedModel,
         };
 
-        let accumulatedResponse = '';
+        // let accumulatedResponse = '';
         let buffer = '';
 
-        AiApi.ContinueWriting(requestData, async (response: Response) => {
+        abortRef.current = await AiApi.ContinueWriting(requestData, async (response: Response) => {
           // 获取流式响应
           const reader = response.body?.getReader();
 
@@ -140,7 +141,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
             buffer = lines.pop() || '';
 
             let lineString = '';
-            console.log('lines', lines);
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
@@ -164,16 +164,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                     if (choice.finish_reason === 'stop') {
                       // 流式传输完成
                       console.log('结束');
+                      setPrompt(''); // 清空输入框
                       setIsLoading(false);
 
                       return;
                     } else if (choice.delta && choice.delta.content) {
                       // 累积接收到的内容
-                      accumulatedResponse += choice.delta.content;
-
-                      if (choice.delta.content) {
-                      }
-
+                      setAccumulatedResponse(accumulatedResponse + choice.delta.content);
                       lineString += choice.delta.content;
                       setResponse(accumulatedResponse);
                     }
@@ -189,7 +186,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         });
 
         // 组件卸载时中止请求
-        // return () => abortController.abort();
+        // return () => abort();
       } catch (error) {
         console.error('初始化失败:', error);
         setIsLoading(false);
@@ -270,6 +267,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         {isLoading ? (
           <AILoadingStatus
             onCancel={() => {
+              abortRef.current?.();
               setIsLoading(false);
               updateAttributes({ loading: false });
             }}

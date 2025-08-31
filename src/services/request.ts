@@ -513,8 +513,6 @@ class Request {
         ...req.options,
       });
 
-      console.log('SSE连接成功:', response);
-
       if (!response.ok) {
         throw new RequestError(
           HTTP_STATUS_MESSAGES[response.status] || 'SSE连接失败',
