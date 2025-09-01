@@ -41,7 +41,7 @@ declare module '@tiptap/core' {
       /**
        * Insert an AI block
        */
-      setAI: (options: { prompt: string; context?: string; op?: string }) => ReturnType;
+      setAI: (options: { prompt: string; op?: string }) => ReturnType;
     };
   }
 }
@@ -78,19 +78,7 @@ export const AI = Node.create<AIOptions>({
           };
         },
       },
-      context: {
-        default: '',
-        parseHTML: (element) => element.getAttribute('data-context'),
-        renderHTML: (attributes) => {
-          if (!attributes.context) {
-            return {};
-          }
 
-          return {
-            'data-context': attributes.context,
-          };
-        },
-      },
       response: {
         default: '',
         parseHTML: (element) => element.getAttribute('data-response'),

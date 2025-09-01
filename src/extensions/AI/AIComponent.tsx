@@ -27,8 +27,8 @@ interface AIComponentProps {
 export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
   const params = useParams();
   const documentId = params?.room as string;
-  const [prompt, setPrompt] = useState(node.attrs.context || '');
-  const [isLoading, setIsLoading] = useState(node.attrs.loading || false);
+  const [prompt, setPrompt] = useState(node.attrs.prompt || '');
+  const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(node.attrs.response || '');
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
   const [showSearch, setShowSearch] = useState(false);
@@ -37,8 +37,9 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
-  const [animatedText, setText] = useAnimatedText(editor);
+  const [animatedText, setText] = useAnimatedText();
   const [accumulatedResponse, setAccumulatedResponse] = useState('');
+  const accumulatedResponseRef = useRef('');
   const abortRef = useRef<() => void | undefined>(undefined);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-        editor.chain().focus().insertContent(response).run();
+        updateAttributes({ showInput: false });
       }
     };
 
@@ -71,6 +72,9 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const handleGenerateAI = async () => {
     if (!prompt?.trim()) return;
 
+    // 重置响应状态
+    setAccumulatedResponse('');
+    accumulatedResponseRef.current = '';
     setIsLoading(true);
     updateAttributes({ loading: true });
 
@@ -113,7 +117,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
           model: selectedModel,
         };
 
-        // let accumulatedResponse = '';
         let buffer = '';
 
         abortRef.current = await AiApi.ContinueWriting(requestData, async (response: Response) => {
@@ -162,20 +165,24 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
                     // 检查finish_reason来判断是否完成
                     if (choice.finish_reason === 'stop') {
-                      // 流式传输完成
+                      // 流式传输完成，同步响应内容
                       console.log('结束');
+                      setResponse(accumulatedResponseRef.current);
+                      updateAttributes({ response: accumulatedResponseRef.current });
                       setPrompt(''); // 清空输入框
                       setIsLoading(false);
 
                       return;
                     } else if (choice.delta && choice.delta.content) {
                       // 累积接收到的内容
-                      setAccumulatedResponse(accumulatedResponse + choice.delta.content);
+                      const newContent = accumulatedResponseRef.current + choice.delta.content;
+                      accumulatedResponseRef.current = newContent;
+                      setAccumulatedResponse(newContent);
                       lineString += choice.delta.content;
-                      setResponse(accumulatedResponse);
                     }
                   }
 
+                  // 防止打字机效果漏字
                   setText(lineString);
                 } catch (parseError) {
                   console.error('解析SSE数据失败:', parseError);
@@ -261,218 +268,223 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   return (
     <NodeViewWrapper className="ai-block">
       {/* 返回值显示 */}
-      <div className="mb-2">{animatedText}</div>
       <div className="w-full max-w-4xl mx-auto">
         {/* AI Input Box */}
         {isLoading ? (
-          <AILoadingStatus
-            onCancel={() => {
-              abortRef.current?.();
-              setIsLoading(false);
-              updateAttributes({ loading: false });
-            }}
-          />
+          <>
+            <div className="mb-2">{animatedText}</div>
+            <AILoadingStatus
+              onCancel={() => {
+                abortRef.current?.();
+                setIsLoading(false);
+                updateAttributes({ loading: false });
+              }}
+            />
+          </>
         ) : (
-          <div
-            ref={componentRef}
-            className={cn(
-              'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
-            )}
-          >
-            <div className={cn('transition-all duration-300')}>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-gray-600">AI正在思考中...</span>
-                  </div>
-                </div>
-              ) : (
-                <Textarea
-                  ref={textareaRef}
-                  value={prompt}
-                  onChange={handlePromptChange}
-                  onKeyDown={handleKeyDown}
-                  className="text-base"
-                  disabled={isLoading}
-                  placeholder="输入你的AI提示词..."
-                />
+          <>
+            <div className="mb-2">{response}</div>
+            <div
+              ref={componentRef}
+              className={cn(
+                'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
               )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              <input
-                ref={uploadInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                multiple={false}
-              />
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-                onClick={() => uploadInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Paperclip className="h-5 w-5" />
-              </Button>
-
-              <div className="flex items-center gap-1">
-                {actionButtons.slice(0, 2).map((buttonConfig) => {
-                  const IconComponent = buttonConfig.icon;
-
-                  return (
-                    <button
-                      key={buttonConfig.id + '-action'}
-                      onClick={buttonConfig.onClick}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
-                        buttonConfig.isActive
-                          ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                          : 'text-[#6B7280] hover:text-[#374151]',
-                      )}
-                      style={{
-                        color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                      }}
-                      disabled={buttonConfig.disabled}
-                    >
-                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                        <motion.div
-                          animate={{
-                            rotate: buttonConfig.isActive ? 360 : 0,
-                            scale: buttonConfig.isActive ? 1.1 : 1,
-                          }}
-                          whileHover={{
-                            rotate: buttonConfig.isActive ? 360 : 15,
-                            scale: 1.1,
-                            transition: { type: 'spring', stiffness: 300, damping: 10 },
-                          }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                        >
-                          <IconComponent
-                            className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                          />
-                        </motion.div>
-                      </div>
-                      <AnimatePresence>
-                        {buttonConfig.isActive && (
-                          <motion.span
-                            initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 'auto', opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                            style={{ color: buttonConfig.color }}
-                          >
-                            {buttonConfig.label}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </button>
-                  );
-                })}
-
-                <CustomDivider />
-
-                {actionButtons.slice(2).map((buttonConfig) => {
-                  if (buttonConfig.id === 'model') {
-                    return (
-                      <div
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ModelSelector
-                          key={buttonConfig.id}
-                          selectedModel={selectedModel}
-                          setSelectedModel={setSelectedModel}
-                          disabled={buttonConfig.disabled}
-                          buttonConfig={buttonConfig}
-                        />
-                      </div>
-                    );
-                  }
-
-                  const IconComponent = buttonConfig.icon;
-
-                  return (
-                    <button
-                      key={buttonConfig.id}
-                      onClick={buttonConfig.onClick}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
-                        buttonConfig.isActive
-                          ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                          : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
-                      )}
-                      style={{
-                        color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                      }}
-                      disabled={buttonConfig.disabled}
-                    >
-                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                        <motion.div
-                          animate={{
-                            rotate: buttonConfig.isActive ? 360 : 0,
-                            scale: buttonConfig.isActive ? 1.1 : 1,
-                          }}
-                          whileHover={{
-                            rotate: buttonConfig.isActive ? 360 : 15,
-                            scale: 1.1,
-                            transition: { type: 'spring', stiffness: 300, damping: 10 },
-                          }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                        >
-                          <IconComponent
-                            className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                          />
-                        </motion.div>
-                      </div>
-                      <AnimatePresence>
-                        {buttonConfig.isActive && (
-                          <motion.span
-                            initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 'auto', opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                            style={{ color: buttonConfig.color }}
-                          >
-                            {buttonConfig.label}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </button>
-                  );
-                })}
+            >
+              <div className={cn('transition-all duration-300')}>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-gray-600">AI正在思考中...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <Textarea
+                    ref={textareaRef}
+                    value={prompt}
+                    onChange={handlePromptChange}
+                    onKeyDown={handleKeyDown}
+                    className="text-base"
+                    disabled={isLoading}
+                    placeholder="输入你的AI提示词..."
+                  />
+                )}
               </div>
 
-              <Button
-                variant="default"
-                size="icon"
-                className={cn(
-                  'h-8 w-8 rounded-full transition-all duration-200',
-                  hasContent
-                    ? 'bg-gray-700 hover:bg-gray-800 text-white'
-                    : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
-                )}
-                onClick={() => {
-                  if (hasContent) handleGenerateAI();
-                }}
-                disabled={isLoading && !hasContent}
-              >
-                {isLoading ? (
-                  <Square className="h-4 w-4 fill-white animate-pulse" />
-                ) : hasContent ? (
-                  <ArrowUp className="h-4 w-4 text-white" />
-                ) : (
-                  <span className="h-5 w-5 flex items-center justify-center text-white">?</span>
-                )}
-              </Button>
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <input
+                  ref={uploadInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  multiple={false}
+                />
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
+                  onClick={() => uploadInputRef.current?.click()}
+                  disabled={isLoading}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {actionButtons.slice(0, 2).map((buttonConfig) => {
+                    const IconComponent = buttonConfig.icon;
+
+                    return (
+                      <button
+                        key={buttonConfig.id + '-action'}
+                        onClick={buttonConfig.onClick}
+                        className={cn(
+                          'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
+                          buttonConfig.isActive
+                            ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
+                            : 'text-[#6B7280] hover:text-[#374151]',
+                        )}
+                        style={{
+                          color: buttonConfig.isActive ? buttonConfig.color : undefined,
+                        }}
+                        disabled={buttonConfig.disabled}
+                      >
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                          <motion.div
+                            animate={{
+                              rotate: buttonConfig.isActive ? 360 : 0,
+                              scale: buttonConfig.isActive ? 1.1 : 1,
+                            }}
+                            whileHover={{
+                              rotate: buttonConfig.isActive ? 360 : 15,
+                              scale: 1.1,
+                              transition: { type: 'spring', stiffness: 300, damping: 10 },
+                            }}
+                            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                          >
+                            <IconComponent
+                              className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
+                            />
+                          </motion.div>
+                        </div>
+                        <AnimatePresence>
+                          {buttonConfig.isActive && (
+                            <motion.span
+                              initial={{ width: 0, opacity: 0 }}
+                              animate={{ width: 'auto', opacity: 1 }}
+                              exit={{ width: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
+                              style={{ color: buttonConfig.color }}
+                            >
+                              {buttonConfig.label}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    );
+                  })}
+
+                  <CustomDivider />
+
+                  {actionButtons.slice(2).map((buttonConfig) => {
+                    if (buttonConfig.id === 'model') {
+                      return (
+                        <div
+                          key={buttonConfig.id}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ModelSelector
+                            selectedModel={selectedModel}
+                            setSelectedModel={setSelectedModel}
+                            disabled={buttonConfig.disabled}
+                            buttonConfig={buttonConfig}
+                          />
+                        </div>
+                      );
+                    }
+
+                    const IconComponent = buttonConfig.icon;
+
+                    return (
+                      <button
+                        key={buttonConfig.id}
+                        onClick={buttonConfig.onClick}
+                        className={cn(
+                          'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
+                          buttonConfig.isActive
+                            ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
+                            : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
+                        )}
+                        style={{
+                          color: buttonConfig.isActive ? buttonConfig.color : undefined,
+                        }}
+                        disabled={buttonConfig.disabled}
+                      >
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                          <motion.div
+                            animate={{
+                              rotate: buttonConfig.isActive ? 360 : 0,
+                              scale: buttonConfig.isActive ? 1.1 : 1,
+                            }}
+                            whileHover={{
+                              rotate: buttonConfig.isActive ? 360 : 15,
+                              scale: 1.1,
+                              transition: { type: 'spring', stiffness: 300, damping: 10 },
+                            }}
+                            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                          >
+                            <IconComponent
+                              className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
+                            />
+                          </motion.div>
+                        </div>
+                        <AnimatePresence>
+                          {buttonConfig.isActive && (
+                            <motion.span
+                              initial={{ width: 0, opacity: 0 }}
+                              animate={{ width: 'auto', opacity: 1 }}
+                              exit={{ width: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
+                              style={{ color: buttonConfig.color }}
+                            >
+                              {buttonConfig.label}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="default"
+                  size="icon"
+                  className={cn(
+                    'h-8 w-8 rounded-full transition-all duration-200',
+                    hasContent
+                      ? 'bg-gray-700 hover:bg-gray-800 text-white'
+                      : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
+                  )}
+                  onClick={() => {
+                    if (hasContent) handleGenerateAI();
+                  }}
+                  disabled={isLoading && !hasContent}
+                >
+                  {isLoading ? (
+                    <Square className="h-4 w-4 fill-white animate-pulse" />
+                  ) : hasContent ? (
+                    <ArrowUp className="h-4 w-4 text-white" />
+                  ) : (
+                    <span className="h-5 w-5 flex items-center justify-center text-white">?</span>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
+          </>
         )}
         {/* AI Response */}
       </div>

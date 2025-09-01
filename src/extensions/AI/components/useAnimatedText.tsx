@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import TypeIt from 'typeit-react';
 import { ReactElement } from 'react';
-import { Editor } from '@tiptap/core';
 
 type SetTextFunction = (text: string) => void;
 
-export function useAnimatedText(editor: Editor): [ReactElement, SetTextFunction] {
+export function useAnimatedText(): [ReactElement, SetTextFunction] {
   const [instance, setInstance] = useState<any>(null);
   const [text, setText] = useState<string>('');
 
@@ -27,16 +26,6 @@ export function useAnimatedText(editor: Editor): [ReactElement, SetTextFunction]
         cursor: false,
         breakLines: true,
         html: true,
-        beforeString: (text: string) => {
-          console.log('匹配文本:', text);
-          console.log('正则匹配结果:', /`{3}/g.test(text));
-
-          if (/`{3}/g.test(text)) {
-            // const lang = (text.match(/```(\w+)/) || [, ''])[1];
-            editor.chain().focus().toggleCodeBlock().run();
-            // editor.commands.setCodeBlock({ language: lang });
-          }
-        },
       }}
       getAfterInit={(i: any) => {
         setInstance(i);
