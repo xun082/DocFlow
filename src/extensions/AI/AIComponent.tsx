@@ -22,7 +22,6 @@ import { AiApi } from '@/services/ai';
 interface AIComponentProps {
   node: ProseMirrorNode;
   updateAttributes: (attributes: Record<string, any>) => void;
-  deleteNode: () => void;
   editor: Editor;
 }
 
@@ -60,8 +59,10 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     // 监听点击其他区域，input 框隐藏
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
+        const { from, to } = editor.state.selection;
         setAiState(AIState.DISPLAY);
-        updateAttributes({ aiState: 'display' });
+        editor.chain().deleteRange({ from, to }).insertContent(`<p>${response}</p>`);
+        componentRef.current.style.display = 'none';
       }
     };
 
