@@ -41,7 +41,7 @@ declare module '@tiptap/core' {
       /**
        * Insert an AI block
        */
-      setAI: (options: { prompt: string; op?: string }) => ReturnType;
+      setAI: (options: { prompt: string; op?: string; aiState: string }) => ReturnType;
     };
   }
 }
@@ -92,16 +92,17 @@ export const AI = Node.create<AIOptions>({
           };
         },
       },
-      loading: {
-        default: false,
-        parseHTML: (element) => element.getAttribute('data-loading') === 'true',
+      // 我需要在 这里添加一个属性， 来获取后端拿到的aiState
+      aiState: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('data-ai-state'),
         renderHTML: (attributes) => {
-          if (!attributes.loading) {
+          if (!attributes.aiState) {
             return {};
           }
 
           return {
-            'data-loading': attributes.loading,
+            'data-ai-state': attributes.aiState,
           };
         },
       },

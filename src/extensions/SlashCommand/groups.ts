@@ -12,7 +12,7 @@ export const GROUPS: Group[] = [
         description: 'Insert an AI assistant block',
         aliases: ['ai', 'assistant', 'gpt'],
         action: (editor) => {
-          editor.chain().focus().setAI({ prompt: '', op: 'ask' }).run();
+          editor.chain().focus().setAI({ prompt: '', op: 'ask', aiState: 'input' }).run();
         },
       },
       {
@@ -24,7 +24,11 @@ export const GROUPS: Group[] = [
         action: (editor) => {
           const previousNode = editor.state.doc.resolve(editor.state.selection.anchor - 1).node();
           const previousNodeContent = previousNode.textContent;
-          editor.chain().focus().setAI({ prompt: previousNodeContent, op: 'continue' }).run();
+          editor
+            .chain()
+            .focus()
+            .setAI({ prompt: previousNodeContent, op: 'continue', aiState: 'input' })
+            .run();
         },
       },
     ],

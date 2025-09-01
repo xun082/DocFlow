@@ -767,7 +767,7 @@ function UserProfileContent({ localUserData }: { localUserData?: User }) {
                 description: '配置Cohere AI服务密钥',
               },
               {
-                name: '硅基流动',
+                name: 'siliconflow',
                 color: 'from-yellow-500 to-orange-500',
                 description: '配置硅基流动服务密钥',
               },

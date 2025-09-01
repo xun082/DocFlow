@@ -3,19 +3,21 @@ import { useParams } from 'next/navigation';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
-import { ArrowUp, Paperclip, Square, BrainCircuit } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { BrainCircuit } from 'lucide-react';
+
+// AI组件状态枚举
+enum AIState {
+  INPUT = 'input', // 输入状态：可以输入prompt
+  LOADING = 'loading', // 加载状态：正在生成AI响应
+  DISPLAY = 'display', // 显示状态：显示AI响应结果
+}
 
 import { createActionButtons } from './actionButtons';
 import { useAnimatedText } from './components/useAnimatedText';
-import CustomDivider from './components/CustomDivider';
-import ModelSelector from './components/ModelSelector';
-import Textarea from './components/Textarea';
-import Button from './components/Button';
 import AILoadingStatus from './components/AILoadingStatus';
+import AIInputPanel from './components/AIInputPanel';
 
 import { AiApi } from '@/services/ai';
-import { cn } from '@/utils/utils';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -28,17 +30,15 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const params = useParams();
   const documentId = params?.room as string;
   const [prompt, setPrompt] = useState(node.attrs.prompt || '');
-  const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(node.attrs.response || '');
+  // 统一的AI状态管理
+  const [aiState, setAiState] = useState<AIState>(node.attrs.aiState || AIState.DISPLAY);
+
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
-  const [showSearch, setShowSearch] = useState(false);
-  const [showThink, setShowThink] = useState(false);
-  const [showCanvas, setShowCanvas] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
   const [animatedText, setText] = useAnimatedText();
-  const [accumulatedResponse, setAccumulatedResponse] = useState('');
   const accumulatedResponseRef = useRef('');
   const abortRef = useRef<() => void | undefined>(undefined);
 
@@ -50,15 +50,18 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   }, [prompt]);
 
   useEffect(() => {
+    // 因为如果获取不到 焦点无法 focuse
     setTimeout(() => {
-      if (textareaRef.current && !isLoading) {
+      if (textareaRef.current && aiState !== AIState.LOADING) {
         textareaRef.current.focus();
       }
     }, 100);
 
+    // 监听点击其他区域，input 框隐藏
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-        updateAttributes({ showInput: false });
+        setAiState(AIState.DISPLAY);
+        updateAttributes({ aiState: 'display' });
       }
     };
 
@@ -67,23 +70,26 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isLoading, editor, response]);
+  }, [aiState, updateAttributes]);
+
+  // 状态切换时重置动画文本
+  useEffect(() => {
+    if (aiState !== AIState.LOADING) {
+      setText(''); // 清空动画文本
+    }
+  }, [aiState, setText]);
 
   const handleGenerateAI = async () => {
-    if (!prompt?.trim()) return;
+    if (!prompt?.trim() || aiState === AIState.LOADING) return;
 
-    // 重置响应状态
-    setAccumulatedResponse('');
+    // 重置响应状态并切换到加载状态
     accumulatedResponseRef.current = '';
-    setIsLoading(true);
-    updateAttributes({ loading: true });
+    setAiState(AIState.LOADING);
+    updateAttributes({ aiState: AIState.LOADING });
 
     try {
       // 获取所有文本节点的文案
       if (!prompt?.trim()) return;
-
-      setIsLoading(true);
-      updateAttributes({ loading: true });
 
       try {
         // 提取编辑器中的文本内容
@@ -109,11 +115,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
           contentString = extractTextContent() + '\n' + prompt;
         }
 
+        const apiKeys = localStorage.getItem('docflow_api_keys');
+
         // SSE流式数据处理
         const requestData = {
           documentId: documentId,
           content: contentString,
-          apiKey: 'sk-akaemjzequsiwfzyfpijamrnsuvvfeicsbtsqnzqshfvxexv', // 从环境变量获取
+          apiKey: apiKeys ? JSON.parse(apiKeys)?.siliconflow : '',
           model: selectedModel,
         };
 
@@ -150,8 +158,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                 const data = line.slice(6);
 
                 if (data === '[DONE]') {
-                  setIsLoading(false);
-                  console.log('AI响应完成:', accumulatedResponse);
+                  setAiState(AIState.INPUT);
+                  console.log('AI响应完成:', accumulatedResponseRef.current);
 
                   return;
                 }
@@ -165,19 +173,18 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
                     // 检查finish_reason来判断是否完成
                     if (choice.finish_reason === 'stop') {
-                      // 流式传输完成，同步响应内容
+                      // 流式传输完成，同步响应内容并切换到显示状态
                       console.log('结束');
                       setResponse(accumulatedResponseRef.current);
                       updateAttributes({ response: accumulatedResponseRef.current });
                       setPrompt(''); // 清空输入框
-                      setIsLoading(false);
+                      setAiState(AIState.INPUT);
 
                       return;
                     } else if (choice.delta && choice.delta.content) {
                       // 累积接收到的内容
                       const newContent = accumulatedResponseRef.current + choice.delta.content;
                       accumulatedResponseRef.current = newContent;
-                      setAccumulatedResponse(newContent);
                       lineString += choice.delta.content;
                     }
                   }
@@ -195,14 +202,15 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         // 组件卸载时中止请求
         // return () => abort();
       } catch (error) {
-        console.error('初始化失败:', error);
-        setIsLoading(false);
+        console.error('AI生成过程中出错:', error);
+        setAiState(AIState.INPUT);
+        setResponse('错误：请求过程中出错');
+        updateAttributes({ aiState: AIState.INPUT, response: '错误：请求过程中出错' });
       }
     } catch (error) {
-      console.error('请求过程中出错:', error);
-      setIsLoading(false);
-      setResponse('错误：请求过程中出错');
-      updateAttributes({ loading: false });
+      console.error('请求初始化失败:', error);
+      setAiState(AIState.INPUT);
+      updateAttributes({ aiState: AIState.INPUT });
     }
   };
 
@@ -213,39 +221,21 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && aiState !== AIState.LOADING) {
       e.preventDefault();
       handleGenerateAI();
     }
   };
 
-  const handleToggleChange = (value: string) => {
-    if (value === 'search') {
-      setShowSearch((prev) => !prev);
-      setShowThink(false);
-      setShowCanvas(false);
-    } else if (value === 'think') {
-      setShowThink((prev) => !prev);
-      setShowSearch(false);
-      setShowCanvas(false);
-    }
-  };
-
-  const handleCanvasToggle = () => {
-    setShowCanvas((prev) => !prev);
-    setShowSearch(false);
-    setShowThink(false);
-  };
-
   // 按钮配置数据
   const baseButtons = createActionButtons(
-    showSearch,
-    showThink,
-    showCanvas,
-    () => handleToggleChange('search'),
-    () => handleToggleChange('think'),
-    handleCanvasToggle,
-    isLoading,
+    false, // showSearch
+    false, // showThink
+    false, // showCanvas
+    () => {}, // search toggle
+    () => {}, // think toggle
+    () => {}, // canvas toggle
+    aiState === AIState.LOADING,
   );
 
   const actionButtons = [
@@ -257,8 +247,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       color: '#7C3AED',
       bgColor: 'bg-[#7C3AED]/20',
       hoverBgColor: 'hover:bg-[#7C3AED]/30',
-      isActive: showCanvas,
-      disabled: isLoading,
+      isActive: false,
+      disabled: aiState === AIState.LOADING,
       onClick: () => {},
     },
   ];
@@ -270,220 +260,40 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       {/* 返回值显示 */}
       <div className="w-full max-w-4xl mx-auto">
         {/* AI Input Box */}
-        {isLoading ? (
+        {aiState === AIState.LOADING ? (
           <>
             <div className="mb-2">{animatedText}</div>
             <AILoadingStatus
               onCancel={() => {
                 abortRef.current?.();
-                setIsLoading(false);
+                setAiState(AIState.INPUT);
                 updateAttributes({ loading: false });
               }}
             />
           </>
         ) : (
           <>
-            <div className="mb-2">{response}</div>
-            <div
-              ref={componentRef}
-              className={cn(
-                'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
-              )}
-            >
-              <div className={cn('transition-all duration-300')}>
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm text-gray-600">AI正在思考中...</span>
-                    </div>
-                  </div>
-                ) : (
-                  <Textarea
-                    ref={textareaRef}
-                    value={prompt}
-                    onChange={handlePromptChange}
-                    onKeyDown={handleKeyDown}
-                    className="text-base"
-                    disabled={isLoading}
-                    placeholder="输入你的AI提示词..."
-                  />
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <input
-                  ref={uploadInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  multiple={false}
+            {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
+              <div className="mb-2">{response}</div>
+            )}
+            {aiState === AIState.INPUT && (
+              <>
+                <AIInputPanel
+                  prompt={prompt}
+                  onPromptChange={handlePromptChange}
+                  onKeyDown={handleKeyDown}
+                  onGenerateAI={handleGenerateAI}
+                  isLoading={(aiState as AIState) === AIState.LOADING}
+                  hasContent={hasContent}
+                  actionButtons={actionButtons}
+                  selectedModel={selectedModel}
+                  setSelectedModel={setSelectedModel}
+                  textareaRef={textareaRef}
+                  uploadInputRef={uploadInputRef}
+                  componentRef={componentRef}
                 />
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-                  onClick={() => uploadInputRef.current?.click()}
-                  disabled={isLoading}
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-
-                <div className="flex items-center gap-1">
-                  {actionButtons.slice(0, 2).map((buttonConfig) => {
-                    const IconComponent = buttonConfig.icon;
-
-                    return (
-                      <button
-                        key={buttonConfig.id + '-action'}
-                        onClick={buttonConfig.onClick}
-                        className={cn(
-                          'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
-                          buttonConfig.isActive
-                            ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                            : 'text-[#6B7280] hover:text-[#374151]',
-                        )}
-                        style={{
-                          color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                        }}
-                        disabled={buttonConfig.disabled}
-                      >
-                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                          <motion.div
-                            animate={{
-                              rotate: buttonConfig.isActive ? 360 : 0,
-                              scale: buttonConfig.isActive ? 1.1 : 1,
-                            }}
-                            whileHover={{
-                              rotate: buttonConfig.isActive ? 360 : 15,
-                              scale: 1.1,
-                              transition: { type: 'spring', stiffness: 300, damping: 10 },
-                            }}
-                            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                          >
-                            <IconComponent
-                              className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                            />
-                          </motion.div>
-                        </div>
-                        <AnimatePresence>
-                          {buttonConfig.isActive && (
-                            <motion.span
-                              initial={{ width: 0, opacity: 0 }}
-                              animate={{ width: 'auto', opacity: 1 }}
-                              exit={{ width: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                              style={{ color: buttonConfig.color }}
-                            >
-                              {buttonConfig.label}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </button>
-                    );
-                  })}
-
-                  <CustomDivider />
-
-                  {actionButtons.slice(2).map((buttonConfig) => {
-                    if (buttonConfig.id === 'model') {
-                      return (
-                        <div
-                          key={buttonConfig.id}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <ModelSelector
-                            selectedModel={selectedModel}
-                            setSelectedModel={setSelectedModel}
-                            disabled={buttonConfig.disabled}
-                            buttonConfig={buttonConfig}
-                          />
-                        </div>
-                      );
-                    }
-
-                    const IconComponent = buttonConfig.icon;
-
-                    return (
-                      <button
-                        key={buttonConfig.id}
-                        onClick={buttonConfig.onClick}
-                        className={cn(
-                          'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
-                          buttonConfig.isActive
-                            ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                            : 'text-[#9CA3AF] hover:text-[#D1D5DB]',
-                        )}
-                        style={{
-                          color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                        }}
-                        disabled={buttonConfig.disabled}
-                      >
-                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                          <motion.div
-                            animate={{
-                              rotate: buttonConfig.isActive ? 360 : 0,
-                              scale: buttonConfig.isActive ? 1.1 : 1,
-                            }}
-                            whileHover={{
-                              rotate: buttonConfig.isActive ? 360 : 15,
-                              scale: 1.1,
-                              transition: { type: 'spring', stiffness: 300, damping: 10 },
-                            }}
-                            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                          >
-                            <IconComponent
-                              className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                            />
-                          </motion.div>
-                        </div>
-                        <AnimatePresence>
-                          {buttonConfig.isActive && (
-                            <motion.span
-                              initial={{ width: 0, opacity: 0 }}
-                              animate={{ width: 'auto', opacity: 1 }}
-                              exit={{ width: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                              style={{ color: buttonConfig.color }}
-                            >
-                              {buttonConfig.label}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  variant="default"
-                  size="icon"
-                  className={cn(
-                    'h-8 w-8 rounded-full transition-all duration-200',
-                    hasContent
-                      ? 'bg-gray-700 hover:bg-gray-800 text-white'
-                      : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
-                  )}
-                  onClick={() => {
-                    if (hasContent) handleGenerateAI();
-                  }}
-                  disabled={isLoading && !hasContent}
-                >
-                  {isLoading ? (
-                    <Square className="h-4 w-4 fill-white animate-pulse" />
-                  ) : hasContent ? (
-                    <ArrowUp className="h-4 w-4 text-white" />
-                  ) : (
-                    <span className="h-5 w-5 flex items-center justify-center text-white">?</span>
-                  )}
-                </Button>
-              </div>
-            </div>
+              </>
+            )}
           </>
         )}
         {/* AI Response */}
