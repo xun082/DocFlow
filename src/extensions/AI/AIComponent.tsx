@@ -82,9 +82,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
 
   const handleGenerateAI = async () => {
     if (!prompt?.trim() || aiState === AIState.LOADING) return;
-
-    // 重置响应状态并切换到加载状态
     accumulatedResponseRef.current = '';
+
     setAiState(AIState.LOADING);
     updateAttributes({ aiState: AIState.LOADING });
 
@@ -199,9 +198,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
             }
           }
         });
-
-        // 组件卸载时中止请求
-        // return () => abort();
       } catch (error) {
         console.error('AI生成过程中出错:', error);
         setAiState(AIState.INPUT);
