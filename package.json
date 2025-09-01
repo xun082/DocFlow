@@ -127,6 +127,8 @@
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "typeit": "^8.8.7",
+    "typeit-react": "^2.7.8",
     "ua-parser-js": "^2.0.4",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
@@ -199,5 +201,6 @@
     "node": ">=20",
     "pnpm": ">=9.0.0"
   },
-  "engineStrict": true
+  "engineStrict": true,
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }
