@@ -274,7 +274,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         ) : (
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
-              <div className="mb-2">{response}</div>
+              <p>{response}</p>
             )}
             {aiState === AIState.INPUT && (
               <>
