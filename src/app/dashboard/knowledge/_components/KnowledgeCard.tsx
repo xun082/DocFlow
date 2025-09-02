@@ -1,11 +1,11 @@
 'use client';
 
-import { BookOpen, Calendar, FileText } from 'lucide-react';
+import { BookOpen, Calendar } from 'lucide-react';
 
-import { KnowledgeBase } from '@/services/knowledge/types';
+import { ApiKnowledgeItem } from '@/services/knowledge/types';
 
 interface KnowledgeCardProps {
-  knowledge: KnowledgeBase;
+  knowledge: ApiKnowledgeItem;
   onClick?: () => void;
 }
 
@@ -24,35 +24,29 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
             </div>
             <div>
               <h3 className="font-semibold text-lg line-clamp-1">{knowledge.title}</h3>
-              {knowledge.category && (
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                  {knowledge.category}
-                </span>
-              )}
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                知识库
+              </span>
             </div>
           </div>
         </div>
 
         {/* 描述 */}
-        {knowledge.description && (
-          <p className="text-muted-foreground text-sm line-clamp-2">{knowledge.description}</p>
+        {knowledge.content && (
+          <p className="text-muted-foreground text-sm line-clamp-2">
+            {knowledge.content.length > 100
+              ? knowledge.content.substring(0, 100) + '...'
+              : knowledge.content}
+          </p>
         )}
 
         {/* 底部信息 */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            {knowledge.itemCount && (
-              <div className="flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                <span>{knowledge.itemCount} 项</span>
-              </div>
-            )}
-            {knowledge.lastUpdated && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span>{knowledge.lastUpdated}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{new Date(knowledge.updated_at).toLocaleDateString('zh-CN')}</span>
+            </div>
           </div>
         </div>
       </div>

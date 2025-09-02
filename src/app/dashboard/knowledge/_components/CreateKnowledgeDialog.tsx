@@ -9,6 +9,7 @@ import { fileTypeFromBuffer } from 'file-type';
 
 import { CreateKnowledge } from '@/services/knowledge/types';
 import { KnowledgeApi } from '@/services/knowledge';
+import { storage, STORAGE_KEYS } from '@/utils/localstorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Textarea from '@/components/ui/Textarea';
@@ -28,10 +29,6 @@ interface CreateKnowledgeDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
-const API_KEY =
-  process.env.NEXT_PUBLIC_KNOWLEDGE_API_KEY ||
-  'sk-phjxmuhdlfheyxzqdhviixdpkjarcsqysncucualaflbqohw';
 
 // 文件大小限制 (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -299,17 +296,21 @@ export function CreateKnowledgeDialog({
 
     setIsProcessing(true);
 
-    // Zod验证
+    // 获取 API Key（可选）
+    const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
+    const apiKey = apiKeys?.siliconflow || '';
+
+    // Zod验证 - API Key 为可选字段
     const schema = z.object({
-      apiKey: z.string().min(1, 'API Key 不能为空'),
       title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
       content: z.string().min(1, '内容不能为空'),
+      apiKey: z.string().optional(), // API Key 设为可选
     });
 
     const validationResult = schema.safeParse({
-      apiKey: API_KEY,
       title: title.trim(),
       content: content.trim(),
+      apiKey: apiKey || undefined, // 空字符串转为 undefined
     });
 
     if (!validationResult.success) {

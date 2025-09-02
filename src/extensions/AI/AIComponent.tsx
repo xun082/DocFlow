@@ -18,6 +18,7 @@ import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
 
 import { AiApi } from '@/services/ai';
+import { storage, STORAGE_KEYS } from '@/utils/localstorage';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -115,13 +116,23 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
           contentString = extractTextContent() + '\n' + prompt;
         }
 
-        const apiKeys = localStorage.getItem('docflow_api_keys');
+        const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
+        const siliconflowApiKey = apiKeys?.siliconflow;
+
+        // 如果没有 API 密钥，提示用户配置
+        if (!siliconflowApiKey) {
+          setAiState(AIState.INPUT);
+          setResponse('错误：请先配置 API 密钥');
+          updateAttributes({ aiState: AIState.INPUT, response: '错误：请先配置 API 密钥' });
+
+          return;
+        }
 
         // SSE流式数据处理
         const requestData = {
           documentId: documentId,
           content: contentString,
-          apiKey: apiKeys ? JSON.parse(apiKeys)?.siliconflow : '',
+          apiKey: siliconflowApiKey,
           model: selectedModel,
         };
 
