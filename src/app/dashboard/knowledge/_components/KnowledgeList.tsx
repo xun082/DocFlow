@@ -8,7 +8,7 @@ import { KnowledgeCard } from './KnowledgeCard';
 import { KnowledgeListSkeleton } from './KnowledgeListSkeleton';
 
 import { KnowledgeApi } from '@/services/knowledge';
-import { GetKnowledgeParams, KnowledgeBase, ApiKnowledgeItem } from '@/services/knowledge/types';
+import { GetKnowledgeParams, ApiKnowledgeItem } from '@/services/knowledge/types';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -28,7 +28,7 @@ interface KnowledgeListProps {
 export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [knowledgeList, setKnowledgeList] = useState<KnowledgeBase[]>([]);
+  const [knowledgeList, setKnowledgeList] = useState<ApiKnowledgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -51,24 +51,13 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
       });
 
       if (response?.data?.data) {
-        // 根据实际API返回的数据结构: RequestResult<GetKnowledgeResponse> -> { data: { data: { data: [...], total: 2 } } }
         const apiData = response.data.data;
         const knowledgeItems: ApiKnowledgeItem[] = apiData.data || [];
 
-        const transformedList: KnowledgeBase[] = knowledgeItems.map((item) => ({
-          id: item.id,
-          title: item.title,
-          description: item.content ? item.content.substring(0, 100) + '...' : '暂无描述',
-          itemCount: Math.floor(Math.random() * 50) + 1, // 临时随机数据
-          lastUpdated: new Date(item.updated_at).toLocaleDateString('zh-CN'),
-          category: '知识库',
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-        }));
-
-        setKnowledgeList(transformedList);
-        setTotalCount(apiData.total || 0);
-        setTotalPages(Math.ceil((apiData.total || 0) / pageSize));
+        // 直接使用API返回的原始数据
+        setKnowledgeList(knowledgeItems);
+        setTotalCount(apiData.total);
+        setTotalPages(Math.ceil(apiData.total / pageSize));
       }
     } catch (error) {
       console.error('获取知识库列表失败:', error);
@@ -208,12 +197,12 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
       {/* 知识库列表 */}
       {!loading && knowledgeList.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {knowledgeList.map((kb) => (
+          {knowledgeList.map((item) => (
             <KnowledgeCard
-              key={kb.id}
-              knowledge={kb}
+              key={item.id}
+              knowledge={item}
               onClick={() => {
-                console.log('点击知识库:', kb.title);
+                console.log('点击知识库:', item.title);
               }}
             />
           ))}
