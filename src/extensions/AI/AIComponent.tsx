@@ -24,9 +24,15 @@ interface AIComponentProps {
   node: ProseMirrorNode;
   updateAttributes: (attributes: Record<string, any>) => void;
   editor: Editor;
+  getPos: () => number | undefined;
 }
 
-export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
+export const AIComponent: React.FC<AIComponentProps> = ({
+  node,
+  updateAttributes,
+  editor,
+  getPos,
+}) => {
   const params = useParams();
   const documentId = params?.room as string;
   const [prompt, setPrompt] = useState(node.attrs.prompt || '');
@@ -83,8 +89,17 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
         if (response) {
           // 如果有response，替换整个AI节点为段落
-          const pos = editor.state.selection.from;
-          editor.chain().focus().deleteNode('ai').insertContentAt(pos, `<p>${response}</p>`).run();
+          const pos = getPos();
+
+          if (pos !== undefined) {
+            const nodeSize = node.nodeSize;
+            editor
+              .chain()
+              .focus()
+              .deleteRange({ from: pos, to: pos + nodeSize })
+              .insertContentAt(pos, `<p>${response}</p>`)
+              .run();
+          }
         } else {
           // 如果没有response，只是隐藏输入状态
           updateState({ aiState: AIState.DISPLAY });
@@ -122,6 +137,12 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         content: contentString,
         apiKey: apiKeys ? JSON.parse(apiKeys)?.siliconflow : '',
         model: selectedModel,
+        errorHandler: () => {
+          updateState({ aiState: AIState.INPUT });
+          updateAttributes({
+            aiState: AIState.DISPLAY,
+          });
+        },
       };
 
       let buffer = '';

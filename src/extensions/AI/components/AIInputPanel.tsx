@@ -90,12 +90,12 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
         </Button>
 
         <div className="flex items-center gap-1">
-          {actionButtons.slice(0, 2).map((buttonConfig) => {
+          {actionButtons.slice(0, 2).map((buttonConfig, index) => {
             const IconComponent = buttonConfig.icon;
 
             return (
               <button
-                key={buttonConfig.id + '-action'}
+                key={`action-${buttonConfig.id}-${index}`}
                 onClick={buttonConfig.onClick}
                 className={cn(
                   'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
@@ -146,11 +146,11 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
 
           <CustomDivider />
 
-          {actionButtons.slice(2).map((buttonConfig) => {
+          {actionButtons.slice(2).map((buttonConfig, index) => {
             if (buttonConfig.id === 'model') {
               return (
                 <div
-                  key={buttonConfig.id}
+                  key={`model-${buttonConfig.id}-${index}`}
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -168,7 +168,7 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
 
             return (
               <button
-                key={buttonConfig.id}
+                key={`button-${buttonConfig.id}-${index}`}
                 onClick={buttonConfig.onClick}
                 className={cn(
                   'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
