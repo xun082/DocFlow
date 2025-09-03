@@ -15,10 +15,11 @@ enum AIState {
 import { createActionButtons } from './actionButtons';
 import { useAnimatedText } from './components/useAnimatedText';
 import { useTextExtraction } from './hooks/useTextExtraction';
+import { useSSEStream } from './hooks/useSSEStream';
+// import { useTextToImage } from './hooks/useTextToImage';
+import { useQuestion } from './hooks/useQuestion';
 import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
-
-import { AiApi } from '@/services/ai';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -47,7 +48,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const componentRef = useRef<HTMLDivElement>(null);
   const [animatedText, setText] = useAnimatedText();
   const { buildContentString } = useTextExtraction(editor);
-  const accumulatedResponseRef = useRef('');
   const abortRef = useRef<() => void | undefined>(undefined);
 
   // 统一状态更新函数
@@ -68,6 +68,24 @@ export const AIComponent: React.FC<AIComponentProps> = ({
 
     updateAttributes(newState);
   };
+
+  const { handleGenerateAI: handleAIGeneration } = useSSEStream({
+    updateState,
+    setAiState,
+    setText,
+    updateAttributes,
+    buildContentString,
+    documentId,
+    selectedModel,
+  });
+  const { handleQuestion } = useQuestion({
+    updateState,
+    setAiState,
+    setText,
+    updateAttributes,
+    // documentId,
+    selectedModel,
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -123,108 +141,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({
 
   const handleGenerateAI = async () => {
     if (!prompt?.trim() || aiState === AIState.LOADING) return;
-    accumulatedResponseRef.current = '';
 
-    updateState({ aiState: AIState.LOADING });
+    setAiState(AIState.LOADING);
 
-    try {
-      const contentString = buildContentString(prompt, node.attrs.op);
-      const apiKeys = localStorage.getItem('docflow_api_keys');
-
-      // SSE流式数据处理
-      const requestData = {
-        documentId: documentId,
-        content: contentString,
-        apiKey: apiKeys ? JSON.parse(apiKeys)?.siliconflow : '',
-        model: selectedModel,
-        errorHandler: () => {
-          updateState({ aiState: AIState.INPUT });
-          updateAttributes({
-            aiState: AIState.DISPLAY,
-          });
-        },
-      };
-
-      let buffer = '';
-
-      abortRef.current = await AiApi.ContinueWriting(requestData, async (response: Response) => {
-        // 获取流式响应
-        const reader = response.body?.getReader();
-
-        if (!reader) {
-          throw new Error('无法获取响应流');
-        }
-
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) {
-            break;
-          }
-
-          buffer += decoder.decode(value, {
-            stream: true,
-          });
-
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          let lineString = '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-
-              if (data === '[DONE]') {
-                setAiState(AIState.INPUT);
-                console.log('AI响应完成:', accumulatedResponseRef.current);
-
-                return;
-              }
-
-              try {
-                const parsedData = JSON.parse(data);
-
-                // 检查是否有choices数组和delta内容
-                if (parsedData.choices && parsedData.choices.length > 0) {
-                  const choice = parsedData.choices[0];
-
-                  // 检查finish_reason来判断是否完成
-                  if (choice.finish_reason === 'stop') {
-                    // 流式传输完成，同步响应内容并切换到显示状态
-                    console.log('结束');
-                    updateState({
-                      response: accumulatedResponseRef.current,
-                      prompt: '',
-                      aiState: AIState.INPUT,
-                    });
-
-                    return;
-                  } else if (choice.delta && choice.delta.content) {
-                    // 累积接收到的内容
-                    const newContent = accumulatedResponseRef.current + choice.delta.content;
-                    accumulatedResponseRef.current = newContent;
-                    lineString += choice.delta.content;
-                  }
-                }
-
-                // 防止打字机效果漏字
-                setText(lineString);
-              } catch (parseError) {
-                console.error('解析SSE数据失败:', parseError);
-              }
-            }
-          }
-        }
-      });
-    } catch (error) {
-      console.error('AI生成过程中出错:', error);
-      updateState({
-        aiState: AIState.INPUT,
-        response: '错误：请求过程中出错',
-      });
+    if (showImage) {
+      await handleQuestion(prompt, abortRef);
+    } else {
+      await handleAIGeneration(prompt, node.attrs, abortRef);
     }
   };
 
@@ -244,8 +167,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   // 图片生成处理函数
   const handleToggleImage = () => {
     setShowImage(!showImage);
-    // TODO: 实现图片生成逻辑
-    console.log('Toggle image generation:', !showImage);
   };
 
   // 按钮配置数据
