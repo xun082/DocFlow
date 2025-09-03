@@ -1,4 +1,4 @@
-import { Globe, BrainCog, FolderCode } from 'lucide-react';
+import { Globe, BrainCog, FolderCode, ImageIcon } from 'lucide-react';
 
 export interface ActionButtonConfig {
   id: string;
@@ -16,9 +16,11 @@ export const createActionButtons = (
   showSearch: boolean,
   showThink: boolean,
   showCanvas: boolean,
+  showImage: boolean,
   onToggleSearch: () => void,
   onToggleThink: () => void,
   onToggleCanvas: () => void,
+  onToggleImage: () => void,
   isDisabled: boolean,
 ): ActionButtonConfig[] => {
   return [
@@ -54,6 +56,17 @@ export const createActionButtons = (
       isActive: showCanvas,
       disabled: isDisabled,
       onClick: onToggleCanvas,
+    },
+    {
+      id: 'image',
+      label: 'Generate Image',
+      icon: ImageIcon,
+      color: '#EC4899',
+      bgColor: 'bg-[#EC4899]/20',
+      hoverBgColor: 'hover:bg-[#EC4899]/30',
+      isActive: showImage,
+      disabled: isDisabled,
+      onClick: onToggleImage,
     },
   ];
 };

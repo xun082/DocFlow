@@ -35,6 +35,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const [aiState, setAiState] = useState<AIState>(node.attrs.aiState || AIState.DISPLAY);
 
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
+  const [showImage, setShowImage] = useState(false); // 图片生成状态
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
@@ -219,14 +220,23 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     }
   };
 
+  // 图片生成处理函数
+  const handleToggleImage = () => {
+    setShowImage(!showImage);
+    // TODO: 实现图片生成逻辑
+    console.log('Toggle image generation:', !showImage);
+  };
+
   // 按钮配置数据
   const baseButtons = createActionButtons(
     false, // showSearch
     false, // showThink
     false, // showCanvas
+    showImage, // showImage
     () => {}, // search toggle
     () => {}, // think toggle
     () => {}, // canvas toggle
+    handleToggleImage, // image toggle
     aiState === AIState.LOADING,
   );
 
