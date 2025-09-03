@@ -50,11 +50,14 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   uploadInputRef,
   componentRef,
 }) => {
+  const [hideSelection, setHideSelection] = React.useState(false);
+
   return (
     <div
       ref={componentRef}
       className={cn(
         'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
+        hideSelection && 'ProseMirror-hideselection',
       )}
     >
       <div className={cn('transition-all duration-300')}>
@@ -63,6 +66,13 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
           value={prompt}
           onChange={onPromptChange}
           onKeyDown={onKeyDown}
+          onFocus={(e) => {
+            const textarea = e.target as HTMLTextAreaElement;
+            const length = textarea.value.length;
+            setTimeout(() => {
+              textarea.setSelectionRange(length, length);
+            }, 0);
+          }}
           className="text-base"
           disabled={false}
           placeholder="输入你的AI提示词..."
@@ -96,7 +106,11 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
             return (
               <button
                 key={`action-${buttonConfig.id}-${index}`}
-                onClick={buttonConfig.onClick}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  buttonConfig.onClick();
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
                   buttonConfig.isActive
@@ -169,7 +183,12 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
             return (
               <button
                 key={`button-${buttonConfig.id}-${index}`}
-                onClick={buttonConfig.onClick}
+                onClick={() => {
+                  // 切换隐藏选择样式
+                  setHideSelection(!hideSelection);
+
+                  buttonConfig.onClick();
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-600/30',
                   buttonConfig.isActive
