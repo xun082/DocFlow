@@ -16,8 +16,8 @@ import { createActionButtons } from './actionButtons';
 import { useAnimatedText } from './components/useAnimatedText';
 import { useTextExtraction } from './hooks/useTextExtraction';
 import { useSSEStream } from './hooks/useSSEStream';
-// import { useTextToImage } from './hooks/useTextToImage';
-import { useQuestion } from './hooks/useQuestion';
+import { useTextToImage } from './hooks/useTextToImage';
+// import { useQuestion } from './hooks/useQuestion';
 import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
 
@@ -78,13 +78,33 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     documentId,
     selectedModel,
   });
-  const { handleQuestion } = useQuestion({
-    updateState,
-    setAiState,
-    setText,
-    updateAttributes,
-    // documentId,
-    selectedModel,
+  // const { handleQuestion } = useQuestion({
+  //   updateState,
+  //   setAiState,
+  //   setText,
+  //   updateAttributes,
+  //   selectedModel,
+  // });
+
+  const { generateImage } = useTextToImage({
+    onSuccess: (imageUrl) => {
+      const pos = getPos();
+
+      if (pos !== undefined) {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(pos + node.nodeSize, {
+            type: 'imageBlock',
+            attrs: { src: imageUrl },
+          })
+          .run();
+      }
+    },
+    onError: () => {
+      setAiState(AIState.INPUT);
+      updateState({ aiState: AIState.DISPLAY });
+    },
   });
 
   useEffect(() => {
@@ -115,7 +135,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
               .chain()
               .focus()
               .deleteRange({ from: pos, to: pos + nodeSize })
-              .insertContentAt(pos, `<p>${response}</p>`)
+              .pasteMarkdown(response)
               .run();
           }
         } else {
@@ -145,7 +165,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     setAiState(AIState.LOADING);
 
     if (showImage) {
-      await handleQuestion(prompt, abortRef);
+      await generateImage({ prompt });
     } else {
       await handleAIGeneration(prompt, node.attrs, abortRef);
     }
@@ -218,7 +238,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         ) : (
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
-              <p>{response}</p>
+              <div dangerouslySetInnerHTML={{ __html: response }} />
             )}
             {aiState === AIState.INPUT && (
               <>

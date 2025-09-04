@@ -4,7 +4,7 @@ import { AiApi } from '@/services/ai';
 
 interface TextToImageRequest {
   prompt: string;
-  size: string;
+  size?: string;
 }
 
 interface TextToImageResponse {
@@ -30,7 +30,7 @@ export const useTextToImage = ({ onSuccess, onError }: UseTextToImageProps = {})
     try {
       const result = await AiApi.TextToImage({
         prompt: request.prompt,
-        size: request.size,
+        size: request.size || '1024x1024',
       });
 
       if (result.error) {

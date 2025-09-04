@@ -38,22 +38,6 @@ export const AiApi = {
       callback,
     ),
 
-  // 图生文
-  GenerateDiagram: (
-    data: GenerateDiagramParams,
-    callback: (response: Response) => void,
-    errorHandler?: ErrorHandler,
-  ) =>
-    request.post('/api/v1/ai/generate-diagram', {
-      errorHandler,
-      timeout: 80000,
-      retries: 2,
-      retryDelay: 2000,
-      params: {
-        ...data,
-      },
-    }),
-
   // 问答
   Question: (
     data: QuestionParams,
@@ -75,7 +59,7 @@ export const AiApi = {
     ),
 
   // 文本生成图片
-  TextToImage: (data: { prompt: string; size: string }, errorHandler?: ErrorHandler) =>
+  TextToImage: (data: GenerateDiagramParams, errorHandler?: ErrorHandler) =>
     request.post('/api/v1/ai/text-to-image', {
       errorHandler,
       timeout: 80000,

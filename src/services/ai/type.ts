@@ -42,8 +42,8 @@ export interface ContinueWritingResponse {
 }
 
 export interface GenerateDiagramParams {
-  apiKey: string;
-  model: string;
+  apiKey?: string;
+  model?: string;
   prompt: string;
   size: string;
 }
