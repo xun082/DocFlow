@@ -57,6 +57,10 @@
     display: inline !important;
   }
 
+  .ProseMirror-hideselection *::selection {
+    background: transparent !important;
+  }
+
   .dark .ProseMirror *::selection,
   .dark .ProseMirror ::selection,
   .dark .ProseMirror .selection {

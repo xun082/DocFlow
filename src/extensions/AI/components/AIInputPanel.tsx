@@ -50,14 +50,11 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   uploadInputRef,
   componentRef,
 }) => {
-  const [hideSelection, setHideSelection] = React.useState(false);
-
   return (
     <div
       ref={componentRef}
       className={cn(
         'rounded-3xl border border-[#D1D5DB] bg-[#F9FAFB] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300',
-        hideSelection && 'ProseMirror-hideselection',
       )}
     >
       <div className={cn('transition-all duration-300')}>
@@ -106,9 +103,7 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
             return (
               <button
                 key={`action-${buttonConfig.id}-${index}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={() => {
                   buttonConfig.onClick();
                 }}
                 className={cn(
@@ -184,9 +179,6 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
               <button
                 key={`button-${buttonConfig.id}-${index}`}
                 onClick={() => {
-                  // 切换隐藏选择样式
-                  setHideSelection(!hideSelection);
-
                   buttonConfig.onClick();
                 }}
                 className={cn(
