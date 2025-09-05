@@ -79,6 +79,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     buildContentString,
     documentId,
     selectedModel,
+    setResponse,
   });
 
   const { generateImage } = useTextToImage({
@@ -156,38 +157,39 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   }, [aiState]);
 
   const handleGenerateAI = async () => {
+    // 如果已经在加载状态，直接返回
+    if (aiState === AIState.LOADING) {
+      return;
+    }
+
+    // 处理提问模式
+    // 处理提问模式下的输入验证
     if (node.attrs.op === 'ask') {
-      if (!prompt?.trim() || aiState === AIState.LOADING) {
-        return;
-      } else {
-        setAiState(AIState.LOADING);
+      if (!prompt?.trim()) {
+        toast.warning('请输入您的问题');
 
-        if (showImage) {
-          await generateImage({ prompt });
-        } else {
-          await handleAIGeneration(prompt, node.attrs, abortRef);
-        }
+        return;
       }
+    }
+    // 处理其他模式（续写、改写等）
+    else {
+      const contentString = buildContentString(prompt, node.attrs.op);
+
+      if (!contentString) {
+        toast.warning('文档是空白文档');
+
+        return;
+      }
+    }
+
+    // 设置加载状态
+    setAiState(AIState.LOADING);
+
+    // 根据模式选择生成图片或文本
+    if (showImage) {
+      await generateImage({ prompt });
     } else {
-      if (aiState === AIState.LOADING) {
-        return;
-      } else {
-        const contentString = buildContentString(prompt, node.attrs.op);
-
-        if (!contentString) {
-          toast.warning('文档是空白文档');
-
-          return;
-        }
-
-        setAiState(AIState.LOADING);
-
-        if (showImage) {
-          await generateImage({ prompt });
-        } else {
-          await handleAIGeneration(prompt, node.attrs, abortRef);
-        }
-      }
+      await handleAIGeneration(prompt, node.attrs, abortRef);
     }
   };
 

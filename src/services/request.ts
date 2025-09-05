@@ -571,17 +571,23 @@ class Request {
         );
       }
 
-      console.log('SSE响应拦截器 - 成功连接:', response.status);
       callback(response);
 
       return () => controller.abort();
     } catch (error) {
-      // console.error('SSE连接异常:', error);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('流读取被中止:', error);
+        // 中止是预期行为，不需要额外处理
+      } else {
+        // 其他错误需要重新抛出
+        if (typeof params?.errorHandler === 'function') {
+          params.errorHandler(error);
+        } else if (params?.errorHandler?.onError) {
+          params.errorHandler.onError(error);
+        }
 
-      if (typeof params?.errorHandler === 'function') {
-        params.errorHandler(error);
-      } else if (params?.errorHandler?.onError) {
-        params.errorHandler.onError(error);
+        console.error('流读取过程中出错:', error);
+        throw error;
       }
 
       // 重新抛出错误，让调用方能够捕获和处理

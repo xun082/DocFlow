@@ -16,6 +16,7 @@ interface UseSSEStreamProps {
   buildContentString: (prompt: string, op?: string) => string;
   documentId: string;
   selectedModel: string;
+  setResponse: (response: string) => void;
 }
 
 export const useSSEStream = ({
@@ -26,6 +27,7 @@ export const useSSEStream = ({
   buildContentString,
   documentId,
   selectedModel,
+  setResponse,
 }: UseSSEStreamProps) => {
   const accumulatedResponseRef = useRef('');
 
@@ -40,65 +42,78 @@ export const useSSEStream = ({
     const decoder = new TextDecoder();
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
 
-      if (done) {
-        break;
-      }
+        if (done) {
+          break;
+        }
 
-      buffer += decoder.decode(value, {
-        stream: true,
-      });
+        buffer += decoder.decode(value, {
+          stream: true,
+        });
 
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-      let lineString = '';
+        let lineString = '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
 
-          if (data === '[DONE]') {
-            setAiState(AIState.INPUT);
-            console.log('AI响应完成:', accumulatedResponseRef.current);
+            if (data === '[DONE]') {
+              setAiState(AIState.INPUT);
+              console.log('AI响应完成:', accumulatedResponseRef.current);
 
-            return;
-          }
-
-          try {
-            const parsedData = JSON.parse(data);
-
-            // 检查是否有choices数组和delta内容
-            if (parsedData.choices && parsedData.choices.length > 0) {
-              const choice = parsedData.choices[0];
-
-              // 检查finish_reason来判断是否完成
-              if (choice.finish_reason === 'stop') {
-                // 流式传输完成，同步响应内容并切换到显示状态
-                console.log('结束');
-                updateState({
-                  response: accumulatedResponseRef.current,
-                  prompt: '',
-                  aiState: AIState.INPUT,
-                });
-
-                return;
-              } else if (choice.delta && choice.delta.content) {
-                // 累积接收到的内容
-                const newContent = accumulatedResponseRef.current + choice.delta.content;
-                accumulatedResponseRef.current = newContent;
-                lineString += choice.delta.content;
-              }
+              return;
             }
 
-            // 防止打字机效果漏字
-            setText(lineString);
-          } catch (parseError) {
-            console.error('解析SSE数据失败:', parseError);
+            try {
+              const parsedData = JSON.parse(data);
+
+              // 检查是否有choices数组和delta内容
+              if (parsedData.choices && parsedData.choices.length > 0) {
+                const choice = parsedData.choices[0];
+
+                // 检查finish_reason来判断是否完成
+                if (choice.finish_reason === 'stop') {
+                  // 流式传输完成，同步响应内容并切换到显示状态
+                  console.log('结束');
+                  updateState({
+                    response: accumulatedResponseRef.current,
+                    prompt: '',
+                    aiState: AIState.INPUT,
+                  });
+
+                  return;
+                } else if (choice.delta && choice.delta.content) {
+                  // 累积接收到的内容
+                  const newContent = accumulatedResponseRef.current + choice.delta.content;
+                  accumulatedResponseRef.current = newContent;
+                  lineString += choice.delta.content;
+                }
+              }
+
+              // 防止打字机效果漏字
+              setResponse(accumulatedResponseRef.current);
+              setText(lineString);
+            } catch (parseError) {
+              console.error('解析SSE数据失败:', parseError);
+            }
           }
         }
+      }
+    } catch (error) {
+      // 处理中止错误
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('流读取被中止:', error);
+        // 中止是预期行为，不需要额外处理
+      } else {
+        // 其他错误需要重新抛出
+        console.error('流读取过程中出错:', error);
+        throw error;
       }
     }
   };
@@ -157,11 +172,21 @@ export const useSSEStream = ({
         );
       }
     } catch (error) {
-      console.error('AI生成过程中出错:', error);
-      updateState({
-        aiState: AIState.INPUT,
-        response: '错误：请求过程中出错',
-      });
+      // 区分中止错误和其他错误
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('AI生成被中止:', error);
+        // 中止是预期行为，只需更新状态
+        updateState({
+          aiState: AIState.INPUT,
+        });
+      } else {
+        // 其他错误需要显示错误信息
+        console.error('AI生成过程中出错:', error);
+        updateState({
+          aiState: AIState.INPUT,
+          response: '错误：请求过程中出错',
+        });
+      }
     }
   };
 
