@@ -49,10 +49,10 @@ export interface GenerateDiagramParams {
 }
 
 export interface QuestionParams {
-  // documentId: string;
   question: string;
   apiKey: string;
   model: string;
+  useKnowledgeBase: boolean;
 }
 
 export interface QuestionResponse {

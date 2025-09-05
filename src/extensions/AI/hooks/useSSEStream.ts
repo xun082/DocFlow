@@ -119,12 +119,11 @@ export const useSSEStream = ({
 
     try {
       const contentString = buildContentString(prompt, nodeAttrs.op);
+
       const apiKeys = localStorage.getItem('docflow_api_keys');
 
       // SSE流式数据处理
       const requestData = {
-        documentId: documentId,
-        content: contentString,
         apiKey: apiKeys ? JSON.parse(apiKeys)?.siliconflow : '',
         model: selectedModel,
         errorHandler: () => {
@@ -137,7 +136,26 @@ export const useSSEStream = ({
 
       // 续写
       resetAccumulatedResponse();
-      abortRef.current = await AiApi.ContinueWriting(requestData, processSSEResponse);
+
+      if (nodeAttrs.op === 'continue') {
+        abortRef.current = await AiApi.ContinueWriting(
+          {
+            ...requestData,
+            documentId: documentId,
+            content: contentString,
+          },
+          processSSEResponse,
+        );
+      } else {
+        abortRef.current = await AiApi.Question(
+          {
+            ...requestData,
+            question: prompt,
+            useKnowledgeBase: true,
+          },
+          processSSEResponse,
+        );
+      }
     } catch (error) {
       console.error('AI生成过程中出错:', error);
       updateState({

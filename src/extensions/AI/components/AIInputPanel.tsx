@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUp, Paperclip, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
 import Button from './Button';
 import Textarea from './Textarea';
@@ -34,6 +35,7 @@ interface AIInputPanelProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   uploadInputRef: React.RefObject<HTMLInputElement | null>;
   componentRef: React.RefObject<HTMLDivElement | null>;
+  node: ProseMirrorNode;
 }
 
 const AIInputPanel: React.FC<AIInputPanelProps> = ({
@@ -49,6 +51,7 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   textareaRef,
   uploadInputRef,
   componentRef,
+  node,
 }) => {
   return (
     <div
@@ -58,22 +61,24 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
       )}
     >
       <div className={cn('transition-all duration-300')}>
-        <Textarea
-          ref={textareaRef}
-          value={prompt}
-          onChange={onPromptChange}
-          onKeyDown={onKeyDown}
-          onFocus={(e) => {
-            const textarea = e.target as HTMLTextAreaElement;
-            const length = textarea.value.length;
-            setTimeout(() => {
-              textarea.setSelectionRange(length, length);
-            }, 0);
-          }}
-          className="text-base"
-          disabled={false}
-          placeholder="输入你的AI提示词..."
-        />
+        {node.attrs.op !== 'ask' || (
+          <Textarea
+            ref={textareaRef}
+            value={prompt}
+            onChange={onPromptChange}
+            onKeyDown={onKeyDown}
+            onFocus={(e) => {
+              const textarea = e.target as HTMLTextAreaElement;
+              const length = textarea.value.length;
+              setTimeout(() => {
+                textarea.setSelectionRange(length, length);
+              }, 0);
+            }}
+            className="text-base"
+            disabled={false}
+            placeholder="输入你的AI提示词..."
+          />
+        )}
       </div>
 
       {/* Actions */}
@@ -234,18 +239,27 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
           size="icon"
           className={cn(
             'h-8 w-8 rounded-full transition-all duration-200',
-            hasContent
+            hasContent || node.attrs.op === 'continue'
               ? 'bg-gray-700 hover:bg-gray-800 text-white'
               : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
           )}
           onClick={() => {
-            if (hasContent) onGenerateAI();
+            // console.log('onGenerateAI');
+            // console.log(
+            //   "🚀 ~ hasContent || node.attrs.op === 'continue':",
+            //   hasContent || node.attrs.op === 'continue',
+            // );
+
+            if (hasContent || node.attrs.op === 'continue') {
+              console.log('onGenerateAI');
+              onGenerateAI();
+            }
           }}
-          disabled={!hasContent}
+          disabled={!(hasContent || node.attrs.op === 'continue')}
         >
           {isLoading ? (
             <Square className="h-4 w-4 fill-white animate-pulse" />
-          ) : hasContent ? (
+          ) : hasContent || node.attrs.op === 'continue' ? (
             <ArrowUp className="h-4 w-4 text-white" />
           ) : (
             <span className="h-5 w-5 flex items-center justify-center text-white">?</span>

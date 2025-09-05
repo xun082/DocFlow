@@ -4,6 +4,9 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
 import { BrainCircuit } from 'lucide-react';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // AI组件状态枚举
 enum AIState {
@@ -17,7 +20,6 @@ import { useAnimatedText } from './components/useAnimatedText';
 import { useTextExtraction } from './hooks/useTextExtraction';
 import { useSSEStream } from './hooks/useSSEStream';
 import { useTextToImage } from './hooks/useTextToImage';
-// import { useQuestion } from './hooks/useQuestion';
 import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
 
@@ -78,13 +80,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     documentId,
     selectedModel,
   });
-  // const { handleQuestion } = useQuestion({
-  //   updateState,
-  //   setAiState,
-  //   setText,
-  //   updateAttributes,
-  //   selectedModel,
-  // });
 
   const { generateImage } = useTextToImage({
     onSuccess: (imageUrl) => {
@@ -94,6 +89,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         editor
           .chain()
           .focus()
+          .deleteRange({ from: pos, to: pos + node.nodeSize })
           .insertContentAt(pos + node.nodeSize, {
             type: 'imageBlock',
             attrs: { src: imageUrl },
@@ -160,14 +156,40 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   }, [aiState]);
 
   const handleGenerateAI = async () => {
-    if (!prompt?.trim() || aiState === AIState.LOADING) return;
+    // if ((!prompt?.trim() && node.attrs.op === 'ask') || aiState === AIState.LOADING) return;
 
-    setAiState(AIState.LOADING);
+    if (node.attrs.op === 'ask') {
+      if (!prompt?.trim() || aiState === AIState.LOADING) {
+        return;
+      } else {
+        setAiState(AIState.LOADING);
 
-    if (showImage) {
-      await generateImage({ prompt });
+        if (showImage) {
+          await generateImage({ prompt });
+        } else {
+          await handleAIGeneration(prompt, node.attrs, abortRef);
+        }
+      }
     } else {
-      await handleAIGeneration(prompt, node.attrs, abortRef);
+      if (aiState === AIState.LOADING) {
+        return;
+      } else {
+        const contentString = buildContentString(prompt, node.attrs.op);
+
+        if (!contentString) {
+          toast.warning('文档是空白文档');
+
+          return;
+        }
+
+        setAiState(AIState.LOADING);
+
+        if (showImage) {
+          await generateImage({ prompt });
+        } else {
+          await handleAIGeneration(prompt, node.attrs, abortRef);
+        }
+      }
     }
   };
 
@@ -238,7 +260,9 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         ) : (
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
-              <div dangerouslySetInnerHTML={{ __html: response }} />
+              <div className="markdown-content">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{response}</ReactMarkdown>
+              </div>
             )}
             {aiState === AIState.INPUT && (
               <>
@@ -255,6 +279,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                   textareaRef={textareaRef}
                   uploadInputRef={uploadInputRef}
                   componentRef={componentRef}
+                  node={node}
                 />
               </>
             )}
