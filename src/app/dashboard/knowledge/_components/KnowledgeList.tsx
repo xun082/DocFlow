@@ -51,13 +51,14 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
       });
 
       if (response?.data?.data) {
-        const apiData = response.data.data;
-        const knowledgeItems: ApiKnowledgeItem[] = apiData.data || [];
+        const responseData = response.data.data;
+        const knowledgeItems = responseData.data;
+        const pagination = responseData.pagination;
 
-        // 直接使用API返回的原始数据
+        // 使用新的分页结构
         setKnowledgeList(knowledgeItems);
-        setTotalCount(apiData.total);
-        setTotalPages(Math.ceil(apiData.total / pageSize));
+        setTotalCount(pagination.total);
+        setTotalPages(pagination.totalPages);
       }
     } catch (error) {
       console.error('获取知识库列表失败:', error);

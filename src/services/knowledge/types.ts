@@ -34,10 +34,16 @@ export interface ApiKnowledgeItem {
   updated_at: string;
 }
 
+// 分页信息
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 // 获取知识库列表响应
 export interface GetKnowledgeResponse {
   data: ApiKnowledgeItem[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: PaginationInfo;
 }
