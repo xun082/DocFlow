@@ -156,8 +156,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   }, [aiState]);
 
   const handleGenerateAI = async () => {
-    // if ((!prompt?.trim() && node.attrs.op === 'ask') || aiState === AIState.LOADING) return;
-
     if (node.attrs.op === 'ask') {
       if (!prompt?.trim() || aiState === AIState.LOADING) {
         return;
@@ -251,9 +249,16 @@ export const AIComponent: React.FC<AIComponentProps> = ({
             <div className="mb-2">{animatedText}</div>
             <AILoadingStatus
               onCancel={() => {
-                abortRef.current?.();
-                setAiState(AIState.INPUT);
-                updateAttributes({ loading: false });
+                try {
+                  console.log('cancel', response);
+                  abortRef.current?.();
+                } catch (error) {
+                  // 忽略BodyStreamBuffer中止错误
+                  console.log('中止流处理:', error);
+                } finally {
+                  setAiState(AIState.INPUT);
+                  updateAttributes({ loading: false });
+                }
               }}
             />
           </>

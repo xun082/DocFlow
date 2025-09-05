@@ -68,12 +68,6 @@ export type ErrorHandler =
       default?: (error: unknown) => void;
     };
 
-// interface SSECallback<T> {
-//   onData: (data: T) => void;
-//   onError?: (error: string) => void;
-//   onComplete?: () => void;
-// }
-
 class Request {
   baseURL: string;
   defaultTimeout: number;
@@ -582,7 +576,14 @@ class Request {
 
       return () => controller.abort();
     } catch (error) {
-      console.error('SSE连接异常:', error);
+      // console.error('SSE连接异常:', error);
+
+      if (typeof params?.errorHandler === 'function') {
+        params.errorHandler(error);
+      } else if (params?.errorHandler?.onError) {
+        params.errorHandler.onError(error);
+      }
+
       // 重新抛出错误，让调用方能够捕获和处理
       throw error;
     }
