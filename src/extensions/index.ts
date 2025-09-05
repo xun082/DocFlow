@@ -57,3 +57,4 @@ export { ExcalidrawImage } from './ExcalidrawImage';
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Audio } from './Audio';
 export { AI } from './AI';
+export { Youtube } from './Youtube';
