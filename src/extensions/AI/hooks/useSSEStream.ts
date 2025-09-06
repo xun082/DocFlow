@@ -80,7 +80,7 @@ export const useSSEStream = ({
                 // 检查finish_reason来判断是否完成
                 if (choice.finish_reason === 'stop') {
                   // 流式传输完成，同步响应内容并切换到显示状态
-                  console.log('结束');
+                  // console.log('结束');
                   updateState({
                     response: accumulatedResponseRef.current,
                     prompt: '',
@@ -96,8 +96,8 @@ export const useSSEStream = ({
                 }
               }
 
-              // 防止打字机效果漏字
               setResponse(accumulatedResponseRef.current);
+              // 防止打字机效果漏字
               setText(lineString);
             } catch (parseError) {
               console.error('解析SSE数据失败:', parseError);

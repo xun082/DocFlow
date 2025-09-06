@@ -173,8 +173,6 @@ class Request {
    * 响应拦截器
    */
   async interceptorsResponse<T>(res: Response, url: string): Promise<T> {
-    console.log('响应拦截器', res);
-
     const status = res.status;
     const statusText = res.statusText;
 

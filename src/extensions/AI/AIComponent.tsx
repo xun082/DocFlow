@@ -252,7 +252,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
             <AILoadingStatus
               onCancel={() => {
                 try {
-                  console.log('cancel', response);
                   abortRef.current?.();
                 } catch (error) {
                   // 忽略BodyStreamBuffer中止错误
