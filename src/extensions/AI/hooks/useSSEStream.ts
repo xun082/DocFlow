@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Editor } from '@tiptap/core';
 
 import { AiApi } from '@/services/ai';
 
@@ -11,23 +12,23 @@ enum AIState {
 interface UseSSEStreamProps {
   updateState: (state: any) => void;
   setAiState: (state: AIState) => void;
-  setText: (text: string) => void;
   updateAttributes: (attributes: Record<string, any>) => void;
   buildContentString: (prompt: string, op?: string) => string;
   documentId: string;
   selectedModel: string;
   setResponse: (response: string) => void;
+  editor: Editor;
 }
 
 export const useSSEStream = ({
   updateState,
   setAiState,
-  setText,
   updateAttributes,
   buildContentString,
   documentId,
   selectedModel,
   setResponse,
+  editor,
 }: UseSSEStreamProps) => {
   const accumulatedResponseRef = useRef('');
 
@@ -97,8 +98,9 @@ export const useSSEStream = ({
               }
 
               setResponse(accumulatedResponseRef.current);
-              // 防止打字机效果漏字
-              setText(lineString);
+
+              const pos = editor.state.selection.from;
+              editor.commands.updateStreamingContent(pos, lineString);
             } catch (parseError) {
               console.error('解析SSE数据失败:', parseError);
             }

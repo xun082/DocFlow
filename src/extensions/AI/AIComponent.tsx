@@ -16,12 +16,12 @@ enum AIState {
 }
 
 import { createActionButtons } from './actionButtons';
-import { useAnimatedText } from './components/useAnimatedText';
 import { useTextExtraction } from './hooks/useTextExtraction';
 import { useSSEStream } from './hooks/useSSEStream';
 import { useTextToImage } from './hooks/useTextToImage';
 import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
+import SyntaxHighlight from './components/SyntaxHighlight';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -48,7 +48,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
-  const [animatedText, setText] = useAnimatedText();
   const { buildContentString } = useTextExtraction(editor);
   const abortRef = useRef<() => void | undefined>(undefined);
 
@@ -74,12 +73,12 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const { handleGenerateAI: handleAIGeneration } = useSSEStream({
     updateState,
     setAiState,
-    setText,
     updateAttributes,
     buildContentString,
     documentId,
     selectedModel,
     setResponse,
+    editor,
   });
 
   const { generateImage } = useTextToImage({
@@ -148,13 +147,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [aiState, response, editor]);
-
-  // 状态切换时重置动画文本
-  useEffect(() => {
-    if (aiState !== AIState.LOADING) {
-      setText(''); // 清空动画文本
-    }
-  }, [aiState]);
 
   const handleGenerateAI = async () => {
     // 如果已经在加载状态，直接返回
@@ -248,7 +240,22 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         {/* AI Input Box */}
         {aiState === AIState.LOADING ? (
           <>
-            <div className="mb-2">{animatedText}</div>
+            <div className="markdown-content">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code: SyntaxHighlight,
+                  pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                    <pre className="rounded-[12px]" {...props}>
+                      {children}
+                    </pre>
+                  ),
+                }}
+              >
+                {response}
+              </ReactMarkdown>
+            </div>
+            {/* <div className="mb-2">{animatedText}</div> */}
             <AILoadingStatus
               onCancel={() => {
                 try {
@@ -267,7 +274,21 @@ export const AIComponent: React.FC<AIComponentProps> = ({
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
               <div className="markdown-content">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{response}</ReactMarkdown>
+                <div className="markdown-content">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: SyntaxHighlight,
+                      pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                        <pre className="rounded-[12px]" {...props}>
+                          {children}
+                        </pre>
+                      ),
+                    }}
+                  >
+                    {response}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
             {aiState === AIState.INPUT && (

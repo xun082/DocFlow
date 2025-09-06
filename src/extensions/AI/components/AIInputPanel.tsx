@@ -244,12 +244,6 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
               : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
           )}
           onClick={() => {
-            // console.log('onGenerateAI');
-            // console.log(
-            //   "🚀 ~ hasContent || node.attrs.op === 'continue':",
-            //   hasContent || node.attrs.op === 'continue',
-            // );
-
             if (hasContent || node.attrs.op === 'continue') {
               console.log('onGenerateAI');
               onGenerateAI();
