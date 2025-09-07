@@ -56,6 +56,7 @@ import {
   Audio,
   FileHandler,
   AI,
+  Youtube,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -290,6 +291,14 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     maxTokens: 1000,
     temperature: 0.7,
     showLoading: true,
+  }),
+  Youtube.configure({
+    controls: false,
+    nocookie: true,
+    inline: false,
+    HTMLAttributes: {
+      class: 'youtube-video-wrapper',
+    },
   }),
 ];
 

@@ -2,37 +2,7 @@ import { useEffect, useRef } from 'react';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { UAParser } from 'ua-parser-js';
 
-interface TrackingData {
-  path: string;
-  referrer?: string;
-  duration: number;
-  os: string;
-  browser: string;
-  browser_ver: string;
-  screen_resolution: string;
-  device_type: string;
-  language: string;
-  timezone: string;
-  load_time: number;
-  fingerprint_id: string;
-}
-
-interface DeviceInfo {
-  path: string;
-  referrer: string;
-  os: string;
-  browser: string;
-  browser_ver: string;
-  screen_resolution: string;
-  device_type: string;
-  language: string;
-  timezone: string;
-  load_time: number;
-}
-
-interface UseAnalyticsOptions {
-  debug?: boolean;
-}
+import type { TrackingData, DeviceInfo } from '@/types/analytics';
 
 class AnalyticsTracker {
   private static instance: AnalyticsTracker;
@@ -58,19 +28,14 @@ class AnalyticsTracker {
 
   public setFingerprintId(id: string): void {
     this.fingerprintId = id;
-  }
-
-  public getCurrentDuration(): number {
-    let duration = this.accumulatedDuration;
-
-    if (this.isVisible) {
-      duration += Date.now() - this.lastHeartbeat;
-    }
-
-    return Math.round(duration);
+    this.track();
   }
 
   public track(data: Partial<TrackingData> = {}): void {
+    if (!this.fingerprintId) {
+      return;
+    }
+
     const payload = this.buildPayload(data);
     this.send(payload);
   }
@@ -90,7 +55,9 @@ class AnalyticsTracker {
 
   private startHeartbeat(): void {
     this.heartbeatInterval = setInterval(() => {
-      if (this.isVisible) this.updateDuration();
+      if (this.isVisible) {
+        this.updateDuration();
+      }
     }, 5000);
   }
 
@@ -131,6 +98,16 @@ class AnalyticsTracker {
     };
   }
 
+  private getCurrentDuration(): number {
+    let duration = this.accumulatedDuration;
+
+    if (this.isVisible) {
+      duration += Date.now() - this.lastHeartbeat;
+    }
+
+    return Math.round(duration);
+  }
+
   private send(data: TrackingData): void {
     const payload = JSON.stringify(data);
 
@@ -139,26 +116,26 @@ class AnalyticsTracker {
     } else {
       fetch(this.apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: '*/*',
+        },
         body: payload,
         keepalive: true,
-      }).catch(() => {});
+        mode: 'cors',
+      }).catch(() => {
+        // Silent fail
+      });
     }
   }
 
   private collectDeviceInfo(): DeviceInfo {
     const parser = UAParser(navigator.userAgent);
-
     const currentPath = window.location.pathname;
     const referrer = document.referrer;
-
     const loadTime = Math.round(Date.now() - this.pageLoadTime);
-
     const screenResolution = `${screen.width}x${screen.height}`;
-
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // Get language
     const language = navigator.language;
 
     return {
@@ -168,7 +145,7 @@ class AnalyticsTracker {
       browser: parser.browser.name?.toLowerCase() as string,
       browser_ver: parser.browser.version as string,
       screen_resolution: screenResolution,
-      device_type: parser.device.type as string,
+      device_type: (parser.device.type || 'desktop') as string,
       language: language,
       timezone: timezone,
       load_time: loadTime,
@@ -176,12 +153,10 @@ class AnalyticsTracker {
   }
 }
 
-// Browser environment check
 const isBrowser = typeof window !== 'undefined';
 const tracker = isBrowser ? AnalyticsTracker.getInstance() : null;
 
-const useAnalytics = (options: UseAnalyticsOptions = {}) => {
-  const { debug = false } = options;
+const useAnalytics = () => {
   const initialized = useRef<boolean>(false);
 
   useEffect(() => {
@@ -189,19 +164,19 @@ const useAnalytics = (options: UseAnalyticsOptions = {}) => {
     initialized.current = true;
 
     const initializeTracking = async () => {
-      // Generate unique visitor ID using FingerprintJS
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      const fingerprintId = result.visitorId;
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const fingerprintId = result.visitorId;
 
-      // Initialize analytics with fingerprint ID (starts automatic tracking)
-      tracker?.setFingerprintId(fingerprintId);
-
-      if (debug) console.log(`Analytics tracking started: ${fingerprintId}`);
+        tracker?.setFingerprintId(fingerprintId);
+      } catch {
+        // Silent fail
+      }
     };
 
     initializeTracking();
-  }, [debug]);
+  }, []);
 };
 
 export default useAnalytics;

@@ -401,7 +401,8 @@ export default function SharePage() {
               {/* 打开文档按钮 */}
               <button
                 onClick={() => {
-                  window.open(`/docs/${state.documentData!.id}`, '_blank');
+                  // 跳转到正确的文档页面路径
+                  window.location.href = `/docs/${state.documentData!.id}`;
                 }}
                 className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
               >
