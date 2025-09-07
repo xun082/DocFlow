@@ -4,6 +4,9 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
 import { BrainCircuit } from 'lucide-react';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // AI组件状态枚举
 enum AIState {
@@ -13,20 +16,26 @@ enum AIState {
 }
 
 import { createActionButtons } from './actionButtons';
-import { useAnimatedText } from './components/useAnimatedText';
+import { useTextExtraction } from './hooks/useTextExtraction';
+import { useSSEStream } from './hooks/useSSEStream';
+import { useTextToImage } from './hooks/useTextToImage';
 import AILoadingStatus from './components/AILoadingStatus';
 import AIInputPanel from './components/AIInputPanel';
-
-import { AiApi } from '@/services/ai';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
+import SyntaxHighlight from './components/SyntaxHighlight';
 
 interface AIComponentProps {
   node: ProseMirrorNode;
   updateAttributes: (attributes: Record<string, any>) => void;
   editor: Editor;
+  getPos: () => number | undefined;
 }
 
-export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes, editor }) => {
+export const AIComponent: React.FC<AIComponentProps> = ({
+  node,
+  updateAttributes,
+  editor,
+  getPos,
+}) => {
   const params = useParams();
   const documentId = params?.room as string;
   const [prompt, setPrompt] = useState(node.attrs.prompt || '');
@@ -35,12 +44,64 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
   const [aiState, setAiState] = useState<AIState>(node.attrs.aiState || AIState.DISPLAY);
 
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
+  const [showImage, setShowImage] = useState(false); // 图片生成状态
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
-  const [animatedText, setText] = useAnimatedText();
-  const accumulatedResponseRef = useRef('');
+  const { buildContentString } = useTextExtraction(editor);
   const abortRef = useRef<() => void | undefined>(undefined);
+
+  // 统一状态更新函数
+  const updateState = (
+    newState: Partial<{ aiState: AIState; response: string; prompt: string }>,
+  ) => {
+    if (newState.aiState !== undefined) {
+      setAiState(newState.aiState);
+    }
+
+    if (newState.response !== undefined) {
+      setResponse(newState.response);
+    }
+
+    if (newState.prompt !== undefined) {
+      setPrompt(newState.prompt);
+    }
+
+    updateAttributes(newState);
+  };
+
+  const { handleGenerateAI: handleAIGeneration } = useSSEStream({
+    updateState,
+    setAiState,
+    updateAttributes,
+    buildContentString,
+    documentId,
+    selectedModel,
+    setResponse,
+    editor,
+  });
+
+  const { generateImage } = useTextToImage({
+    onSuccess: (imageUrl) => {
+      const pos = getPos();
+
+      if (pos !== undefined) {
+        editor
+          .chain()
+          .focus()
+          .deleteRange({ from: pos, to: pos + node.nodeSize })
+          .insertContentAt(pos + node.nodeSize, {
+            type: 'imageBlock',
+            attrs: { src: imageUrl },
+          })
+          .run();
+      }
+    },
+    onError: () => {
+      setAiState(AIState.INPUT);
+      updateState({ aiState: AIState.DISPLAY });
+    },
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -60,10 +121,23 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     // 监听点击其他区域，input 框隐藏
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-        const { from, to } = editor.state.selection;
-        setAiState(AIState.DISPLAY);
-        editor.chain().deleteRange({ from, to }).insertContent(`<p>${response}</p>`);
-        componentRef.current.style.display = 'none';
+        if (response) {
+          // 如果有response，替换整个AI节点为段落
+          const pos = getPos();
+
+          if (pos !== undefined) {
+            const nodeSize = node.nodeSize;
+            editor
+              .chain()
+              .focus()
+              .deleteRange({ from: pos, to: pos + nodeSize })
+              .pasteMarkdown(response)
+              .run();
+          }
+        } else {
+          // 如果没有response，只是隐藏输入状态
+          updateState({ aiState: AIState.DISPLAY });
+        }
       }
     };
 
@@ -72,153 +146,42 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [aiState, updateAttributes]);
-
-  // 状态切换时重置动画文本
-  useEffect(() => {
-    if (aiState !== AIState.LOADING) {
-      setText(''); // 清空动画文本
-    }
-  }, [aiState, setText]);
+  }, [aiState, response, editor]);
 
   const handleGenerateAI = async () => {
-    if (!prompt?.trim() || aiState === AIState.LOADING) return;
-    accumulatedResponseRef.current = '';
+    // 如果已经在加载状态，直接返回
+    if (aiState === AIState.LOADING) {
+      return;
+    }
 
-    setAiState(AIState.LOADING);
-    updateAttributes({ aiState: AIState.LOADING });
+    // 处理提问模式
+    // 处理提问模式下的输入验证
+    if (node.attrs.op === 'ask') {
+      if (!prompt?.trim()) {
+        toast.warning('请输入您的问题');
 
-    try {
-      // 获取所有文本节点的文案
-      if (!prompt?.trim()) return;
-
-      try {
-        // 提取编辑器中的文本内容
-        let contentString: string = ' ';
-
-        const extractTextContent = (): string => {
-          const textContents: string[] = [];
-
-          editor.state.doc.descendants((node) => {
-            if (node.type.name === 'paragraph' && node.textContent?.trim()) {
-              textContents.push(node.textContent?.trim());
-            }
-
-            return true;
-          });
-
-          return textContents.join('\n');
-        };
-
-        if (node.attrs.op === 'continue') {
-          contentString = extractTextContent();
-        } else {
-          contentString = extractTextContent() + '\n' + prompt;
-        }
-
-        const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
-        const siliconflowApiKey = apiKeys?.siliconflow;
-
-        // 如果没有 API 密钥，提示用户配置
-        if (!siliconflowApiKey) {
-          setAiState(AIState.INPUT);
-          setResponse('错误：请先配置 API 密钥');
-          updateAttributes({ aiState: AIState.INPUT, response: '错误：请先配置 API 密钥' });
-
-          return;
-        }
-
-        // SSE流式数据处理
-        const requestData = {
-          documentId: documentId,
-          content: contentString,
-          apiKey: siliconflowApiKey,
-          model: selectedModel,
-        };
-
-        let buffer = '';
-
-        abortRef.current = await AiApi.ContinueWriting(requestData, async (response: Response) => {
-          // 获取流式响应
-          const reader = response.body?.getReader();
-
-          if (!reader) {
-            throw new Error('无法获取响应流');
-          }
-
-          const decoder = new TextDecoder();
-
-          while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-              break;
-            }
-
-            buffer += decoder.decode(value, {
-              stream: true,
-            });
-
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            let lineString = '';
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6);
-
-                if (data === '[DONE]') {
-                  setAiState(AIState.INPUT);
-                  console.log('AI响应完成:', accumulatedResponseRef.current);
-
-                  return;
-                }
-
-                try {
-                  const parsedData = JSON.parse(data);
-
-                  // 检查是否有choices数组和delta内容
-                  if (parsedData.choices && parsedData.choices.length > 0) {
-                    const choice = parsedData.choices[0];
-
-                    // 检查finish_reason来判断是否完成
-                    if (choice.finish_reason === 'stop') {
-                      // 流式传输完成，同步响应内容并切换到显示状态
-                      console.log('结束');
-                      setResponse(accumulatedResponseRef.current);
-                      updateAttributes({ response: accumulatedResponseRef.current });
-                      setPrompt(''); // 清空输入框
-                      setAiState(AIState.INPUT);
-
-                      return;
-                    } else if (choice.delta && choice.delta.content) {
-                      // 累积接收到的内容
-                      const newContent = accumulatedResponseRef.current + choice.delta.content;
-                      accumulatedResponseRef.current = newContent;
-                      lineString += choice.delta.content;
-                    }
-                  }
-
-                  // 防止打字机效果漏字
-                  setText(lineString);
-                } catch (parseError) {
-                  console.error('解析SSE数据失败:', parseError);
-                }
-              }
-            }
-          }
-        });
-      } catch (error) {
-        console.error('AI生成过程中出错:', error);
-        setAiState(AIState.INPUT);
-        setResponse('错误：请求过程中出错');
-        updateAttributes({ aiState: AIState.INPUT, response: '错误：请求过程中出错' });
+        return;
       }
-    } catch (error) {
-      console.error('请求初始化失败:', error);
-      setAiState(AIState.INPUT);
-      updateAttributes({ aiState: AIState.INPUT });
+    }
+    // 处理其他模式（续写、改写等）
+    else {
+      const contentString = buildContentString(prompt, node.attrs.op);
+
+      if (!contentString) {
+        toast.warning('文档是空白文档');
+
+        return;
+      }
+    }
+
+    // 设置加载状态
+    setAiState(AIState.LOADING);
+
+    // 根据模式选择生成图片或文本
+    if (showImage) {
+      await generateImage({ prompt });
+    } else {
+      await handleAIGeneration(prompt, node.attrs, abortRef);
     }
   };
 
@@ -235,14 +198,21 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
     }
   };
 
+  // 图片生成处理函数
+  const handleToggleImage = () => {
+    setShowImage(!showImage);
+  };
+
   // 按钮配置数据
   const baseButtons = createActionButtons(
     false, // showSearch
     false, // showThink
     false, // showCanvas
+    showImage, // showImage
     () => {}, // search toggle
     () => {}, // think toggle
     () => {}, // canvas toggle
+    handleToggleImage, // image toggle
     aiState === AIState.LOADING,
   );
 
@@ -270,19 +240,56 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
         {/* AI Input Box */}
         {aiState === AIState.LOADING ? (
           <>
-            <div className="mb-2">{animatedText}</div>
+            <div className="markdown-content">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code: SyntaxHighlight,
+                  pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                    <pre className="rounded-[12px]" {...props}>
+                      {children}
+                    </pre>
+                  ),
+                }}
+              >
+                {response}
+              </ReactMarkdown>
+            </div>
+            {/* <div className="mb-2">{animatedText}</div> */}
             <AILoadingStatus
               onCancel={() => {
-                abortRef.current?.();
-                setAiState(AIState.INPUT);
-                updateAttributes({ loading: false });
+                try {
+                  abortRef.current?.();
+                } catch (error) {
+                  // 忽略BodyStreamBuffer中止错误
+                  console.log('中止流处理:', error);
+                } finally {
+                  setAiState(AIState.INPUT);
+                  updateAttributes({ loading: false });
+                }
               }}
             />
           </>
         ) : (
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
-              <p>{response}</p>
+              <div className="markdown-content">
+                <div className="markdown-content">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: SyntaxHighlight,
+                      pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                        <pre className="rounded-[12px]" {...props}>
+                          {children}
+                        </pre>
+                      ),
+                    }}
+                  >
+                    {response}
+                  </ReactMarkdown>
+                </div>
+              </div>
             )}
             {aiState === AIState.INPUT && (
               <>
@@ -299,6 +306,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({ node, updateAttributes
                   textareaRef={textareaRef}
                   uploadInputRef={uploadInputRef}
                   componentRef={componentRef}
+                  node={node}
                 />
               </>
             )}

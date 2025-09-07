@@ -68,12 +68,6 @@ export type ErrorHandler =
       default?: (error: unknown) => void;
     };
 
-// interface SSECallback<T> {
-//   onData: (data: T) => void;
-//   onError?: (error: string) => void;
-//   onComplete?: () => void;
-// }
-
 class Request {
   baseURL: string;
   defaultTimeout: number;
@@ -533,18 +527,45 @@ class Request {
         params: params.params,
         headers: params.headers,
         withCredentials: params.withCredentials,
+        errorHandler: params?.errorHandler,
       });
 
       const response = await fetch(req.url, {
         ...req.options,
+        signal: controller.signal,
       });
 
+      // 使用响应拦截器进行统一的错误处理和状态检查
+      // 注意：对于SSE，我们不需要解析响应体，只需要检查状态
       if (!response.ok) {
+        console.log('SSE响应拦截器 - 错误状态:', response.status, response.statusText);
+
+        // 尝试获取错误信息
+        let errorMessage = HTTP_STATUS_MESSAGES[response.status] || 'SSE连接失败';
+        let errorData = null;
+
+        try {
+          const contentType = response.headers.get('content-type');
+
+          if (contentType && contentType.includes('application/json')) {
+            // 克隆响应以避免消费原始流
+            const clonedResponse = response.clone();
+            errorData = await clonedResponse.json();
+
+            if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          }
+        } catch {
+          // 如果无法解析错误信息，使用默认消息
+        }
+
         throw new RequestError(
-          HTTP_STATUS_MESSAGES[response.status] || 'SSE连接失败',
+          errorMessage,
           fullUrl,
           response.status,
           response.statusText,
+          errorData,
         );
       }
 
@@ -552,7 +573,23 @@ class Request {
 
       return () => controller.abort();
     } catch (error) {
-      console.error('SSE连接异常:', error);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('流读取被中止:', error);
+        // 中止是预期行为，不需要额外处理
+      } else {
+        // 其他错误需要重新抛出
+        if (typeof params?.errorHandler === 'function') {
+          params.errorHandler(error);
+        } else if (params?.errorHandler?.onError) {
+          params.errorHandler.onError(error);
+        }
+
+        console.error('流读取过程中出错:', error);
+        throw error;
+      }
+
+      // 重新抛出错误，让调用方能够捕获和处理
+      throw error;
     }
   }
   /**
