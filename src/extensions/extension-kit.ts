@@ -57,6 +57,7 @@ import {
   FileHandler,
   AI,
   Youtube,
+  ClearMarksOnEnter,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -300,6 +301,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
       class: 'youtube-video-wrapper',
     },
   }),
+  ClearMarksOnEnter,
 ];
 
 export default ExtensionKit;
