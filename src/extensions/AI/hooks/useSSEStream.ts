@@ -197,7 +197,7 @@ export const useSSEStream = ({
         console.error('AI生成过程中出错:', error);
         updateState({
           aiState: AIState.INPUT,
-          response: '错误：请求过程中出错',
+          response: '',
         });
       }
     }

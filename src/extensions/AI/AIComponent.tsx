@@ -154,7 +154,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       return;
     }
 
-    // 处理提问模式
     // 处理提问模式下的输入验证
     if (node.attrs.op === 'ask') {
       if (!prompt?.trim()) {
