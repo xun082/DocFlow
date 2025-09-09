@@ -191,13 +191,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     updateAttributes({ prompt: newPrompt });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && aiState !== AIState.LOADING) {
-      e.preventDefault();
-      handleGenerateAI();
-    }
-  };
-
   // 图片生成处理函数
   const handleToggleImage = () => {
     setShowImage(!showImage);
@@ -296,7 +289,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                 <AIInputPanel
                   prompt={prompt}
                   onPromptChange={handlePromptChange}
-                  onKeyDown={handleKeyDown}
                   onGenerateAI={handleGenerateAI}
                   isLoading={(aiState as AIState) === AIState.LOADING}
                   hasContent={hasContent}

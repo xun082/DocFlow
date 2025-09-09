@@ -25,7 +25,6 @@ interface ActionButton {
 interface AIInputPanelProps {
   prompt: string;
   onPromptChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onGenerateAI: () => void;
   isLoading: boolean;
   hasContent: boolean;
@@ -41,7 +40,6 @@ interface AIInputPanelProps {
 const AIInputPanel: React.FC<AIInputPanelProps> = ({
   prompt,
   onPromptChange,
-  onKeyDown,
   onGenerateAI,
   isLoading,
   hasContent,
@@ -66,7 +64,7 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
             ref={textareaRef}
             value={prompt}
             onChange={onPromptChange}
-            onKeyDown={onKeyDown}
+            // onKeyDown={onKeyDown}
             onFocus={(e) => {
               const textarea = e.target as HTMLTextAreaElement;
               const length = textarea.value.length;
