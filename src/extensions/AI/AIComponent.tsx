@@ -154,7 +154,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       return;
     }
 
-    // 处理提问模式
     // 处理提问模式下的输入验证
     if (node.attrs.op === 'ask') {
       if (!prompt?.trim()) {
@@ -189,13 +188,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     const newPrompt = e.target.value;
     setPrompt(newPrompt);
     updateAttributes({ prompt: newPrompt });
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && aiState !== AIState.LOADING) {
-      e.preventDefault();
-      handleGenerateAI();
-    }
   };
 
   // 图片生成处理函数
@@ -296,7 +288,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                 <AIInputPanel
                   prompt={prompt}
                   onPromptChange={handlePromptChange}
-                  onKeyDown={handleKeyDown}
                   onGenerateAI={handleGenerateAI}
                   isLoading={(aiState as AIState) === AIState.LOADING}
                   hasContent={hasContent}

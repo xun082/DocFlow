@@ -132,8 +132,8 @@ export const useQuestion = ({
       // 如果没有 API 密钥，提示用户配置
       if (!siliconflowApiKey) {
         setAiState(AIState.INPUT);
-        setResponse('错误：请先配置 API 密钥');
-        updateAttributes({ aiState: AIState.INPUT, response: '错误：请先配置 API 密钥' });
+        setResponse('');
+        updateAttributes({ aiState: AIState.INPUT, response: '' });
 
         return;
       }
@@ -158,7 +158,7 @@ export const useQuestion = ({
       console.error('问答过程中出错:', error);
       updateState({
         aiState: AIState.INPUT,
-        response: '错误：请求过程中出错',
+        response: '',
       });
     }
   };
