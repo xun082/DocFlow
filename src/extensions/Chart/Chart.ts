@@ -14,7 +14,8 @@ declare module '@tiptap/core' {
         data: Array<Record<string, any>>;
         title?: string;
         xAxisKey?: string;
-        yAxisKey?: string;
+        yAxisKeys?: string[];
+        colorKey?: string;
       }) => ReturnType;
     };
   }
@@ -40,8 +41,11 @@ export const Chart = Node.create({
       xAxisKey: {
         default: 'name',
       },
-      yAxisKey: {
-        default: 'value',
+      yAxisKeys: {
+        default: [],
+      },
+      colorKey: {
+        default: 'red',
       },
     };
   },
@@ -64,7 +68,8 @@ export const Chart = Node.create({
       data: Array<Record<string, any>>;
       title?: string;
       xAxisKey: string;
-      yAxisKey: string;
+      yAxisKeys?: string[];
+      colorKey?: string;
     }>(ChartComponent as any);
   },
 
