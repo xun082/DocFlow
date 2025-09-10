@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   MessageCircle,
   Users,
@@ -11,34 +11,16 @@ import {
   Clock,
   Plus,
   Wifi,
+  Eye,
+  MousePointer,
+  Timer,
+  Target,
+  ChevronDown,
 } from 'lucide-react';
 
 import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
-
-// 静态数据
-const staticStats = [
-  {
-    name: '未读消息',
-    value: '12',
-    icon: <MessageCircle className="w-6 h-6" />,
-    color: 'bg-blue-500',
-    change: '+2',
-  },
-  {
-    name: '今日会议',
-    value: '4',
-    icon: <Video className="w-6 h-6" />,
-    color: 'bg-purple-500',
-    change: '+1',
-  },
-  {
-    name: '活跃文档',
-    value: '18',
-    icon: <FileText className="w-6 h-6" />,
-    color: 'bg-orange-500',
-    change: '+5',
-  },
-];
+import { TraceApi } from '@/services/trace';
+import { AnalyticsData } from '@/services/trace/types';
 
 const quickActions = [
   {
@@ -107,8 +89,20 @@ const upcomingEvents = [
   },
 ];
 
+// 时间范围选项
+const timeRangeOptions = [
+  { value: 1, label: '1天' },
+  { value: 3, label: '3天' },
+  { value: 7, label: '7天' },
+  { value: 14, label: '14天' },
+  { value: 30, label: '1个月' },
+];
+
 export default function DashboardPage() {
   const { isConnected, isConnecting, onlineUsers, connect } = useNotificationSocket();
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTimeRange, setSelectedTimeRange] = useState(1); // 默认1天
 
   // 自动连接WebSocket
   useEffect(() => {
@@ -116,6 +110,36 @@ export default function DashboardPage() {
       connect();
     }
   }, [isConnected, isConnecting, connect]);
+
+  // 获取分析数据
+  const fetchAnalytics = async (days: number) => {
+    try {
+      setLoading(true);
+
+      const response = await TraceApi.getTraceList({ days });
+
+      if (response.data?.data) {
+        setAnalyticsData(response.data.data);
+      } else {
+        setAnalyticsData(null);
+      }
+    } catch (error) {
+      console.error('获取分析数据失败:', error);
+      setAnalyticsData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理时间范围变化
+  const handleTimeRangeChange = (days: number) => {
+    setSelectedTimeRange(days);
+    fetchAnalytics(days);
+  };
+
+  useEffect(() => {
+    fetchAnalytics(selectedTimeRange);
+  }, []);
 
   const currentTime = new Date().toLocaleString('zh-CN', {
     year: 'numeric',
@@ -125,18 +149,97 @@ export default function DashboardPage() {
     minute: '2-digit',
   });
 
-  // 动态生成统计数据，包含实时在线用户数
-  const quickStats = [
-    ...staticStats,
+  // 格式化数值显示
+  const formatValue = (value: number) => {
+    if (value >= 1000) {
+      return (value / 1000).toFixed(1) + 'k';
+    }
+
+    return value.toString();
+  };
+
+  // 格式化变化值
+  const formatChange = (change: number) => {
+    const sign = change > 0 ? '+' : '';
+
+    return `${sign}${change}`;
+  };
+
+  // 格式化趋势百分比
+  const formatTrend = (trend: number) => {
+    const sign = trend > 0 ? '+' : '';
+
+    return `${sign}${trend}%`;
+  };
+
+  // 格式化平均停留时间（输入为毫秒）
+  const formatDuration = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // 统计数据配置
+  const statsConfig = [
     {
-      name: '在线用户',
-      value: isConnected ? onlineUsers.length.toString() : '--',
-      icon: <Wifi className="w-6 h-6" />,
-      color: isConnected ? 'bg-green-500' : 'bg-gray-400',
-      change: isConnected ? `${onlineUsers.length > 0 ? '+' : ''}${onlineUsers.length}` : '--',
-      status: isConnected ? 'connected' : 'disconnected',
+      key: 'pageviews',
+      name: '页面浏览量',
+      icon: <Eye className="w-6 h-6" />,
+      color: 'bg-blue-500',
+      formatter: (value: number) => formatValue(value),
+    },
+    {
+      key: 'visitors',
+      name: '访问者',
+      icon: <Users className="w-6 h-6" />,
+      color: 'bg-green-500',
+      formatter: (value: number) => formatValue(value),
+    },
+    {
+      key: 'visits',
+      name: '访问次数',
+      icon: <MousePointer className="w-6 h-6" />,
+      color: 'bg-purple-500',
+      formatter: (value: number) => formatValue(value),
+    },
+    {
+      key: 'avgDuration',
+      name: '平均停留时间',
+      icon: <Timer className="w-6 h-6" />,
+      color: 'bg-orange-500',
+      formatter: (value: number) => `${formatDuration(value)} (分:秒)`,
+      changeFormatter: (change: number) => `${formatChange(Math.floor(change / 1000))}秒`,
+    },
+    {
+      key: 'bounceRate',
+      name: '跳出率',
+      icon: <Target className="w-6 h-6" />,
+      color: 'bg-red-500',
+      formatter: (value: number) => `${value}%`,
     },
   ];
+
+  // 动态生成统计数据
+  const quickStats = statsConfig.map((config) => {
+    const data = analyticsData?.[config.key as keyof AnalyticsData];
+    const hasData = !loading && data;
+
+    return {
+      name: config.name,
+      icon: config.icon,
+      color: config.color,
+      value: hasData ? config.formatter(data.current) : '--',
+      change: hasData
+        ? config.changeFormatter
+          ? config.changeFormatter(data.change)
+          : formatChange(data.change)
+        : '--',
+      trend: hasData ? data.trend : undefined,
+      trendText: hasData ? formatTrend(data.trend) : '--',
+    };
+  });
 
   return (
     <div className="p-6">
@@ -146,51 +249,82 @@ export default function DashboardPage() {
         <p className="text-gray-600">今天是个美好的工作日，{currentTime}</p>
       </div>
 
-      {/* 数据统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {quickStats.map((stat, index) => (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 relative">
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white relative`}
-              >
-                {stat.icon}
-                {/* 在线状态指示器 */}
-                {stat.name === '在线用户' && (
-                  <div
-                    className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-                      isConnected ? 'bg-green-400 animate-pulse' : 'bg-gray-400'
-                    }`}
-                  ></div>
-                )}
+      {/* 数据概览区域 - 只有在有数据或加载中时才显示 */}
+      {(loading || analyticsData) && (
+        <>
+          {/* 时间范围选择器 */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">数据概览</h2>
+              <div className="relative">
+                <select
+                  value={selectedTimeRange}
+                  onChange={(e) => handleTimeRangeChange(Number(e.target.value))}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {timeRangeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      最近 {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
-              <div
-                className={`flex items-center text-sm ${
-                  stat.name === '在线用户' && !isConnected ? 'text-gray-400' : 'text-green-600'
-                }`}
-              >
-                <TrendingUp className="w-4 h-4 mr-1" />
-                {stat.change}
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-              <p className="text-sm text-gray-600 flex items-center">
-                {stat.name}
-                {stat.name === '在线用户' && (
-                  <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
-                    }`}
-                  >
-                    {isConnected ? '实时' : '离线'}
-                  </span>
-                )}
-              </p>
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* 数据统计卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {loading
+              ? // 骨架屏
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 bg-gray-200 rounded animate-pulse mr-1"></div>
+                        <div className="w-8 h-4 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="w-16 h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                ))
+              : // 实际数据
+                quickStats.map((stat, index) => (
+                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}
+                      >
+                        {stat.icon}
+                      </div>
+                      <div
+                        className={`flex items-center text-sm ${
+                          stat.trend && stat.trend > 0
+                            ? 'text-green-600'
+                            : stat.trend && stat.trend < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-4 h-4 mr-1 ${stat.trend && stat.trend < 0 ? 'rotate-180' : ''}`}
+                        />
+                        {stat.trendText || stat.change}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
+                      <p className="text-sm text-gray-600">{stat.name}</p>
+                    </div>
+                  </div>
+                ))}
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 快速操作 */}
