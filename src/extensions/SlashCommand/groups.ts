@@ -252,6 +252,30 @@ export const GROUPS: Group[] = [
           window.dispatchEvent(event);
         },
       },
+      {
+        name: 'chart',
+        label: 'Chart',
+        iconName: 'ChartLine',
+        description: 'Insert a chart',
+        aliases: ['chart', 'graph'],
+        action: (editor) => {
+          editor
+            .chain()
+            .focus()
+            .setChart({
+              type: 'bar',
+              data: [
+                { name: 'Jan', value: 400 },
+                { name: 'Feb', value: 300 },
+                { name: 'Mar', value: 200 },
+                { name: 'Apr', value: 278 },
+                { name: 'May', value: 189 },
+              ],
+              title: 'Sample Chart',
+            })
+            .run();
+        },
+      },
     ],
   },
 ];

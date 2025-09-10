@@ -59,3 +59,4 @@ export { Audio } from './Audio';
 export { AI } from './AI';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
+export { Chart } from './Chart';
