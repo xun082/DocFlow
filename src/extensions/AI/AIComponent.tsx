@@ -266,21 +266,19 @@ export const AIComponent: React.FC<AIComponentProps> = ({
           <>
             {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
               <div className="markdown-content">
-                <div className="markdown-content">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code: SyntaxHighlight,
-                      pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
-                        <pre className="rounded-[12px]" {...props}>
-                          {children}
-                        </pre>
-                      ),
-                    }}
-                  >
-                    {response}
-                  </ReactMarkdown>
-                </div>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code: SyntaxHighlight,
+                    pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                      <pre className="rounded-[12px]" {...props}>
+                        {children}
+                      </pre>
+                    ),
+                  }}
+                >
+                  {response}
+                </ReactMarkdown>
               </div>
             )}
             {aiState === AIState.INPUT && (
