@@ -30,7 +30,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: COLORS[colorKey][index],
+        color: COLORS[colorKey][index % COLORS[colorKey].length], // 添加模运算防止越界
       };
 
       return acc;
@@ -38,9 +38,16 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
     {} as Record<string, { label: string; color: string }>,
   );
 
+  console.log('🚀 ~ chartConfig:', chartConfig);
+
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
-      <BarChart accessibilityLayer data={data} margin={CHART_CONSTANTS.MARGIN}>
+      <BarChart
+        accessibilityLayer
+        data={data}
+        margin={CHART_CONSTANTS.MARGIN}
+        onClick={(e) => console.log(e)}
+      >
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey={xAxisKey}
@@ -50,7 +57,11 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
         />
         <YAxis />
         <ChartLegend content={<ChartLegendContent />} />
-        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartTooltip
+          content={<ChartTooltipContent indicator="line" />}
+          trigger="click"
+          wrapperStyle={{ pointerEvents: 'auto' }}
+        />
         {yAxisKeys.map((key, index) => (
           <Bar
             key={key}

@@ -89,13 +89,14 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // 当节点属性变化时，重置表单默认值
   const form = useForm<ChartFormValues>({
     resolver: zodResolver(chartFormSchema),
     defaultValues: {
       title: title || '',
       chartType: type,
       xKey: xAxisKey || '',
-      yAxisKeys: yAxisKeys ? yAxisKeys : [],
+      yAxisKeys: yAxisKeys || [],
       colorKey: colorKey,
       chartData: JSON.stringify(data, null, 2),
     },
@@ -110,7 +111,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const isValidData = data && Array.isArray(data) && data.length > 0;
 
   const handleSave = (values: ChartFormValues) => {
-    console.log('保存数据：', values);
+    console.log('🚀 ~ handleSave ~ values:', values);
 
     try {
       let parsedData = JSON.parse(values.chartData);
@@ -151,7 +152,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
               <BarChartComponent
                 data={data}
                 xAxisKey={xAxisKey || ''}
-                yAxisKeys={node.attrs.yAxisKeys || []}
+                yAxisKeys={yAxisKeys || []}
                 title={title}
                 colorKey={colorKey || 'red'}
               />
@@ -164,7 +165,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
               <LineChartComponent
                 data={data}
                 xAxisKey={xAxisKey || ''}
-                yAxisKeys={node.attrs.yAxisKeys || []}
+                yAxisKeys={yAxisKeys || []}
                 title={title}
                 colorKey={colorKey || 'red'}
               />
@@ -177,7 +178,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
               <AreaChartComponent
                 data={data}
                 xAxisKey={xAxisKey || ''}
-                yAxisKeys={node.attrs.yAxisKeys || []}
+                yAxisKeys={yAxisKeys || []}
                 title={title}
                 colorKey={colorKey || 'red'}
               />
@@ -190,7 +191,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
               <PieChartComponent
                 data={data}
                 xAxisKey={xAxisKey || ''}
-                yAxisKeys={node.attrs.yAxisKeys || []}
+                yAxisKeys={yAxisKeys || []}
                 title={title}
                 colorKey={colorKey || 'red'}
               />
@@ -216,7 +217,10 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   };
 
   return (
-    <NodeViewWrapper className="chart-extension">
+    <NodeViewWrapper
+      className="chart-extension"
+      onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
+    >
       <Card className="w-full">
         <div className="flex justify-between items-center">
           {title && (
@@ -230,18 +234,21 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                 variant="outline"
                 className="m-4"
                 onClick={() => {
-                  form.setValue('chartData', JSON.stringify(data, null, 2));
-                  form.setValue('title', title || '');
-                  form.setValue('xKey', xAxisKey || '');
-                  form.setValue('chartType', type);
-                  form.setValue('yAxisKeys', yAxisKeys ? yAxisKeys : []);
-                  form.setValue('colorKey', node.attrs.colorKey || 'red'); // 使用当前图表的colorKey，如果没有则默认为'red'
+                  // 每次打开对话框时都重置表单为最新数据
+                  form.reset({
+                    title: title || '',
+                    chartType: type,
+                    xKey: xAxisKey || '',
+                    yAxisKeys: yAxisKeys ? [...yAxisKeys] : [],
+                    colorKey: colorKey || 'red',
+                    chartData: JSON.stringify(data, null, 2),
+                  });
                 }}
               >
                 Edit Chart
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl min-w-3xl">
+            <DialogContent className="max-w-4xl min-w-3xl overflow-scroll">
               <DialogHeader>
                 <DialogTitle>Edit Chart Data</DialogTitle>
               </DialogHeader>
@@ -299,6 +306,12 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                             {...field}
                             className="col-span-5 border rounded px-3 py-2"
                             placeholder="X axis key"
+                            // 当xKey变化时，清空yAxisKeys
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // 重置yAxisKeys，因为可用键可能已经改变
+                              form.setValue('yAxisKeys', []);
+                            }}
                           />
                         </FormControl>
                         <FormMessage className="col-span-6 col-start-2" />

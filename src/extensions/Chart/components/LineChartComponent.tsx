@@ -49,7 +49,7 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
           axisLine={false}
         />
         <YAxis />
-        <ChartTooltip content={<ChartTooltipContent indicator="dashed" />} />
+        <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
         <ChartLegend content={<ChartLegendContent />} />
         {yAxisKeys.map((key, index) => (
           <Line

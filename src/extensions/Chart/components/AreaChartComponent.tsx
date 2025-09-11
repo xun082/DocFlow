@@ -30,7 +30,7 @@ export const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: COLORS[colorKey][index],
+        color: COLORS[colorKey][index % COLORS[colorKey].length], // 添加模运算防止越界
       };
 
       return acc;
@@ -49,7 +49,7 @@ export const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
           axisLine={false}
         />
         <YAxis />
-        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
         <ChartLegend content={<ChartLegendContent />} />
 
         {yAxisKeys.map((key, index) => (

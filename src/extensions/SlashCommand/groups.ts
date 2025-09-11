@@ -264,13 +264,71 @@ export const GROUPS: Group[] = [
             .focus()
             .setChart({
               type: 'bar',
+              colorKey: 'red',
               data: [
-                { name: 'Jan', value: 400 },
-                { name: 'Feb', value: 300 },
-                { name: 'Mar', value: 200 },
-                { name: 'Apr', value: 278 },
-                { name: 'May', value: 189 },
+                {
+                  month: 'January',
+                  desktop: 186,
+                  mobile: 80,
+                  tablet: 45,
+                },
+                {
+                  month: 'February',
+                  desktop: 305,
+                  mobile: 200,
+                  tablet: 95,
+                },
+                {
+                  month: 'March',
+                  desktop: 237,
+                  mobile: 120,
+                  tablet: 78,
+                },
+                {
+                  month: 'April',
+                  desktop: 73,
+                  mobile: 190,
+                  tablet: 62,
+                },
+                {
+                  month: 'May',
+                  desktop: 209,
+                  mobile: 130,
+                  tablet: 88,
+                },
+                {
+                  month: 'June',
+                  desktop: 214,
+                  mobile: 140,
+                  tablet: 92,
+                },
+                {
+                  month: 'July',
+                  desktop: 285,
+                  mobile: 165,
+                  tablet: 105,
+                },
+                {
+                  month: 'August',
+                  desktop: 198,
+                  mobile: 145,
+                  tablet: 82,
+                },
+                {
+                  month: 'September',
+                  desktop: 245,
+                  mobile: 175,
+                  tablet: 98,
+                },
+                {
+                  month: 'October',
+                  desktop: 312,
+                  mobile: 210,
+                  tablet: 115,
+                },
               ],
+              xAxisKey: 'month',
+              yAxisKeys: ['desktop'],
               title: 'Sample Chart',
             })
             .run();

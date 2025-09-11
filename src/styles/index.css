@@ -11,7 +11,9 @@
 @import './partials/draggable.css';
 
 @custom-variant dark (&:is(.dark *));
-
+.bg-\[--color-bg\] {
+  background-color: var(--color-bg);
+}
 @layer utilities {
   .ProseMirror {
     @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-3xl;

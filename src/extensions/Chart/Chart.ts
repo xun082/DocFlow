@@ -68,7 +68,7 @@ export const Chart = Node.create({
       data: Array<Record<string, any>>;
       title?: string;
       xAxisKey: string;
-      yAxisKeys?: string[];
+      yAxisKeys: string[];
       colorKey?: string;
     }>(ChartComponent as any);
   },
@@ -78,6 +78,8 @@ export const Chart = Node.create({
       setChart:
         (options) =>
         ({ commands }) => {
+          console.log('options', options);
+
           return commands.insertContent({
             type: this.name,
             attrs: options,

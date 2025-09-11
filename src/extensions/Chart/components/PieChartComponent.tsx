@@ -32,7 +32,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: COLORS[colorKey][index],
+        color: COLORS[colorKey][index % COLORS[colorKey].length], // 添加模运算防止越界
       };
 
       return acc;
