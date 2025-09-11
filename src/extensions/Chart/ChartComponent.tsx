@@ -5,12 +5,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import js_beautify from 'js-beautify';
 
 import BarChartComponent from './components/BarChartComponent';
 import LineChartComponent from './components/LineChartComponent';
 import AreaChartComponent from './components/AreaChartComponent';
 import PieChartComponent from './components/PieChartComponent';
-import { CHART_CONSTANTS, colors } from './constants';
+import { CHART_CONSTANTS, COLORS } from './constants';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -240,7 +241,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                 Edit Chart
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl min-w-3xl">
               <DialogHeader>
                 <DialogTitle>Edit Chart Data</DialogTitle>
               </DialogHeader>
@@ -381,12 +382,12 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.keys(colors).map((colorKey) => (
+                            {Object.keys(COLORS).map((colorKey) => (
                               <SelectItem key={colorKey} value={colorKey}>
                                 <div className="flex items-center">
                                   <div
                                     className="w-4 h-4 mr-2 rounded-full"
-                                    style={{ backgroundColor: colors[colorKey][5] }} // 使用索引5，而不是500
+                                    style={{ backgroundColor: COLORS[colorKey][5] }} // 使用索引5，而不是500
                                   />
                                   {colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}
                                 </div>
@@ -404,13 +405,35 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-6 items-center gap-4">
                         <FormLabel className="text-right">Data</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            className="col-span-5 h-64 font-mono text-sm"
-                            placeholder='[{"name": "Jan", "value": 100}, ...]'
-                          />
-                        </FormControl>
+                        <div className="col-span-5">
+                          <div className="flex justify-end mb-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                try {
+                                  const beautified = js_beautify.js(field.value, {
+                                    indent_size: 2,
+                                    space_in_empty_paren: true,
+                                  });
+                                  field.onChange(beautified);
+                                } catch (error) {
+                                  console.error('Error formatting JSON:', error);
+                                }
+                              }}
+                            >
+                              格式化 JSON
+                            </Button>
+                          </div>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              className="h-64 font-mono text-sm"
+                              placeholder='[{"name": "Jan", "value": 100}, ...]'
+                            />
+                          </FormControl>
+                        </div>
                         <FormMessage className="col-span-6 col-start-2" />
                       </FormItem>
                     )}

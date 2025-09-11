@@ -54,7 +54,7 @@ export const CHART_CONSTANTS = {
 
 // 定义颜色对象的类型
 
-export const colors: any = {
+export const COLORS: any = {
   red: [
     '#ffebee',
     '#ffcdd2',

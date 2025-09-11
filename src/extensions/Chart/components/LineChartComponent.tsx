@@ -1,7 +1,7 @@
 import React from 'react';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
 
-import { CHART_CONSTANTS, colors } from '../constants';
+import { CHART_CONSTANTS, COLORS } from '../constants';
 
 import {
   ChartContainer,
@@ -30,7 +30,7 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: colors[colorKey][index],
+        color: COLORS[colorKey][index],
       };
 
       return acc;
@@ -56,15 +56,15 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
             key={key}
             type="monotone"
             dataKey={key}
-            stroke={colors[colorKey][index]}
+            stroke={COLORS[colorKey][index]}
             strokeWidth={CHART_CONSTANTS.LINE.strokeWidth}
             dot={{
               r: CHART_CONSTANTS.LINE.dotRadius,
-              fill: colors[colorKey][index],
+              fill: COLORS[colorKey][index],
             }}
             activeDot={{
               r: CHART_CONSTANTS.LINE.activeDotRadius,
-              fill: colors[colorKey][index],
+              fill: COLORS[colorKey][index],
             }}
           />
         ))}

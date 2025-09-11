@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
-import { CHART_CONSTANTS, colors } from '../constants';
+import { CHART_CONSTANTS, COLORS } from '../constants';
 
 import {
   ChartContainer,
@@ -30,7 +30,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: colors[colorKey][index],
+        color: COLORS[colorKey][index],
       };
 
       return acc;
@@ -55,7 +55,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
           <Bar
             key={key}
             dataKey={key}
-            fill={colors[colorKey][index]}
+            fill={COLORS[colorKey][index]}
             radius={CHART_CONSTANTS.BAR.radius}
           />
         ))}

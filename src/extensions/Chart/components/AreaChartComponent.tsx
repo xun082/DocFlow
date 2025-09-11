@@ -1,7 +1,7 @@
 import React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
-import { CHART_CONSTANTS, colors } from '../constants';
+import { CHART_CONSTANTS, COLORS } from '../constants';
 
 import {
   ChartContainer,
@@ -30,7 +30,7 @@ export const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: colors[colorKey][index],
+        color: COLORS[colorKey][index],
       };
 
       return acc;
@@ -57,9 +57,9 @@ export const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
             key={key}
             type="monotone"
             dataKey={key}
-            fill={colors[colorKey][index]}
+            fill={COLORS[colorKey][index]}
             fillOpacity={0.4}
-            stroke={colors[colorKey][index]}
+            stroke={COLORS[colorKey][index]}
             strokeWidth={CHART_CONSTANTS.LINE.strokeWidth}
             stackId={key === yAxisKeys[0] ? '1' : undefined} // 只有第一条曲线参与堆叠
           />

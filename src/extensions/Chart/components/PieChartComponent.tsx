@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pie, PieChart } from 'recharts';
 
-import { CHART_CONSTANTS, colors } from '../constants';
+import { CHART_CONSTANTS, COLORS } from '../constants';
 
 import {
   ChartContainer,
@@ -32,7 +32,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: colors[colorKey][index],
+        color: COLORS[colorKey][index],
       };
 
       return acc;
@@ -54,7 +54,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
             cx={CHART_CONSTANTS.PIE.centerPosition}
             cy={CHART_CONSTANTS.PIE.centerPosition}
             outerRadius={CHART_CONSTANTS.PIE.outerRadius}
-            fill={colors[colorKey][index]}
+            fill={COLORS[colorKey][index]}
             label
           />
         ))}
