@@ -30,7 +30,7 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
     (acc, key, index) => {
       acc[key] = {
         label: key,
-        color: COLORS[colorKey][index],
+        color: COLORS[colorKey][index % COLORS[colorKey].length],
       };
 
       return acc;
@@ -56,15 +56,15 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
             key={key}
             type="monotone"
             dataKey={key}
-            stroke={COLORS[colorKey][index]}
+            stroke={COLORS[colorKey][index % COLORS[colorKey].length]}
             strokeWidth={CHART_CONSTANTS.LINE.strokeWidth}
             dot={{
               r: CHART_CONSTANTS.LINE.dotRadius,
-              fill: COLORS[colorKey][index],
+              fill: COLORS[colorKey][index % COLORS[colorKey].length],
             }}
             activeDot={{
               r: CHART_CONSTANTS.LINE.activeDotRadius,
-              fill: COLORS[colorKey][index],
+              fill: COLORS[colorKey][index % COLORS[colorKey].length],
             }}
           />
         ))}

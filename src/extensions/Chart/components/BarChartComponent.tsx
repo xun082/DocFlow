@@ -38,8 +38,6 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
     {} as Record<string, { label: string; color: string }>,
   );
 
-  console.log('🚀 ~ chartConfig:', chartConfig);
-
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
       <BarChart
@@ -62,7 +60,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
           <Bar
             key={key}
             dataKey={key}
-            fill={COLORS[colorKey][index]}
+            fill={COLORS[colorKey][index % COLORS[colorKey].length]}
             radius={CHART_CONSTANTS.BAR.radius}
           />
         ))}

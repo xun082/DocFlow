@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pie, PieChart } from 'recharts';
+import { Pie, PieChart, Cell } from 'recharts';
 
 import { CHART_CONSTANTS, COLORS } from '../constants';
 
@@ -7,16 +7,16 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
+  // ChartLegend,
+  // ChartLegendContent,
 } from '@/components/ui/chart';
 
 interface PieChartComponentProps {
   data: Array<Record<string, any>>;
   xAxisKey: string;
-  yAxisKeys?: string[]; // 支持多个Y轴键
+  yAxisKeys?: string[];
   title?: string;
-  colorKey: string; // 单个颜色（向后兼容）
+  colorKey: string;
 }
 
 export const PieChartComponent: React.FC<PieChartComponentProps> = ({
@@ -25,8 +25,6 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
   yAxisKeys = [],
   colorKey,
 }) => {
-  // 如果没有提供yAxisKeys，则使用yAxisKey作为默认键
-
   // 创建 chartConfig
   const chartConfig = yAxisKeys.reduce(
     (acc, key, index) => {
@@ -40,24 +38,22 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
     {} as Record<string, { label: string; color: string }>,
   );
 
+  console.log(chartConfig);
+  console.log('yAxisKeys', yAxisKeys);
+
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
       <PieChart accessibilityLayer data={data} margin={CHART_CONSTANTS.MARGIN}>
         <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
-        {yAxisKeys.map((key, index) => (
-          <Pie
-            key={key}
-            data={data}
-            dataKey={key}
-            nameKey={xAxisKey}
-            cx={CHART_CONSTANTS.PIE.centerPosition}
-            cy={CHART_CONSTANTS.PIE.centerPosition}
-            outerRadius={CHART_CONSTANTS.PIE.outerRadius}
-            fill={COLORS[colorKey][index]}
-            label
-          />
-        ))}
+        {/* <ChartLegend content={<ChartLegendContent />} /> */}
+        <Pie data={data} dataKey={yAxisKeys[0]} nameKey={xAxisKey} label>
+          {data.map((entry, index) => (
+            <Cell
+              key={`cell-${entry[xAxisKey]}`}
+              fill={COLORS[colorKey][index % COLORS[colorKey].length]}
+            />
+          ))}
+        </Pie>
       </PieChart>
     </ChartContainer>
   );
