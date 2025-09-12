@@ -1,0 +1,14 @@
+---
+description: Validation workflow and allowed scripts (pnpm only)
+alwaysApply: true
+---
+
+Use pnpm for all scripts. The project is always running; do not use `pnpm dev`.
+
+Before considering work complete, ensure all pass:
+1) `pnpm build`
+2) `pnpm type-check`
+3) `pnpm lint`
+4) `pnpm format`
+
+If script names differ in package.json, update them accordingly so these commands exist and succeed.

@@ -1,0 +1,14 @@
+---
+description: Global components and utilities conventions
+globs:
+  - "components/**"
+  - "utils/**"
+---
+
+When working in `components/**` and `utils/**`:
+
+- Components under `components/**` are reusable across the app; keep them pure and well-typed.
+- `utils/**` contains side-effect-free helpers, constants, and data transforms.
+- Naming: PascalCase for components/types/enums; camelCase for variables/functions/hooks; kebab-case for file names.
+- Avoid framework-specific assumptions in `utils/`.
+- Provide examples and minimal docs in code comments where helpful (self-explanatory first).
