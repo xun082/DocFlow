@@ -1,0 +1,13 @@
+---
+description: Page-level private component rules (applies to app/**/_components/**)
+globs:
+  - "app/**/_components/**"
+---
+
+For files under `app/**/_components/**`:
+
+- Treat components as route-scoped, not global; prefer local composition over exporting to global `components/`.
+- Keep props minimal and stable; move shared logic to `utils/` or global components when reused.
+- Avoid `useMemo`/`useCallback` unless profiling justifies them; prefer splitting and simplifying.
+- Ensure accessibility (roles, labels, keyboard navigation).
+- Default export by default; use named exports only when multiple related exports are required.
