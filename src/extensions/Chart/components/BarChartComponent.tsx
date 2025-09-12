@@ -57,11 +57,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
         />
         <YAxis />
         <ChartLegend content={<ChartLegendContent />} />
-        <ChartTooltip
-          content={<ChartTooltipContent indicator="line" />}
-          trigger="click"
-          wrapperStyle={{ pointerEvents: 'auto' }}
-        />
+        <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
         {yAxisKeys.map((key, index) => (
           <Bar
             key={key}
