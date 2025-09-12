@@ -13,6 +13,7 @@ import AreaChartComponent from './components/AreaChartComponent';
 import PieChartComponent from './components/PieChartComponent';
 import { CHART_CONSTANTS, COLORS } from './constants';
 
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -111,8 +112,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const isValidData = data && Array.isArray(data) && data.length > 0;
 
   const handleSave = (values: ChartFormValues) => {
-    console.log('🚀 ~ handleSave ~ values:', values);
-
     try {
       let parsedData = JSON.parse(values.chartData);
 
@@ -216,6 +215,22 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     }
   };
 
+  // 从数据中提取非数字值的键
+  const getNonNumericKeys = (chartData: any[]) => {
+    if (!chartData || chartData.length === 0) return [];
+
+    // 获取第一个数据项的所有键
+    const allKeys = Object.keys(chartData[0]);
+
+    // 筛选出值不是数字的键
+    return allKeys.filter((key) => {
+      const value = chartData[0][key];
+
+      // 检查值是否为数字（包括字符串形式的数字）
+      return isNaN(Number(value)) || value === null || value === undefined || value === '';
+    });
+  };
+
   return (
     <NodeViewWrapper
       className="chart-extension"
@@ -298,25 +313,52 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                   <FormField
                     control={form.control}
                     name="xKey"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-6 items-center gap-4">
-                        <FormLabel className="text-right">X Axis</FormLabel>
-                        <FormControl>
-                          <input
-                            {...field}
-                            className="col-span-5 border rounded px-3 py-2"
-                            placeholder="X axis key"
-                            // 当xKey变化时，清空yAxisKeys
-                            onChange={(e) => {
-                              field.onChange(e);
-                              // 重置yAxisKeys，因为可用键可能已经改变
-                              form.setValue('yAxisKeys', []);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage className="col-span-6 col-start-2" />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      // 从chartData中解析非数字键
+                      let nonNumericKeys: string[] = [];
+
+                      try {
+                        const chartData = JSON.parse(form.getValues('chartData'));
+                        nonNumericKeys = getNonNumericKeys(chartData);
+                      } catch (error) {
+                        console.error('Error parsing chart data for keys:', error);
+                      }
+
+                      return (
+                        <FormItem className="grid grid-cols-6 items-center gap-4">
+                          <FormLabel className="text-right">X Axis</FormLabel>
+                          <FormControl>
+                            {nonNumericKeys.length > 0 ? (
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                className="flex col-span-5 "
+                              >
+                                {nonNumericKeys.map((key) => (
+                                  <div key={key} className="flex items-center">
+                                    <FormItem className=" flex items-center gap-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem
+                                          value={key}
+                                          id={key}
+                                          className="space-y-0"
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">{key}</FormLabel>
+                                    </FormItem>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            ) : (
+                              <div className="col-span-5 text-sm text-muted-foreground">
+                                请先输入有效的图表数据或没有可用的非数字键
+                              </div>
+                            )}
+                          </FormControl>
+                          <FormMessage className="col-span-6 col-start-2" />
+                        </FormItem>
+                      );
+                    }}
                   />
                   <FormField
                     control={form.control}
