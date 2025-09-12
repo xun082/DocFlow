@@ -240,6 +240,18 @@ export const GROUPS: Group[] = [
           // window.open(`${window.location.origin}/excalidraw`);
         },
       },
+      {
+        name: 'youtube',
+        label: 'YouTube Video',
+        iconName: 'Play',
+        description: 'Insert a YouTube video',
+        aliases: ['video', 'yt'],
+        action: (editor) => {
+          // 触发 YouTube 弹窗事件
+          const event = new CustomEvent('openYoutubeDialog', { detail: { editor } });
+          window.dispatchEvent(event);
+        },
+      },
     ],
   },
 ];

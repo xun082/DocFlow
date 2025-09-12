@@ -56,6 +56,8 @@ import {
   Audio,
   FileHandler,
   AI,
+  Youtube,
+  ClearMarksOnEnter,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -291,6 +293,15 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     temperature: 0.7,
     showLoading: true,
   }),
+  Youtube.configure({
+    controls: false,
+    nocookie: true,
+    inline: false,
+    HTMLAttributes: {
+      class: 'youtube-video-wrapper',
+    },
+  }),
+  ClearMarksOnEnter,
 ];
 
 export default ExtensionKit;

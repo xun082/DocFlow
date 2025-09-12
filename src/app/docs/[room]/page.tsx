@@ -8,12 +8,7 @@ import { Collaboration } from '@tiptap/extension-collaboration';
 import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
-// import { isEqual, debounce } from 'lodash-es';
-// import { Menu } from 'lucide-react';
 
-// import Syllabus, { SyllabusTitle } from '../_components/Syllabus';
-
-// import { Button } from '@/components/ui/button';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
@@ -26,7 +21,6 @@ import { TextMenu } from '@/components/menus/TextMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableRowMenu, TableColumnMenu } from '@/extensions/Table/menus';
 import { ImageBlockMenu } from '@/components/menus';
-
 // 类型定义
 interface CollaborationUser {
   id: string;
@@ -54,7 +48,7 @@ export default function DocumentPage() {
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
 
   // Editor编辑器的容器元素
-  const editorContaiRef = useRef<HTMLDivElement>(null);
+  const editorContainRef = useRef<HTMLDivElement>(null);
 
   // 目录切换函数
   const toggleToc = () => {
@@ -226,7 +220,7 @@ export default function DocumentPage() {
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
           <div
-            ref={editorContaiRef}
+            ref={editorContainRef}
             // onScroll={scrollLightHandler}
             className="h-full overflow-y-auto relative w-full"
           >

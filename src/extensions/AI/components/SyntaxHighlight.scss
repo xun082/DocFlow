@@ -1,0 +1,121 @@
+ pre {
+   margin: 0;
+   padding: 20px;
+   background: #0d1117;
+   color: #e6edf3;
+   font-size: 14px;
+   line-height: 1.6;
+   overflow-x: auto;
+   white-space: pre;
+   font-weight: 400;
+   border: none;
+
+   &.word-wrap {
+     white-space: pre-wrap;
+     word-break: break-word;
+     overflow-x: visible;
+   }
+
+   code {
+     font-family: inherit;
+     font-size: inherit;
+     color: inherit;
+     background: transparent;
+     padding: 0;
+     outline: none;
+     caret-color: #58a6ff;
+     box-shadow: none;
+
+     &:focus {
+       outline: none;
+     }
+   }
+
+   // GitHub 暗色主题语法高亮
+   .hljs-comment,
+   .hljs-quote {
+     color: #8b949e;
+     font-style: italic;
+   }
+
+   .hljs-keyword,
+   .hljs-selector-tag,
+   .hljs-literal,
+   .hljs-section,
+   .hljs-link {
+     color: #ff7b72;
+   }
+
+   .hljs-function .hljs-keyword {
+     color: #d2a8ff;
+   }
+
+   .hljs-subst {
+     color: #e6edf3;
+   }
+
+   .hljs-string,
+   .hljs-attr,
+   .hljs-symbol,
+   .hljs-bullet,
+   .hljs-addition {
+     color: #a5d6ff;
+   }
+
+   .hljs-title,
+   .hljs-name,
+   .hljs-selector-id,
+   .hljs-selector-class,
+   .hljs-type,
+   .hljs-template-tag {
+     color: #79c0ff;
+   }
+
+   .hljs-number,
+   .hljs-meta,
+   .hljs-built_in,
+   .hljs-builtin-name,
+   .hljs-params {
+     color: #79c0ff;
+   }
+
+   .hljs-variable,
+   .hljs-template-variable {
+     color: #ffa657;
+   }
+
+   .hljs-regexp,
+   .hljs-deletion {
+     color: #ff7b72;
+   }
+
+   .hljs-tag {
+     color: #7ee787;
+   }
+
+   .hljs-tag .hljs-attr {
+     color: #79c0ff;
+   }
+
+   .hljs-tag .hljs-name {
+     color: #7ee787;
+   }
+
+   .hljs-attribute {
+     color: #79c0ff;
+   }
+
+   .hljs-emphasis {
+     font-style: italic;
+   }
+
+   .hljs-strong {
+     font-weight: 600;
+   }
+
+   // 选中文本样式
+   &::selection,
+   & *::selection {
+     background: rgba(56, 139, 253, 0.4);
+   }
+ }
