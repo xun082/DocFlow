@@ -7,8 +7,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  // ChartLegend,
-  // ChartLegendContent,
+  ChartLegend,
+  ChartLegendContent,
 } from '@/components/ui/chart';
 
 interface PieChartComponentProps {
@@ -45,7 +45,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
     <ChartContainer config={chartConfig} className="h-full w-full">
       <PieChart accessibilityLayer data={data} margin={CHART_CONSTANTS.MARGIN}>
         <ChartTooltip content={<ChartTooltipContent />} />
-        {/* <ChartLegend content={<ChartLegendContent />} /> */}
+        <ChartLegend content={<ChartLegendContent />} />
         <Pie data={data} dataKey={yAxisKeys[0]} nameKey={xAxisKey} label>
           {data.map((entry, index) => (
             <Cell
