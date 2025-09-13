@@ -243,13 +243,24 @@ export const GROUPS: Group[] = [
       {
         name: 'youtube',
         label: 'YouTube Video',
-        iconName: 'Play',
+        iconName: 'Youtube',
         description: 'Insert a YouTube video',
         aliases: ['video', 'yt'],
         action: (editor) => {
           // 触发 YouTube 弹窗事件
           const event = new CustomEvent('openYoutubeDialog', { detail: { editor } });
           window.dispatchEvent(event);
+        },
+      },
+      {
+        name: 'bilibili',
+        label: 'Bilibili Video',
+        iconName: 'Tv',
+        description: 'Insert a Bilibili video',
+        aliases: ['bili'],
+        action: (editor) => {
+          console.log('Bilibili');
+          editor.chain().focus().setBilibili({ src: '' }).run();
         },
       },
     ],

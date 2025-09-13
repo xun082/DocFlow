@@ -58,6 +58,7 @@ import {
   AI,
   Youtube,
   ClearMarksOnEnter,
+  Bilibili,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -302,6 +303,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     },
   }),
   ClearMarksOnEnter,
+  Bilibili,
 ];
 
 export default ExtensionKit;
