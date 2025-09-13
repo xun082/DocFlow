@@ -252,6 +252,52 @@ export const GROUPS: Group[] = [
           window.dispatchEvent(event);
         },
       },
+      {
+        name: 'chart',
+        label: 'Chart',
+        iconName: 'ChartColumnBig',
+        description: 'Insert a chart',
+        aliases: ['chart', 'graph'],
+        action: (editor) => {
+          editor
+            .chain()
+            .focus()
+            .setChart({
+              type: 'bar',
+              colorKey: 'red',
+              data: [
+                {
+                  month: 'January',
+                  desktop: 186,
+                  mobile: 80,
+                  tablet: 45,
+                },
+                {
+                  month: 'February',
+                  desktop: 305,
+                  mobile: 200,
+                  tablet: 95,
+                },
+                {
+                  month: 'March',
+                  desktop: 237,
+                  mobile: 120,
+                  tablet: 78,
+                },
+                {
+                  month: 'April',
+                  desktop: 73,
+                  mobile: 190,
+                  tablet: 62,
+                },
+              ],
+              xAxisKey: 'month',
+              yAxisKeys: ['desktop'],
+              title: 'Sample Chart',
+            })
+            .run();
+        },
+      },
     ],
   },
 ];
