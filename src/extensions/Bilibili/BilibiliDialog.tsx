@@ -35,16 +35,24 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // const validateBilibiliUrl = (url: string): boolean => {
-  //   // 更新正则表达式以更好地支持各种Bilibili链接格式
-  //   const bilibiliRegex =
-  //     /^(https?:\/\/)?(www\.)?(bilibili\.com|b23\.tv|player\.bilibili\.com)\/(video\/[a-zA-Z0-9]+|player\.html\?.*)$/;
+  const validateBilibiliIframeUrl = (url: string): boolean => {
+    // 校验B站iframe链接格式
+    const iframeRegex = /^(https?:\/\/)?player\.bilibili\.com\/player\.html\?.*$/;
 
-  //   // 如果上述正则不匹配，使用更宽松的验证
-  //   const looseRegex = /^(https?:\/\/)?(www\.)?(bilibili\.com|b23\.tv|player\.bilibili\.com)\/.+$/;
+    if (!iframeRegex.test(url)) {
+      return false;
+    }
 
-  //   return bilibiliRegex.test(url) || looseRegex.test(url);
-  // };
+    // 检查必要的参数
+    const urlObj = new URL(url);
+    const params = new URLSearchParams(urlObj.search);
+
+    // 必须包含aid或bvid参数
+    const hasAid = params.has('aid');
+    const hasBvid = params.has('bvid');
+
+    return hasAid || hasBvid;
+  };
 
   const handleSubmit = async () => {
     if (!url.trim()) {
@@ -53,11 +61,11 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
       return;
     }
 
-    // if (!validateBilibiliUrl(url)) {
-    //   setError('请输入有效的 Bilibili 视频链接');
+    if (!validateBilibiliIframeUrl(url)) {
+      setError('请输入有效的 Bilibili iframe 链接，必须包含 aid 或 bvid 参数');
 
-    //   return;
-    // }
+      return;
+    }
 
     setIsLoading(true);
     setError('');
