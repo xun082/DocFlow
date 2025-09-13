@@ -5,8 +5,8 @@ import { CHART_CONSTANTS, COLORS } from '../constants';
 
 import {
   ChartContainer,
-  // ChartTooltip,
-  // ChartTooltipContent,
+  ChartTooltip,
+  ChartTooltipContent,
   // ChartLegend,
   // ChartLegendContent,
 } from '@/components/ui/chart';
@@ -41,7 +41,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
   return (
     <ChartContainer config={chartConfig} className="h-full w-full">
       <PieChart accessibilityLayer data={data} margin={CHART_CONSTANTS.MARGIN}>
-        {/* <ChartTooltip content={<ChartTooltipContent />} /> */}
+        <ChartTooltip content={<ChartTooltipContent />} />
         {/* <ChartLegend content={<ChartLegendContent />} /> */}
         <Pie data={data} dataKey={yAxisKeys[0]} nameKey={xAxisKey} label>
           {data.map((entry, index) => (
