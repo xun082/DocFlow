@@ -10,6 +10,7 @@ import {
   ExcalidrawImage,
   Audio,
   AI,
+  Bilibili,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -45,6 +46,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     ExcalidrawImage.name,
     Audio.name,
     AI.name,
+    Bilibili.name,
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);
