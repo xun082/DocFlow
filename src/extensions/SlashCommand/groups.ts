@@ -255,7 +255,7 @@ export const GROUPS: Group[] = [
       {
         name: 'chart',
         label: 'Chart',
-        iconName: 'ChartLine',
+        iconName: 'ChartColumnBig',
         description: 'Insert a chart',
         aliases: ['chart', 'graph'],
         action: (editor) => {
