@@ -80,8 +80,6 @@ const PodcastPage = () => {
                     PodcastApi.uploadFile(formData).then((res) => {
                       if (res?.data?.code === 200) {
                         toast.success('上传成功');
-                        console.log('上传成功', res);
-                        // alert(`文件 "${file.name}" 已上传转为博客`);
                       }
                     });
                   }
