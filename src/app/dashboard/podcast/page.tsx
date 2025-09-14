@@ -19,12 +19,23 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const PodcastPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const [list, setList] = useState<Podcast[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [interviewer, setInterviewer] = useState('front_end');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +44,6 @@ const PodcastPage = () => {
           page: currentPage,
           limit,
         });
-        console.log('result', result);
 
         if (result?.data?.code === 200 && result?.data?.data) {
           const { podcasts, total } = result.data?.data;
@@ -52,43 +62,67 @@ const PodcastPage = () => {
     setCurrentPage(page);
   };
 
+  const handleFileUpload = async () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.md,.doc,.docx';
+
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+
+      try {
+        if (file) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('interviewer', interviewer);
+          formData.append('candidate_id', 'hunyin_6');
+          formData.append('interviewer_voice_id', 'Chinese (Mandarin)_News_Anchor');
+          setIsUploading(true);
+
+          const res = await PodcastApi.uploadFile(formData);
+
+          if (res?.data?.code === 200) {
+            toast.success('上传成功');
+          } else {
+            toast.error('上传失败');
+          }
+        }
+      } catch (error) {
+        console.error('上传失败:', error);
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    fileInput.click();
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4">
-      {total}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
         <div className="p-6 text-center">
           <h3 className="text-lg font-semibold text-blue-800 mb-4">上传文件转为AI博客</h3>
           <p className="text-blue-600 text-sm mb-6">将文件转换为结构化音频文件，提升内容传播效率</p>
           <div className="flex justify-center">
+            <Select onValueChange={(value) => setInterviewer(value)} defaultValue="front_end">
+              <SelectTrigger className="w-[200px] mb-4">
+                <SelectValue placeholder="选择面试官" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>面试官</SelectLabel>
+                  <SelectItem value="front_end">前端面试官</SelectItem>
+                  <SelectItem value="hrbp">HRBP面试官</SelectItem>
+                  <SelectItem value="marketing_manager">经理面试官</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.pdf,.md,.doc,.docx';
-
-                fileInput.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-
-                  if (file) {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('interviewer', 'front_end');
-                    formData.append('candidate_id', 'hunyin_6');
-                    formData.append('interviewer_voice_id', 'Chinese (Mandarin)_News_Anchor');
-
-                    PodcastApi.uploadFile(formData).then((res) => {
-                      if (res?.data?.code === 200) {
-                        toast.success('上传成功');
-                      }
-                    });
-                  }
-                };
-
-                fileInput.click();
-              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white ml-4"
+              disabled={isUploading}
+              onClick={handleFileUpload}
             >
-              选择文件
+              {isUploading ? '上传中...' : '上传简历'}
             </Button>
           </div>
           <p className="text-xs text-blue-500 mt-4">支持word、md、ppt、pdf等常见文件格式</p>
@@ -113,9 +147,6 @@ const PodcastPage = () => {
                     <h3 className="font-semibold">
                       {podcast.content?.split('\n')[0]?.substring(0, 40)}
                     </h3>
-                    <span className="text-muted-foreground text-sm">
-                      {/* {formatDistanceToNow(new Date(podcast.created_at), { addSuffix: true })} */}
-                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                     {podcast.content?.replace(/\n/g, ' ')}
