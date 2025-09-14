@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Play } from 'lucide-react';
 // import { formatBytes } from '@/utils/file';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 import { Button } from '@/components/ui/button';
 // import { Pagination } from '@/components/ui/pagination';
@@ -36,6 +37,7 @@ const PodcastPage = () => {
   const [list, setList] = useState<Podcast[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [interviewer, setInterviewer] = useState('front_end');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,13 +150,35 @@ const PodcastPage = () => {
                       {podcast.content?.split('\n')[0]?.substring(0, 40)}
                     </h3>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                    {podcast.content?.replace(/\n/g, ' ')}
-                  </p>
+
+                  {isExpanded ? (
+                    <div className="text-sm text-muted-foreground mt-2">
+                      <ReactMarkdown>{podcast.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                      <ReactMarkdown>{podcast.content}</ReactMarkdown>
+                    </div>
+                  )}
+                  <Button
+                    variant="link"
+                    className="text-sm p-0 h-auto ml-2"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                  >
+                    {isExpanded ? '收起' : '展开全部'}
+                  </Button>
                 </div>
                 <div className="flex flex-col">
-                  <Button variant="ghost" size="sm" className="space-x-2">
-                    <Play className="h-4 w-4" onClick={() => changePage(1)} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="space-x-2"
+                    onClick={() => {
+                      const audio = new Audio(podcast.audio_url);
+                      audio.play();
+                    }}
+                  >
+                    <Play className="h-4 w-4" />
                   </Button>
                   <div className="flex items-center text-sm text-muted-foreground">
                     {podcast.user?.name}
