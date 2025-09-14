@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Play } from 'lucide-react';
-
 // import { formatBytes } from '@/utils/file';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 // import { Pagination } from '@/components/ui/pagination';
 import PodcastApi from '@/services/podcast';
@@ -29,8 +30,6 @@ const PodcastPage = () => {
           const { podcasts, total } = result.data?.data;
           setList(podcasts);
           setTotal(total);
-          setCurrentPage(currentPage + 1);
-          console.log('total', total);
         }
       } catch (error) {
         console.error('加载播客列表失败:', error);
@@ -40,10 +39,50 @@ const PodcastPage = () => {
     fetchData();
   }, [currentPage, limit]);
 
+  const changePage = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <div>{total}</div>
-      {/* 播客列表区域 */}
+      {total}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
+        <div className="p-6 text-center">
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">上传文件转为AI博客</h3>
+          <p className="text-blue-600 text-sm mb-6">将文件转换为结构化音频文件，提升内容传播效率</p>
+          <div className="flex justify-center">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.pdf,.md,.doc,.docx';
+
+                fileInput.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  console.log('file', file);
+
+                  if (file) {
+                    // 这里可以添加文件上传逻辑
+                    PodcastApi.uploadFile(file).then((res) => {
+                      if (res?.data?.code === 200) {
+                        toast.success('上传成功');
+                        console.log('上传成功', res);
+                        // alert(`文件 "${file.name}" 已上传转为博客`);
+                      }
+                    });
+                  }
+                };
+
+                fileInput.click();
+              }}
+            >
+              选择文件
+            </Button>
+          </div>
+          <p className="text-xs text-blue-500 mt-4">支持word、md、ppt、pdf等常见文件格式</p>
+        </div>
+      </Card>
       <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
         <div className="mb-4 pb-3 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-800">播客列表</h2>
@@ -58,7 +97,7 @@ const PodcastPage = () => {
                   <AvatarImage src={podcast.user?.avatar_url} />
                   <AvatarFallback>{podcast.user?.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 flex">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">
                       {podcast.content?.split('\n')[0]?.substring(0, 40)}
@@ -70,14 +109,13 @@ const PodcastPage = () => {
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                     {podcast.content?.replace(/\n/g, ' ')}
                   </p>
-                  <div className="flex items-center gap-4 mt-4">
-                    <Button variant="ghost" size="sm" className="space-x-2">
-                      <Play className="h-4 w-4" />
-                      <span>播放</span>
-                    </Button>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      {podcast.user?.name}
-                    </div>
+                </div>
+                <div className="flex flex-col">
+                  <Button variant="ghost" size="sm" className="space-x-2">
+                    <Play className="h-4 w-4" onClick={() => changePage(1)} />
+                  </Button>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    {podcast.user?.name}
                   </div>
                 </div>
               </div>

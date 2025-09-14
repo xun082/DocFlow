@@ -41,6 +41,16 @@ export const PodcastApi = {
       errorHandler,
       timeout: 15000,
     }),
+
+  // 增加一个文件上传转为AI博客的接口
+  uploadFile: (file: File, errorHandler?: ErrorHandler) =>
+    request.post<Podcast>('/api/v1/ai/podcast', {
+      errorHandler,
+      timeout: 150000,
+      params: {
+        file,
+      },
+    }),
 };
 
 export default PodcastApi;
