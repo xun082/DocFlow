@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
   LayoutDashboard,
   BookOpen,
+  Podcast,
 } from 'lucide-react';
 
 // 导航项接口
@@ -64,6 +65,11 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <User className="w-5 h-5" />,
   },
   {
+    name: '播客',
+    href: '/dashboard/podcast',
+    icon: <Podcast className="w-5 h-5" />,
+  },
+  {
     name: '设置',
     href: '/dashboard/settings',
     icon: <Settings className="w-5 h-5" />,
@@ -86,6 +92,7 @@ export const PAGE_TITLE_MAP: Record<string, string> = {
   '/dashboard/settings': '系统设置',
   '/dashboard/more': '更多功能',
   '/dashboard/knowledge': '知识库管理',
+  '/dashboard/podcast': '播客管理',
   '/docs': '文档管理',
 };
 

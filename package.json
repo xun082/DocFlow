@@ -126,6 +126,7 @@
     "react-hot-toast": "^2.5.2",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.2",
+    "react-use-audio-player": "^4.0.2",
     "recharts": "2.15.4",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
