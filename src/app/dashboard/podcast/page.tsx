@@ -135,7 +135,7 @@ const PodcastPage = () => {
     <div className="max-w-6xl mx-auto p-4">
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
         <div className="p-6 text-center">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">上传文件转为AI博客</h3>
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">上传简历转为AI博客</h3>
           <p className="text-blue-600 text-sm mb-6">将文件转换为结构化音频文件，提升内容传播效率</p>
           <div className="flex justify-center">
             <Select onValueChange={(value) => setInterviewer(value)} defaultValue="front_end">
