@@ -43,13 +43,12 @@ export const PodcastApi = {
     }),
 
   // 增加一个文件上传转为AI博客的接口
-  uploadFile: (file: File, errorHandler?: ErrorHandler) =>
+  uploadFile: (formData: FormData, errorHandler?: ErrorHandler) =>
     request.post<Podcast>('/api/v1/ai/podcast', {
       errorHandler,
       timeout: 150000,
-      params: {
-        file,
-      },
+      params: formData,
+      // headers: { 'Content-Type': 'multipart/form-data' },
     }),
 };
 

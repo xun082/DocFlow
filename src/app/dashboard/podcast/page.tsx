@@ -11,6 +11,14 @@ import PodcastApi from '@/services/podcast';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Podcast } from '@/services/podcast';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 const PodcastPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,6 +33,7 @@ const PodcastPage = () => {
           page: currentPage,
           limit,
         });
+        console.log('result', result);
 
         if (result?.data?.code === 200 && result?.data?.data) {
           const { podcasts, total } = result.data?.data;
@@ -60,11 +69,15 @@ const PodcastPage = () => {
 
                 fileInput.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
-                  console.log('file', file);
 
                   if (file) {
-                    // 这里可以添加文件上传逻辑
-                    PodcastApi.uploadFile(file).then((res) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('interviewer', 'front_end');
+                    formData.append('candidate_id', 'hunyin_6');
+                    formData.append('interviewer_voice_id', 'Chinese (Mandarin)_News_Anchor');
+
+                    PodcastApi.uploadFile(formData).then((res) => {
                       if (res?.data?.code === 200) {
                         toast.success('上传成功');
                         console.log('上传成功', res);
@@ -125,13 +138,42 @@ const PodcastPage = () => {
       </div>
 
       {/* 分页组件 */}
-      {/* <Pagination
-        current={currentPage}
-        total={total}
-        pageSize={pageSize}
-        onChange={setCurrentPage}
-        className="mt-6"
-      /> */}
+      <Pagination className="mt-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage > 1) changePage(currentPage - 1);
+              }}
+            />
+          </PaginationItem>
+          {Array.from({ length: Math.ceil(total / limit) }, (_, i) => i + 1).map((page) => (
+            <PaginationItem key={page}>
+              <PaginationLink
+                href="#"
+                isActive={page === currentPage}
+                onClick={(e) => {
+                  e.preventDefault();
+                  changePage(page);
+                }}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage < Math.ceil(total / limit)) changePage(currentPage + 1);
+              }}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 };
