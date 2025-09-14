@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Play } from 'lucide-react';
-// import { formatBytes } from '@/utils/file';
+import { Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { useAudioPlayer } from 'react-use-audio-player';
 
 import { Button } from '@/components/ui/button';
-// import { Pagination } from '@/components/ui/pagination';
 import PodcastApi from '@/services/podcast';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,6 +37,37 @@ const PodcastPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [interviewer, setInterviewer] = useState('front_end');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  const handlePlay = (url: string, id: string) => {
+    const audioConfig = {
+      html5: true,
+      initialVolume: 0.75,
+      onload: () => {
+        if (!isPlaying) {
+          togglePlayPause();
+        }
+      },
+      onend: () => {
+        setPlayingId(null);
+      },
+    };
+
+    if (playingId === id) {
+      togglePlayPause();
+    } else {
+      if (playingId && isPlaying) {
+        togglePlayPause();
+        setTimeout(() => {
+          setPlayingId(id);
+          load(url, audioConfig);
+        }, 100);
+      } else {
+        setPlayingId(id);
+        load(url, audioConfig);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +128,8 @@ const PodcastPage = () => {
 
     fileInput.click();
   };
+
+  const { load, isPlaying, togglePlayPause } = useAudioPlayer();
 
   return (
     <div className="max-w-6xl mx-auto p-4">
@@ -173,12 +205,13 @@ const PodcastPage = () => {
                     variant="ghost"
                     size="sm"
                     className="space-x-2"
-                    onClick={() => {
-                      const audio = new Audio(podcast.audio_url);
-                      audio.play();
-                    }}
+                    onClick={() => handlePlay(podcast.audio_url, podcast.id)}
                   >
-                    <Play className="h-4 w-4" />
+                    {playingId === podcast.id && isPlaying ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
                   </Button>
                   <div className="flex items-center text-sm text-muted-foreground">
                     {podcast.user?.name}
