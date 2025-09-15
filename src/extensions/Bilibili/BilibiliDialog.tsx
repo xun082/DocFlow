@@ -36,8 +36,6 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   const [error, setError] = useState('');
 
   const validateBilibiliIframeUrl = (url: string): boolean => {
-    // 校验B站iframe链接格式
-    //
     const iframeRegex = /^(?:https?:)?\/\/player\.bilibili\.com\/player\.html(?:\?.*)?$/;
 
     if (!iframeRegex.test(url)) {
