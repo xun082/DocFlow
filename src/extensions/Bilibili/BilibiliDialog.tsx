@@ -35,24 +35,21 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // const validateBilibiliIframeUrl = (url: string): boolean => {
-  //   // 校验B站iframe链接格式
-  //   const iframeRegex = /^(https?:\/\/)?player\.bilibili\.com\/player\.html\?.*$/;
+  const validateBilibiliIframeUrl = (url: string): boolean => {
+    // 校验B站iframe链接格式
+    //
+    const iframeRegex = /^(?:https?:)?\/\/player\.bilibili\.com\/player\.html(?:\?.*)?$/;
 
-  //   if (!iframeRegex.test(url)) {
-  //     return false;
-  //   }
+    if (!iframeRegex.test(url)) {
+      return false;
+    }
 
-  //   // 检查必要的参数
-  //   const urlObj = new URL(url);
-  //   const params = new URLSearchParams(urlObj.search);
+    // 必须包含aid或bvid参数
+    const hasAid = url.includes('aid');
+    const hasBvid = url.includes('bvid');
 
-  //   // 必须包含aid或bvid参数
-  //   const hasAid = params.has('aid');
-  //   const hasBvid = params.has('bvid');
-
-  //   return hasAid || hasBvid;
-  // };
+    return hasAid || hasBvid;
+  };
 
   const handleSubmit = async () => {
     if (!url.trim()) {
@@ -61,11 +58,11 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
       return;
     }
 
-    // if (!validateBilibiliIframeUrl(url)) {
-    //   setError('请输入有效的 Bilibili iframe 链接，必须包含 aid 或 bvid 参数');
+    if (!validateBilibiliIframeUrl(url)) {
+      setError('请输入有效的 Bilibili iframe 链接，必须包含 aid 或 bvid 参数');
 
-    //   return;
-    // }
+      return;
+    }
 
     setIsLoading(true);
     setError('');
