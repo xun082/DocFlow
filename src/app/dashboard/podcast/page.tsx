@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import PodcastApi from '@/services/podcast';
 import { Card } from '@/components/ui/card';
 import { Podcast } from '@/services/podcast/type';
+import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
 import {
   Select,
   SelectContent,
@@ -42,6 +43,10 @@ const PodcastPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [playingId, setPlayingId] = useState<string | null>(null);
+
+  const { podcastEvent, connect } = useNotificationSocket();
+
+  const [tasks, setTasks] = useState(new Map());
 
   const audioConfig = {
     html5: true,
@@ -98,8 +103,32 @@ const PodcastPage = () => {
         formData.append('interviewer_voice_id', VOICE_ID);
         setIsUploading(true);
 
-        const res = await PodcastApi.uploadFile(formData);
-        toast(res?.data?.code === 200 ? '上传成功' : '上传失败');
+        const res = await PodcastApi.uploadFileAsync(formData);
+
+        // 上传成功后，连接 websocket
+        if (res?.data?.code === 200) {
+          toast.success('上传成功');
+          connect();
+
+          const jobId = res?.data?.data?.jobId;
+
+          if (podcastEvent) {
+            if (podcastEvent.status === 'failed') {
+              toast.error(podcastEvent.message);
+            } else {
+              setTasks(
+                (prev) =>
+                  new Map(
+                    prev.set(jobId, {
+                      ...podcastEvent,
+                    }),
+                  ),
+              );
+            }
+          }
+        } else {
+          toast.error('上传失败');
+        }
       } catch (error) {
         console.error('上传失败:', error);
         toast.error('上传失败');
@@ -175,6 +204,22 @@ const PodcastPage = () => {
           <p className="text-xs text-blue-500 mt-4">支持word、md、ppt、pdf等常见文件格式</p>
         </div>
       </Card>
+
+      {/* 循环遍历任务列表 */}
+      {[...tasks].map(([jobId, task]) => (
+        <div key={jobId} className="bg-white rounded-xl shadow-sm p-6 mt-6">
+          <div className="mb-4 pb-3 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800">{task.title}</h2>
+            <p className="text-gray-500 text-sm mt-1">最新更新的播客内容</p>
+          </div>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-gray-500 text-sm">状态：{task.status}</p>
+              <p className="text-gray-500 text-sm">进度：{task.progress}%</p>
+            </div>
+          </div>
+        </div>
+      ))}
 
       <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
         <div className="mb-4 pb-3 border-b border-gray-100">

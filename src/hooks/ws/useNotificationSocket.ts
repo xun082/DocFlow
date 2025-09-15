@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-import { ConnectedEvent, ConnectionState, OnlineUser, OnlineUsersResponse } from '@/types/ws';
+import {
+  ConnectedEvent,
+  ConnectionState,
+  OnlineUser,
+  OnlineUsersResponse,
+  PodcastEventResponse,
+} from '@/types/ws';
 
 // 从localStorage中获取token的工具函数
 const getTokenFromStorage = (): string | null => {
@@ -49,6 +55,8 @@ export const useNotificationSocket = () => {
     id: number;
     name: string;
   } | null>(null);
+
+  const [podcastEvent, setPodcastEvent] = useState<any>(null);
 
   useEffect(() => {
     const storageToken = getTokenFromStorage();
@@ -139,6 +147,11 @@ export const useNotificationSocket = () => {
       // 监听在线用户列表
       socket.on('online_users', (data: OnlineUsersResponse) => {
         setOnlineUsers(data.users);
+      });
+
+      // 监听播客 ai 事件
+      socket.on('podcast_event', (data: PodcastEventResponse) => {
+        setPodcastEvent(data.data);
       });
 
       // 监听错误
@@ -248,6 +261,9 @@ export const useNotificationSocket = () => {
     // 用户数据
     currentUser,
     onlineUsers,
+
+    // 播客 ai 事件
+    podcastEvent,
 
     // 服务器和认证信息
     serverUrl: server,

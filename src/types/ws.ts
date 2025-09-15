@@ -26,3 +26,26 @@ export interface OnlineUsersResponse {
   users: OnlineUser[];
   count: number;
 }
+interface QueueStats {
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+}
+
+export interface PodcastEvent {
+  jobId: string;
+  status: 'pending' | 'progress' | 'completed' | 'failed';
+  progress: number;
+  message: string;
+  result?: any;
+  error?: string;
+  queueStats: QueueStats;
+  timestamp: string;
+}
+
+export interface PodcastEventResponse {
+  type: string;
+  data: PodcastEvent;
+  timestamp: string;
+}
