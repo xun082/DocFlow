@@ -38,27 +38,15 @@ const PodcastPage = () => {
   const [list, setList] = useState<Podcast[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [interviewer, setInterviewer] = useState<string>('front_end');
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const newSet = new Set(prev);
-
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-
-      return newSet;
-    });
-  };
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const audioConfig = {
     html5: true,
     initialVolume: INITIAL_VOLUME,
+    autoPlay: true,
     onend: () => setPlayingId(null),
   };
 
@@ -199,10 +187,8 @@ const PodcastPage = () => {
         ) : (
           <PodcastList
             list={list}
-            expandedIds={expandedIds}
             playingId={playingId}
             isPlaying={isPlaying}
-            toggleExpand={toggleExpand}
             handlePlay={handlePlay}
             currentPage={currentPage}
             total={total}

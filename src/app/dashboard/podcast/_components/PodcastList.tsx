@@ -2,6 +2,7 @@
 
 import { Play, Pause } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useState } from 'react';
 
 import {
   Pagination,
@@ -18,10 +19,8 @@ import { Podcast } from '@/services/podcast/type';
 
 interface PodcastListProps {
   list: Podcast[];
-  expandedIds: Set<string>;
   playingId: string | null;
   isPlaying: boolean;
-  toggleExpand: (id: string) => void;
   handlePlay: (url: string, id: string) => void;
   currentPage: number;
   total: number;
@@ -31,16 +30,29 @@ interface PodcastListProps {
 
 export function PodcastList({
   list,
-  expandedIds,
   playingId,
   isPlaying,
-  toggleExpand,
   handlePlay,
   currentPage,
   total,
   changePage,
   pageSize,
 }: PodcastListProps) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+
+      return newSet;
+    });
+  };
+
   return (
     <>
       <div className="space-y-4">
