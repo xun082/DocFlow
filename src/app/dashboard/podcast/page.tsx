@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import PodcastApi from '@/services/podcast';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Podcast } from '@/services/podcast';
+import { Podcast } from '@/services/podcast/type';
 import {
   Pagination,
   PaginationContent,
@@ -30,13 +30,26 @@ import {
 } from '@/components/ui/select';
 
 const PodcastPage = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(10);
-  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
   const [list, setList] = useState<Podcast[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [interviewer, setInterviewer] = useState('front_end');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [interviewer, setInterviewer] = useState<string>('front_end');
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+
+      return newSet;
+    });
+  };
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const handlePlay = (url: string, id: string) => {
@@ -74,7 +87,7 @@ const PodcastPage = () => {
       try {
         const result = await PodcastApi.getList({
           page: currentPage,
-          limit,
+          limit: 10,
         });
 
         if (result?.data?.code === 200 && result?.data?.data) {
@@ -88,7 +101,7 @@ const PodcastPage = () => {
     };
 
     fetchData();
-  }, [currentPage, limit]);
+  }, [currentPage]);
 
   const changePage = (page: number) => {
     setCurrentPage(page);
@@ -183,7 +196,7 @@ const PodcastPage = () => {
                     </h3>
                   </div>
 
-                  {isExpanded ? (
+                  {expandedIds.has(podcast.id) ? (
                     <div className="text-sm text-muted-foreground mt-2">
                       <ReactMarkdown>{podcast.content}</ReactMarkdown>
                     </div>
@@ -195,9 +208,9 @@ const PodcastPage = () => {
                   <Button
                     variant="link"
                     className="text-sm p-0 h-auto ml-2"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => toggleExpand(podcast.id)}
                   >
-                    {isExpanded ? '收起' : '展开全部'}
+                    {expandedIds.has(podcast.id) ? '收起' : '展开全部'}
                   </Button>
                 </div>
                 <div className="flex flex-col">
@@ -235,7 +248,7 @@ const PodcastPage = () => {
               }}
             />
           </PaginationItem>
-          {Array.from({ length: Math.ceil(total / limit) }, (_, i) => i + 1).map((page) => (
+          {Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1).map((page) => (
             <PaginationItem key={page}>
               <PaginationLink
                 href="#"
@@ -254,7 +267,7 @@ const PodcastPage = () => {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                if (currentPage < Math.ceil(total / limit)) changePage(currentPage + 1);
+                if (currentPage < Math.ceil(total / 10)) changePage(currentPage + 1);
               }}
             />
           </PaginationItem>
