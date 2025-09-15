@@ -29,6 +29,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const DEFAULT_PAGE_SIZE = 10;
+const INITIAL_VOLUME = 0.75;
+const INTERVIEWER_OPTIONS = [
+  { value: 'front_end', label: '前端面试官' },
+  { value: 'hrbp', label: 'HRBP面试官' },
+  { value: 'marketing_manager', label: '经理面试官' },
+];
+const CANDIDATE_ID = 'hunyin_6';
+const VOICE_ID = 'Chinese (Mandarin)_News_Anchor';
+const SUPPORTED_FILE_TYPES = '.pdf,.md,.doc,.docx';
+
 const PodcastPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [total, setTotal] = useState<number>(0);
@@ -52,20 +63,13 @@ const PodcastPage = () => {
   };
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const handlePlay = (url: string, id: string) => {
-    const audioConfig = {
-      html5: true,
-      initialVolume: 0.75,
-      onload: () => {
-        if (!isPlaying) {
-          togglePlayPause();
-        }
-      },
-      onend: () => {
-        setPlayingId(null);
-      },
-    };
+  const audioConfig = {
+    html5: true,
+    initialVolume: INITIAL_VOLUME,
+    onend: () => setPlayingId(null),
+  };
 
+  const handlePlay = (url: string, id: string) => {
     if (playingId === id) {
       togglePlayPause();
     } else {
@@ -73,13 +77,57 @@ const PodcastPage = () => {
         togglePlayPause();
         setTimeout(() => {
           setPlayingId(id);
-          load(url, audioConfig);
+          load(url, {
+            ...audioConfig,
+            onload: () => {
+              if (!isPlaying) {
+                togglePlayPause();
+              }
+            },
+          });
         }, 100);
       } else {
         setPlayingId(id);
-        load(url, audioConfig);
+        load(url, {
+          ...audioConfig,
+          onload: () => {
+            if (!isPlaying) {
+              togglePlayPause();
+            }
+          },
+        });
       }
     }
+  };
+
+  const handleFileUpload = async () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = SUPPORTED_FILE_TYPES;
+
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('interviewer', interviewer);
+        formData.append('candidate_id', CANDIDATE_ID);
+        formData.append('interviewer_voice_id', VOICE_ID);
+        setIsUploading(true);
+
+        const res = await PodcastApi.uploadFile(formData);
+        toast(res?.data?.code === 200 ? '上传成功' : '上传失败');
+      } catch (error) {
+        console.error('上传失败:', error);
+        toast.error('上传失败');
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    fileInput.click();
   };
 
   useEffect(() => {
@@ -87,7 +135,7 @@ const PodcastPage = () => {
       try {
         const result = await PodcastApi.getList({
           page: currentPage,
-          limit: 10,
+          limit: DEFAULT_PAGE_SIZE,
         });
 
         if (result?.data?.code === 200 && result?.data?.data) {
@@ -107,41 +155,6 @@ const PodcastPage = () => {
     setCurrentPage(page);
   };
 
-  const handleFileUpload = async () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.md,.doc,.docx';
-
-    fileInput.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-
-      try {
-        if (file) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('interviewer', interviewer);
-          formData.append('candidate_id', 'hunyin_6');
-          formData.append('interviewer_voice_id', 'Chinese (Mandarin)_News_Anchor');
-          setIsUploading(true);
-
-          const res = await PodcastApi.uploadFile(formData);
-
-          if (res?.data?.code === 200) {
-            toast.success('上传成功');
-          } else {
-            toast.error('上传失败');
-          }
-        }
-      } catch (error) {
-        console.error('上传失败:', error);
-      } finally {
-        setIsUploading(false);
-      }
-    };
-
-    fileInput.click();
-  };
-
   const { load, isPlaying, togglePlayPause } = useAudioPlayer();
 
   return (
@@ -151,16 +164,18 @@ const PodcastPage = () => {
           <h3 className="text-lg font-semibold text-blue-800 mb-4">上传简历转为AI博客</h3>
           <p className="text-blue-600 text-sm mb-6">将文件转换为结构化音频文件，提升内容传播效率</p>
           <div className="flex justify-center">
-            <Select onValueChange={(value) => setInterviewer(value)} defaultValue="front_end">
+            <Select onValueChange={setInterviewer} defaultValue="front_end">
               <SelectTrigger className="w-[200px] mb-4">
                 <SelectValue placeholder="选择面试官" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>面试官</SelectLabel>
-                  <SelectItem value="front_end">前端面试官</SelectItem>
-                  <SelectItem value="hrbp">HRBP面试官</SelectItem>
-                  <SelectItem value="marketing_manager">经理面试官</SelectItem>
+                  {INTERVIEWER_OPTIONS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -248,26 +263,28 @@ const PodcastPage = () => {
               }}
             />
           </PaginationItem>
-          {Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1).map((page) => (
-            <PaginationItem key={page}>
-              <PaginationLink
-                href="#"
-                isActive={page === currentPage}
-                onClick={(e) => {
-                  e.preventDefault();
-                  changePage(page);
-                }}
-              >
-                {page}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
+          {Array.from({ length: Math.ceil(total / DEFAULT_PAGE_SIZE) }, (_, i) => i + 1).map(
+            (page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  href="#"
+                  isActive={page === currentPage}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    changePage(page);
+                  }}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ),
+          )}
           <PaginationItem>
             <PaginationNext
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                if (currentPage < Math.ceil(total / 10)) changePage(currentPage + 1);
+                if (currentPage < Math.ceil(total / DEFAULT_PAGE_SIZE)) changePage(currentPage + 1);
               }}
             />
           </PaginationItem>
