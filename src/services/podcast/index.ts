@@ -21,7 +21,7 @@ export const PodcastApi = {
 
   // 增加一个异步上传
   uploadFileAsync: (formData: FormData, errorHandler?: ErrorHandler) =>
-    request.post<AsyncPodcast>('/api/v1/ai/podcast/async', {
+    request.post<AsyncPodcast>('/api/v1/ai/podcast/mock', {
       errorHandler,
       timeout: 150000,
       params: formData,

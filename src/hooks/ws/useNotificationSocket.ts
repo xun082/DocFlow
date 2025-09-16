@@ -9,6 +9,7 @@ import {
   OnlineUser,
   OnlineUsersResponse,
   PodcastEventResponse,
+  PodcastEvent,
 } from '@/types/ws';
 
 // 从localStorage中获取token的工具函数
@@ -56,7 +57,9 @@ export const useNotificationSocket = () => {
     name: string;
   } | null>(null);
 
-  const [podcastEvent, setPodcastEvent] = useState<any>(null);
+  // const [podcastEvent, setPodcastEvent] = useState<PodcastEvent | null>(null);
+
+  const [podcastTasks, setPodcastTasks] = useState<Map<string, PodcastEvent>>(new Map());
 
   useEffect(() => {
     const storageToken = getTokenFromStorage();
@@ -151,7 +154,12 @@ export const useNotificationSocket = () => {
 
       // 监听播客 ai 事件
       socket.on('podcast_event', (data: PodcastEventResponse) => {
-        setPodcastEvent(data.data);
+        setPodcastTasks((prev) => {
+          const newTasks = new Map(prev);
+          newTasks.set(data.data.jobId, data.data);
+
+          return newTasks;
+        });
       });
 
       // 监听错误
@@ -263,7 +271,7 @@ export const useNotificationSocket = () => {
     onlineUsers,
 
     // 播客 ai 事件
-    podcastEvent,
+    podcastTasks,
 
     // 服务器和认证信息
     serverUrl: server,

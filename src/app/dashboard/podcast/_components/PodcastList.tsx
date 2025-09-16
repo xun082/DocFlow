@@ -64,12 +64,6 @@ export function PodcastList({
                 <AvatarFallback>{podcast.user?.name?.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">
-                    {podcast.content?.split('\n')[0]?.substring(0, 40)}
-                  </h3>
-                </div>
-
                 {expandedIds.has(podcast.id) ? (
                   <div className="text-sm text-muted-foreground mt-2">
                     <ReactMarkdown>{podcast.content}</ReactMarkdown>
