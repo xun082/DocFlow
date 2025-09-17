@@ -1,4 +1,5 @@
 export interface Podcast {
+  jobId: string;
   id: string;
   title: string;
   duration: number;
@@ -12,6 +13,12 @@ export interface Podcast {
   };
   created_at: string;
   updated_at: string;
+}
+
+// 异步的podCast
+export interface AsyncPodcast {
+  jobId: string;
+  message: string;
 }
 
 export interface ListParams {
