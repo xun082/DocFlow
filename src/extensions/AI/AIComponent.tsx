@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
-import { BrainCircuit } from 'lucide-react';
+import { BrainCircuit, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -41,10 +41,20 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const [prompt, setPrompt] = useState(node.attrs.prompt || '');
   const [response, setResponse] = useState(node.attrs.response || '');
   // 统一的AI状态管理
-  const [aiState, setAiState] = useState<AIState>(node.attrs.aiState || AIState.DISPLAY);
+  const [aiState, setAiState] = useState<AIState>(() => {
+    // 如果节点有aiState属性，使用它；否则根据是否有response来决定初始状态
+    if (node.attrs.aiState) {
+      return node.attrs.aiState as AIState;
+    }
+    // 如果有response说明是已生成的内容，显示DISPLAY状态
+    // 如果没有response说明是新创建的，显示INPUT状态
+
+    return (node.attrs.response || '').trim() ? AIState.DISPLAY : AIState.INPUT;
+  });
 
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
   const [showImage, setShowImage] = useState(false); // 图片生成状态
+  const [useKnowledgeBase, setUseKnowledgeBase] = useState(true); // 知识库开关状态，默认开启
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
@@ -79,6 +89,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     selectedModel,
     setResponse,
     editor,
+    useKnowledgeBase, // 传递知识库开关状态
   });
 
   const { generateImage } = useTextToImage({
@@ -121,22 +132,24 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     // 监听点击其他区域，input 框隐藏
     const handleClickOutside = (event: MouseEvent) => {
       if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-        if (response) {
-          // 如果有response，替换整个AI节点为段落
-          const pos = getPos();
+        // 只有在INPUT状态下才处理点击外部事件
+        if (aiState === AIState.INPUT) {
+          if (response?.trim()) {
+            // 如果有response，切换到显示状态
+            updateState({ aiState: AIState.DISPLAY });
+          } else {
+            // 如果没有response，删除整个AI节点
+            const pos = getPos();
 
-          if (pos !== undefined) {
-            const nodeSize = node.nodeSize;
-            editor
-              .chain()
-              .focus()
-              .deleteRange({ from: pos, to: pos + nodeSize })
-              .pasteMarkdown(response)
-              .run();
+            if (pos !== undefined) {
+              const nodeSize = node.nodeSize;
+              editor
+                .chain()
+                .focus()
+                .deleteRange({ from: pos, to: pos + nodeSize })
+                .run();
+            }
           }
-        } else {
-          // 如果没有response，只是隐藏输入状态
-          updateState({ aiState: AIState.DISPLAY });
         }
       }
     };
@@ -162,8 +175,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         return;
       }
     }
-    // 处理其他模式（续写、改写等）
-    else {
+    // 处理续写模式
+    else if (node.attrs.op === 'continue') {
       const contentString = buildContentString(prompt, node.attrs.op);
 
       if (!contentString) {
@@ -172,15 +185,28 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         return;
       }
     }
+    // 处理空op或其他模式 - 当op为空或未定义时，默认当作ask模式处理
+    else {
+      if (!prompt?.trim()) {
+        toast.warning('请输入您的问题');
+
+        return;
+      }
+    }
 
     // 设置加载状态
     setAiState(AIState.LOADING);
 
-    // 根据模式选择生成图片或文本
-    if (showImage) {
-      await generateImage({ prompt });
-    } else {
-      await handleAIGeneration(prompt, node.attrs, abortRef);
+    try {
+      // 根据模式选择生成图片或文本
+      if (showImage) {
+        await generateImage({ prompt });
+      } else {
+        await handleAIGeneration(prompt, node.attrs, abortRef);
+      }
+    } catch (error) {
+      console.error('AI生成过程中出错:', error);
+      setAiState(AIState.INPUT);
     }
   };
 
@@ -211,6 +237,17 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const actionButtons = [
     ...baseButtons,
     {
+      id: 'knowledge',
+      label: '知识库',
+      icon: Database,
+      color: useKnowledgeBase ? '#10B981' : '#6B7280',
+      bgColor: useKnowledgeBase ? 'bg-[#10B981]/20' : 'bg-gray-200',
+      hoverBgColor: useKnowledgeBase ? 'hover:bg-[#10B981]/30' : 'hover:bg-gray-300',
+      isActive: useKnowledgeBase,
+      disabled: aiState === AIState.LOADING,
+      onClick: () => setUseKnowledgeBase(!useKnowledgeBase),
+    },
+    {
       id: 'model',
       label: 'Model',
       icon: BrainCircuit,
@@ -225,6 +262,14 @@ export const AIComponent: React.FC<AIComponentProps> = ({
 
   const hasContent = prompt?.trim() !== '';
 
+  // 如果在DISPLAY状态但既没有prompt也没有response，自动切换到INPUT状态
+  useEffect(() => {
+    if (aiState === AIState.DISPLAY && !prompt?.trim() && !response?.trim()) {
+      setAiState(AIState.INPUT);
+      updateState({ aiState: AIState.INPUT });
+    }
+  }, [aiState, prompt, response, updateState]);
+
   return (
     <NodeViewWrapper className="ai-block">
       {/* 返回值显示 */}
@@ -232,40 +277,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
         {/* AI Input Box */}
         {aiState === AIState.LOADING ? (
           <>
-            <div className="markdown-content">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code: SyntaxHighlight,
-                  pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
-                    <pre className="rounded-[12px]" {...props}>
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
-                {response}
-              </ReactMarkdown>
-            </div>
-            {/* <div className="mb-2">{animatedText}</div> */}
-            <AILoadingStatus
-              onCancel={() => {
-                try {
-                  abortRef.current?.();
-                } catch (error) {
-                  // 忽略BodyStreamBuffer中止错误
-                  console.log('中止流处理:', error);
-                } finally {
-                  setAiState(AIState.INPUT);
-                  updateAttributes({ loading: false });
-                }
-              }}
-            />
-          </>
-        ) : (
-          <>
-            {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
-              <div className="markdown-content">
+            <div className="relative group">
+              <div className="markdown-content bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-3">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -279,6 +292,137 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                 >
                   {response}
                 </ReactMarkdown>
+              </div>
+
+              {/* 加载状态下的操作按钮 */}
+              <div className="opacity-70 group-hover:opacity-100 transition-opacity absolute top-2 right-2 flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    try {
+                      abortRef.current?.();
+                    } catch (error) {
+                      console.log('中止流处理:', error);
+                    } finally {
+                      setAiState(AIState.INPUT);
+                      updateAttributes({ loading: false });
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md border border-red-300 flex items-center gap-1"
+                >
+                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                  停止生成
+                </button>
+              </div>
+            </div>
+
+            <AILoadingStatus
+              onCancel={() => {
+                try {
+                  abortRef.current?.();
+                } catch (error) {
+                  console.log('中止流处理:', error);
+                } finally {
+                  setAiState(AIState.INPUT);
+                  updateAttributes({ loading: false });
+                }
+              }}
+            />
+          </>
+        ) : (
+          <>
+            {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && response && (
+              <div className="relative group">
+                <div
+                  className={`markdown-content transition-all duration-200 ${
+                    aiState === AIState.DISPLAY
+                      ? 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-3 hover:shadow-md cursor-pointer'
+                      : 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3'
+                  }`}
+                  onClick={() => {
+                    if (aiState === AIState.DISPLAY) {
+                      // 在显示模式下点击插入内容
+                      const pos = getPos();
+
+                      if (pos !== undefined) {
+                        const nodeSize = node.nodeSize;
+                        editor
+                          .chain()
+                          .focus()
+                          .deleteRange({ from: pos, to: pos + nodeSize })
+                          .pasteMarkdown(response)
+                          .run();
+                      }
+                    }
+                  }}
+                >
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: SyntaxHighlight,
+                      pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
+                        <pre className="rounded-[12px]" {...props}>
+                          {children}
+                        </pre>
+                      ),
+                    }}
+                  >
+                    {response}
+                  </ReactMarkdown>
+                </div>
+
+                {(aiState === AIState.DISPLAY || aiState === AIState.INPUT) && (
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 flex gap-2">
+                    {aiState === AIState.DISPLAY && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // 重新编辑
+                          setAiState(AIState.INPUT);
+                          updateState({ aiState: AIState.INPUT });
+                        }}
+                        className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md border border-gray-300 transition-all"
+                      >
+                        重新编辑
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        // 插入内容到文档
+                        const pos = getPos();
+
+                        if (pos !== undefined) {
+                          const nodeSize = node.nodeSize;
+                          editor
+                            .chain()
+                            .focus()
+                            .deleteRange({ from: pos, to: pos + nodeSize })
+                            .pasteMarkdown(response)
+                            .run();
+                        }
+                      }}
+                      className="px-3 py-1.5 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md border border-blue-300 transition-all"
+                    >
+                      插入内容
+                    </button>
+                    {aiState === AIState.INPUT && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // 切换到显示模式
+                          setAiState(AIState.DISPLAY);
+                          updateState({ aiState: AIState.DISPLAY });
+                        }}
+                        className="px-3 py-1.5 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded-md border border-green-300 transition-all"
+                      >
+                        完成编辑
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {aiState === AIState.INPUT && (
