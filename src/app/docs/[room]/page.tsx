@@ -206,7 +206,6 @@ export default function DocumentPage() {
     >
       {/* Header */}
       <DocumentHeader
-        editor={editor}
         isSidebarOpen={sidebar.isOpen}
         toggleSidebar={sidebar.toggle}
         isTocOpen={isTocOpen}
@@ -214,6 +213,8 @@ export default function DocumentPage() {
         provider={provider}
         connectedUsers={connectedUsers}
         currentUser={currentUser}
+        documentId={documentId}
+        documentName={`文档 ${documentId}`}
       />
 
       {/* 主内容区域 */}
