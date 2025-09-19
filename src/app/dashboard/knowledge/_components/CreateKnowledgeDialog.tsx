@@ -298,7 +298,7 @@ export function CreateKnowledgeDialog({
 
     // 获取 API Key（可选）
     const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
-    const apiKey = apiKeys?.siliconflow || '';
+    const apiKey = apiKeys?.siliconflow;
 
     // Zod验证 - API Key 为可选字段
     const schema = z.object({
@@ -307,11 +307,17 @@ export function CreateKnowledgeDialog({
       apiKey: z.string().optional(), // API Key 设为可选
     });
 
-    const validationResult = schema.safeParse({
+    // 构建验证数据 - 只有存在API密钥时才包含
+    const validationData: any = {
       title: title.trim(),
       content: content.trim(),
-      apiKey: apiKey || undefined, // 空字符串转为 undefined
-    });
+    };
+
+    if (apiKey?.trim()) {
+      validationData.apiKey = apiKey.trim();
+    }
+
+    const validationResult = schema.safeParse(validationData);
 
     if (!validationResult.success) {
       const errorMsg = validationResult.error.errors[0].message;
