@@ -55,17 +55,17 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   // };
 
   const handleSubmit = async () => {
-    if (!url.trim()) {
+    if (!url || !url.trim()) {
       setError('请输入 Bilibili 视频链接');
 
       return;
     }
 
-    // if (!validateBilibiliIframeUrl(url)) {
-    //   setError('请输入有效的 Bilibili iframe 链接，必须包含 aid 或 bvid 参数');
-
-    //   return;
-    // }
+    // 使用DOMParser解析
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(url, 'text/html');
+    const iframe = doc.querySelector('iframe');
+    const videoUrl = iframe ? iframe.getAttribute('src') : url;
 
     setIsLoading(true);
     setError('');
@@ -75,7 +75,7 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
         .chain()
         .focus()
         .setBilibili({
-          src: url,
+          src: videoUrl || url,
           width: Math.max(320, width),
           height: Math.max(180, height),
         })
@@ -234,7 +234,7 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isLoading || !url.trim()}
+              disabled={isLoading || !url?.trim()}
               className="flex-1 bg-gradient-to-r from-[#FF6699] to-[#FF6699]/80 text-white hover:shadow-lg hover:shadow-[#FF6699]/20 duration-200"
             >
               {isLoading ? '插入中...' : '插入视频'}
