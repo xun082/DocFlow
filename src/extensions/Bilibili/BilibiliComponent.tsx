@@ -44,8 +44,6 @@ export const BilibiliComponent: React.FC<NodeViewProps> = ({ node, editor }) => 
           <iframe
             className="absolute top-0 left-0 w-full h-full"
             src={node.attrs.src}
-            scrolling="no"
-            frameBorder="0"
             allowFullScreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
