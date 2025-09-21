@@ -1,36 +1,4 @@
-import { Edit3, Layers, Code } from 'lucide-react';
 import type { Variants } from 'framer-motion';
-
-// 功能特性数据
-export const features = [
-  {
-    icon: Edit3,
-    title: '多人实时协作',
-    description: '支持多人同时编辑同一文档，实时看到其他人的光标和修改，就像 Google Docs 一样流畅',
-    gradient: 'from-violet-500 to-purple-600',
-    glowColor: 'rgba(139, 92, 246, 0.3)',
-    bgGradient: 'from-violet-500/10 via-purple-500/5 to-violet-500/10',
-    details: ['实时同步编辑', '冲突自动解决', '历史版本追踪'],
-  },
-  {
-    icon: Layers,
-    title: '丰富编辑功能',
-    description: '支持富文本、表格、代码块、图片等多种内容格式，满足各种文档编写需求',
-    gradient: 'from-blue-500 to-cyan-600',
-    glowColor: 'rgba(59, 130, 246, 0.3)',
-    bgGradient: 'from-blue-500/10 via-cyan-500/5 to-blue-500/10',
-    details: ['富文本编辑', '插入表格图片', '代码语法高亮'],
-  },
-  {
-    icon: Code,
-    title: '开发者友好',
-    description: '基于现代 Web 技术栈构建，代码开源，支持自定义部署和二次开发',
-    gradient: 'from-emerald-500 to-teal-600',
-    glowColor: 'rgba(16, 185, 129, 0.3)',
-    bgGradient: 'from-emerald-500/10 via-teal-500/5 to-emerald-500/10',
-    details: ['完全开源', '技术栈先进', '易于部署'],
-  },
-];
 
 // 项目数据
 export const projects = [
@@ -40,8 +8,8 @@ export const projects = [
       '基于 Next.js 和 NestJS 的在线代码编辑器，使用 Monaco Editor 和 Yjs 实现实时协作编辑和同步功能。',
     link: 'https://github.com/xun082/online-edit-web',
     repo: 'xun082/online-edit-web',
-    stars: 670,
-    forks: 140,
+    stars: 704,
+    forks: 146,
     tech: ['Next.js', 'TypeScript', 'Shadcn UI', 'Zustand', 'Tailwind CSS', 'Yjs'],
     gradient: 'from-cyan-500 via-blue-600 to-indigo-700',
     cardGlow: 'rgba(6,182,212,0.15)',
@@ -52,8 +20,8 @@ export const projects = [
     description: '基于 PNPM 和 Turborepo 开发的前端脚手架，旨在帮助用户快速创建各类型项目。',
     link: 'https://github.com/xun082/create-neat',
     repo: 'xun082/create-neat',
-    stars: 592,
-    forks: 151,
+    stars: 607,
+    forks: 155,
     tech: ['Webpack', 'Vite', 'NodeJs', 'TypeScript', 'Turborepo'],
     gradient: 'from-pink-600 via-purple-600 to-blue-600',
     cardGlow: 'rgba(219,39,119,0.15)',
