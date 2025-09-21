@@ -58,30 +58,31 @@ const Hero: React.FC<HeroProps> = () => {
             {/* 开始创作按钮 - 跳转到 dashboard */}
             <Link href="/dashboard">
               <motion.button
-                className="group px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg hover:shadow-violet-500/25 transition-all duration-300 cursor-pointer"
-                whileHover={{ scale: 1.05 }}
+                className="group relative px-8 py-4 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold rounded-2xl shadow-2xl hover:shadow-violet-500/40 transition-all duration-300 cursor-pointer overflow-hidden"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="flex items-center justify-center space-x-2">
-                  <Sparkles className="h-4 w-4" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative flex items-center justify-center space-x-2 text-lg">
+                  <Sparkles className="h-5 w-5" />
                   <span>开始创作</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </motion.button>
             </Link>
 
             {/* 项目介绍按钮 */}
             <motion.button
-              className="group px-6 py-3 bg-white/5 backdrop-blur-xl text-white font-medium rounded-xl border border-white/20 transition-all duration-300 hover:bg-white/10 hover:border-white/30 hover:scale-105 cursor-pointer"
-              whileHover={{ scale: 1.05 }}
+              className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-2xl border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:bg-white/20 hover:scale-105 cursor-pointer shadow-xl hover:shadow-white/10"
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 const featuresSection = document.getElementById('features');
                 featuresSection?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="relative flex items-center justify-center space-x-2">
-                <BookOpen className="h-4 w-4" />
+              <span className="relative flex items-center justify-center space-x-2 text-lg">
+                <BookOpen className="h-5 w-5" />
                 <span>项目介绍</span>
               </span>
             </motion.button>
@@ -89,12 +90,13 @@ const Hero: React.FC<HeroProps> = () => {
             {/* 加群学习按钮 */}
             <GroupQRDialog>
               <motion.button
-                className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 cursor-pointer"
-                whileHover={{ scale: 1.05 }}
+                className="group relative px-8 py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white font-semibold rounded-2xl shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 cursor-pointer overflow-hidden"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="flex items-center justify-center space-x-2">
-                  <Users className="h-4 w-4" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative flex items-center justify-center space-x-2 text-lg">
+                  <Users className="h-5 w-5" />
                   <span>加群学习</span>
                 </span>
               </motion.button>
