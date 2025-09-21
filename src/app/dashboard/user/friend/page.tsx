@@ -2,8 +2,8 @@ import React from 'react';
 
 import ComingSoonPage from '@/components/working';
 
-const Messages = () => {
+const Friend = () => {
   return <ComingSoonPage />;
 };
 
-export default Messages;
+export default Friend;

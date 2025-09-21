@@ -1,16 +1,13 @@
 import { ReactNode } from 'react';
 import {
-  MessageCircle,
   User,
-  Users,
   FileText,
-  Calendar,
-  Video,
   Settings,
-  MoreHorizontal,
   LayoutDashboard,
   BookOpen,
   Podcast,
+  Bot,
+  Workflow,
 } from 'lucide-react';
 
 // 导航项接口
@@ -29,14 +26,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
-    name: '消息',
+    name: '聊天助手',
     href: '/dashboard/messages',
-    icon: <MessageCircle className="w-5 h-5" />,
+    icon: <Bot className="w-5 h-5" />,
   },
   {
-    name: '日历',
-    href: '/dashboard/calendar',
-    icon: <Calendar className="w-5 h-5" />,
+    name: '工作流',
+    href: '/dashboard/workflow',
+    icon: <Workflow className="w-5 h-5" />,
   },
   {
     name: '文档',
@@ -48,16 +45,6 @@ export const NAV_ITEMS: NavItem[] = [
     name: '知识库',
     href: '/dashboard/knowledge',
     icon: <BookOpen className="w-5 h-5" />,
-  },
-  {
-    name: '视频会议',
-    href: '/dashboard/meeting',
-    icon: <Video className="w-5 h-5" />,
-  },
-  {
-    name: '通讯录',
-    href: '/dashboard/contacts',
-    icon: <Users className="w-5 h-5" />,
   },
   {
     name: '个人资料',
@@ -74,23 +61,16 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/settings',
     icon: <Settings className="w-5 h-5" />,
   },
-  {
-    name: '更多',
-    href: '/dashboard/more',
-    icon: <MoreHorizontal className="w-5 h-5" />,
-  },
 ];
 
 // 页面标题映射
 export const PAGE_TITLE_MAP: Record<string, string> = {
   '/dashboard': '仪表盘',
-  '/dashboard/messages': '消息中心',
-  '/dashboard/calendar': '日历',
-  '/dashboard/meeting': '视频会议',
+  '/dashboard/messages': 'AI聊天助手',
+  '/dashboard/workflow': '工作流编辑器',
   '/dashboard/contacts': '通讯录',
   '/dashboard/user': '个人资料',
   '/dashboard/settings': '系统设置',
-  '/dashboard/more': '更多功能',
   '/dashboard/knowledge': '知识库管理',
   '/dashboard/podcast': '播客管理',
   '/docs': '文档管理',
@@ -100,10 +80,12 @@ export const PAGE_TITLE_MAP: Record<string, string> = {
 export const PAGE_DESCRIPTION_MAP: Record<string, string> = {
   '/dashboard': '欢迎回来，查看您的工作概览',
   '/dashboard/user': '管理您的账户信息和资料',
-  '/dashboard/messages': '查看和管理您的消息',
-  '/dashboard/calendar': '管理您的日程安排',
+  '/dashboard/messages': '与AI助手进行智能对话和协作',
+  '/dashboard/workflow': '创建和管理自动化工作流程',
   '/dashboard/settings': '配置您的偏好设置',
   '/dashboard/knowledge': '管理和组织您的知识库内容',
+  '/dashboard/podcast': '管理您的播客内容和任务',
+  '/dashboard/contacts': '管理您的联系人信息',
 };
 
 // 获取页面标题的函数
