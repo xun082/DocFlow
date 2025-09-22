@@ -26,6 +26,7 @@ interface PodcastListProps {
   total: number;
   changePage: (page: number) => void;
   pageSize: number;
+  showPagination?: boolean;
 }
 
 export function PodcastList({
@@ -37,6 +38,7 @@ export function PodcastList({
   total,
   changePage,
   pageSize,
+  showPagination = true,
 }: PodcastListProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const toggleExpand = (id: string) => {
@@ -179,7 +181,7 @@ export function PodcastList({
       </div>
 
       {/* 分页组件 */}
-      {total > pageSize && (
+      {showPagination && total > pageSize && (
         <Pagination className="mt-6">
           <PaginationContent>
             <PaginationItem>

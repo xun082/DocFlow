@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAudioPlayer } from 'react-use-audio-player';
 
 import { PodcastListSkeleton } from './_components/PodcastListSkeleton';
@@ -16,7 +17,11 @@ const DEFAULT_PAGE_SIZE = 10;
 const INITIAL_VOLUME = 0.75;
 
 const PodcastPage = () => {
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+
   const [total, setTotal] = useState<number>(0);
   const [list, setList] = useState<Podcast[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -99,7 +104,10 @@ const PodcastPage = () => {
   }, [currentPage]);
 
   const changePage = (page: number) => {
-    setCurrentPage(page);
+    // 使用查询字符串更新页码
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`?${params.toString()}`);
   };
 
   return (

@@ -35,3 +35,15 @@ export interface ListResponse<T> {
   limit: number;
   page: number;
 }
+
+// 面试官类型枚举
+export type InterviewerType = 'front_end' | 'hrbp' | 'marketing_manager';
+
+// 生成播客的请求参数
+export interface GeneratePodcastParams {
+  file: File;
+  interviewer: InterviewerType;
+  candidate_id: string;
+  interviewer_voice_id: string;
+  minimax_key: string; // 必传参数
+}
