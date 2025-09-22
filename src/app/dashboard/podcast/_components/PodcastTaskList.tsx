@@ -46,7 +46,9 @@ export const PodcastTaskList = ({ tasks }: PodcastTaskListProps) => {
           {[...tasks].map(([jobId, task]) => (
             <div
               key={jobId}
-              className="p-4 border border-gray-100 rounded-lg transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/50"
+              className={`p-4 border border-gray-100 rounded-lg transition-all duration-500 hover:border-blue-200 hover:bg-blue-50/50 ${
+                task.status === 'completed' ? 'bg-green-50/80 border-green-200 animate-pulse' : ''
+              }`}
             >
               <div className="flex flex-wrap justify-between items-start gap-4">
                 <div className="flex-1 min-w-[200px]">

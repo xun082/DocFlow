@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAudioPlayer } from 'react-use-audio-player';
+import { toast } from 'sonner';
 
 import { PodcastListSkeleton } from './_components/PodcastListSkeleton';
 import { PodcastList } from './_components/PodcastList';
@@ -27,7 +28,48 @@ const PodcastPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const { podcastTasks, connect, isConnected } = useNotificationSocket();
+  const { podcastTasks, connect, isConnected, clearCompletedTasks } = useNotificationSocket();
+
+  // 监听播客任务完成状态
+  useEffect(() => {
+    const completedTasks = Array.from(podcastTasks.values()).filter(
+      (task) => task.status === 'completed',
+    );
+
+    if (completedTasks.length > 0) {
+      // 延迟3秒后执行清理和刷新，让用户看到完成状态
+      const timer = setTimeout(async () => {
+        // 先刷新播客列表
+        try {
+          const result = await PodcastApi.getList({
+            page: currentPage,
+            limit: DEFAULT_PAGE_SIZE,
+          });
+
+          if (result?.data?.code === 200 && result?.data?.data) {
+            const { podcasts, total } = result.data?.data;
+            setList(podcasts);
+            setTotal(total);
+            console.log('✅ 播客列表已刷新，发现新内容');
+          }
+        } catch (error) {
+          console.error('刷新播客列表失败:', error);
+        }
+
+        // 然后清理已完成的任务（隐藏状态栏）
+        clearCompletedTasks();
+        console.log('🧹 已清理完成的播客任务');
+
+        // 显示成功提示
+        toast.success('🎉 播客生成完成！列表已更新', {
+          description: '您的新播客已经可以播放了',
+          duration: 4000,
+        });
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [podcastTasks, currentPage, clearCompletedTasks]);
 
   const audioConfig = {
     html5: true,

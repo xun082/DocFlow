@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, ChevronUp, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
 
@@ -40,19 +40,10 @@ export function PodcastList({
   pageSize,
   showPagination = true,
 }: PodcastListProps) {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const newSet = new Set(prev);
-
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-
-      return newSet;
-    });
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   // 如果没有播客数据，显示空状态
@@ -97,7 +88,11 @@ export function PodcastList({
         {list.map((podcast) => (
           <Card
             key={podcast.id}
-            className="group hover:shadow-md transition-all duration-200 border-0 bg-gradient-to-r from-white via-gray-50/30 to-white"
+            className={`group hover:shadow-md transition-all duration-300 border-0 ${
+              expandedId === podcast.id
+                ? 'bg-gradient-to-r from-blue-50 via-blue-25 to-blue-50 shadow-md ring-1 ring-blue-200'
+                : 'bg-gradient-to-r from-white via-gray-50/30 to-white'
+            }`}
           >
             <div className="p-6">
               <div className="flex items-start gap-4">
@@ -118,25 +113,37 @@ export function PodcastList({
                 {/* 内容区域 */}
                 <div className="flex-1 min-w-0">
                   <div className="prose prose-sm max-w-none">
-                    {expandedIds.has(podcast.id) ? (
-                      <div className="text-gray-700 leading-relaxed">
-                        <ReactMarkdown>{podcast.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      <div className="text-gray-700 leading-relaxed line-clamp-3">
-                        <ReactMarkdown>{podcast.content}</ReactMarkdown>
-                      </div>
-                    )}
+                    <div
+                      className={`text-gray-700 leading-relaxed transition-all duration-500 ease-in-out overflow-hidden ${
+                        expandedId === podcast.id ? '' : 'line-clamp-3'
+                      }`}
+                    >
+                      <ReactMarkdown>{podcast.content}</ReactMarkdown>
+                    </div>
                   </div>
 
                   {/* 展开/收起按钮 */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-0 h-auto mt-2 text-xs font-medium"
+                    className={`p-0 h-auto mt-3 text-xs font-medium transition-all duration-300 flex items-center gap-1 ${
+                      expandedId === podcast.id
+                        ? 'text-blue-700 hover:text-blue-800 hover:bg-blue-100'
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                    }`}
                     onClick={() => toggleExpand(podcast.id)}
                   >
-                    {expandedIds.has(podcast.id) ? '收起' : '展开全部'}
+                    {expandedId === podcast.id ? (
+                      <>
+                        <ChevronUp className="w-3 h-3 transition-transform duration-300" />
+                        收起
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3 h-3 transition-transform duration-300" />
+                        展开全部
+                      </>
+                    )}
                   </Button>
                 </div>
 

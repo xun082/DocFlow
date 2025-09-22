@@ -242,6 +242,31 @@ export const useNotificationSocket = () => {
     }
   }, [connect]);
 
+  // 移除已完成的任务
+  const removeCompletedTask = useCallback((jobId: string) => {
+    setPodcastTasks((prev) => {
+      const newTasks = new Map(prev);
+      newTasks.delete(jobId);
+
+      return newTasks;
+    });
+  }, []);
+
+  // 清理所有已完成的任务
+  const clearCompletedTasks = useCallback(() => {
+    setPodcastTasks((prev) => {
+      const newTasks = new Map();
+
+      for (const [jobId, task] of prev.entries()) {
+        if (task.status !== 'completed') {
+          newTasks.set(jobId, task);
+        }
+      }
+
+      return newTasks;
+    });
+  }, []);
+
   // 重置连接
   const reset = useCallback(() => {
     disconnect();
@@ -283,6 +308,8 @@ export const useNotificationSocket = () => {
     sendPing,
     getOnlineUsers,
     reset,
+    removeCompletedTask,
+    clearCompletedTasks,
 
     // 工具函数
     isValidToken: () => isValidToken(token),
