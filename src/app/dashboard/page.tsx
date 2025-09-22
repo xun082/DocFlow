@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  MessageCircle,
+  Bot,
   Users,
   Calendar,
   Video,
@@ -449,7 +449,7 @@ export default function DashboardPage() {
                 href="/dashboard/messages"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
               >
-                <MessageCircle className="w-4 h-4" />
+                <Bot className="w-4 h-4" />
                 <span className="text-sm">查看消息</span>
               </a>
               <a
