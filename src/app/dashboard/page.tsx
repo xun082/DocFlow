@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Clock,
   Plus,
-  Wifi,
   Eye,
   MousePointer,
   Timer,
@@ -242,25 +241,63 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* 欢迎区域 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">欢迎回来！</h1>
-        <p className="text-gray-600">今天是个美好的工作日，{currentTime}</p>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">欢迎回来！</h1>
+              {/* 在线状态指示器 */}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full animate-pulse ${
+                    isConnected ? 'bg-green-500' : 'bg-gray-400'
+                  }`}
+                ></div>
+                <span className="text-sm text-gray-500 hidden sm:inline">
+                  {isConnected ? '已连接' : '未连接'}
+                </span>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm sm:text-base">
+              今天是个美好的工作日，{currentTime}
+            </p>
+          </div>
+
+          {/* 在线用户统计卡片 */}
+          <div className="flex items-center gap-4">
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-100 rounded-xl px-6 py-4 min-w-[140px]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {isConnected ? onlineUsers.length : 0}
+                    </p>
+                    <p className="text-xs text-gray-600 font-medium">在线用户</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 数据概览区域 - 只有在有数据或加载中时才显示 */}
       {(loading || analyticsData) && (
         <>
           {/* 时间范围选择器 */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">数据概览</h2>
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">数据概览</h2>
               <div className="relative">
                 <select
                   value={selectedTimeRange}
                   onChange={(e) => handleTimeRangeChange(Number(e.target.value))}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
                 >
                   {timeRangeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -274,35 +311,41 @@ export default function DashboardPage() {
           </div>
 
           {/* 数据统计卡片 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {loading
               ? // 骨架屏
                 Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
+                  >
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg animate-pulse"></div>
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-gray-200 rounded animate-pulse mr-1"></div>
                         <div className="w-8 h-4 bg-gray-200 rounded animate-pulse"></div>
                       </div>
                     </div>
                     <div>
-                      <div className="w-16 h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="w-16 h-6 sm:h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
                       <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </div>
                   </div>
                 ))
               : // 实际数据
                 quickStats.map((stat, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div
-                        className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}
                       >
                         {stat.icon}
                       </div>
                       <div
-                        className={`flex items-center text-sm ${
+                        className={`flex items-center text-xs sm:text-sm ${
                           stat.trend && stat.trend > 0
                             ? 'text-green-600'
                             : stat.trend && stat.trend < 0
@@ -311,14 +354,16 @@ export default function DashboardPage() {
                         }`}
                       >
                         <TrendingUp
-                          className={`w-4 h-4 mr-1 ${stat.trend && stat.trend < 0 ? 'rotate-180' : ''}`}
+                          className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 ${stat.trend && stat.trend < 0 ? 'rotate-180' : ''}`}
                         />
-                        {stat.trendText || stat.change}
+                        <span className="hidden sm:inline">{stat.trendText || stat.change}</span>
                       </div>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                      <p className="text-sm text-gray-600">{stat.name}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600">{stat.name}</p>
                     </div>
                   </div>
                 ))}
@@ -326,36 +371,36 @@ export default function DashboardPage() {
         </>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
         {/* 快速操作 */}
-        <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">快速操作</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="xl:col-span-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">快速操作</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 sm:mb-8">
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className={`${action.color} text-white p-6 rounded-lg transition-colors text-left`}
+                className={`${action.color} text-white p-4 sm:p-6 rounded-lg transition-colors text-left`}
               >
                 <div className="mb-3">{action.icon}</div>
-                <h3 className="font-semibold mb-1">{action.name}</h3>
-                <p className="text-sm opacity-90">{action.description}</p>
+                <h3 className="font-semibold mb-1 text-sm sm:text-base">{action.name}</h3>
+                <p className="text-xs sm:text-sm opacity-90">{action.description}</p>
               </button>
             ))}
           </div>
 
           {/* 最近活动 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">最近活动</h3>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">最近活动</h3>
             <div className="space-y-4">
               {recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm flex-shrink-0">
                     {activity.avatar}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
                     <div className="flex items-center text-xs text-gray-500 mt-1">
-                      <Clock className="w-3 h-3 mr-1" />
+                      <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
                       {activity.time}
                     </div>
                   </div>
@@ -367,65 +412,10 @@ export default function DashboardPage() {
 
         {/* 侧边栏 */}
         <div className="space-y-6">
-          {/* 在线用户 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Wifi
-                  className={`w-4 h-4 mr-2 ${isConnected ? 'text-green-500' : 'text-gray-400'}`}
-                />
-                在线用户
-              </h3>
-              <span
-                className={`text-sm px-2 py-1 rounded-full ${
-                  isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {isConnected ? onlineUsers.length : 0}
-              </span>
-            </div>
-
-            {isConnected ? (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {onlineUsers.length > 0 ? (
-                  onlineUsers.slice(0, 5).map((user: any, index: number) => (
-                    <div
-                      key={user.id || index}
-                      className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                      </div>
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">暂无其他在线用户</p>
-                )}
-                {onlineUsers.length > 5 && (
-                  <div className="text-center pt-2">
-                    <span className="text-xs text-gray-500">
-                      还有 {onlineUsers.length - 5} 人在线
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Wifi className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">WebSocket 未连接</p>
-                <p className="text-xs text-gray-400 mt-1">无法获取实时用户信息</p>
-              </div>
-            )}
-          </div>
-
           {/* 今日日程 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">今日日程</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">今日日程</h3>
               <button className="text-blue-600 hover:text-blue-700">
                 <Plus className="w-5 h-5" />
               </button>
@@ -442,35 +432,35 @@ export default function DashboardPage() {
           </div>
 
           {/* 快捷导航 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">快捷导航</h3>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">快捷导航</h3>
             <div className="space-y-3">
               <a
                 href="/dashboard/messages"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
-                <Bot className="w-4 h-4" />
+                <Bot className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">查看消息</span>
               </a>
               <a
                 href="/dashboard/contacts"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">通讯录</span>
               </a>
               <a
                 href="/docs"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">文档协作</span>
               </a>
               <a
                 href="/dashboard/calendar"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">查看日历</span>
               </a>
             </div>
