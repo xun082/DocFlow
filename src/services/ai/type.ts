@@ -15,7 +15,7 @@ export interface CorrectTextResponse {
 export interface ContinueWritingParams {
   documentId: string;
   content: string;
-  apiKey: string;
+  apiKey?: string; // 修改为可选参数
   model: string;
 }
 
@@ -50,7 +50,7 @@ export interface GenerateDiagramParams {
 
 export interface QuestionParams {
   question: string;
-  apiKey: string;
+  apiKey?: string; // 修改为可选参数
   model: string;
   useKnowledgeBase: boolean;
 }

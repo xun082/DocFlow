@@ -11,6 +11,7 @@ import {
   Audio,
   AI,
   Bilibili,
+  Chart,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -47,6 +48,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     Audio.name,
     AI.name,
     Bilibili.name,
+    Chart.name,
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);

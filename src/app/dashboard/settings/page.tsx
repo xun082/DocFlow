@@ -1,5 +1,7 @@
 import { Bell, Shield, Palette, Globe } from 'lucide-react';
 
+import ApiKeySettings from './_components/api-key-settings';
+
 const settingsCategories = [
   {
     id: 'notifications',
@@ -91,6 +93,11 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* API 密钥管理 */}
+      <div className="mt-8">
+        <ApiKeySettings />
       </div>
     </div>
   );

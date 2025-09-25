@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { ArrowUp, Paperclip, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
@@ -51,6 +51,90 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   componentRef,
   node,
 }) => {
+  // 记录用户是否正在选择文本或使用输入法
+  const isComposingRef = useRef(false);
+  const selectionStartRef = useRef<number | null>(null);
+
+  // 智能回车键处理
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // 如果是回车键且不是 Shift+Enter
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const textarea = e.target as HTMLTextAreaElement;
+        const { selectionStart, selectionEnd } = textarea;
+
+        // 检查是否正在使用输入法
+        if (isComposingRef.current) {
+          return;
+        }
+
+        // 检查是否有选中的文本（用户可能在选择文字）
+        if (selectionStart !== selectionEnd) {
+          return;
+        }
+
+        // 检查光标位置是否刚刚发生变化（可能是通过回车键移动的）
+        if (
+          selectionStartRef.current !== null &&
+          Math.abs(selectionStart - selectionStartRef.current) === 1
+        ) {
+          // 允许一次性的光标移动，但重置状态
+          selectionStartRef.current = selectionStart;
+
+          return;
+        }
+
+        // 检查是否能发送
+        const canSend = (hasContent && prompt?.trim()) || node.attrs.op === 'continue';
+
+        if (canSend && !isLoading) {
+          e.preventDefault();
+          onGenerateAI();
+        }
+      }
+    },
+    [hasContent, prompt, node.attrs.op, isLoading, onGenerateAI],
+  );
+
+  // 处理输入法状态
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    isComposingRef.current = false;
+  }, []);
+
+  // 跟踪光标位置变化
+  const handleSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target as HTMLTextAreaElement;
+    selectionStartRef.current = textarea.selectionStart;
+  }, []);
+
+  // 增强的发送逻辑
+  const handleSend = useCallback(() => {
+    // 检查各种发送条件
+    const canSend =
+      // 基本条件：有内容或者是续写模式
+      ((hasContent && prompt?.trim()) || node.attrs.op === 'continue') &&
+      // 不在加载状态
+      !isLoading;
+
+    if (canSend) {
+      console.log('发送AI请求:', { prompt: prompt?.trim(), op: node.attrs.op });
+      onGenerateAI();
+    } else {
+      // 提供用户反馈
+      if (isLoading) {
+        console.log('正在处理中，请稍候...');
+      } else if (!prompt?.trim() && node.attrs.op !== 'continue') {
+        console.log('请输入内容后再发送');
+        // 聚焦到输入框
+        textareaRef.current?.focus();
+      }
+    }
+  }, [hasContent, prompt, node.attrs.op, isLoading, onGenerateAI, textareaRef]);
+
   return (
     <div
       ref={componentRef}
@@ -64,16 +148,20 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
             ref={textareaRef}
             value={prompt}
             onChange={onPromptChange}
-            // onKeyDown={onKeyDown}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            onSelect={handleSelect}
             onFocus={(e) => {
               const textarea = e.target as HTMLTextAreaElement;
               const length = textarea.value.length;
               setTimeout(() => {
                 textarea.setSelectionRange(length, length);
+                selectionStartRef.current = length;
               }, 0);
             }}
             className="text-base"
-            disabled={false}
+            disabled={isLoading}
             placeholder="输入你的AI提示词..."
           />
         )}
@@ -94,7 +182,7 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
           size="icon"
           className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
           onClick={() => uploadInputRef.current?.click()}
-          disabled={false}
+          disabled={isLoading}
         >
           <Paperclip className="h-5 w-5" />
         </Button>
@@ -237,24 +325,21 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
           size="icon"
           className={cn(
             'h-8 w-8 rounded-full transition-all duration-200',
-            hasContent || node.attrs.op === 'continue'
-              ? 'bg-gray-700 hover:bg-gray-800 text-white'
-              : 'bg-transparent hover:bg-gray-200/50 text-[#6B7280] hover:text-[#374151]',
+            ((hasContent && prompt?.trim()) || node.attrs.op === 'continue') && !isLoading
+              ? 'bg-gray-700 hover:bg-gray-800 text-white shadow-lg'
+              : isLoading
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-gray-300 hover:bg-gray-400 text-gray-500 cursor-not-allowed',
           )}
-          onClick={() => {
-            if (hasContent || node.attrs.op === 'continue') {
-              console.log('onGenerateAI');
-              onGenerateAI();
-            }
-          }}
-          disabled={!(hasContent || node.attrs.op === 'continue')}
+          onClick={handleSend}
+          disabled={false} // 移除disabled，让handleSend处理所有逻辑
         >
           {isLoading ? (
-            <Square className="h-4 w-4 fill-white animate-pulse" />
-          ) : hasContent || node.attrs.op === 'continue' ? (
-            <ArrowUp className="h-4 w-4 text-white" />
+            <Square className="h-4 w-4 animate-pulse" />
+          ) : (hasContent && prompt?.trim()) || node.attrs.op === 'continue' ? (
+            <ArrowUp className="h-4 w-4" />
           ) : (
-            <span className="h-5 w-5 flex items-center justify-center text-white">?</span>
+            <ArrowUp className="h-4 w-4 opacity-50" />
           )}
         </Button>
       </div>

@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-import { ConnectedEvent, ConnectionState, OnlineUser, OnlineUsersResponse } from '@/types/ws';
+import {
+  ConnectedEvent,
+  ConnectionState,
+  OnlineUser,
+  OnlineUsersResponse,
+  PodcastEventResponse,
+  PodcastEvent,
+} from '@/types/ws';
 
 // 从localStorage中获取token的工具函数
 const getTokenFromStorage = (): string | null => {
@@ -49,6 +56,10 @@ export const useNotificationSocket = () => {
     id: number;
     name: string;
   } | null>(null);
+
+  // const [podcastEvent, setPodcastEvent] = useState<PodcastEvent | null>(null);
+
+  const [podcastTasks, setPodcastTasks] = useState<Map<string, PodcastEvent>>(new Map());
 
   useEffect(() => {
     const storageToken = getTokenFromStorage();
@@ -141,6 +152,16 @@ export const useNotificationSocket = () => {
         setOnlineUsers(data.users);
       });
 
+      // 监听播客 ai 事件
+      socket.on('podcast_event', (data: PodcastEventResponse) => {
+        setPodcastTasks((prev) => {
+          const newTasks = new Map(prev);
+          newTasks.set(data.data.jobId, data.data);
+
+          return newTasks;
+        });
+      });
+
       // 监听错误
       socket.on('error', (error: any) => {
         setConnectionState((prev) => ({
@@ -221,6 +242,31 @@ export const useNotificationSocket = () => {
     }
   }, [connect]);
 
+  // 移除已完成的任务
+  const removeCompletedTask = useCallback((jobId: string) => {
+    setPodcastTasks((prev) => {
+      const newTasks = new Map(prev);
+      newTasks.delete(jobId);
+
+      return newTasks;
+    });
+  }, []);
+
+  // 清理所有已完成的任务
+  const clearCompletedTasks = useCallback(() => {
+    setPodcastTasks((prev) => {
+      const newTasks = new Map();
+
+      for (const [jobId, task] of prev.entries()) {
+        if (task.status !== 'completed') {
+          newTasks.set(jobId, task);
+        }
+      }
+
+      return newTasks;
+    });
+  }, []);
+
   // 重置连接
   const reset = useCallback(() => {
     disconnect();
@@ -249,6 +295,9 @@ export const useNotificationSocket = () => {
     currentUser,
     onlineUsers,
 
+    // 播客 ai 事件
+    podcastTasks,
+
     // 服务器和认证信息
     serverUrl: server,
     token,
@@ -259,6 +308,8 @@ export const useNotificationSocket = () => {
     sendPing,
     getOnlineUsers,
     reset,
+    removeCompletedTask,
+    clearCompletedTasks,
 
     // 工具函数
     isValidToken: () => isValidToken(token),

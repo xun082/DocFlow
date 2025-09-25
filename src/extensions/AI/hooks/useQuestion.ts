@@ -9,13 +9,13 @@ enum AIState {
   DISPLAY = 'display',
 }
 
-interface QuestionParams {
-  // documentId: string;
-  question: string;
-  apiKey: string;
-  model: string;
-  useKnowledgeBase: boolean;
-}
+// 这个接口现在在 services/ai/type.ts 中定义
+// interface QuestionParams {
+//   question: string;
+//   apiKey: string;
+//   model: string;
+//   useKnowledgeBase: boolean;
+// }
 
 interface UseQuestionProps {
   updateState: (state: any) => void;
@@ -23,7 +23,7 @@ interface UseQuestionProps {
   setText: (text: string) => void;
   updateAttributes: (attributes: Record<string, any>) => void;
   // documentId: string;
-  setResponse: (response: string) => void;
+  // setResponse: (response: string) => void; // 未使用，已注释
 
   selectedModel: string;
 }
@@ -32,7 +32,7 @@ export const useQuestion = ({
   updateState,
   setAiState,
   setText,
-  setResponse,
+  // setResponse,  // 未使用，已注释
   updateAttributes,
   selectedModel,
 }: UseQuestionProps) => {
@@ -129,22 +129,18 @@ export const useQuestion = ({
       const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
       const siliconflowApiKey = apiKeys?.siliconflow;
 
-      // 如果没有 API 密钥，提示用户配置
-      if (!siliconflowApiKey) {
-        setAiState(AIState.INPUT);
-        setResponse('');
-        updateAttributes({ aiState: AIState.INPUT, response: '' });
-
-        return;
-      }
-
-      // SSE流式数据处理
-      const requestData: QuestionParams = {
+      // 构建问答请求参数
+      const requestData: any = {
         question: question,
-        apiKey: siliconflowApiKey,
         model: selectedModel,
         useKnowledgeBase: true,
       };
+
+      // 只有当API密钥存在且不为空时才添加到请求参数中
+      if (siliconflowApiKey?.trim()) {
+        requestData.apiKey = siliconflowApiKey.trim();
+      }
+      // 如果没有API密钥，完全不传递apiKey参数，让后端使用系统默认配置
 
       // 问答
       resetAccumulatedResponse();

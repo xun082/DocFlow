@@ -60,3 +60,4 @@ export { AI } from './AI';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
 export { Bilibili } from './Bilibili';
+export { Chart } from './Chart';

@@ -65,6 +65,7 @@ export interface StorageValueMap {
   [STORAGE_KEYS.CACHE_TIMESTAMP]: number;
   [STORAGE_KEYS.API_KEYS]: {
     siliconflow?: string;
+    minimax?: string;
     openai?: string;
     anthropic?: string;
     [key: string]: string | undefined;

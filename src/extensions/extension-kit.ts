@@ -59,6 +59,7 @@ import {
   Youtube,
   ClearMarksOnEnter,
   Bilibili,
+  Chart,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -304,6 +305,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   ClearMarksOnEnter,
   Bilibili,
+  Chart,
 ];
 
 export default ExtensionKit;
