@@ -168,7 +168,7 @@ export default function DashboardPage() {
   const formatTrend = (trend: number) => {
     const sign = trend > 0 ? '+' : '';
 
-    return `${sign}${trend}%`;
+    return `${sign}${Number(trend).toFixed(2)}%`;
   };
 
   // 格式化平均停留时间（输入为毫秒）
@@ -216,13 +216,18 @@ export default function DashboardPage() {
       name: '跳出率',
       icon: <Target className="w-6 h-6" />,
       color: 'bg-red-500',
-      formatter: (value: number) => `${value}%`,
+      formatter: (value: number) => {
+        console.log('🚀 ~ file: page.tsx:220 ~ value:', value);
+
+        return `${value}%`;
+      },
     },
   ];
 
   // 动态生成统计数据
   const quickStats = statsConfig.map((config) => {
     const data = analyticsData?.[config.key as keyof AnalyticsData];
+
     const hasData = !loading && data;
 
     return {
