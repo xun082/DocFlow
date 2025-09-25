@@ -161,7 +161,7 @@ export default function DashboardPage() {
   const formatChange = (change: number) => {
     const sign = change > 0 ? '+' : '';
 
-    return `${sign}${Number(change).toFixed(2)}`;
+    return `${sign}${change}`;
   };
 
   // 格式化趋势百分比
