@@ -10,6 +10,7 @@ import {
   ExcalidrawImage,
   Audio,
   AI,
+  Bilibili,
   Chart,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
@@ -46,6 +47,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     ExcalidrawImage.name,
     Audio.name,
     AI.name,
+    Bilibili.name,
     Chart.name,
   ];
 
