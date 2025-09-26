@@ -1,6 +1,6 @@
 @layer utilities {
   .ProseMirror .tableWrapper {
-    @apply my-12;
+    @apply my-12 overflow-x-scroll;
   }
 
   .ProseMirror table {

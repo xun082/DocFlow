@@ -1,20 +1,32 @@
 import { BubbleMenu } from '@tiptap/react/menus';
-import React, { JSX } from 'react';
+// import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import { EditorView } from '@tiptap/pm/view';
+import type { FC } from 'react';
 
-import { isTableSelected, selectTable } from '../../utils';
+import { isAtLeastTwoCellsSelected } from '../../utils';
+import { isRowGripSelected } from '../TableRow/utils';
+import { isColumnGripSelected } from '../TableColumn/utils';
 
 import * as PopoverMenu from '@/components/ui/PopoverMenu';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 
-export function TableMenu({ editor }: MenuProps): JSX.Element {
-  const shouldShow = ({ state }: ShouldShowProps) => {
-    if (!state) {
+export const TableMenu: FC<MenuProps> = ({ editor }) => {
+  const shouldShow = ({ state, from, view }: ShouldShowProps & { view: EditorView }) => {
+    if (!state || !from) {
       return false;
     }
 
-    return isTableSelected(state.selection);
+    // 如果选中了行或列的控制柄，则不显示此菜单
+    if (
+      isRowGripSelected({ editor, view, state, from }) ||
+      isColumnGripSelected({ editor, view, state, from })
+    ) {
+      return false;
+    }
+
+    return isAtLeastTwoCellsSelected(state.selection);
   };
 
   // 添加行
@@ -32,19 +44,6 @@ export function TableMenu({ editor }: MenuProps): JSX.Element {
     editor.chain().focus().addColumnAfter().run();
   };
 
-  // 删除表格
-  const onDeleteTable = () => {
-    editor.chain().focus().deleteTable().run();
-  };
-
-  // 复制表格
-  const onCopyTable = () => {
-    // 选中整个表格
-    editor.view.dispatch(selectTable(editor.state.tr));
-    // 执行复制命令
-    document.execCommand('copy');
-  };
-
   // 合并单元格
   const onMergeCells = () => {
     editor.chain().focus().mergeCells().run();
@@ -54,16 +53,6 @@ export function TableMenu({ editor }: MenuProps): JSX.Element {
   const onSplitCell = () => {
     editor.chain().focus().splitCell().run();
   };
-
-  // 切换表格标题
-  const onToggleHeader = () => {
-    editor.chain().focus().toggleHeaderCell().run();
-  };
-
-  // 清除单元格内容
-  //   const onClearCells = () => {
-  //     editor.chain().focus().clearCells().run();
-  //   };
 
   // 对齐方式
   const onAlignLeft = () => {
@@ -108,13 +97,13 @@ export function TableMenu({ editor }: MenuProps): JSX.Element {
           label="Add column"
           onClick={onAddColumn}
         />
-        <PopoverMenu.Item
+        {/* <PopoverMenu.Item
           iconComponent={<Icon name="Copy" />}
           close={false}
           label="Copy table"
           onClick={onCopyTable}
-        />
-        <PopoverMenu.Item icon="Trash" close={false} label="Delete table" onClick={onDeleteTable} />
+        /> */}
+        {/* <PopoverMenu.Item icon="Trash" close={false} label="Delete table" onClick={onDeleteTable} /> */}
 
         {/* 单元格操作 */}
         <PopoverMenu.Item
@@ -130,40 +119,27 @@ export function TableMenu({ editor }: MenuProps): JSX.Element {
           onClick={onSplitCell}
         />
         <PopoverMenu.Item
-          iconComponent={<Icon name="Heading1" />}
-          close={false}
-          label="Toggle header"
-          onClick={onToggleHeader}
-        />
-        {/* <PopoverMenu.Item
-          iconComponent={<Icon name="Eraser" />}
-          close={false}
-          label="Clear cells"
-          onClick={onClearCells}
-        /> */}
-
-        {/* 对齐方式 */}
-        <PopoverMenu.Item
           iconComponent={<Icon name="AlignLeft" />}
           close={false}
-          label="Left"
+          label="Align left"
           onClick={onAlignLeft}
         />
         <PopoverMenu.Item
           iconComponent={<Icon name="AlignCenter" />}
           close={false}
-          label="Center"
+          label="Align center"
           onClick={onAlignCenter}
         />
+
         <PopoverMenu.Item
           iconComponent={<Icon name="AlignRight" />}
           close={false}
-          label="Right"
+          label="Align right"
           onClick={onAlignRight}
         />
       </Toolbar.Wrapper>
     </BubbleMenu>
   );
-}
+};
 
 export default TableMenu;
