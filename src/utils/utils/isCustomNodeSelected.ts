@@ -12,6 +12,10 @@ import {
   AI,
   Bilibili,
   Chart,
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -49,6 +53,10 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     AI.name,
     Bilibili.name,
     Chart.name,
+    Table.name,
+    TableCell.name,
+    TableHeader.name,
+    TableRow.name,
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);

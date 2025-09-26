@@ -58,6 +58,13 @@ export function TableColumnMenu({ editor }: MenuProps): JSX.Element {
           label="Delete column"
           onClick={onDeleteColumn}
         />
+        {/* 增加一个合并单元格的操作 */}
+        <PopoverMenu.Item
+          iconComponent={<Icon name="TableCellsMerge" />}
+          close={false}
+          label="Merge cells"
+          onClick={() => editor.chain().focus().mergeCells().run()}
+        />
       </Toolbar.Wrapper>
     </BubbleMenu>
   );

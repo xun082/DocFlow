@@ -73,6 +73,22 @@ export const isTableSelected = (selection: Selection) => {
   return false;
 };
 
+export const isAtLeastTwoCellsSelected = (selection: Selection) => {
+  if (isCellSelection(selection)) {
+    const map = TableMap.get(selection.$anchorCell.node(-1));
+    const selectedCells = map.cellsInRect(
+      map.rectBetween(
+        selection.$anchorCell.pos - selection.$anchorCell.start(-1),
+        selection.$headCell.pos - selection.$headCell.start(-1),
+      ),
+    );
+
+    return selectedCells.length >= 2;
+  }
+
+  return false;
+};
+
 export const getCellsInColumn = (columnIndex: number | number[]) => (selection: Selection) => {
   const table = findTable(selection);
 

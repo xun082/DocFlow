@@ -53,6 +53,13 @@ export function TableRowMenu({ editor }: MenuProps): JSX.Element {
           label="Add row after"
           onClick={onAddRowAfter}
         />
+        {/* 增加一个合并单元格的操作 */}
+        <PopoverMenu.Item
+          iconComponent={<Icon name="TableCellsMerge" />}
+          close={false}
+          label="Merge cells"
+          onClick={() => editor.chain().focus().mergeCells().run()}
+        />
         <PopoverMenu.Item icon="Trash" close={false} label="Delete row" onClick={onDeleteRow} />
       </Toolbar.Wrapper>
     </BubbleMenu>
