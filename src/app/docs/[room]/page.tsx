@@ -15,6 +15,8 @@ import { getAuthToken } from '@/utils/cookie';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
 import { TableOfContents } from '@/app/docs/_components/TableOfContents';
 import { useSidebar } from '@/stores/sidebarStore';
+import { useFileStore } from '@/stores/fileStore';
+import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
@@ -34,6 +36,7 @@ export default function DocumentPage() {
   const documentId = params?.room as string;
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const sidebar = useSidebar();
+  const { files } = useFileStore();
 
   // 防止水合不匹配的强制客户端渲染
   const [isMounted, setIsMounted] = useState(false);
@@ -53,6 +56,29 @@ export default function DocumentPage() {
   // 目录切换函数
   const toggleToc = () => {
     setIsTocOpen(!isTocOpen);
+  };
+
+  // 获取当前文档的名称
+  const getCurrentDocumentName = () => {
+    if (!documentId || !files.length) return null;
+
+    // 递归查找文件的函数，支持嵌套文件夹
+    const findFileById = (items: FileItem[], id: string): FileItem | null => {
+      for (const item of items) {
+        if (item.id === id) return item;
+
+        if (item.children && item.children.length > 0) {
+          const found = findFileById(item.children, id);
+          if (found) return found;
+        }
+      }
+
+      return null;
+    };
+
+    const currentFile = findFileById(files, documentId);
+
+    return currentFile?.name || null;
   };
 
   // 初始化
@@ -214,6 +240,7 @@ export default function DocumentPage() {
         connectedUsers={connectedUsers}
         currentUser={currentUser}
         documentId={documentId}
+        documentTitle={getCurrentDocumentName() ?? undefined}
         documentName={`文档 ${documentId}`}
       />
 
