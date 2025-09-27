@@ -1,6 +1,10 @@
 @layer utilities {
   .ProseMirror .tableWrapper {
-    @apply my-12 overflow-x-scroll;
+    @apply my-12;
+    overflow-x: auto;
+    overflow-y: visible !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
 
   .ProseMirror table {
@@ -60,7 +64,7 @@
 
   .ProseMirror table .grip-column,
   .ProseMirror table .grip-row {
-    @apply absolute z-10 flex justify-center items-center cursor-pointer bg-black/5;
+    @apply absolute z-[1] flex justify-center items-center cursor-pointer bg-black/5;
   }
 
   .dark .ProseMirror table .grip-column,

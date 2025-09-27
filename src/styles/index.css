@@ -410,13 +410,15 @@
   font-weight: 600 !important;
   left: 0px !important;
   white-space: nowrap !important;
-  z-index: 10002 !important;
+  z-index: 999999 !important;
+  isolation: isolate !important;
 }
 
 .collaboration-carets__caret {
   border-width: 1px !important;
   position: relative !important;
-  z-index: 10001 !important;
+  z-index: 999999 !important;
+  isolation: isolate !important;
 }
 
 /* 确保菜单层级低于协作光标 */
@@ -434,4 +436,36 @@
 
 [data-radix-portal] {
   z-index: 9999 !important;
+}
+
+/* 表格环境中的协作光标强制显示 */
+.ProseMirror table .collaboration-cursor__caret,
+.ProseMirror table .collaboration-carets__caret,
+.ProseMirror .tableWrapper .collaboration-cursor__caret,
+.ProseMirror .tableWrapper .collaboration-carets__caret {
+  z-index: 999999 !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+}
+
+.ProseMirror table .collaboration-cursor__label,
+.ProseMirror table .collaboration-carets__label,
+.ProseMirror .tableWrapper .collaboration-cursor__label,
+.ProseMirror .tableWrapper .collaboration-carets__label {
+  z-index: 999999 !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+}
+
+/* 确保表格控制元素层级远低于协作光标 */
+.ProseMirror table .grip-column,
+.ProseMirror table .grip-row,
+.ProseMirror table .column-resize-handle {
+  z-index: 1 !important;
+}
+
+/* 表格容器不能创建新的层叠上下文 */
+.ProseMirror .tableWrapper {
+  overflow-y: visible !important;
+  z-index: 1 !important;
 }
