@@ -399,19 +399,39 @@
   }
 }
 
+/* Tiptap 协作光标的全局样式覆盖 */
 .collaboration-carets__label {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  position: absolute;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  position: absolute !important;
   top: -2em !important;
-  font-style: normal;
-  font-weight: 600;
+  font-style: normal !important;
+  font-weight: 600 !important;
   left: 0px !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
+  z-index: 10002 !important;
 }
 
 .collaboration-carets__caret {
-  border-width: 1px;
-  position: relative;
+  border-width: 1px !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+/* 确保菜单层级低于协作光标 */
+.tippy-box {
+  z-index: 9999 !important;
+}
+
+[data-tippy-root] {
+  z-index: 9999 !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+[data-radix-portal] {
+  z-index: 9999 !important;
 }

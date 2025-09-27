@@ -1,9 +1,36 @@
-@layer utilities {
-  .ProseMirror .collaboration-cursor__caret {
-    @apply border-r border-l border-black pointer-events-none -ml-[1px] -mr-[1px] relative break-normal;
-  }
+/* Tiptap 协作光标样式 - 简洁有效的解决方案 */
 
-  .ProseMirror .collaboration-cursor__label {
-    @apply rounded rounded-tl-none text-black text-xs font-semibold -left-[1px] leading-none py-0.5 px-1.5 absolute -top-[1.4em] select-none whitespace-nowrap;
-  }
+/* 协作光标主体 */
+.ProseMirror .collaboration-cursor__caret {
+  position: relative !important;
+  margin-left: -1px !important;
+  margin-right: -1px !important;
+  pointer-events: none !important;
+  border-left: 1px solid !important;
+  border-right: 1px solid transparent !important;
+  word-break: normal !important;
+  z-index: 10001 !important;
+}
+
+/* 协作光标标签 */
+.ProseMirror .collaboration-cursor__label {
+  position: absolute !important;
+  top: -1.4em !important;
+  left: -1px !important;
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  user-select: none !important;
+  white-space: nowrap !important;
+  border-radius: 3px !important;
+  border-top-left-radius: 0 !important;
+  padding: 0.125rem 0.375rem !important;
+  z-index: 10002 !important;
+  color: white !important;
+}
+
+/* 确保编辑器容器有相对定位 */
+.prose-container .ProseMirror {
+  position: relative !important;
 }
