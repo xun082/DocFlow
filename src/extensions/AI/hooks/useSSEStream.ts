@@ -14,7 +14,7 @@ interface UseSSEStreamProps {
   updateState: (state: any) => void;
   setAiState: (state: AIState) => void;
   updateAttributes: (attributes: Record<string, any>) => void;
-  buildContentString: (prompt: string, op?: string) => string;
+  buildContentString: (prompt: string, op?: string, aiNodePos?: number) => string;
   documentId: string;
   selectedModel: string;
   setResponse: (response: string) => void;
@@ -133,11 +133,13 @@ export const useSSEStream = ({
     prompt: string,
     nodeAttrs: any,
     abortRef: React.MutableRefObject<(() => void) | undefined>,
+    aiNodePos?: number,
   ) => {
     console.log('=== useSSEStream handleGenerateAI 开始 ===', {
       prompt: prompt?.trim(),
       nodeAttrs,
       op: nodeAttrs.op,
+      aiNodePos,
     });
 
     if (!prompt?.trim()) {
@@ -151,7 +153,7 @@ export const useSSEStream = ({
     updateState({ aiState: AIState.LOADING });
 
     try {
-      const contentString = buildContentString(prompt, nodeAttrs.op);
+      const contentString = buildContentString(prompt, nodeAttrs.op, aiNodePos);
 
       const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
       const siliconflowApiKey = apiKeys?.siliconflow;
