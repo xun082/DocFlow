@@ -1,6 +1,6 @@
-/* Tiptap 协作光标样式 - 简洁有效的解决方案 */
+/* Tiptap 协作光标样式 - 强力修复版本 */
 
-/* 协作光标主体 */
+/* 协作光标主体 - 使用极高的 z-index */
 .ProseMirror .collaboration-cursor__caret {
   position: relative !important;
   margin-left: -1px !important;
@@ -9,10 +9,11 @@
   border-left: 1px solid !important;
   border-right: 1px solid transparent !important;
   word-break: normal !important;
-  z-index: 10001 !important;
+  z-index: 999999 !important;
+  isolation: isolate !important;
 }
 
-/* 协作光标标签 */
+/* 协作光标标签 - 使用极高的 z-index */
 .ProseMirror .collaboration-cursor__label {
   position: absolute !important;
   top: -1.4em !important;
@@ -26,11 +27,51 @@
   border-radius: 3px !important;
   border-top-left-radius: 0 !important;
   padding: 0.125rem 0.375rem !important;
-  z-index: 10002 !important;
+  z-index: 999999 !important;
   color: white !important;
+  isolation: isolate !important;
 }
 
 /* 确保编辑器容器有相对定位 */
 .prose-container .ProseMirror {
   position: relative !important;
+}
+
+/* 表格环境的强制修复 */
+.ProseMirror .tableWrapper {
+  position: relative !important;
+  z-index: 1 !important;
+  /* 不影响协作光标显示的 overflow 设置 */
+  overflow: visible !important;
+}
+
+/* 针对表格的协作光标强制显示 */
+.ProseMirror table .collaboration-cursor__caret,
+.ProseMirror .tableWrapper .collaboration-cursor__caret {
+  z-index: 999999 !important;
+  position: relative !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+}
+
+.ProseMirror table .collaboration-cursor__label,
+.ProseMirror .tableWrapper .collaboration-cursor__label {
+  z-index: 999999 !important;
+  position: absolute !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+}
+
+/* 确保表格单元格不会创建新的层叠上下文 */
+.ProseMirror table td,
+.ProseMirror table th {
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* 降低表格控制元素的层级 */
+.ProseMirror table .grip-column,
+.ProseMirror table .grip-row,
+.ProseMirror table .column-resize-handle {
+  z-index: 1 !important;
 }
