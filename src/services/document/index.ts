@@ -19,7 +19,7 @@ import {
 export const DocumentApi = {
   // 获取文档列表
   GetDocument: (errorHandler?: ErrorHandler) =>
-    request.get<DocumentResponse>('/api/v1/documents', { errorHandler }),
+    request.get<DocumentResponse>('/api/v1/documents', { errorHandler, cacheTime: 0 }),
 
   // 获取文档内容
   GetDocumentContent: (documentId: number, errorHandler?: ErrorHandler) =>
