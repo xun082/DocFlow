@@ -1,12 +1,7 @@
 import { BubbleMenu } from '@tiptap/react/menus';
-// import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { EditorView } from '@tiptap/pm/view';
-import type { FC } from 'react';
-import { useCallback, ChangeEvent } from 'react';
+import React, { JSX, useCallback, ChangeEvent } from 'react';
 
-import { isAtLeastTwoCellsSelected } from '../../utils';
-import { isRowGripSelected } from '../TableRow/utils';
-import { isColumnGripSelected } from '../TableColumn/utils';
+import { findTable, isCellSelection, isAtLeastTwoCellsSelected } from '../../utils';
 
 import * as PopoverMenu from '@/components/ui/PopoverMenu';
 import { Toolbar } from '@/components/ui/Toolbar';
@@ -14,62 +9,64 @@ import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 import { useFileUpload, useImgUpload } from '@/extensions/ImageUpload/view/hooks';
 
-export const TableMenu: FC<MenuProps> = ({ editor }) => {
+export function TableCellMenu({ editor }: MenuProps): JSX.Element {
   const { handleUploadClick, ref } = useFileUpload();
   const { isUploading } = useImgUpload();
 
-  const shouldShow = ({ state, from, view }: ShouldShowProps & { view: EditorView }) => {
+  // 检查是否选中了一个表格单元格（单选，非多选）
+  const isCellSelected = ({ state, from }: Pick<ShouldShowProps, 'state' | 'from'>) => {
     if (!state || !from) {
       return false;
     }
 
-    // 如果选中了行或列的控制柄，则不显示此菜单
-    if (
-      isRowGripSelected({ editor, view, state, from }) ||
-      isColumnGripSelected({ editor, view, state, from })
-    ) {
+    const { selection } = state;
+
+    // 首先检查是否在表格内
+    const table = findTable(selection);
+
+    if (!table) {
       return false;
     }
 
-    return isAtLeastTwoCellsSelected(state.selection);
+    // 检查选择类型
+    if (isCellSelection(selection)) {
+      // 如果是 CellSelection，检查是否只选中了一个单元格
+      return !isAtLeastTwoCellsSelected(selection);
+    }
+
+    // 如果是普通的文本选择，检查是否在单个表格单元格内
+    const pos = state.doc.resolve(from);
+
+    // 查找最近的表格单元格节点
+    let depth = pos.depth;
+    let cellNode = null;
+    let cellPos = -1;
+
+    while (depth > 0) {
+      const node = pos.node(depth);
+
+      if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+        cellNode = node;
+        cellPos = pos.before(depth);
+        break;
+      }
+
+      depth--;
+    }
+
+    if (!cellNode) {
+      return false;
+    }
+
+    // 检查选择是否完全在单个单元格内
+    const cellStart = cellPos;
+    const cellEnd = cellPos + cellNode.nodeSize;
+
+    return selection.from >= cellStart && selection.to <= cellEnd;
   };
 
-  // 添加行
-  const onAddRow = () => {
-    editor.chain().focus().addRowAfter().run();
-  };
-
-  // 在上方插入行
-  const onAddRowBefore = () => {
-    editor.chain().focus().addRowBefore().run();
-  };
-
-  // 添加列
-  const onAddColumn = () => {
-    editor.chain().focus().addColumnAfter().run();
-  };
-
-  // 合并单元格
-  const onMergeCells = () => {
-    editor.chain().focus().mergeCells().run();
-  };
-
-  // 分割单元格
-  const onSplitCell = () => {
-    editor.chain().focus().splitCell().run();
-  };
-
-  // 对齐方式
-  const onAlignLeft = () => {
-    editor.chain().focus().setTextAlign('left').run();
-  };
-
-  const onAlignCenter = () => {
-    editor.chain().focus().setTextAlign('center').run();
-  };
-
-  const onAlignRight = () => {
-    editor.chain().focus().setTextAlign('right').run();
+  const shouldShow = ({ state, from }: ShouldShowProps) => {
+    return isCellSelected({ state, from });
   };
 
   // 处理图片文件上传 - 表格专用
@@ -144,11 +141,34 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
     handleUploadClick();
   };
 
+  // 合并单元格
+  const onMergeCells = () => {
+    editor.chain().focus().mergeCells().run();
+  };
+
+  // 拆分单元格
+  const onSplitCell = () => {
+    editor.chain().focus().splitCell().run();
+  };
+
+  // 对齐操作
+  const onAlignLeft = () => {
+    editor.chain().focus().setTextAlign('left').run();
+  };
+
+  const onAlignCenter = () => {
+    editor.chain().focus().setTextAlign('center').run();
+  };
+
+  const onAlignRight = () => {
+    editor.chain().focus().setTextAlign('right').run();
+  };
+
   return (
     <>
       <BubbleMenu
         editor={editor}
-        pluginKey="tableMenu"
+        pluginKey="tableCellMenu"
         updateDelay={0}
         options={{
           offset: 15,
@@ -156,7 +176,7 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
         shouldShow={shouldShow}
       >
         <Toolbar.Wrapper isVertical>
-          {/* 内容操作 */}
+          {/* 图片插入 */}
           <PopoverMenu.Item
             iconComponent={<Icon name="Image" />}
             close={false}
@@ -164,33 +184,6 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
             onClick={onInsertImage}
             disabled={isUploading}
           />
-
-          {/* 表格操作 */}
-          <PopoverMenu.Item
-            iconComponent={<Icon name="ArrowUpToLine" />}
-            close={false}
-            label="Insert row above"
-            onClick={onAddRowBefore}
-          />
-          <PopoverMenu.Item
-            iconComponent={<Icon name="Plus" />}
-            close={false}
-            label="Add row"
-            onClick={onAddRow}
-          />
-          <PopoverMenu.Item
-            iconComponent={<Icon name="Plus" />}
-            close={false}
-            label="Add column"
-            onClick={onAddColumn}
-          />
-          {/* <PopoverMenu.Item
-            iconComponent={<Icon name="Copy" />}
-            close={false}
-            label="Copy table"
-            onClick={onCopyTable}
-          /> */}
-          {/* <PopoverMenu.Item icon="Trash" close={false} label="Delete table" onClick={onDeleteTable} /> */}
 
           {/* 单元格操作 */}
           <PopoverMenu.Item
@@ -205,6 +198,8 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
             label="Split cell"
             onClick={onSplitCell}
           />
+
+          {/* 对齐操作 */}
           <PopoverMenu.Item
             iconComponent={<Icon name="AlignLeft" />}
             close={false}
@@ -217,7 +212,6 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
             label="Align center"
             onClick={onAlignCenter}
           />
-
           <PopoverMenu.Item
             iconComponent={<Icon name="AlignRight" />}
             close={false}
@@ -237,6 +231,6 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
       />
     </>
   );
-};
+}
 
-export default TableMenu;
+export default TableCellMenu;
