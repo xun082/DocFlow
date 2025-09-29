@@ -21,7 +21,7 @@ import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
-import { TableRowMenu, TableColumnMenu, TableMenu } from '@/extensions/Table/menus';
+import { TableRowMenu, TableColumnMenu, TableMenu, TableCellMenu } from '@/extensions/Table/menus';
 import { ImageBlockMenu } from '@/components/menus';
 // 类型定义
 interface CollaborationUser {
@@ -274,6 +274,7 @@ export default function DocumentPage() {
           <TableRowMenu editor={editor} appendTo={menuContainerRef} />
           <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
           <TableMenu editor={editor} appendTo={menuContainerRef} />
+          <TableCellMenu editor={editor} appendTo={menuContainerRef} />
           <ImageBlockMenu editor={editor}></ImageBlockMenu>
         </>
       )}

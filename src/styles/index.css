@@ -469,3 +469,20 @@
   overflow-y: visible !important;
   z-index: 1 !important;
 }
+
+/* 表格图片样式优化 */
+.ProseMirror td img[data-table-image='true'],
+.ProseMirror th img[data-table-image='true'] {
+  display: block !important;
+  margin: 4px auto !important;
+  max-width: 120px !important;
+  max-height: 80px !important;
+}
+
+@media (max-width: 640px) {
+  .ProseMirror td img[data-table-image='true'],
+  .ProseMirror th img[data-table-image='true'] {
+    max-width: 80px !important;
+    max-height: 60px !important;
+  }
+}

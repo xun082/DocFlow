@@ -27,6 +27,7 @@ import {
   Highlight,
   HorizontalRule,
   ImageBlock,
+  TableImage,
   Link,
   MarkdownPaste,
   Placeholder,
@@ -135,6 +136,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     clientId: provider?.document?.clientID,
   }),
   ImageBlock,
+  TableImage,
   ExcalidrawImage,
   DraggableBlock,
   DragHandler,
@@ -144,7 +146,28 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
       files.forEach(async (file) => {
         const url = await uploadService.uploadImage(file);
 
-        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
+        // 检查是否在表格中
+        const resolvedPos = currentEditor.state.doc.resolve(pos);
+        let isInTable = false;
+
+        for (let i = resolvedPos.depth; i > 0; i--) {
+          const node = resolvedPos.node(i);
+
+          if (
+            node.type.name === 'table' ||
+            node.type.name === 'tableCell' ||
+            node.type.name === 'tableHeader'
+          ) {
+            isInTable = true;
+            break;
+          }
+        }
+
+        if (isInTable) {
+          currentEditor.chain().setTableImageAt({ pos, src: url }).focus().run();
+        } else {
+          currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
+        }
       });
     },
     onPaste: (currentEditor, files) => {
@@ -152,25 +175,62 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
         const pos = currentEditor.state.selection.anchor;
 
         try {
+          // 检查是否在表格中
+          const resolvedPos = currentEditor.state.doc.resolve(pos ?? 0);
+          let isInTable = false;
+
+          for (let i = resolvedPos.depth; i > 0; i--) {
+            const node = resolvedPos.node(i);
+
+            if (
+              node.type.name === 'table' ||
+              node.type.name === 'tableCell' ||
+              node.type.name === 'tableHeader'
+            ) {
+              isInTable = true;
+              break;
+            }
+          }
+
           // 先显示 base64 预览
           const base64Url = await readFileAsDataURL(file);
 
-          // 插入预览图片
-          currentEditor
-            .chain()
-            .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
-            .setImageBlock({ src: base64Url })
-            .focus()
-            .run();
+          if (isInTable) {
+            // 在表格中使用TableImage
+            currentEditor
+              .chain()
+              .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+              .setTableImage({ src: base64Url })
+              .focus()
+              .run();
+          } else {
+            // 普通环境使用ImageBlock
+            currentEditor
+              .chain()
+              .deleteRange({ from: pos ?? 0, to: pos ?? 0 })
+              .setImageBlock({ src: base64Url })
+              .focus()
+              .run();
+          }
 
           // 后台上传文件
           const serverUrl = await uploadService.uploadImage(file);
 
           // 查找并更新图片节点
-          const targetPos = findImageNodeByUrl(currentEditor.state, base64Url);
+          let targetPos: number | null = null;
 
-          if (targetPos !== null) {
-            updateImageNode(currentEditor, targetPos, serverUrl);
+          if (isInTable) {
+            targetPos = findTableImageNodeByUrl(currentEditor.state, base64Url);
+
+            if (targetPos !== null) {
+              updateTableImageNode(currentEditor, targetPos, serverUrl);
+            }
+          } else {
+            targetPos = findImageNodeByUrl(currentEditor.state, base64Url);
+
+            if (targetPos !== null) {
+              updateImageNode(currentEditor, targetPos, serverUrl);
+            }
           }
         } catch (error) {
           console.error('图片处理失败:', error);
@@ -211,8 +271,36 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
         return targetPos;
       }
 
+      // 辅助函数：查找表格图片节点
+      function findTableImageNodeByUrl(state: any, url: string): number | null {
+        let targetPos: number | null = null;
+
+        state.doc.descendants((node: any, pos: number) => {
+          if (node.type.name === 'tableImage' && node.attrs.src === url) {
+            targetPos = pos;
+
+            return false; // 停止遍历
+          }
+        });
+
+        return targetPos;
+      }
+
       // 辅助函数：更新图片节点
       function updateImageNode(editor: any, pos: number, newSrc: string): void {
+        editor
+          .chain()
+          .command(({ tr }: { tr: any }) => {
+            tr.setNodeMarkup(pos, undefined, { src: newSrc });
+
+            return true;
+          })
+          .focus()
+          .run();
+      }
+
+      // 辅助函数：更新表格图片节点
+      function updateTableImageNode(editor: any, pos: number, newSrc: string): void {
         editor
           .chain()
           .command(({ tr }: { tr: any }) => {

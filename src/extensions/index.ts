@@ -46,6 +46,7 @@ export { Link } from './Link';
 export { Image } from './Image';
 export { ImageUpload } from './ImageUpload';
 export { ImageBlock } from './ImageBlock';
+export { TableImage } from './TableImage';
 export { Columns, Column } from './MultiColumn';
 export { emojiSuggestion } from './EmojiSuggestion';
 export { DraggableBlock } from './DraggableBlock';
