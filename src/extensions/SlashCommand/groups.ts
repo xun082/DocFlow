@@ -309,6 +309,16 @@ export const GROUPS: Group[] = [
             .run();
         },
       },
+      {
+        name: 'countdown',
+        label: 'Countdown',
+        iconName: 'Timer',
+        description: 'Insert a countdown timer',
+        aliases: ['countdown'],
+        action: (editor) => {
+          editor.chain().focus().setCountdown({ targetDate: '' }).run();
+        },
+      },
     ],
   },
 ];

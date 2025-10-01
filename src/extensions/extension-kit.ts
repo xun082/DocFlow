@@ -61,6 +61,7 @@ import {
   ClearMarksOnEnter,
   Bilibili,
   Chart,
+  Countdown,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -394,6 +395,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   ClearMarksOnEnter,
   Bilibili,
   Chart,
+  Countdown,
 ];
 
 export default ExtensionKit;
