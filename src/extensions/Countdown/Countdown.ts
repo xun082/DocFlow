@@ -39,18 +39,6 @@ export interface CountdownOptions {
    * @default true
    */
   showSeconds: boolean;
-
-  /**
-   * Countdown title
-   * @default ''
-   */
-  title: string;
-
-  /**
-   * Countdown description
-   * @default ''
-   */
-  description: string;
 }
 
 declare module '@tiptap/core' {
@@ -61,28 +49,11 @@ declare module '@tiptap/core' {
        */
       setCountdown: (options: {
         targetDate?: string;
-        title?: string;
-        description?: string;
         showDays?: boolean;
         showHours?: boolean;
         showMinutes?: boolean;
         showSeconds?: boolean;
       }) => ReturnType;
-
-      /**
-       * Update countdown target date
-       */
-      updateCountdownTargetDate: (targetDate: string) => ReturnType;
-
-      /**
-       * Update countdown title
-       */
-      updateCountdownTitle: (title: string) => ReturnType;
-
-      /**
-       * Update countdown description
-       */
-      updateCountdownDescription: (description: string) => ReturnType;
     };
   }
 }
@@ -98,8 +69,6 @@ export const Countdown = Node.create<CountdownOptions>({
       showHours: true,
       showMinutes: true,
       showSeconds: true,
-      title: '',
-      description: '',
     };
   },
 
@@ -122,32 +91,7 @@ export const Countdown = Node.create<CountdownOptions>({
           };
         },
       },
-      title: {
-        default: '',
-        parseHTML: (element) => element.getAttribute('data-title'),
-        renderHTML: (attributes) => {
-          if (!attributes.title) {
-            return {};
-          }
 
-          return {
-            'data-title': attributes.title,
-          };
-        },
-      },
-      description: {
-        default: '',
-        parseHTML: (element) => element.getAttribute('data-description'),
-        renderHTML: (attributes) => {
-          if (!attributes.description) {
-            return {};
-          }
-
-          return {
-            'data-description': attributes.description,
-          };
-        },
-      },
       showDays: {
         default: true,
         parseHTML: (element) => element.getAttribute('data-show-days') === 'true',
@@ -204,51 +148,6 @@ export const Countdown = Node.create<CountdownOptions>({
             type: this.name,
             attrs: options,
           });
-        },
-      updateCountdownTargetDate:
-        (targetDate) =>
-        ({ commands, editor }) => {
-          const { from, to } = editor.state.selection;
-          let found = false;
-
-          editor.state.doc.nodesBetween(from, to, (node) => {
-            if (node.type.name === this.name) {
-              commands.updateAttributes(this.name, { targetDate });
-              found = true;
-            }
-          });
-
-          return found;
-        },
-      updateCountdownTitle:
-        (title) =>
-        ({ commands, editor }) => {
-          const { from, to } = editor.state.selection;
-          let found = false;
-
-          editor.state.doc.nodesBetween(from, to, (node) => {
-            if (node.type.name === this.name) {
-              commands.updateAttributes(this.name, { title });
-              found = true;
-            }
-          });
-
-          return found;
-        },
-      updateCountdownDescription:
-        (description) =>
-        ({ commands, editor }) => {
-          const { from, to } = editor.state.selection;
-          let found = false;
-
-          editor.state.doc.nodesBetween(from, to, (node) => {
-            if (node.type.name === this.name) {
-              commands.updateAttributes(this.name, { description });
-              found = true;
-            }
-          });
-
-          return found;
         },
     };
   },

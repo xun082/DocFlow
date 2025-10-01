@@ -102,8 +102,6 @@ const FlipNumber: React.FC<FlipNumberProps> = ({ value, label, type }) => {
 const CountdownComponent: React.FC<ReactNodeViewProps> = ({ node, selected, updateAttributes }) => {
   const {
     targetDate,
-    title = '',
-    description = '',
     showDays = true,
     showHours = true,
     showMinutes = true,
@@ -118,8 +116,6 @@ const CountdownComponent: React.FC<ReactNodeViewProps> = ({ node, selected, upda
     total: 0,
   });
   const [isEditing, setIsEditing] = useState(!targetDate);
-  const [editTitle, setEditTitle] = useState(title);
-  const [editDescription, setEditDescription] = useState(description);
   const [editTargetDate, setEditTargetDate] = useState<Date | undefined>(
     targetDate ? parseISO(targetDate) : new Date(),
   );
@@ -201,8 +197,6 @@ const CountdownComponent: React.FC<ReactNodeViewProps> = ({ node, selected, upda
     }
 
     updateAttributes({
-      title: editTitle,
-      description: editDescription,
       targetDate: formatISO(combinedDate),
     });
 
@@ -212,8 +206,6 @@ const CountdownComponent: React.FC<ReactNodeViewProps> = ({ node, selected, upda
   };
 
   const handleCancel = () => {
-    setEditTitle(title);
-    setEditDescription(description);
     setEditTargetDate(targetDate ? parseISO(targetDate) : new Date());
     setEditTime(
       targetDate ? format(parseISO(targetDate), 'HH:mm:ss') : format(new Date(), 'HH:mm:ss'),
