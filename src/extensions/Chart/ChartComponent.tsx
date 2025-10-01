@@ -1,11 +1,12 @@
 'use client';
 
 import { NodeViewWrapper } from '@tiptap/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import js_beautify from 'js-beautify';
+import * as XLSX from 'xlsx';
 
 import BarChartComponent from './components/BarChartComponent';
 import LineChartComponent from './components/LineChartComponent';
@@ -40,6 +41,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Icon } from '@/components/ui/Icon';
 
 interface ChartComponentProps {
   node: {
@@ -89,6 +91,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const { type, data, title, xAxisKey, yAxisKeys, colorKey } = node.attrs;
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 当节点属性变化时，重置表单默认值
   const form = useForm<ChartFormValues>({
@@ -127,6 +130,89 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     } catch (error) {
       console.error('Error parsing chart data:', error);
     }
+  };
+
+  // 处理Excel文件导入
+  const handleExcelImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // 获取第一个工作表
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // 将工作表转换为JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length > 0) {
+          // 更新表单数据
+          form.setValue('chartData', JSON.stringify(jsonData, null, 2));
+
+          // 自动设置第一个非数字键为X轴
+          const nonNumericKeys = getNonNumericKeys(jsonData);
+
+          if (nonNumericKeys.length > 0) {
+            form.setValue('xKey', nonNumericKeys[0]);
+          }
+
+          // 自动设置第一个数字键为Y轴
+          const numericKeys = getNumericKeys(jsonData);
+
+          if (numericKeys.length > 0) {
+            form.setValue('yAxisKeys', [numericKeys[0]]);
+          }
+        }
+      } catch (error) {
+        console.error('Error reading Excel file:', error);
+        alert('导入Excel文件失败，请检查文件格式');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+
+    // 重置文件输入，允许重复选择同一文件
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 从数据中提取非数字值的键
+  const getNonNumericKeys = (chartData: any[]) => {
+    if (!chartData || chartData.length === 0) return [];
+
+    // 获取第一个数据项的所有键
+    const allKeys = Object.keys(chartData[0]);
+
+    // 筛选出值不是数字的键
+    return allKeys.filter((key) => {
+      const value = chartData[0][key];
+
+      // 检查值是否为数字（包括字符串形式的数字）
+      return isNaN(Number(value)) || value === null || value === undefined || value === '';
+    });
+  };
+
+  // 从数据中提取数字值的键
+  const getNumericKeys = (chartData: any[]) => {
+    if (!chartData || chartData.length === 0) return [];
+
+    // 获取第一个数据项的所有键
+    const allKeys = Object.keys(chartData[0]);
+
+    // 筛选出值是数字的键
+    return allKeys.filter((key) => {
+      const value = chartData[0][key];
+
+      // 检查值是否为数字（包括字符串形式的数字）
+      return !isNaN(Number(value)) && value !== null && value !== undefined && value !== '';
+    });
   };
 
   const renderChart = () => {
@@ -215,22 +301,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     }
   };
 
-  // 从数据中提取非数字值的键
-  const getNonNumericKeys = (chartData: any[]) => {
-    if (!chartData || chartData.length === 0) return [];
-
-    // 获取第一个数据项的所有键
-    const allKeys = Object.keys(chartData[0]);
-
-    // 筛选出值不是数字的键
-    return allKeys.filter((key) => {
-      const value = chartData[0][key];
-
-      // 检查值是否为数字（包括字符串形式的数字）
-      return isNaN(Number(value)) || value === null || value === undefined || value === '';
-    });
-  };
-
   return (
     <NodeViewWrapper
       className="chart-extension"
@@ -269,6 +339,26 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSave)} className="grid gap-4 py-4">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Icon name="Upload" />
+                      导入Excel
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      onChange={handleExcelImport}
+                      className="hidden"
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="title"
