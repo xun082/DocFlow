@@ -16,6 +16,7 @@ import {
   TableCell,
   TableHeader,
   TableRow,
+  Countdown,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -57,6 +58,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     TableCell.name,
     TableHeader.name,
     TableRow.name,
+    Countdown.name,
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);

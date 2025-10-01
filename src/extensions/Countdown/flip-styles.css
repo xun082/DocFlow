@@ -1,0 +1,26 @@
+/* @pqina/flip 样式 */
+.tick {
+  font-size: 58px !important;
+  position: relative;
+}
+
+.tick-flip {
+  text-align: center;
+}
+
+.tick .tick-credits {
+  display: none;
+}
+
+.tick-text {
+  font-size: 58px !important;
+  font-weight: bold;
+}
+
+.tick-flip-panel {
+  color: #fff;
+}
+
+.tick-flip-panel-text-wrapper {
+  line-height: 1.45 !important;
+}

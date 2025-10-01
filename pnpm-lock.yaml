@@ -50,6 +50,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.60.0(react@19.1.0))
+      '@pqina/flip':
+        specifier: ^1.8.4
+        version: 1.8.4
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1838,6 +1841,9 @@ packages:
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
+  '@pqina/flip@1.8.4':
+    resolution: {integrity: sha512-vOOGo23t0egDHOhnNeDwHdSQVT1p8l+MetwpZPd+5xEYjvZR6FNUaWYqLki3XFfMijro9YpYuljInCaLhO62dQ==}
 
   '@radix-ui/number@1.1.1':
     resolution: {integrity: sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==}
@@ -8962,6 +8968,8 @@ snapshots:
       playwright: 1.54.1
 
   '@polka/url@1.0.0-next.29': {}
+
+  '@pqina/flip@1.8.4': {}
 
   '@radix-ui/number@1.1.1': {}
 
