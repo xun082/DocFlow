@@ -12,6 +12,7 @@ import { saveAuthData } from '@/utils/cookie';
 interface EmailLoginParams {
   email: string;
   code: string;
+  redirectUrl?: string;
 }
 
 // GitHub 回调参数
@@ -50,18 +51,13 @@ const handleAuthSuccess = async (
 
       // 3. 立即更新 React Query 缓存
       queryClient.setQueryData<User>(userQueryKeys.profile(), user);
-
-      // 4. 可选：同时保存到 localStorage 作为备份
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user_profile', JSON.stringify(user));
-      }
     }
   } catch (error) {
     console.warn('处理用户资料时出错:', error);
     toast.warning('获取用户资料失败，但登录成功');
   }
 
-  // 5. 跳转到目标页面
+  // 4. 跳转到目标页面
   const targetUrl = redirectUrl || '/dashboard';
   setTimeout(() => {
     router.push(targetUrl);
@@ -75,7 +71,8 @@ export function useEmailLogin() {
 
   return useMutation({
     mutationFn: async (params: EmailLoginParams) => {
-      const { data, error } = await authApi.emailCodeLogin(params);
+      const { email, code, redirectUrl } = params;
+      const { data, error } = await authApi.emailCodeLogin({ email, code });
 
       if (error) {
         throw new Error(error);
@@ -85,14 +82,14 @@ export function useEmailLogin() {
         throw new Error(data?.message || '登录失败');
       }
 
-      return data.data;
+      return { authData: data.data, redirectUrl };
     },
-    onSuccess: async (authData) => {
+    onSuccess: async ({ authData, redirectUrl }) => {
       toast.success('登录成功！', {
         description: '正在获取用户资料...',
       });
 
-      await handleAuthSuccess(authData, queryClient, router);
+      await handleAuthSuccess(authData, queryClient, router, redirectUrl);
     },
     onError: (error) => {
       console.error('邮箱登录失败:', error);

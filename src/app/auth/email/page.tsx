@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Mail, AlertCircle, CheckCircle, Shield, ArrowLeft, Star } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { Mail, AlertCircle, CheckCircle, Shield, ArrowLeft, Star, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,14 +31,30 @@ const emailLoginSchema = z.object({
 
 type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
 
-export default function EmailLoginPage() {
+function EmailLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const emailLoginMutation = useEmailLogin();
   const [countdown, setCountdown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
 
   // 使用 ref 保存定时器 ID，避免内存泄漏
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 获取重定向地址
+  const getRedirectUrl = useCallback(() => {
+    const redirectTo = searchParams?.get('redirect_to');
+
+    if (redirectTo) {
+      try {
+        return decodeURIComponent(redirectTo);
+      } catch {
+        return '/dashboard';
+      }
+    }
+
+    return '/dashboard';
+  }, [searchParams]);
 
   // 使用 react-hook-form + zod
   const {
@@ -160,7 +176,7 @@ export default function EmailLoginPage() {
 
     // 使用 React Query mutation
     emailLoginMutation.mutate(
-      { email: data.email, code: data.code },
+      { email: data.email, code: data.code, redirectUrl: getRedirectUrl() },
       {
         onSuccess: () => {
           // 清理定时器
@@ -526,5 +542,27 @@ export default function EmailLoginPage() {
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+// 导出带 Suspense 的组件
+export default function EmailLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="min-h-screen relative overflow-hidden bg-black flex items-center justify-center"
+        >
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-12 w-12 text-violet-500 animate-spin" />
+            <p className="text-lg font-medium text-gray-300">加载中...</p>
+          </div>
+        </motion.div>
+      }
+    >
+      <EmailLoginContent />
+    </Suspense>
   );
 }
