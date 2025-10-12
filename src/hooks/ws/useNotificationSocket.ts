@@ -11,13 +11,14 @@ import {
   PodcastEventResponse,
   PodcastEvent,
 } from '@/types/ws';
+import { getAuthToken } from '@/utils/cookie';
 
-// 从localStorage中获取token的工具函数
+// 从cookie中获取token的工具函数
 const getTokenFromStorage = (): string | null => {
   if (typeof window === 'undefined') return null;
 
   try {
-    return localStorage.getItem('auth_token');
+    return getAuthToken();
   } catch (error) {
     console.error('获取 token 失败:', error);
 

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import authApi from '@/services/auth';
 import { User } from '@/services/auth/type';
 import UserApi from '@/services/users';
+import { clearAuthData } from '@/utils/cookie';
 
 // Query Keys
 export const userQueryKeys = {
@@ -22,11 +23,6 @@ export function useUserQuery() {
         throw new Error(error || '获取用户信息失败');
       }
 
-      // 同步更新本地存储
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user_profile', JSON.stringify(data.data));
-      }
-
       return data.data;
     },
     staleTime: 5 * 60 * 1000, // 5分钟内认为数据新鲜
@@ -36,18 +32,12 @@ export function useUserQuery() {
   });
 }
 
-// 获取本地存储的用户数据（仅在客户端组件中使用）
-export function getLocalUserData(): User | undefined {
-  if (typeof window === 'undefined') return undefined;
-
+// 获取缓存的用户数据（从 React Query 缓存中获取）
+export function getLocalUserData(queryClient: ReturnType<typeof useQueryClient>): User | undefined {
   try {
-    const cachedUser = localStorage.getItem('user_profile');
-
-    if (cachedUser) {
-      return JSON.parse(cachedUser);
-    }
+    return queryClient.getQueryData<User>(userQueryKeys.profile());
   } catch (error) {
-    console.warn('解析本地用户数据失败:', error);
+    console.warn('获取缓存用户数据失败:', error);
   }
 
   return undefined;
@@ -92,13 +82,6 @@ export function useUpdateUserMutation() {
       // 成功后重新获取最新数据
       queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });
 
-      // 同时更新本地存储中的用户数据
-      const currentUser = queryClient.getQueryData<User>(userQueryKeys.profile());
-
-      if (currentUser && typeof window !== 'undefined') {
-        localStorage.setItem('user_profile', JSON.stringify(currentUser));
-      }
-
       const updatedFieldsCount = Object.keys(variables).length;
       toast.success(`已更新 ${updatedFieldsCount} 个字段`);
     },
@@ -117,14 +100,8 @@ export function useLogoutMutation() {
       // 清除所有用户相关的查询缓存
       queryClient.removeQueries({ queryKey: userQueryKeys.user });
 
-      // 清除本地存储的用户数据
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user_profile');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('expires_in');
-        localStorage.removeItem('refresh_expires_in');
-      }
+      // 清除认证数据（cookie）
+      clearAuthData();
 
       toast.success('已成功退出登录');
 

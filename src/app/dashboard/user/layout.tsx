@@ -15,6 +15,7 @@ import {
   User as ProfileIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { User } from '@/services/auth/type';
 import Spinner from '@/components/ui/Spinner';
@@ -267,18 +268,19 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const [localUserData, setLocalUserData] = useState<User | undefined>(undefined);
 
   // 获取用户数据
+  const queryClient = useQueryClient();
   const { data: profile } = useUserQuery();
 
   // 确保组件只在客户端渲染，并预加载本地数据
   useEffect(() => {
     setIsMounted(true);
 
-    const cachedData = getLocalUserData();
+    const cachedData = getLocalUserData(queryClient);
 
     if (cachedData) {
       setLocalUserData(cachedData);
     }
-  }, []);
+  }, [queryClient]);
 
   // 在客户端挂载之前显示骨架屏
   if (!isMounted) {

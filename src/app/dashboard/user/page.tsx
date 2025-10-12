@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 import UserProfileForm from './_components/user-profile-form';
 
@@ -44,18 +45,19 @@ export default function UserProfile() {
   const [localUserData, setLocalUserData] = useState<User | undefined>(undefined);
 
   // 使用 React Query 获取用户数据
+  const queryClient = useQueryClient();
   const { data: profile, isLoading, error } = useUserQuery();
 
   // 确保组件只在客户端渲染，并预加载本地数据
   useEffect(() => {
     setIsMounted(true);
 
-    const cachedData = getLocalUserData();
+    const cachedData = getLocalUserData(queryClient);
 
     if (cachedData) {
       setLocalUserData(cachedData);
     }
-  }, []);
+  }, [queryClient]);
 
   // 在客户端挂载之前总是显示骨架屏
   if (!isMounted) {

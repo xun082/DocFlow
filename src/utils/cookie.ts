@@ -8,7 +8,11 @@ export function setCookie(name: string, value: string, days: number = 7) {
   if (typeof document === 'undefined') return;
 
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+  // 添加 SameSite=Lax 确保 cookie 在刷新时不会丢失
+  // Secure 在 HTTPS 环境下启用
+  const isSecure = window.location.protocol === 'https:';
+  const secureFlag = isSecure ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${secureFlag}`;
 }
 
 /**
@@ -40,7 +44,7 @@ export function removeCookie(name: string) {
 }
 
 /**
- * 保存认证信息到localStorage和cookie
+ * 保存认证信息到cookie（仅使用cookie，不使用localStorage）
  * @param authData 认证数据
  */
 export function saveAuthData(authData: {
@@ -49,45 +53,41 @@ export function saveAuthData(authData: {
   expires_in?: number;
   refresh_expires_in?: number;
 }) {
-  if (typeof window !== 'undefined') {
-    // 优先保存到localStorage
-    if (authData.token) {
-      localStorage.setItem('auth_token', authData.token);
-      setCookie('auth_token', authData.token); // 保持cookie兼容性
-    }
+  if (typeof window === 'undefined') return;
 
-    if (authData.refresh_token) {
-      localStorage.setItem('refresh_token', authData.refresh_token);
-      setCookie('refresh_token', authData.refresh_token);
-    }
+  // 计算过期天数，默认7天
+  const expiryDays = authData.expires_in ? Math.ceil(authData.expires_in / 86400) : 7;
 
-    if (authData.expires_in) {
-      localStorage.setItem('expires_in', authData.expires_in.toString());
-      setCookie('expires_in', authData.expires_in.toString());
-    }
-
-    if (authData.refresh_expires_in) {
-      localStorage.setItem('refresh_expires_in', authData.refresh_expires_in.toString());
-      setCookie('refresh_expires_in', authData.refresh_expires_in.toString());
-    }
+  // 只保存到cookie
+  if (authData.token) {
+    setCookie('auth_token', authData.token, expiryDays);
   }
+
+  if (authData.refresh_token) {
+    const refreshExpiryDays = authData.refresh_expires_in
+      ? Math.ceil(authData.refresh_expires_in / 86400)
+      : 30;
+    setCookie('refresh_token', authData.refresh_token, refreshExpiryDays);
+  }
+
+  if (authData.expires_in) {
+    setCookie('expires_in', authData.expires_in.toString(), expiryDays);
+  }
+
+  if (authData.refresh_expires_in) {
+    setCookie('refresh_expires_in', authData.refresh_expires_in.toString(), expiryDays);
+  }
+
+  // 保存一个时间戳，用于验证token是否过期
+  const timestamp = Date.now().toString();
+  setCookie('auth_timestamp', timestamp, expiryDays);
 }
 
 /**
- * 获取认证token，优先从localStorage获取，fallback到cookie
+ * 获取认证token（仅从cookie获取）
  * @returns token字符串或null
  */
 export function getAuthToken(): string | null {
-  if (typeof window !== 'undefined') {
-    // 优先从localStorage获取
-    const localToken = localStorage.getItem('auth_token');
-
-    if (localToken) {
-      return localToken;
-    }
-  }
-
-  // fallback到cookie
   return getCookie('auth_token');
 }
 
@@ -102,20 +102,12 @@ export function hasValidAuthToken(): boolean {
 }
 
 /**
- * 清除认证数据
+ * 清除认证数据（仅清除cookies）
  */
 export function clearAuthData() {
-  if (typeof window !== 'undefined') {
-    // 清除localStorage
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('expires_in');
-    localStorage.removeItem('refresh_expires_in');
-  }
-
-  // 清除cookies
   removeCookie('auth_token');
   removeCookie('refresh_token');
   removeCookie('expires_in');
   removeCookie('refresh_expires_in');
+  removeCookie('auth_timestamp');
 }

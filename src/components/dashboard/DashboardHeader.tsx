@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bell, User, Settings, LogOut, HelpCircle, Menu, ChevronDown } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { getPageDescription, PAGE_TITLE_MAP } from '@/utils/constants/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -68,6 +69,7 @@ export default function DashboardHeader({
   pageTitle,
 }: DashboardHeaderProps) {
   // 使用 React Query 获取用户数据
+  const queryClient = useQueryClient();
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
   const [notifications] = useState(mockNotifications);
@@ -75,12 +77,12 @@ export default function DashboardHeader({
 
   // 加载本地用户数据作为fallback
   useEffect(() => {
-    const cachedData = getLocalUserData();
+    const cachedData = getLocalUserData(queryClient);
 
     if (cachedData) {
       setLocalUserData(cachedData);
     }
-  }, []);
+  }, [queryClient]);
 
   // 优先使用服务器数据，回退到本地数据
   const displayUser = user || localUserData;
