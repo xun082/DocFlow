@@ -1,4 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+
+import ColumnComponent from './ColumnComponent';
 
 export const Column = Node.create({
   name: 'column',
@@ -27,6 +30,10 @@ export const Column = Node.create({
         tag: 'div[data-type="column"]',
       },
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ColumnComponent);
   },
 });
 
