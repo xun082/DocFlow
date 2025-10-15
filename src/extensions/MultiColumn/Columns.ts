@@ -11,6 +11,7 @@ declare module '@tiptap/core' {
     columns: {
       setColumns: () => ReturnType;
       setLayout: (layout: ColumnLayout) => ReturnType;
+      setColumnColor: (color: string) => ReturnType;
     };
   }
 }
@@ -31,6 +32,15 @@ export const Columns = Node.create({
       layout: {
         default: ColumnLayout.TwoColumn,
       },
+      columnColor: {
+        default: '#f3f4f6',
+        parseHTML: (element) => element.getAttribute('data-column-color') || '#f3f4f6',
+        renderHTML: (attributes) => {
+          if (!attributes.columnColor) return {};
+
+          return { 'data-column-color': attributes.columnColor };
+        },
+      },
     };
   },
 
@@ -40,12 +50,16 @@ export const Columns = Node.create({
         () =>
         ({ commands }) =>
           commands.insertContent(
-            `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div><div data-type="column" data-position="right"><p></p></div></div>`,
+            `<div data-type="columns"><div data-type="column" data-position="left" ><p></p></div><div data-type="column" data-position="right" class="column"><p></p></div></div>`,
           ),
       setLayout:
         (layout: ColumnLayout) =>
         ({ commands }) =>
           commands.updateAttributes('columns', { layout }),
+      setColumnColor:
+        (color: string) =>
+        ({ commands }) =>
+          commands.updateAttributes('columns', { columnColor: color }),
     };
   },
 

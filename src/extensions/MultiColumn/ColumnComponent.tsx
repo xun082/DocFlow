@@ -3,7 +3,34 @@ import type { ReactNodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 
 export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement>) {
+  // 获取当前节点的位置
+  const pos = props.getPos();
+
+  // 获取当前节点在文档中的解析位置
+  const $pos = props.editor.view.state.doc.resolve(pos ?? 0);
+
+  // 向上查找columns父节点
+  let parentNode = null;
+  let currentDepth = $pos.depth;
+
+  while (currentDepth > 0) {
+    const node = $pos.node(currentDepth);
+
+    if (node && node.type.name === 'columns') {
+      parentNode = node;
+      break;
+    }
+
+    currentDepth--;
+  }
+
+  // 检查是否找到columns节点
+  if (!parentNode) {
+    console.warn('未找到columns父节点');
+  }
+
   const { position } = props.node.attrs;
+  const { columnColor } = parentNode?.attrs || {};
 
   const [width, setWidth] = useState('100%');
   const columnRef = useRef<HTMLDivElement>(null);
@@ -55,7 +82,9 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         ref={columnRef}
         data-type="column"
         data-position={position}
-        className="bg-gray-100/50 p-3 rounded relative"
+        data-column-color={columnColor}
+        className="p-3 rounded relative"
+        style={{ backgroundColor: columnColor }}
       >
         <NodeViewContent className="column-content" />
         {/* 右侧边框拖拽区域 */}
