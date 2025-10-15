@@ -1,69 +1,56 @@
-# 依赖目录
+# 依赖
 node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.pnpm-store
 
-# 构建输出
-.next/
-dist/
-build/
+# Next.js
+.next
+out
+dist
 
-# 环境变量文件
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# 测试
+coverage
+.nyc_output
+*.log
 
-# IDE和编辑器
-.vscode/
-.idea/
+# 开发工具
+.vscode
+.idea
 *.swp
 *.swo
 *~
 
-# 操作系统
-.DS_Store
-Thumbs.db
-
 # Git
-.git/
+.git
 .gitignore
+.gitattributes
 
-# 测试和覆盖率
-coverage/
-.nyc_output/
-test-results/
-playwright-report/
+# 环境变量（不要包含敏感信息）
+.env*.local
+.env.development
+.env.test
 
-# 日志文件
-*.log
-logs/
+# 其他
+.DS_Store
+*.pem
+.husky
+.github
 
-# 临时文件
-tmp/
-temp/
-
-# 缓存
-.cache/
-.parcel-cache/
-.eslintcache
-
-# 文档和配置
+# 文档
 README.md
 LICENSE.md
-*.md
-.prettierrc
-.editorconfig
-commitlint.config.cjs
-eslint.config.mjs
+AGENTS.md
+docs
 
-# CI/CD
-.github/
-.husky/
+# 测试和 CI
+.playwright
+playwright-report
+test-results
 
-# 其他开发工具
-.commitlintrc.json
-.lintstagedrc.json
-tsconfig.tsbuildinfo 
+# Lint 和格式化
+.eslintcache
+.prettierignore
+
+# 临时文件
+*.tmp
+*.temp
+.cache
