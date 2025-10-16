@@ -17,12 +17,24 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm build
+RUN pnpm build && \
+    rm -rf .next/cache
 
 FROM base AS prod-deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
+    find node_modules -name "*.d.ts" -delete && \
+    find node_modules -name "*.map" -delete && \
+    find node_modules -name "README*" -delete && \
+    find node_modules -name "CHANGELOG*" -delete && \
+    find node_modules -name "*.md" ! -name "package.json" -delete && \
+    find node_modules -name "LICENSE*" -delete && \
+    find node_modules -type d -name "test" -exec rm -rf {} + 2>/dev/null || true && \
+    find node_modules -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
+    find node_modules -type d -name "__tests__" -exec rm -rf {} + 2>/dev/null || true && \
+    find node_modules -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true && \
+    find node_modules -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true
 
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -32,11 +44,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
-RUN npm config set registry https://registry.npmmirror.com && \
-    apk add --no-cache libc6-compat && \
-    corepack enable && \
-    corepack prepare pnpm@9.12.3 --activate && \
-    pnpm config set registry https://registry.npmmirror.com && \
+RUN apk add --no-cache libc6-compat && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
@@ -51,4 +59,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["sh", "-c", "node_modules/.bin/next start"]
+CMD ["node_modules/.bin/next", "start"]
