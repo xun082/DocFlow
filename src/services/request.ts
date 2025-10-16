@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/nextjs';
+
 import { getCookie } from '@/utils/cookie';
 import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/http';
 
@@ -293,6 +295,30 @@ class Request {
   ): string {
     // 处理 RequestError
     if (error instanceof RequestError) {
+      // 上报到 Sentry（排除一些不需要上报的状态码）
+      const shouldReportToSentry = error.status !== 401 && error.status !== 404;
+
+      if (shouldReportToSentry) {
+        Sentry.captureException(error, {
+          tags: {
+            errorType: 'RequestError',
+            statusCode: error.status,
+            url: error.url,
+          },
+          contexts: {
+            request: {
+              url: error.url,
+              status: error.status,
+              statusText: error.statusText,
+            },
+            response: {
+              data: error.data,
+            },
+          },
+          level: error.status && error.status >= 500 ? 'error' : 'warning',
+        });
+      }
+
       // 执行特定状态码的处理函数
       if (handlers && error.status) {
         // 特定状态码的处理
@@ -321,6 +347,14 @@ class Request {
       (error.message.includes('Failed to fetch') ||
         error.message.includes('Network request failed'))
     ) {
+      // 上报网络错误到 Sentry
+      Sentry.captureException(error, {
+        tags: {
+          errorType: 'NetworkError',
+        },
+        level: 'error',
+      });
+
       if (handlers?.networkError) {
         handlers.networkError();
       }
@@ -328,12 +362,19 @@ class Request {
       return '网络连接错误，请检查您的网络';
     }
 
-    // 处理取消请求
+    // 处理取消请求（不上报到 Sentry，这是正常行为）
     if (error instanceof DOMException && error.name === 'AbortError') {
       return '请求已取消';
     }
 
     // 处理其他类型错误
+    Sentry.captureException(error, {
+      tags: {
+        errorType: 'UnknownError',
+      },
+      level: 'error',
+    });
+
     if (handlers?.default) {
       handlers.default(error);
     }
@@ -390,6 +431,20 @@ class Request {
   }: Props): Promise<T> {
     const fullUrl = this.baseURL + url;
 
+    // 添加 Sentry breadcrumb 记录请求信息
+    Sentry.addBreadcrumb({
+      category: 'http',
+      message: `${method} ${fullUrl}`,
+      level: 'info',
+      data: {
+        url: fullUrl,
+        method,
+        params: params.params,
+        timeout,
+        retries,
+      },
+    });
+
     const req = this.interceptorsRequest({
       url: fullUrl,
       method,
@@ -414,8 +469,33 @@ class Request {
           res = await fetchPromise;
         }
 
+        // 添加成功响应的 breadcrumb
+        Sentry.addBreadcrumb({
+          category: 'http',
+          message: `${method} ${fullUrl} - ${res.status}`,
+          level: 'info',
+          data: {
+            url: fullUrl,
+            method,
+            status: res.status,
+            statusText: res.statusText,
+          },
+        });
+
         return this.interceptorsResponse<T>(res, fullUrl);
       } catch (error) {
+        // 添加失败响应的 breadcrumb
+        Sentry.addBreadcrumb({
+          category: 'http',
+          message: `${method} ${fullUrl} - Failed`,
+          level: 'error',
+          data: {
+            url: fullUrl,
+            method,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+
         // 确保所有错误都被正确抛出，不在这里输出到控制台
         throw error;
       }
@@ -520,6 +600,17 @@ class Request {
     const controller = new AbortController();
     const fullUrl = this.baseURL + url;
 
+    // 添加 SSE 请求的 breadcrumb
+    Sentry.addBreadcrumb({
+      category: 'sse',
+      message: `SSE Connection: ${fullUrl}`,
+      level: 'info',
+      data: {
+        url: fullUrl,
+        method: 'POST',
+      },
+    });
+
     try {
       const req = this.interceptorsRequest({
         url: fullUrl,
@@ -560,14 +651,44 @@ class Request {
           // 如果无法解析错误信息，使用默认消息
         }
 
-        throw new RequestError(
+        const sseError = new RequestError(
           errorMessage,
           fullUrl,
           response.status,
           response.statusText,
           errorData,
         );
+
+        // 上报 SSE 错误到 Sentry
+        Sentry.captureException(sseError, {
+          tags: {
+            errorType: 'SSEError',
+            statusCode: response.status,
+            url: fullUrl,
+          },
+          contexts: {
+            sse: {
+              url: fullUrl,
+              status: response.status,
+              statusText: response.statusText,
+            },
+          },
+          level: 'error',
+        });
+
+        throw sseError;
       }
+
+      // SSE 连接成功
+      Sentry.addBreadcrumb({
+        category: 'sse',
+        message: `SSE Connected: ${fullUrl}`,
+        level: 'info',
+        data: {
+          url: fullUrl,
+          status: response.status,
+        },
+      });
 
       callback(response);
 
@@ -575,8 +696,35 @@ class Request {
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         console.log('流读取被中止:', error);
-        // 中止是预期行为，不需要额外处理
+        // 中止是预期行为，不需要额外处理和上报到 Sentry
       } else {
+        // 添加 SSE 错误 breadcrumb
+        Sentry.addBreadcrumb({
+          category: 'sse',
+          message: `SSE Error: ${fullUrl}`,
+          level: 'error',
+          data: {
+            url: fullUrl,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+
+        // 如果不是 RequestError（已经在上面上报过），则上报到 Sentry
+        if (!(error instanceof RequestError)) {
+          Sentry.captureException(error, {
+            tags: {
+              errorType: 'SSEConnectionError',
+              url: fullUrl,
+            },
+            contexts: {
+              sse: {
+                url: fullUrl,
+              },
+            },
+            level: 'error',
+          });
+        }
+
         // 其他错误需要重新抛出
         if (typeof params?.errorHandler === 'function') {
           params.errorHandler(error);
