@@ -13,7 +13,10 @@ import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 
 export function ColumnsMenu({ editor }: MenuProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [currentColor, setCurrentColor] = useState('#f3f4f6'); // 默认背景色
+  const [currentColor, setCurrentColor] = useState(editor.getAttributes('column').backgroundColor); // 默认背景色
+  // const [isUpdatAttribute, setIsUpdatAttribute] = useState(false);
+
+  // 获取当前 column 的颜色赋值给currentColor
 
   const getReferenceClientRect = () => {
     const renderContainer = getRenderContainer(editor, 'column');
@@ -42,6 +45,16 @@ export function ColumnsMenu({ editor }: MenuProps) {
 
   const onColorChange = (color: string) => {
     setCurrentColor(color);
+    // 是渲染导致的更新，所以需要设置isUpdatAttribute为true
+    // setIsUpdatAttribute(true);
+    editor
+      .chain()
+      .focus()
+      .updateAttributes('column', {
+        backgroundColor: color,
+        // 其他属性...
+      })
+      .run();
   };
 
   const toggleColorPicker = () => {
@@ -66,7 +79,11 @@ export function ColumnsMenu({ editor }: MenuProps) {
       shouldShow={shouldShow}
       updateDelay={0}
       getReferenceClientRect={getReferenceClientRect}
-      onHide={() => setShowColorPicker(false)}
+      // onHide={() => {
+      //   if (!isUpdatAttribute) {
+      //     setIsUpdatAttribute(false);
+      //   }
+      // }}
     >
       <Toolbar.Wrapper>
         <Toolbar.Button tooltip="Sidebar left" active={isColumnLeft} onClick={onColumnLeft}>
