@@ -9,6 +9,7 @@ interface BubbleMenuProps {
   updateDelay?: number;
   pluginKey?: string;
   getReferenceClientRect?: () => DOMRect;
+  onHide?: () => void; // 新增隐藏回调
 }
 
 export const BubbleMenu: React.FC<BubbleMenuProps> = ({
@@ -17,6 +18,7 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
   shouldShow = () => true,
   updateDelay = 0,
   getReferenceClientRect,
+  onHide, // 解构onHide回调
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<DOMRect | null>(null);
@@ -112,6 +114,13 @@ export const BubbleMenu: React.FC<BubbleMenuProps> = ({
       }
     };
   }, [editor, shouldShow, updateDelay, getReferenceClientRect]);
+
+  // 监听isOpen状态变化，当变为false时触发回调
+  useEffect(() => {
+    if (isOpen === false && onHide) {
+      onHide();
+    }
+  }, [isOpen, onHide]);
 
   if (!position) {
     return null;
