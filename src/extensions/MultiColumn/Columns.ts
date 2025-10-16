@@ -11,7 +11,8 @@ declare module '@tiptap/core' {
     columns: {
       setColumns: () => ReturnType;
       setLayout: (layout: ColumnLayout) => ReturnType;
-      setColumnColor: (color: string) => ReturnType;
+      setColumnBackgroundColor: (columnIndex: number, color: string) => ReturnType;
+      swapColumns: (fromPosition: string, toPosition: string) => ReturnType;
     };
   }
 }
@@ -56,10 +57,64 @@ export const Columns = Node.create({
         (layout: ColumnLayout) =>
         ({ commands }) =>
           commands.updateAttributes('columns', { layout }),
-      setColumnColor:
-        (color: string) =>
-        ({ commands }) =>
-          commands.updateAttributes('columns', { columnColor: color }),
+      setColumnBackgroundColor:
+        (columnIndex: number, color: string) =>
+        ({ state, dispatch }) => {
+          const { selection } = state;
+          const { $from } = selection;
+
+          // 查找columns节点
+          let columnsPos = null;
+
+          for (let depth = $from.depth; depth > 0; depth--) {
+            const node = $from.node(depth);
+
+            if (node.type.name === 'columns') {
+              columnsPos = $from.start(depth);
+              break;
+            }
+          }
+
+          if (columnsPos === null) {
+            return false;
+          }
+
+          const columnsNode = state.doc.nodeAt(columnsPos);
+
+          if (!columnsNode) {
+            return false;
+          }
+
+          // 查找指定索引的column节点
+          let currentIndex = 0;
+          let targetColumnPos = null;
+
+          columnsNode.forEach((child, offset) => {
+            if (child.type.name === 'column' && currentIndex === columnIndex) {
+              targetColumnPos = columnsPos + 1 + offset;
+
+              return false; // 停止遍历
+            }
+
+            if (child.type.name === 'column') {
+              currentIndex++;
+            }
+          });
+
+          if (targetColumnPos === null) {
+            return false;
+          }
+
+          // 更新column节点的backgroundColor属性
+          const tr = state.tr.setNodeMarkup(targetColumnPos, undefined, {
+            ...state.doc.nodeAt(targetColumnPos)?.attrs,
+            backgroundColor: color,
+          });
+
+          if (dispatch) dispatch(tr);
+
+          return true;
+        },
     };
   },
 

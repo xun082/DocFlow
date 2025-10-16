@@ -14,6 +14,7 @@ import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 export function ColumnsMenu({ editor }: MenuProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState('#f3f4f6'); // 默认背景色
+  const [selectedColumnIndex, setSelectedColumnIndex] = useState(0); // 当前选中的列索引
 
   const getReferenceClientRect = () => {
     const renderContainer = getRenderContainer(editor, 'columns');
@@ -43,7 +44,11 @@ export function ColumnsMenu({ editor }: MenuProps) {
 
   const onColorChange = (color: string) => {
     setCurrentColor(color);
-    editor.chain().focus().setColumnColor(color).run();
+    editor.chain().focus().setColumnBackgroundColor(selectedColumnIndex, color).run();
+  };
+
+  const onColumnSelect = (index: number) => {
+    setSelectedColumnIndex(index);
   };
 
   const toggleColorPicker = () => {
@@ -79,6 +84,20 @@ export function ColumnsMenu({ editor }: MenuProps) {
         </Toolbar.Button>
         <Toolbar.Button tooltip="Sidebar right" active={isColumnRight} onClick={onColumnRight}>
           <Icon name="PanelRight" />
+        </Toolbar.Button>
+        <Toolbar.Button
+          tooltip="Select left column"
+          active={selectedColumnIndex === 0}
+          onClick={() => onColumnSelect(0)}
+        >
+          <span className="text-xs font-medium">左列</span>
+        </Toolbar.Button>
+        <Toolbar.Button
+          tooltip="Select right column"
+          active={selectedColumnIndex === 1}
+          onClick={() => onColumnSelect(1)}
+        >
+          <span className="text-xs font-medium">右列</span>
         </Toolbar.Button>
         <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
           <div

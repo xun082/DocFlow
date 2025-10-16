@@ -17,6 +17,15 @@ export const Column = Node.create({
         parseHTML: (element) => element.getAttribute('data-position'),
         renderHTML: (attributes) => ({ 'data-position': attributes.position }),
       },
+      backgroundColor: {
+        default: '#f3f4f6',
+        parseHTML: (element) => element.getAttribute('data-background-color') || '#f3f4f6',
+        renderHTML: (attributes) => {
+          if (!attributes.backgroundColor) return {};
+
+          return { 'data-background-color': attributes.backgroundColor };
+        },
+      },
     };
   },
 
