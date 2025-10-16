@@ -1,6 +1,6 @@
 import { useEditorState } from '@tiptap/react';
 import { v4 as uuid } from 'uuid';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ColumnLayout } from '../Columns';
 
@@ -13,10 +13,36 @@ import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 
 export function ColumnsMenu({ editor }: MenuProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [currentColor, setCurrentColor] = useState(editor.getAttributes('column').backgroundColor); // 默认背景色
-  // const [isUpdatAttribute, setIsUpdatAttribute] = useState(false);
+  const [currentColor, setCurrentColor] = useState('#f3f4f6'); // 默认背景色
 
-  // 获取当前 column 的颜色赋值给currentColor
+  // 查找父节点，直到找到 column 类型的节点
+  const findColumnParent = (selection: any) => {
+    const { $head } = selection;
+
+    // 从当前位置向上遍历所有父节点
+    for (let depth = $head.depth; depth >= 0; depth--) {
+      const node = $head.node(depth);
+
+      // 如果找到 column 类型的节点，停止查找
+      if (node.type.name === 'column') {
+        return {
+          node: node,
+          depth: depth,
+          pos: $head.start(depth) - 1,
+        };
+      }
+    }
+
+    return null; // 没有找到 column 节点
+  };
+
+  useEffect(() => {
+    const columnParent = findColumnParent(editor.state.selection);
+
+    if (columnParent) {
+      setCurrentColor(columnParent.node.attrs.backgroundColor || '#f3f4f6');
+    }
+  }, [editor.state.selection]);
 
   const getReferenceClientRect = () => {
     const renderContainer = getRenderContainer(editor, 'column');
