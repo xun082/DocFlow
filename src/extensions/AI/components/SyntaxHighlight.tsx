@@ -1,6 +1,5 @@
 import { all, createLowlight } from 'lowlight';
 import { toHtml } from 'hast-util-to-html';
-import 'highlight.js/styles/github.css';
 import './SyntaxHighlight.scss';
 
 const lowlight = createLowlight(all);
