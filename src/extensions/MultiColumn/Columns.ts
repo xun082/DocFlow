@@ -12,6 +12,7 @@ declare module '@tiptap/core' {
       setColumns: () => ReturnType;
       setLayout: (layout: ColumnLayout) => ReturnType;
       insertColumn: () => ReturnType;
+      setColumnClass: (handle: string) => ReturnType;
     };
   }
 }
@@ -31,6 +32,9 @@ export const Columns = Node.create({
     return {
       layout: {
         default: ColumnLayout.TwoColumn,
+      },
+      rows: {
+        default: 2,
       },
       columnColor: {
         default: '#f3f4f6',
@@ -60,73 +64,85 @@ export const Columns = Node.create({
       insertColumn:
         () =>
         ({ commands, view }) => {
-          if (!view || !view.state) return false;
+          if (!view?.state?.selection) {
+            return false;
+          }
 
           try {
             const { state } = view;
             const { selection } = state;
             const { $from } = selection;
 
+            // 查找 columns 节点 - 简化查找逻辑
             let columnsPos = -1;
             let columnsNode = null;
 
-            // 从当前节点向上查找 columns 节点
+            // 方法1: 直接从当前位置向上查找父节点（更高效）
             for (let depth = $from.depth; depth > 0; depth--) {
               const node = $from.node(depth);
 
-              if (node.type.name === 'columns') {
+              if (node?.type?.name === 'columns') {
                 columnsPos = $from.before(depth);
                 columnsNode = node;
                 break;
               }
             }
 
-            // 如果找到了 columns 节点，在其末尾添加新列
-            if (columnsPos >= 0 && columnsNode) {
-              // 计算新的列数和每列宽度
-              const newColumnCount = columnsNode.childCount + 1;
-              const widthPercent = Math.floor(100 / newColumnCount);
+            // 方法2: 如果方法1未找到，使用 nodesBetween 查找
+            if (columnsPos < 0) {
+              state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+                if (node.type.name === 'columns') {
+                  columnsPos = pos;
+                  columnsNode = node;
 
-              // 创建事务来更新现有列的宽度
-              let tr = state.tr;
-
-              // 遍历并更新所有现有列的宽度
-              let pos = columnsPos + 1; // 跳过columns节点的开始标记
-              columnsNode.forEach((node) => {
-                if (node.type.name === 'column') {
-                  const nodePos = pos;
-                  // 更新列的style属性
-                  tr = tr.setNodeMarkup(nodePos, null, {
-                    ...node.attrs,
-                    style: `width: ${widthPercent}%`,
-                  });
-                  pos += node.nodeSize;
+                  return false; // 停止遍历
                 }
+
+                return true; // 继续遍历
               });
+            }
 
-              // 应用事务
-              view.dispatch(tr);
-
-              // 创建新列并插入
-              const columnPosition = `column-${newColumnCount}`;
-              const newColumnHtml = `<div data-type="column" data-position="${columnPosition}" style="width: ${widthPercent}%"><p></p></div>`;
+            // 如果找到了 columns 节点，执行插入操作
+            if (columnsPos >= 0 && columnsNode) {
+              // 计算插入位置和创建新列
               const endPos = columnsPos + columnsNode.nodeSize - 1;
+              const columnPosition = `column-${columnsNode.childCount + 1}`;
+              const newColumnHtml = `<div data-type="column" data-position="${columnPosition}"><p></p></div>`;
 
               return commands.insertContentAt(endPos, newColumnHtml);
             }
 
             return false;
           } catch (error) {
-            console.error('插入新列失败:', error);
+            console.error('Error inserting column:', error);
 
             return false;
           }
         },
+      setColumnClass:
+        (handle) =>
+        ({ commands, editor }) => {
+          const attributes = editor.getAttributes('columns');
+          console.log('🚀 ~ addCommands ~ attributes:', attributes);
+
+          // 当前 columns 有多少子节点
+          return commands.updateAttributes('columns', {
+            rows: handle === 'add' ? attributes.rows + 1 : attributes.rows - 1,
+          });
+        },
     };
   },
 
-  renderHTML({}) {
-    return ['div', { 'data-type': 'columns', class: `` }, 0];
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'div',
+      {
+        'data-type': 'columns',
+        class: `layout-${HTMLAttributes.layout}`,
+        style: `grid-template-columns: repeat(${HTMLAttributes.rows}, 1fr)`,
+      },
+      0,
+    ];
   },
 
   parseHTML() {

@@ -2,6 +2,7 @@ import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import type { ReactNodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditorState } from '@tiptap/react';
+import { v4 as uuid } from 'uuid';
 
 import { ColumnLayout } from './Columns';
 
@@ -22,6 +23,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
   const [isResizing, setIsResizing] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColor, setCurrentColor] = useState(backgroundColor);
+  const columnKey = uuid();
 
   // refs
   const columnRef = useRef<HTMLDivElement>(null);
@@ -87,12 +89,24 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     // 获取父节点位置
     const parentPos = getParentPosition();
     if (parentPos === null) return;
-
-    // 先选中 columns 节点，然后插入新列
-    editor.chain().focus().setNodeSelection(parentPos).insertColumn().run();
-
-    console.log('尝试插入新列到 columns 节点');
+    editor.chain().focus().setNodeSelection(parentPos).run();
+    setTimeout(() => {
+      editor.chain().focus().insertColumn().setColumnClass('add').run();
+    }, 50); // 500毫秒延迟
   }, [editor, getParentPosition]);
+
+  // 删除 node
+  const deleteColumn = useCallback(() => {
+    const parentPos = getParentPosition();
+    if (parentPos === null) return;
+    props.deleteNode();
+    setTimeout(() => {
+      editor.chain().focus().setNodeSelection(parentPos).run();
+      setTimeout(() => {
+        editor.chain().focus().setColumnClass('reduce').run();
+      }, 50);
+    }, 50);
+  }, [editor, getParentPosition, props]);
 
   // 颜色选择器
   const toggleColorPicker = useCallback(() => {
@@ -159,6 +173,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         ref={columnRef}
         data-type="column"
         data-position={position}
+        data-key={`column-${columnKey}`}
         data-background-color={backgroundColor}
         className="p-3 rounded relative"
         style={{ backgroundColor }}
@@ -187,6 +202,10 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
               {/* 增加一个插入按钮 */}
               <Toolbar.Button tooltip="Insert column" onClick={insertColumn}>
                 <Icon name="Plus" />
+              </Toolbar.Button>
+              {/* 增加一个删除按钮 */}
+              <Toolbar.Button tooltip="Delete column" onClick={deleteColumn}>
+                <Icon name="Trash" />
               </Toolbar.Button>
               <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
                 <div

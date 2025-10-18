@@ -10,6 +10,8 @@ export const Column = Node.create({
 
   isolating: true,
 
+  selectable: true,
+
   addAttributes() {
     return {
       position: {
@@ -24,15 +26,6 @@ export const Column = Node.create({
           if (!attributes.backgroundColor) return {};
 
           return { 'data-background-color': attributes.backgroundColor };
-        },
-      },
-      style: {
-        default: '',
-        parseHTML: (element) => element.getAttribute('style'),
-        renderHTML: (attributes) => {
-          if (!attributes.style) return {};
-
-          return { style: attributes.style };
         },
       },
     };
