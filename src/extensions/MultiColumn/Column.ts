@@ -26,6 +26,15 @@ export const Column = Node.create({
           return { 'data-background-color': attributes.backgroundColor };
         },
       },
+      style: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('style'),
+        renderHTML: (attributes) => {
+          if (!attributes.style) return {};
+
+          return { style: attributes.style };
+        },
+      },
     };
   },
 

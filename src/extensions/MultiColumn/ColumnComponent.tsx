@@ -1,28 +1,132 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import type { ReactNodeViewProps } from '@tiptap/react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useEditorState } from '@tiptap/react';
+
+import { ColumnLayout } from './Columns';
+
+import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Toolbar } from '@/components/ui/Toolbar';
+import { Icon } from '@/components/ui/Icon';
+
+// 默认背景色
+const DEFAULT_BACKGROUND_COLOR = '#f3f4f6';
 
 export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement>) {
-  const { position, backgroundColor } = props.node.attrs;
+  const { editor, node, updateAttributes } = props;
+  const { position, backgroundColor = DEFAULT_BACKGROUND_COLOR } = node.attrs;
 
+  // 状态管理
   const [width, setWidth] = useState('100%');
-  const columnRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [currentColor, setCurrentColor] = useState(backgroundColor);
+
+  // refs
+  const columnRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
+  // 获取父节点（columns）
+  const getParentNode = useCallback(() => {
+    const pos = props.getPos();
+    if (typeof pos !== 'number') return null;
 
+    const resolvedPos = editor.state.doc.resolve(pos);
+    const parentNode = resolvedPos.parent;
+
+    if (parentNode?.type.name === 'columns') {
+      return parentNode;
+    }
+
+    return null;
+  }, [editor, props]);
+
+  // 获取父节点位置
+  const getParentPosition = useCallback(() => {
+    const pos = props.getPos();
+    if (typeof pos !== 'number') return null;
+
+    const resolvedPos = editor.state.doc.resolve(pos);
+
+    return resolvedPos.before(resolvedPos.depth);
+  }, [editor, props]);
+
+  // 应用布局变更
+  const applyLayout = useCallback(
+    (layout: ColumnLayout) => {
+      const parentPos = getParentPosition();
+      if (parentPos === null) return;
+
+      editor.chain().focus().setNodeSelection(parentPos).setLayout(layout).run();
+    },
+    [editor, getParentPosition],
+  );
+
+  // 布局切换处理函数
+  const onColumnLeft = useCallback(() => {
+    if (getParentNode()) {
+      applyLayout(ColumnLayout.SidebarLeft);
+    }
+  }, [getParentNode, applyLayout]);
+
+  const onColumnTwo = useCallback(() => {
+    if (getParentNode()) {
+      applyLayout(ColumnLayout.TwoColumn);
+    }
+  }, [getParentNode, applyLayout]);
+
+  const onColumnRight = useCallback(() => {
+    if (getParentNode()) {
+      applyLayout(ColumnLayout.SidebarRight);
+    }
+  }, [getParentNode, applyLayout]);
+
+  const insertColumn = useCallback(() => {
+    // 获取父节点位置
+    const parentPos = getParentPosition();
+    if (parentPos === null) return;
+
+    // 先选中 columns 节点，然后插入新列
+    editor.chain().focus().setNodeSelection(parentPos).insertColumn().run();
+
+    console.log('尝试插入新列到 columns 节点');
+  }, [editor, getParentPosition]);
+
+  // 颜色选择器
+  const toggleColorPicker = useCallback(() => {
+    setShowColorPicker((prev) => !prev);
+  }, []);
+
+  const onColorChange = useCallback(
+    (color: string) => {
+      setCurrentColor(color);
+      updateAttributes({ backgroundColor: color });
+    },
+    [updateAttributes],
+  );
+
+  // 调整大小处理
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    startX.current = e.clientX;
+    startWidth.current = columnRef.current?.offsetWidth || 0;
+  }, []);
+
+  // 调整大小的副作用
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
       const diff = e.clientX - startX.current;
       const newWidth = `${startWidth.current + diff}px`;
 
       setWidth(newWidth);
 
-      // 更新节点属性
-      if (props.editor) {
-        props.editor.commands.updateAttributes('column', { width: newWidth });
+      if (editor) {
+        editor.commands.updateAttributes('column', { width: newWidth });
       }
     };
 
@@ -30,23 +134,24 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
       setIsResizing(false);
     };
 
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isResizing, props]);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, editor]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    startX.current = e.clientX;
-    startWidth.current = columnRef.current?.offsetWidth || 0;
-  };
+  // 布局状态
+  const { isColumnLeft, isColumnRight, isColumnTwo } = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      isColumnLeft: ctx.editor.isActive('columns', { layout: ColumnLayout.SidebarLeft }),
+      isColumnRight: ctx.editor.isActive('columns', { layout: ColumnLayout.SidebarRight }),
+      isColumnTwo: ctx.editor.isActive('columns', { layout: ColumnLayout.TwoColumn }),
+    }),
+  });
 
   return (
     <NodeViewWrapper className="column-wrapper" style={{ width }}>
@@ -56,8 +161,51 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         data-position={position}
         data-background-color={backgroundColor}
         className="p-3 rounded relative"
-        style={{ backgroundColor: backgroundColor }}
+        style={{ backgroundColor }}
       >
+        <Popover>
+          <PopoverTrigger asChild>
+            <Toolbar.Button>
+              <Icon name="GripVertical" />
+            </Toolbar.Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="bg-transparent border-none shadow-none">
+            <Toolbar.Wrapper>
+              <Toolbar.Button tooltip="Sidebar left" active={isColumnLeft} onClick={onColumnLeft}>
+                <Icon name="PanelLeft" />
+              </Toolbar.Button>
+              <Toolbar.Button tooltip="Two columns" active={isColumnTwo} onClick={onColumnTwo}>
+                <Icon name="Columns2" />
+              </Toolbar.Button>
+              <Toolbar.Button
+                tooltip="Sidebar right"
+                active={isColumnRight}
+                onClick={onColumnRight}
+              >
+                <Icon name="PanelRight" />
+              </Toolbar.Button>
+              {/* 增加一个插入按钮 */}
+              <Toolbar.Button tooltip="Insert column" onClick={insertColumn}>
+                <Icon name="Plus" />
+              </Toolbar.Button>
+              <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
+                <div
+                  className="w-4 h-4 rounded border border-gray-300"
+                  style={{ backgroundColor: currentColor }}
+                />
+              </Toolbar.Button>
+              {showColorPicker && (
+                <div className="absolute top-full mt-2 right-0 z-50 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                  <ColorPicker
+                    color={currentColor}
+                    onChange={onColorChange}
+                    onClear={() => onColorChange(DEFAULT_BACKGROUND_COLOR)}
+                  />
+                </div>
+              )}
+            </Toolbar.Wrapper>
+          </PopoverContent>
+        </Popover>
         <NodeViewContent className="column-content" />
         {/* 右侧边框拖拽区域 */}
         <div
