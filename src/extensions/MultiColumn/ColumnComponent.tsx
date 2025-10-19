@@ -5,6 +5,7 @@ import { useEditorState } from '@tiptap/react';
 import { v4 as uuid } from 'uuid';
 
 import { ColumnLayout } from './Columns';
+import { dragHandler } from './helpers/dragHandler';
 
 import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -162,6 +163,26 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     setHideTimeout(timeout);
   }, []);
 
+  // 拖拽开始处理
+  const handleDragStart = useCallback(
+    (e: React.DragEvent) => {
+      if (!editor) return;
+
+      //将当前选择范围设置为当前列
+      // editor.chain().focus().setNodeSelection(props.getPos()).run();
+
+      // 调用拖拽处理器
+      dragHandler(e.nativeEvent, editor);
+    },
+    [editor],
+  );
+
+  // 拖拽结束处理
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    // 清理拖拽状态
+    e.preventDefault();
+  }, []);
+
   // 调整大小处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -228,6 +249,9 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
                 data-drag-handle="true"
                 onMouseEnter={handleToolbarEnter}
                 onMouseLeave={handleToolbarLeave}
+                draggable={true}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
               >
                 <Icon name="GripVertical" />
               </Toolbar.Button>
