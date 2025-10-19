@@ -12,6 +12,8 @@ export const Column = Node.create({
 
   selectable: true,
 
+  draggable: true,
+
   addAttributes() {
     return {
       position: {
