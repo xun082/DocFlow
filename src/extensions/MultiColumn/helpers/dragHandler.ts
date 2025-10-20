@@ -57,6 +57,7 @@ export function dragHandlerDirect(
 
     // 创建拖拽元素
     const { tr } = view.state;
+
     const wrapper = document.createElement('div');
     const clonedElement = cloneElement(element);
     wrapper.append(clonedElement);

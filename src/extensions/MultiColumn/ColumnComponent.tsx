@@ -236,6 +236,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         ref={columnRef}
         data-type="column"
         data-position={position}
+        draggable={true}
         data-key={`column-${columnKey}`}
         data-background-color={backgroundColor}
         className="p-3 rounded relative"
@@ -247,10 +248,8 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
           <Popover>
             <PopoverTrigger asChild className="absolute -top-2 -left-1 cursor-pointer">
               <Toolbar.Button
-                data-drag-handle="true"
                 onMouseEnter={handleToolbarEnter}
                 onMouseLeave={handleToolbarLeave}
-                draggable={true}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
