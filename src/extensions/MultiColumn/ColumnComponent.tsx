@@ -257,7 +257,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
           {showToolbar && (
             <Popover>
               <PopoverTrigger asChild className="absolute  right-0">
-                <Toolbar.Button className="!px-0 !rounded-0 !w-1 !min-w-1.5 h-full">
+                <Toolbar.Button className="!px-0 !rounded-0 !w-1 !min-w-1.5">
                   <Icon name="EllipsisVertical" />
                 </Toolbar.Button>
               </PopoverTrigger>
