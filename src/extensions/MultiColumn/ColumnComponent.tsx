@@ -243,11 +243,23 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         style={{ backgroundColor }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
-        {showToolbar && (
+        {/* {showToolbar && (
+
+        )} */}
+        <NodeViewContent className="column-content" />
+        {/* 右侧边框拖拽区域 */}
+        <div
+          className="absolute top-0 right-0 w-1 h-full cursor-ew-resize z-10"
+          style={{ backgroundColor: 'transparent' }}
+          onMouseDown={handleMouseDown}
+        >
           <Popover>
             <PopoverTrigger asChild className="absolute -top-2 -left-1 cursor-pointer">
               <Toolbar.Button
+                draggable={true}
                 onMouseEnter={handleToolbarEnter}
                 onMouseLeave={handleToolbarLeave}
                 onDragStart={handleDragStart}
@@ -304,14 +316,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
               </Toolbar.Wrapper>
             </PopoverContent>
           </Popover>
-        )}
-        <NodeViewContent className="column-content" />
-        {/* 右侧边框拖拽区域 */}
-        <div
-          className="absolute top-0 right-0 w-1 h-full cursor-ew-resize z-10"
-          style={{ backgroundColor: 'transparent' }}
-          onMouseDown={handleMouseDown}
-        />
+        </div>
       </div>
     </NodeViewWrapper>
   );

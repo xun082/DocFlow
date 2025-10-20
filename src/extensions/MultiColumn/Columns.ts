@@ -30,9 +30,9 @@ export const Columns = Node.create({
 
   addAttributes() {
     return {
-      layout: {
-        default: ColumnLayout.TwoColumn,
-      },
+      // layout: {
+      //   default: ColumnLayout.TwoColumn,
+      // },
       rows: {
         default: 2,
       },
@@ -123,7 +123,6 @@ export const Columns = Node.create({
         (handle) =>
         ({ commands, editor }) => {
           const attributes = editor.getAttributes('columns');
-          console.log('🚀 ~ addCommands ~ attributes:', attributes);
 
           // 当前 columns 有多少子节点
           return commands.updateAttributes('columns', {
@@ -138,7 +137,7 @@ export const Columns = Node.create({
       'div',
       {
         'data-type': 'columns',
-        class: `layout-${HTMLAttributes.layout}`,
+        // class: `layout-${HTMLAttributes.layout}`,
         style: `grid-template-columns: repeat(${HTMLAttributes.rows}, 1fr)`,
       },
       0,
