@@ -5,7 +5,7 @@ import { useEditorState } from '@tiptap/react';
 import { v4 as uuid } from 'uuid';
 
 import { ColumnLayout } from './Columns';
-import { dragHandler } from './helpers/dragHandler';
+import { dragHandlerDirect } from './helpers/dragHandler';
 
 import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -168,13 +168,14 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     (e: React.DragEvent) => {
       if (!editor) return;
 
-      //将当前选择范围设置为当前列
-      // editor.chain().focus().setNodeSelection(props.getPos()).run();
+      const element = columnRef.current; // 直接获取 DOM 元素
+      const pos = props.getPos(); // 直接获取位置
 
-      // 调用拖拽处理器
-      dragHandler(e.nativeEvent, editor);
+      if (element && pos !== null && pos !== undefined) {
+        dragHandlerDirect(e.nativeEvent, editor, element, pos);
+      }
     },
-    [editor],
+    [editor, columnRef.current],
   );
 
   // 拖拽结束处理

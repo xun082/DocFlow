@@ -1,101 +1,83 @@
 import type { Editor } from '@tiptap/core';
-import { getSelectionRanges, NodeRangeSelection } from '@tiptap/extension-node-range';
-import type { SelectionRange } from '@tiptap/pm/state';
+import { NodeSelection } from '@tiptap/pm/state';
 
 import { cloneElement } from './cloneElement';
-import { findElementNextToCoords } from './findNextElementFromCursor';
-import { getInnerCoords } from './getInnerCoords';
 import { removeNode } from './removeNode';
 
-function getDragHandleRanges(event: DragEvent, editor: Editor): SelectionRange[] {
-  const { doc } = editor.view.state;
-
-  const result = findElementNextToCoords({
-    editor,
-    x: event.clientX,
-    y: event.clientY,
-    direction: 'right',
-  });
-
-  if (!result.resultNode || result.pos === null) {
-    return [];
-  }
-
-  const x = event.clientX;
-
-  const coords = getInnerCoords(editor.view, x, event.clientY);
-  const posAtCoords = editor.view.posAtCoords(coords);
-
-  if (!posAtCoords) {
-    return [];
-  }
-
-  const { pos } = posAtCoords;
-  const nodeAt = doc.resolve(pos).parent;
-
-  if (!nodeAt) {
-    return [];
-  }
-
-  const $from = doc.resolve(result.pos);
-  const $to = doc.resolve(result.pos + 1);
-
-  return getSelectionRanges($from, $to, 0);
-}
-
-export function dragHandler(event: DragEvent, editor: Editor) {
+export function dragHandlerDirect(
+  event: DragEvent,
+  editor: Editor,
+  element: HTMLElement,
+  pos: number,
+) {
   const { view } = editor;
 
   if (!event.dataTransfer) {
     return;
   }
 
-  const { empty, $from, $to } = view.state.selection;
+  try {
+    const $pos = view.state.doc.resolve(pos);
+    let targetNode = null;
+    let targetFrom = pos;
 
-  const dragHandleRanges = getDragHandleRanges(event, editor);
+    // 确定目标节点和起始位置
+    if (
+      $pos.nodeBefore?.type.name === 'column' &&
+      $pos.nodeAfter?.type.name === 'column' &&
+      $pos.parent?.type.name === 'columns'
+    ) {
+      // 位置在两个 column 节点之间，选择前面的节点
+      targetNode = $pos.nodeBefore;
+      targetFrom = pos - targetNode.nodeSize;
+    } else if ($pos.nodeAfter?.type.name === 'column') {
+      // pos 指向 column 节点的开始位置
+      targetNode = $pos.nodeAfter;
+      targetFrom = pos;
+    } else if ($pos.nodeBefore?.type.name === 'column') {
+      // pos 指向 column 节点的结束位置
+      targetNode = $pos.nodeBefore;
+      targetFrom = pos - targetNode.nodeSize;
+    } else {
+      return;
+    }
 
-  const selectionRanges = getSelectionRanges($from, $to, 0);
-  const isDragHandleWithinSelection = selectionRanges.some((range) => {
-    return dragHandleRanges.find((dragHandleRange) => {
-      return dragHandleRange.$from === range.$from && dragHandleRange.$to === range.$to;
-    });
-  });
+    if (!targetNode || targetNode.type.name !== 'column') {
+      return;
+    }
 
-  const ranges = empty || !isDragHandleWithinSelection ? dragHandleRanges : selectionRanges;
+    // 计算节点范围并获取内容
+    const from = targetFrom;
+    const to = from + targetNode.nodeSize;
+    const slice = view.state.doc.slice(from, to);
 
-  if (!ranges.length) {
-    return;
-  }
+    if (slice.content.childCount === 0) {
+      return;
+    }
 
-  const { tr } = view.state;
-  const wrapper = document.createElement('div');
-  const from = ranges[0].$from.pos;
-  const to = ranges[ranges.length - 1].$to.pos;
-
-  const selection = NodeRangeSelection.create(view.state.doc, from, to);
-  const slice = selection.content();
-
-  ranges.forEach((range) => {
-    const element = view.nodeDOM(range.$from.pos) as HTMLElement;
+    // 创建拖拽元素
+    const { tr } = view.state;
+    const wrapper = document.createElement('div');
     const clonedElement = cloneElement(element);
-
     wrapper.append(clonedElement);
-  });
 
-  wrapper.style.position = 'absolute';
-  wrapper.style.top = '-10000px';
-  document.body.append(wrapper);
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '-10000px';
+    document.body.append(wrapper);
 
-  event.dataTransfer.clearData();
-  event.dataTransfer.setDragImage(wrapper, 0, 0);
+    event.dataTransfer.clearData();
+    event.dataTransfer.setDragImage(wrapper, 0, 0);
 
-  // tell ProseMirror the dragged content
-  view.dragging = { slice, move: true };
+    // tell ProseMirror the dragged content
+    view.dragging = { slice, move: true };
 
-  tr.setSelection(selection);
+    const selection = NodeSelection.create(view.state.doc, from);
+    tr.setSelection(selection);
+    view.dispatch(tr);
 
-  view.dispatch(tr);
-
-  // clean up
-  document.addEventListener('drop', () => removeNode(wrapper), { once: true });
+    // clean up
+    document.addEventListener('drop', () => removeNode(wrapper), { once: true });
+  } catch (error) {
+    console.error('Error in dragHandlerDirect:', error);
+  }
 }
