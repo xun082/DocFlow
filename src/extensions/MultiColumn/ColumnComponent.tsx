@@ -255,7 +255,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
           onMouseDown={handleMouseDown}
         >
           {showToolbar && (
-            <Popover open={showToolbar} onOpenChange={setShowToolbar}>
+            <Popover>
               <PopoverTrigger asChild className="absolute  right-0">
                 <Toolbar.Button className="!px-0 !rounded-0 !w-1 !min-w-1.5 h-full">
                   <Icon name="EllipsisVertical" />
@@ -264,7 +264,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
               <PopoverContent
                 align="start"
                 side="top"
-                sideOffset={-10}
+                sideOffset={-20}
                 className="bg-transparent border-none shadow-none"
                 onMouseEnter={handleToolbarEnter}
                 onMouseLeave={handleToolbarLeave}
