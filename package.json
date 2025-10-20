@@ -131,6 +131,7 @@
     "react-photo-view": "^1.2.7",
     "react-resizable-panels": "^3.0.2",
     "react-use-audio-player": "^4.0.2",
+    "reactflow": "^11.11.4",
     "recharts": "2.15.4",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
