@@ -189,6 +189,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     e.preventDefault();
     setIsResizing(true);
     startX.current = e.clientX;
+    setShowToolbar(true);
     startWidth.current = columnRef.current?.offsetWidth || 0;
   }, []);
 
@@ -246,76 +247,73 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* {showToolbar && (
-
-        )} */}
         <NodeViewContent className="column-content" />
         {/* 右侧边框拖拽区域 */}
         <div
-          className="absolute top-0 right-0 w-1 h-full cursor-ew-resize z-10"
+          className="absolute top-0 right-0 w-4 h-full cursor-ew-resize z-10"
           style={{ backgroundColor: 'transparent' }}
           onMouseDown={handleMouseDown}
         >
-          <Popover>
-            <PopoverTrigger asChild className="absolute -top-2 -left-1 cursor-pointer">
-              <Toolbar.Button
-                draggable={true}
+          {showToolbar && (
+            <Popover open={showToolbar} onOpenChange={setShowToolbar}>
+              <PopoverTrigger asChild className="absolute  right-0">
+                <Toolbar.Button className="!px-0 !rounded-0 !w-1 !min-w-1.5 h-full">
+                  <Icon name="EllipsisVertical" />
+                </Toolbar.Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                side="top"
+                sideOffset={-10}
+                className="bg-transparent border-none shadow-none"
                 onMouseEnter={handleToolbarEnter}
                 onMouseLeave={handleToolbarLeave}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
               >
-                <Icon name="GripVertical" />
-              </Toolbar.Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              side="top"
-              sideOffset={-10}
-              className="bg-transparent border-none shadow-none"
-              onMouseEnter={handleToolbarEnter}
-              onMouseLeave={handleToolbarLeave}
-            >
-              <Toolbar.Wrapper>
-                <Toolbar.Button tooltip="Sidebar left" active={isColumnLeft} onClick={onColumnLeft}>
-                  <Icon name="PanelLeft" />
-                </Toolbar.Button>
-                <Toolbar.Button tooltip="Two columns" active={isColumnTwo} onClick={onColumnTwo}>
-                  <Icon name="Columns2" />
-                </Toolbar.Button>
-                <Toolbar.Button
-                  tooltip="Sidebar right"
-                  active={isColumnRight}
-                  onClick={onColumnRight}
-                >
-                  <Icon name="PanelRight" />
-                </Toolbar.Button>
-                {/* 增加一个插入按钮 */}
-                <Toolbar.Button tooltip="Insert column" onClick={insertColumn}>
-                  <Icon name="Plus" />
-                </Toolbar.Button>
-                {/* 增加一个删除按钮 */}
-                <Toolbar.Button tooltip="Delete column" onClick={deleteColumn}>
-                  <Icon name="Trash" />
-                </Toolbar.Button>
-                <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
-                  <div
-                    className="w-4 h-4 rounded border border-gray-300"
-                    style={{ backgroundColor: currentColor }}
-                  />
-                </Toolbar.Button>
-                {showColorPicker && (
-                  <div className="absolute top-full mt-2 right-0 z-50 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                    <ColorPicker
-                      color={currentColor}
-                      onChange={onColorChange}
-                      onClear={() => onColorChange(DEFAULT_BACKGROUND_COLOR)}
+                <Toolbar.Wrapper>
+                  <Toolbar.Button
+                    tooltip="Sidebar left"
+                    active={isColumnLeft}
+                    onClick={onColumnLeft}
+                  >
+                    <Icon name="PanelLeft" />
+                  </Toolbar.Button>
+                  <Toolbar.Button tooltip="Two columns" active={isColumnTwo} onClick={onColumnTwo}>
+                    <Icon name="Columns2" />
+                  </Toolbar.Button>
+                  <Toolbar.Button
+                    tooltip="Sidebar right"
+                    active={isColumnRight}
+                    onClick={onColumnRight}
+                  >
+                    <Icon name="PanelRight" />
+                  </Toolbar.Button>
+                  {/* 增加一个插入按钮 */}
+                  <Toolbar.Button tooltip="Insert column" onClick={insertColumn}>
+                    <Icon name="Plus" />
+                  </Toolbar.Button>
+                  {/* 增加一个删除按钮 */}
+                  <Toolbar.Button tooltip="Delete column" onClick={deleteColumn}>
+                    <Icon name="Trash" />
+                  </Toolbar.Button>
+                  <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
+                    <div
+                      className="w-4 h-4 rounded border border-gray-300"
+                      style={{ backgroundColor: currentColor }}
                     />
-                  </div>
-                )}
-              </Toolbar.Wrapper>
-            </PopoverContent>
-          </Popover>
+                  </Toolbar.Button>
+                  {showColorPicker && (
+                    <div className="absolute top-full mt-2 right-0 z-50 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                      <ColorPicker
+                        color={currentColor}
+                        onChange={onColorChange}
+                        onClear={() => onColorChange(DEFAULT_BACKGROUND_COLOR)}
+                      />
+                    </div>
+                  )}
+                </Toolbar.Wrapper>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
     </NodeViewWrapper>
