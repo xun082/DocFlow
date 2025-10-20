@@ -179,10 +179,32 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
   );
 
   // 拖拽结束处理
-  const handleDragEnd = useCallback((e: React.DragEvent) => {
-    // 清理拖拽状态
-    e.preventDefault();
-  }, []);
+  const handleDragEnd = useCallback(
+    (e: React.DragEvent) => {
+      // 清理拖拽状态
+      e.preventDefault();
+
+      // 获取父元素属性
+      const pos = props.getPos();
+      if (typeof pos !== 'number') return;
+
+      const resolvedPos = editor.state.doc.resolve(pos);
+      const parentNode = resolvedPos.parent;
+      const parentAttrs = parentNode.attrs;
+      console.log('🚀 ~ ColumnComponent ~ parentAttrs:', parentAttrs);
+
+      // 更新columns 的attr
+      editor
+        .chain()
+        .focus()
+        .setNodeSelection(resolvedPos.before(resolvedPos.depth))
+        .updateAttributes('columns', {
+          rows: parentAttrs.rows - 1,
+        })
+        .run();
+    },
+    [editor, props],
+  );
 
   // 调整大小处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -240,7 +262,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         draggable={true}
         data-key={`column-${columnKey}`}
         data-background-color={backgroundColor}
-        className="p-3 rounded relative"
+        className="p-3 rounded relative border-2 border-transparent hover:border-blue-400 hover:cursor-grab active:cursor-grabbing transition-colors duration-200"
         style={{ backgroundColor }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -270,6 +292,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
                 onMouseLeave={handleToolbarLeave}
               >
                 <Toolbar.Wrapper>
+                  {/* 布局切换按钮组：默认隐藏，可按需开启 */}
                   <Toolbar.Button
                     tooltip="Sidebar left"
                     active={isColumnLeft}
