@@ -22,14 +22,18 @@ export function dragHandlerDirect(
     let targetFrom = pos;
 
     // 确定目标节点和起始位置
-    if (
-      $pos.nodeBefore?.type.name === 'column' &&
-      $pos.nodeAfter?.type.name === 'column' &&
-      $pos.parent?.type.name === 'columns'
-    ) {
-      // 位置在两个 column 节点之间，选择前面的节点
-      targetNode = $pos.nodeBefore;
-      targetFrom = pos - targetNode.nodeSize;
+    // 首先检查当前位置是否在column节点内部
+    if ($pos.parent?.type.name === 'column' && $pos.depth > 0) {
+      // 在column节点内部，向上查找column节点
+      for (let depth = $pos.depth; depth > 0; depth--) {
+        const node = $pos.node(depth);
+
+        if (node?.type?.name === 'column') {
+          targetNode = node;
+          targetFrom = $pos.before(depth);
+          break;
+        }
+      }
     } else if ($pos.nodeAfter?.type.name === 'column') {
       // pos 指向 column 节点的开始位置
       targetNode = $pos.nodeAfter;

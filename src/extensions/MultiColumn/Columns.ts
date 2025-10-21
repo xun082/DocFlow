@@ -34,18 +34,24 @@ export const Columns = Node.create({
         default: ColumnLayout.TwoColumn,
       },
       rows: {
-        default: 2,
+        default: 1,
       },
     };
   },
 
   addCommands() {
     return {
+      // setColumns:
+      //   () =>
+      //   ({ commands }) =>
+      //     commands.insertContent(
+      //       `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div><div data-type="column" data-position="right"><p></p></div></div>`,
+      //     ),
       setColumns:
         () =>
         ({ commands }) =>
           commands.insertContent(
-            `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div><div data-type="column" data-position="right"><p></p></div></div>`,
+            `<div data-type="columns"><div data-type="column" data-position="column-1"><p></p></div><div data-type="column" data-position="column-2"><p></p></div><div data-type="column" data-position="column-3"><p></p></div></div>`,
           ),
       setLayout:
         (layout: ColumnLayout) =>

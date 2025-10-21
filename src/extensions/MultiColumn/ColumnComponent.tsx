@@ -216,6 +216,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
       const parentNode = resolvedPos.parent;
 
       const parentAttrs = parentNode.attrs;
+      console.log('🚀 ~ file: ColumnComponent.tsx:219 ~ parentAttrs:', parentAttrs);
 
       // 更新原来columns的熟悉
       editor
