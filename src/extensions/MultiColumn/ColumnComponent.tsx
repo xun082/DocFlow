@@ -48,6 +48,21 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     return null;
   }, [editor, props]);
 
+  // 获取 columns 的子元素数量
+  const getColumnsCount = useCallback(() => {
+    const parentNode = getParentNode();
+    if (!parentNode) return 0;
+
+    return parentNode.childCount;
+  }, [getParentNode]);
+
+  // 判断是否可以拖拽（子元素数量大于2时允许拖拽）
+  const isDraggable = useCallback(() => {
+    const count = getColumnsCount();
+
+    return count > 2;
+  }, [getColumnsCount]);
+
   // 获取父节点位置
   const getParentPosition = useCallback(() => {
     const pos = props.getPos();
@@ -124,6 +139,56 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     [updateAttributes],
   );
 
+  // 更新新创建的 columns 容器属性
+  const updateNewColumnsAttributes = useCallback(() => {
+    const { state } = editor;
+    const { doc } = state;
+
+    // 遍历文档，查找需要更新属性的 columns 容器
+    doc.descendants((node, pos) => {
+      if (node.type.name === 'columns') {
+        const childCount = node.childCount;
+        const currentRows = node.attrs.rows || 1;
+
+        // 如果子元素数量与 rows 不匹配，说明是新创建的容器
+        if (childCount !== currentRows) {
+          // 更新属性
+          const tr = state.tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            rows: childCount,
+            // 可以在这里添加其他默认属性
+            columnColor: node.attrs.columnColor || '#f3f4f6',
+          });
+
+          editor.view.dispatch(tr);
+
+          return false; // 停止遍历，一次只更新一个
+        }
+      }
+
+      return true;
+    });
+  }, [editor]);
+
+  // 监听拖拽事务，自动更新新创建的 columns 容器属性
+  useEffect(() => {
+    const handleTransaction = (transaction: any) => {
+      // 检查是否是拖拽操作
+      if (transaction.getMeta('uiEvent') === 'drop') {
+        // 延迟执行，确保 DOM 更新完成
+        setTimeout(() => {
+          updateNewColumnsAttributes();
+        }, 50);
+      }
+    };
+
+    editor.on('transaction', handleTransaction);
+
+    return () => {
+      editor.off('transaction', handleTransaction);
+    };
+  }, [editor, updateNewColumnsAttributes]);
+
   // 鼠标进入列区域
   const handleMouseEnter = useCallback(() => {
     if (hideTimeout) {
@@ -168,15 +233,43 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     (e: React.DragEvent) => {
       if (!editor) return;
 
+      // 检查是否允许拖拽（子元素数量大于2时不允许拖拽）
+      if (!isDraggable()) {
+        e.preventDefault();
+
+        return;
+      }
+
       const element = columnRef.current; // 直接获取 DOM 元素
       const pos = props.getPos(); // 直接获取位置
+
+      if (typeof pos !== 'number') return;
 
       if (element && pos !== null && pos !== undefined) {
         dragHandlerDirect(e.nativeEvent, editor, element, pos);
       }
     },
-    [editor, columnRef.current],
+    [editor, columnRef.current, isDraggable],
   );
+
+  // 监听拖拽事务，自动更新新创建的 columns 容器属性
+  useEffect(() => {
+    const handleTransaction = (transaction: any) => {
+      // 检查是否是拖拽操作
+      if (transaction.getMeta('uiEvent') === 'drop') {
+        // 延迟执行，确保 DOM 更新完成
+        setTimeout(() => {
+          updateNewColumnsAttributes();
+        }, 50);
+      }
+    };
+
+    editor.on('transaction', handleTransaction);
+
+    return () => {
+      editor.off('transaction', handleTransaction);
+    };
+  }, [editor, updateNewColumnsAttributes]);
 
   // 拖拽结束处理
   const handleDragEnd = useCallback(
@@ -190,10 +283,10 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
 
       const resolvedPos = editor.state.doc.resolve(pos);
       const parentNode = resolvedPos.parent;
-      const parentAttrs = parentNode.attrs;
-      console.log('🚀 ~ ColumnComponent ~ parentAttrs:', parentAttrs);
 
-      // 更新columns 的attr
+      const parentAttrs = parentNode.attrs;
+
+      // 更新原来columns的熟悉
       editor
         .chain()
         .focus()
@@ -259,10 +352,14 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         ref={columnRef}
         data-type="column"
         data-position={position}
-        draggable={true}
+        draggable={isDraggable()}
         data-key={`column-${columnKey}`}
         data-background-color={backgroundColor}
-        className="p-3 rounded relative border-2 border-transparent hover:border-blue-400 hover:cursor-grab active:cursor-grabbing transition-colors duration-200"
+        className={`p-3 rounded relative border-2 border-transparent transition-colors duration-200 ${
+          isDraggable()
+            ? 'hover:border-blue-400 hover:cursor-grab active:cursor-grabbing'
+            : 'hover:border-gray-300 cursor-not-allowed opacity-75'
+        }`}
         style={{ backgroundColor }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -314,10 +411,12 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
                   <Toolbar.Button tooltip="Insert column" onClick={insertColumn}>
                     <Icon name="Plus" />
                   </Toolbar.Button>
-                  {/* 增加一个删除按钮 */}
-                  <Toolbar.Button tooltip="Delete column" onClick={deleteColumn}>
-                    <Icon name="Trash" />
-                  </Toolbar.Button>
+                  {/* 增加一个删除按钮  小于等于2的时候不允许删除*/}
+                  {isDraggable() && (
+                    <Toolbar.Button tooltip="Delete column" onClick={deleteColumn}>
+                      <Icon name="Trash" />
+                    </Toolbar.Button>
+                  )}
                   <Toolbar.Button tooltip="Column color" onClick={toggleColorPicker}>
                     <div
                       className="w-4 h-4 rounded border border-gray-300"

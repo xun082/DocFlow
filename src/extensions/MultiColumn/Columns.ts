@@ -34,7 +34,7 @@ export const Columns = Node.create({
       //   default: ColumnLayout.TwoColumn,
       // },
       rows: {
-        default: 1,
+        default: 2,
       },
       columnColor: {
         default: '#f3f4f6',
@@ -54,7 +54,7 @@ export const Columns = Node.create({
         () =>
         ({ commands }) =>
           commands.insertContent(
-            `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div></div>`,
+            `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div><div data-type="column" data-position="right"><p></p></div></div>`,
           ),
       setLayout:
         (layout: ColumnLayout) =>
