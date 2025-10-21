@@ -45,6 +45,7 @@ export const BilibiliComponent: React.FC<NodeViewProps> = ({ node, editor }) => 
             className="absolute top-0 left-0 w-full h-full"
             src={node.attrs.src}
             allowFullScreen
+            sandbox="allow-scripts allow-same-origin allow-presentation"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
         </div>
