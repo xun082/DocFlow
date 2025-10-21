@@ -30,20 +30,11 @@ export const Columns = Node.create({
 
   addAttributes() {
     return {
-      // layout: {
-      //   default: ColumnLayout.TwoColumn,
-      // },
+      layout: {
+        default: ColumnLayout.TwoColumn,
+      },
       rows: {
         default: 2,
-      },
-      columnColor: {
-        default: '#f3f4f6',
-        parseHTML: (element) => element.getAttribute('data-column-color') || '#f3f4f6',
-        renderHTML: (attributes) => {
-          if (!attributes.columnColor) return {};
-
-          return { 'data-column-color': attributes.columnColor };
-        },
       },
     };
   },
@@ -137,7 +128,7 @@ export const Columns = Node.create({
       'div',
       {
         'data-type': 'columns',
-        // class: `layout-${HTMLAttributes.layout}`,
+        class: `layout-${HTMLAttributes.layout}`,
         style: `grid-template-columns: repeat(${HTMLAttributes.rows}, 1fr)`,
       },
       0,
