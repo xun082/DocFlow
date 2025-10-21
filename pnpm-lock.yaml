@@ -281,6 +281,9 @@ importers:
       framer-motion:
         specifier: ^12.12.1
         version: 12.23.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      frappe-gantt:
+        specifier: ^1.0.4
+        version: 1.0.4
       hast-util-to-html:
         specifier: ^9.0.5
         version: 9.0.5
@@ -429,6 +432,9 @@ importers:
       '@types/crypto-js':
         specifier: ^4.2.0
         version: 4.2.2
+      '@types/frappe-gantt':
+        specifier: ^0.9.0
+        version: 0.9.0
       '@types/js-beautify':
         specifier: ^1.14.3
         version: 1.14.3
@@ -3799,6 +3805,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/frappe-gantt@0.9.0':
+    resolution: {integrity: sha512-n00ElvRvJ1/+HkJwt57yjnTtAM7FcH/pEV9LbRCy3+hR39TY6l0mQuy4o909uxvw97aCNhQjNh8J8xACKJ2G3w==}
+
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
@@ -5508,6 +5517,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  frappe-gantt@1.0.4:
+    resolution: {integrity: sha512-N94OP9ZiapaG5nzgCeZdxsKP8HD5aLVlH5sEHxSNZQnNKQ4BOn2l46HUD+KIE0LpYIterP7gIrFfkLNRuK0npQ==}
 
   fs-extra@9.1.0:
     resolution: {integrity: sha512-hcg3ZmepS30/7BSFqRvoo3DOMQu7IjqxO5nCDt+zM9XWjb33Wg7ziNT+Qvqbuc3+gWpzO02JubVyk2G4Zvo1OQ==}
@@ -11908,6 +11920,8 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/frappe-gantt@0.9.0': {}
+
   '@types/geojson@7946.0.16': {}
 
   '@types/hast@3.0.4':
@@ -13881,6 +13895,8 @@ snapshots:
     optionalDependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+
+  frappe-gantt@1.0.4: {}
 
   fs-extra@9.1.0:
     dependencies:

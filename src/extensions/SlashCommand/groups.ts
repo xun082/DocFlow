@@ -319,6 +319,16 @@ export const GROUPS: Group[] = [
           editor.chain().focus().setCountdown({ targetDate: '' }).run();
         },
       },
+      {
+        name: 'gantt',
+        label: 'Gantt Chart',
+        iconName: 'CalendarRange',
+        description: 'Insert a Gantt chart for project planning',
+        aliases: ['gantt', 'timeline', 'project'],
+        action: (editor) => {
+          editor.chain().focus().setGantt().run();
+        },
+      },
     ],
   },
 ];
