@@ -141,33 +141,45 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
 
   // 更新新创建的 columns 容器属性
   const updateNewColumnsAttributes = useCallback(() => {
-    const { state } = editor;
-    const { doc } = state;
+    try {
+      const { state } = editor;
+      const { doc } = state;
 
-    // 遍历文档，查找需要更新属性的 columns 容器
-    doc.descendants((node, pos) => {
-      if (node.type.name === 'columns') {
-        const childCount = node.childCount;
-        const currentRows = node.attrs.rows || 1;
+      // 查找需要更新的 columns 节点
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'columns') {
+          const childCount = node.childCount;
+          const currentRows = node.attrs.rows || 1;
 
-        // 如果子元素数量与 rows 不匹配，说明是新创建的容器
-        if (childCount !== currentRows) {
-          // 更新属性
-          const tr = state.tr.setNodeMarkup(pos, undefined, {
-            ...node.attrs,
-            rows: childCount,
-            // 可以在这里添加其他默认属性
-            columnColor: node.attrs.columnColor || '#f3f4f6',
-          });
+          // 如果子元素数量与 rows 不匹配，说明是新创建的容器
+          if (childCount !== currentRows) {
+            // 使用 setTimeout 确保在下一个事件循环中执行
+            setTimeout(() => {
+              try {
+                // 使用 editor.commands 来安全地更新属性
+                editor
+                  .chain()
+                  .focus()
+                  .setNodeSelection(pos)
+                  .updateAttributes('columns', {
+                    rows: childCount,
+                    columnColor: node.attrs.columnColor || '#f3f4f6',
+                  })
+                  .run();
+              } catch (error) {
+                console.warn('Failed to update columns attributes:', error);
+              }
+            }, 0);
 
-          editor.view.dispatch(tr);
-
-          return false; // 停止遍历，一次只更新一个
+            return false; // 只更新第一个找到的节点
+          }
         }
-      }
 
-      return true;
-    });
+        return true;
+      });
+    } catch (error) {
+      console.warn('Error in updateNewColumnsAttributes:', error);
+    }
   }, [editor]);
 
   // 鼠标进入列区域
@@ -258,9 +270,10 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         })
         .run();
 
+      // 延迟更新，确保拖拽操作完全完成
       setTimeout(() => {
         updateNewColumnsAttributes(); // 检测并更新新容器
-      }, 100);
+      }, 200);
     },
 
     [editor, props],
