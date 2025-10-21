@@ -170,25 +170,6 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     });
   }, [editor]);
 
-  // 监听拖拽事务，自动更新新创建的 columns 容器属性
-  useEffect(() => {
-    const handleTransaction = (transaction: any) => {
-      // 检查是否是拖拽操作
-      if (transaction.getMeta('uiEvent') === 'drop') {
-        // 延迟执行，确保 DOM 更新完成
-        setTimeout(() => {
-          updateNewColumnsAttributes();
-        }, 50);
-      }
-    };
-
-    editor.on('transaction', handleTransaction);
-
-    return () => {
-      editor.off('transaction', handleTransaction);
-    };
-  }, [editor, updateNewColumnsAttributes]);
-
   // 鼠标进入列区域
   const handleMouseEnter = useCallback(() => {
     if (hideTimeout) {
@@ -295,7 +276,12 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
           rows: parentAttrs.rows - 1,
         })
         .run();
+
+      setTimeout(() => {
+        updateNewColumnsAttributes(); // 检测并更新新容器
+      }, 100);
     },
+
     [editor, props],
   );
 
