@@ -233,25 +233,6 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     [editor, columnRef.current, isDraggable],
   );
 
-  // 监听拖拽事务，自动更新新创建的 columns 容器属性
-  useEffect(() => {
-    const handleTransaction = (transaction: any) => {
-      // 检查是否是拖拽操作
-      if (transaction.getMeta('uiEvent') === 'drop') {
-        // 延迟执行，确保 DOM 更新完成
-        setTimeout(() => {
-          updateNewColumnsAttributes();
-        }, 50);
-      }
-    };
-
-    editor.on('transaction', handleTransaction);
-
-    return () => {
-      editor.off('transaction', handleTransaction);
-    };
-  }, [editor, updateNewColumnsAttributes]);
-
   // 拖拽结束处理
   const handleDragEnd = useCallback(
     (e: React.DragEvent) => {
