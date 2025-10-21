@@ -9,7 +9,7 @@ export enum ColumnLayout {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     columns: {
-      setColumns: () => ReturnType;
+      setColumns: (rows: number) => ReturnType;
       setLayout: (layout: ColumnLayout) => ReturnType;
       insertColumn: () => ReturnType;
       setColumnClass: (handle: string) => ReturnType;
@@ -48,11 +48,18 @@ export const Columns = Node.create({
       //       `<div data-type="columns"><div data-type="column" data-position="left"><p></p></div><div data-type="column" data-position="right"><p></p></div></div>`,
       //     ),
       setColumns:
-        () =>
-        ({ commands }) =>
-          commands.insertContent(
-            `<div data-type="columns"><div data-type="column" data-position="column-1"><p></p></div><div data-type="column" data-position="column-2"><p></p></div><div data-type="column" data-position="column-3"><p></p></div></div>`,
-          ),
+        (rows: number = 1) =>
+        ({ commands }) => {
+          // 根据rows参数动态创建对应数量的列
+          const columns = [];
+          console.log(rows);
+
+          for (let i = 0; i < rows; i++) {
+            columns.push(`<div data-type="column" ><p></p></div>`);
+          }
+
+          return commands.insertContent(`<div data-type="columns">${columns.join('')}</div>`);
+        },
       setLayout:
         (layout: ColumnLayout) =>
         ({ commands }) =>

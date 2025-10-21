@@ -193,7 +193,8 @@ export const GROUPS: Group[] = [
           editor
             .chain()
             .focus()
-            .setColumns()
+            .setColumns(2)
+            .updateAttributes('columns', { rows: 2 })
             .focus(editor.state.selection.head - 1)
             .run();
         },

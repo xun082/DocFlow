@@ -195,42 +195,52 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
 
       if (typeof pos !== 'number') return;
 
+      // 保存拖拽前的columns状态
+      const resolvedPos = editor.state.doc.resolve(pos);
+      const parentNode = resolvedPos.parent;
+      const parentAttrs = parentNode.attrs;
+
+      dragStartStateRef.current = {
+        parentPos: resolvedPos.before(resolvedPos.depth),
+        parentAttrs: { ...parentAttrs },
+      };
+
+      console.log('handleDragStart saved state:', dragStartStateRef.current);
+
       if (element && pos !== null && pos !== undefined) {
-        dragHandlerDirect(e.nativeEvent, editor, element, pos);
+        dragHandlerDirect(e.nativeEvent, editor, element, pos, handleDragEnd);
       }
     },
     [editor, columnRef.current, isDraggable],
   );
 
-  // 拖拽结束处理
-  const handleDragEnd = useCallback(
-    (e: React.DragEvent) => {
-      // 清理拖拽状态
-      e.preventDefault();
+  // 保存拖拽前的columns状态
+  const dragStartStateRef = useRef<{
+    parentPos: number;
+    parentAttrs: any;
+  } | null>(null);
 
-      // 获取父元素属性
-      const pos = props.getPos();
-      if (typeof pos !== 'number') return;
+  // 拖拽结束处理函数
+  const handleDragEnd = useCallback(() => {
+    console.log('handleDragEnd', dragStartStateRef.current);
 
-      const resolvedPos = editor.state.doc.resolve(pos);
-      const parentNode = resolvedPos.parent;
+    if (!dragStartStateRef.current) return;
 
-      const parentAttrs = parentNode.attrs;
-      console.log('🚀 ~ file: ColumnComponent.tsx:219 ~ parentAttrs:', parentAttrs);
+    const { parentAttrs, parentPos } = dragStartStateRef.current;
 
-      // 更新原来columns的熟悉
-      editor
-        .chain()
-        .focus()
-        .setNodeSelection(resolvedPos.before(resolvedPos.depth))
-        .updateAttributes('columns', {
-          rows: parentAttrs.rows - 1,
-        })
-        .run();
-    },
+    // 更新原来columns的熟悉
+    editor
+      .chain()
+      .focus()
+      .setNodeSelection(parentPos)
+      .updateAttributes('columns', {
+        rows: parentAttrs.rows - 1,
+      })
+      .run();
 
-    [editor, props],
-  );
+    // 清理状态
+    dragStartStateRef.current = null;
+  }, [editor]);
 
   // 调整大小处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -297,7 +307,6 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
       >
         <NodeViewContent className="column-content" />
         {/* 右侧边框拖拽区域 */}

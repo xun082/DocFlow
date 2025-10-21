@@ -9,6 +9,7 @@ export function dragHandlerDirect(
   editor: Editor,
   element: HTMLElement,
   pos: number,
+  onDragEnd?: () => void,
 ) {
   const { view } = editor;
 
@@ -74,14 +75,23 @@ export function dragHandlerDirect(
     event.dataTransfer.setDragImage(wrapper, 0, 0);
 
     // tell ProseMirror the dragged content
-    view.dragging = { slice, move: true };
+    view.dragging = { slice, move: false };
 
     const selection = NodeSelection.create(view.state.doc, from);
     tr.setSelection(selection);
     view.dispatch(tr);
 
-    // clean up
-    document.addEventListener('drop', () => removeNode(wrapper), { once: true });
+    // clean up and handle drag end callback
+    const handleDrop = () => {
+      removeNode(wrapper);
+
+      if (onDragEnd) {
+        console.log('onDragEnd');
+        onDragEnd();
+      }
+    };
+
+    document.addEventListener('drop', handleDrop, { once: true });
   } catch (error) {
     console.error('Error in dragHandlerDirect:', error);
   }
