@@ -101,7 +101,8 @@
   text-align: center;
   color: #9ca3af !important;
   font-weight: 500 !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif !important;
 }
 
@@ -112,7 +113,8 @@
   font-size: 14px !important;
   color: #1f2937 !important;
   height: calc(var(--gv-lower-header-height) * 0.66);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif !important;
 }
 
@@ -185,7 +187,9 @@
     'Microsoft YaHei', sans-serif !important;
   font-size: 13px !important;
   font-weight: 700 !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.2);
   letter-spacing: 0em;
   paint-order: stroke fill;
 }
@@ -429,7 +433,9 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   min-width: 300px;
   max-width: 350px;
   overflow: hidden;
@@ -448,7 +454,8 @@
   color: #ffffff;
   letter-spacing: -0.01em;
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif;
 }
 
@@ -484,7 +491,8 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 4px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif;
 }
 
@@ -493,7 +501,8 @@
   font-weight: 600;
   color: #111827;
   line-height: 1.4;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif;
 }
 
@@ -524,7 +533,8 @@
   color: #3b82f6;
   min-width: 40px;
   text-align: right;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif;
 }
 
