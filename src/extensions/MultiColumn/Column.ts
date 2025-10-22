@@ -10,6 +10,10 @@ export const Column = Node.create({
 
   isolating: true,
 
+  selectable: true,
+
+  draggable: true,
+
   addAttributes() {
     return {
       position: {
