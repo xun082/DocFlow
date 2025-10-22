@@ -205,10 +205,10 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         parentAttrs: { ...parentAttrs },
       };
 
-      console.log('handleDragStart saved state:', dragStartStateRef.current);
+      // 获取唯一的uuid
 
       if (element && pos !== null && pos !== undefined) {
-        dragHandlerDirect(e.nativeEvent, editor, element, pos, handleDragEnd);
+        dragHandlerDirect(e.nativeEvent, editor, element, pos, parentAttrs.uuid);
       }
     },
     [editor, columnRef.current, isDraggable],
@@ -219,28 +219,6 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
     parentPos: number;
     parentAttrs: any;
   } | null>(null);
-
-  // 拖拽结束处理函数
-  const handleDragEnd = useCallback(() => {
-    console.log('handleDragEnd', dragStartStateRef.current);
-
-    if (!dragStartStateRef.current) return;
-
-    const { parentAttrs, parentPos } = dragStartStateRef.current;
-
-    // 更新原来columns的熟悉
-    editor
-      .chain()
-      .focus()
-      .setNodeSelection(parentPos)
-      .updateAttributes('columns', {
-        rows: parentAttrs.rows - 1,
-      })
-      .run();
-
-    // 清理状态
-    dragStartStateRef.current = null;
-  }, [editor]);
 
   // 调整大小处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {

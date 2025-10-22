@@ -1,5 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import { NodeSelection } from '@tiptap/pm/state';
+// import { v4 as uuid } from 'uuid';
 
 import { cloneElement } from './cloneElement';
 import { removeNode } from './removeNode';
@@ -9,7 +10,7 @@ export function dragHandlerDirect(
   editor: Editor,
   element: HTMLElement,
   pos: number,
-  onDragEnd?: () => void,
+  uuid?: string,
 ) {
   const { view } = editor;
 
@@ -75,20 +76,41 @@ export function dragHandlerDirect(
     event.dataTransfer.setDragImage(wrapper, 0, 0);
 
     // tell ProseMirror the dragged content
-    view.dragging = { slice, move: false };
+    view.dragging = { slice, move: true };
 
     const selection = NodeSelection.create(view.state.doc, from);
     tr.setSelection(selection);
     view.dispatch(tr);
 
+    // 获取多有的columns
+
+    // 获取所有的columns节点
+    const getAllColumns = () => {
+      const columnsNodes: Array<{ node: any; pos: number; uuid?: string }> = [];
+      const { tr } = view.state;
+      view.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'columns') {
+          const columnInfo = { node, pos, uuid: node.attrs.uuid };
+          columnsNodes.push(columnInfo);
+
+          if (node.attrs.uuid === uuid) {
+            tr.setNodeAttribute(pos, 'rows', node.attrs.rows - 1);
+          }
+
+          if (node.childCount === 1) {
+            tr.setNodeAttribute(pos, 'rows', 1);
+          }
+        }
+      });
+      view.dispatch(tr);
+    };
+
     // clean up and handle drag end callback
     const handleDrop = () => {
       removeNode(wrapper);
-
-      if (onDragEnd) {
-        console.log('onDragEnd');
-        onDragEnd();
-      }
+      setTimeout(() => {
+        getAllColumns();
+      }, 50);
     };
 
     document.addEventListener('drop', handleDrop, { once: true });
