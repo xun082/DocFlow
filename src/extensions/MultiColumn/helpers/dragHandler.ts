@@ -10,7 +10,7 @@ export function dragHandlerDirect(
   editor: Editor,
   element: HTMLElement,
   pos: number,
-  uuid?: string,
+  // uuid?: string,
 ) {
   const { view } = editor;
 
@@ -86,20 +86,22 @@ export function dragHandlerDirect(
 
     // 获取所有的columns节点
     const getAllColumns = () => {
-      const columnsNodes: Array<{ node: any; pos: number; uuid?: string }> = [];
+      // const columnsNodes: Array<{ node: any; pos: number; uuid?: string }> = [];
       const { tr } = view.state;
       view.state.doc.descendants((node, pos) => {
         if (node.type.name === 'columns') {
-          const columnInfo = { node, pos, uuid: node.attrs.uuid };
-          columnsNodes.push(columnInfo);
+          // const columnInfo = { node, pos, uuid: node.attrs.uuid };
+          // columnsNodes.push(columnInfo);
 
-          if (node.attrs.uuid === uuid) {
-            tr.setNodeAttribute(pos, 'rows', node.attrs.rows - 1);
-          }
+          // if (node.attrs.uuid === uuid) {
+          //   tr.setNodeAttribute(pos, 'rows', node.attrs.rows - 1);
+          // }
 
-          if (node.childCount === 1) {
-            tr.setNodeAttribute(pos, 'rows', 1);
-          }
+          // if (node.childCount === 1) {
+          //   tr.setNodeAttribute(pos, 'rows', 1);
+          // }
+
+          tr.setNodeAttribute(pos, 'rows', node.childCount);
         }
       });
       view.dispatch(tr);

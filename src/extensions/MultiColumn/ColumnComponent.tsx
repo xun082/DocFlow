@@ -208,7 +208,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
       // 获取唯一的uuid
 
       if (element && pos !== null && pos !== undefined) {
-        dragHandlerDirect(e.nativeEvent, editor, element, pos, parentAttrs.uuid);
+        dragHandlerDirect(e.nativeEvent, editor, element, pos);
       }
     },
     [editor, columnRef.current, isDraggable],

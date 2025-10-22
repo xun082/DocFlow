@@ -1,5 +1,4 @@
 import { Node } from '@tiptap/core';
-import { v4 as uuid } from 'uuid';
 
 export enum ColumnLayout {
   SidebarLeft = 'sidebar-left',
@@ -37,20 +36,6 @@ export const Columns = Node.create({
       rows: {
         default: 1,
       },
-      uuid: {
-        default: () => `columns-${uuid()}`,
-        parseHTML: (element) => element.getAttribute('data-uuid'),
-        renderHTML: (attributes) => {
-          // 如果 attributes.uuid 存在，则返回 data-uuid 属性
-          if (attributes.uuid) {
-            return {
-              'data-uuid': attributes.uuid,
-            };
-          }
-
-          return {};
-        },
-      },
     };
   },
 
@@ -59,16 +44,15 @@ export const Columns = Node.create({
       setColumns:
         (rowNum: number = 1) =>
         ({ commands }) => {
-          // 根据rows参数动态创建对应数量的列
+          // 根据 rows 参数动态创建对应数量的列
           const columns = [];
-          const newUuid = `columns-${uuid()}`; // 提前生成uuid
 
           for (let i = 0; i < rowNum; i++) {
             columns.push(`<div data-type="column" ><p></p></div>`);
           }
 
           return commands.insertContent(
-            `<div data-type="columns" data-rows="${rowNum}" data-uuid="${newUuid}">${columns.join('')}</div>`,
+            `<div data-type="columns" data-rows="${rowNum}">${columns.join('')}</div>`,
           );
         },
       setLayout:
