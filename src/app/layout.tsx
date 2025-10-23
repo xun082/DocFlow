@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { Toaster } from 'sonner';
 
-import 'cal-sans';
 import '@/styles/index.css';
+
+import { inter } from './fonts';
 
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
-
-import '@fontsource/inter/100.css';
-import '@fontsource/inter/200.css';
-import '@fontsource/inter/300.css';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -54,14 +47,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html className="h-full font-sans" lang="zh-CN" suppressHydrationWarning>
+    <html className={`h-full ${inter.variable}`} lang="zh-CN" suppressHydrationWarning>
       <head>
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body className="flex flex-col h-full antialiased">
+      <body className={`flex flex-col h-full antialiased ${inter.className}`}>
         <QueryProvider>
           <AuthProvider>
             <main className="h-full">{children}</main>

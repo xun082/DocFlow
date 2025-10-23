@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
+    "analyze": "ANALYZE=true pnpm build",
     "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:ci": "eslint \"**/*.{ts,tsx,js,jsx}\"",
@@ -155,6 +157,8 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@next/bundle-analyzer": "^16.0.0",
     "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4.1.7",
     "@tailwindcss/typography": "^0.5.16",
