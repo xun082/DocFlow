@@ -205,8 +205,6 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         parentAttrs: { ...parentAttrs },
       };
 
-      // 获取唯一的uuid
-
       if (element && pos !== null && pos !== undefined) {
         dragHandlerDirect(e.nativeEvent, editor, element, pos);
       }
