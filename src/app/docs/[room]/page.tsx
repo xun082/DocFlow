@@ -14,8 +14,7 @@ import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
-import { TableOfContents } from '@/app/docs/_components/TableOfContents';
-import { useSidebar } from '@/stores/sidebarStore';
+import { FloatingToc } from '@/app/docs/_components/FloatingToc';
 import { useFileStore } from '@/stores/fileStore';
 import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
@@ -39,7 +38,7 @@ export default function DocumentPage() {
   const params = useParams();
   const documentId = params?.room as string;
   const menuContainerRef = useRef<HTMLDivElement>(null);
-  const sidebar = useSidebar();
+
   const { files } = useFileStore();
 
   // 防止水合不匹配的强制客户端渲染
@@ -50,9 +49,6 @@ export default function DocumentPage() {
   const [isLoadingPermission, setIsLoadingPermission] = useState(true);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
-  // 基本状态
-  const [isTocOpen, setIsTocOpen] = useState(false);
-
   // 协作编辑器状态
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
@@ -61,11 +57,6 @@ export default function DocumentPage() {
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
-
-  // 目录切换函数
-  const toggleToc = () => {
-    setIsTocOpen(!isTocOpen);
-  };
 
   // 获取当前文档的名称
   const getCurrentDocumentName = () => {
@@ -103,7 +94,6 @@ export default function DocumentPage() {
 
         // 检查响应是否有错误
         if (response?.error) {
-          console.error('权限API返回错误:', response.error);
           setPermissionError(response.error);
 
           return;
@@ -112,17 +102,9 @@ export default function DocumentPage() {
         // 检查响应数据
         if (response?.data?.data) {
           const permData = response.data.data as unknown as DocumentPermissionData;
-
           setPermissionData(permData);
         } else if (response?.data) {
           const permData = response.data as unknown as DocumentPermissionData;
-          console.log('✅ 权限数据（直接）:', permData);
-          console.log('📝 准备设置权限数据:', {
-            documentId: permData.documentId,
-            userId: permData.userId,
-            permission: permData.permission,
-            isOwner: permData.isOwner,
-          });
           setPermissionData(permData);
         } else {
           setPermissionError('无法获取文档权限信息');
@@ -151,14 +133,7 @@ export default function DocumentPage() {
       if (permissionData.documentId || permissionData.isOwner !== undefined) {
         setDoc(new Y.Doc());
         setIsMounted(true);
-      } else {
-        console.warn('⚠️ 权限数据结构异常:', permissionData);
       }
-    } else {
-      console.log('⏳ 等待权限数据...', {
-        hasWindow: typeof window !== 'undefined',
-        hasPermissionData: !!permissionData,
-      });
     }
   }, [permissionData]);
 
@@ -178,8 +153,8 @@ export default function DocumentPage() {
           avatar: userProfile.avatar_url,
         });
       }
-    } catch (error) {
-      console.error('解析用户信息失败:', error);
+    } catch {
+      // 静默处理用户信息解析错误
     }
   }, [documentId, permissionData]);
 
@@ -201,8 +176,6 @@ export default function DocumentPage() {
     const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
     if (!websocketUrl) {
-      console.error('WebSocket URL 未配置');
-
       return;
     }
 
@@ -356,10 +329,6 @@ export default function DocumentPage() {
 
       {/* Header */}
       <DocumentHeader
-        isSidebarOpen={sidebar.isOpen}
-        toggleSidebar={sidebar.toggle}
-        isTocOpen={isTocOpen}
-        toggleToc={toggleToc}
         provider={provider}
         connectedUsers={connectedUsers}
         currentUser={currentUser}
@@ -371,22 +340,14 @@ export default function DocumentPage() {
       {/* 主内容区域 */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
-          <div
-            ref={editorContainRef}
-            // onScroll={scrollLightHandler}
-            className="h-full overflow-y-auto relative w-full"
-          >
+          <div ref={editorContainRef} className="h-full overflow-y-auto relative w-full">
             <EditorContent editor={editor} className="prose-container h-full pl-14" />
           </div>
         </div>
-
-        {/* 目录侧边栏 */}
-        {isTocOpen && editor && (
-          <div className="w-80 border-l border-slate-200/60 dark:border-slate-800/60 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm">
-            <TableOfContents isOpen={isTocOpen} editor={editor} />
-          </div>
-        )}
       </div>
+
+      {/* 右侧悬浮目录 - Notion 风格 */}
+      {editor && <FloatingToc editor={editor} />}
 
       {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
       {editor && !isReadOnly && (
