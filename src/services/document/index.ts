@@ -12,8 +12,8 @@ import {
   // SharedDocumentsResponse,
   AccessSharedDocumentDto,
   AccessSharedDocumentResponse,
-  GetDocumentContentResponse,
   SharedDocumentItem,
+  DocumentPermissionData,
 } from './type';
 
 export const DocumentApi = {
@@ -21,9 +21,9 @@ export const DocumentApi = {
   GetDocument: (errorHandler?: ErrorHandler) =>
     request.get<DocumentResponse>('/api/v1/documents', { errorHandler, cacheTime: 0 }),
 
-  // 获取文档内容
-  GetDocumentContent: (documentId: number, errorHandler?: ErrorHandler) =>
-    request.get<GetDocumentContentResponse>(`/api/v1/documents/${documentId}/content`, {
+  // 获取文档权限
+  GetDocumentPermissions: (documentId: number, errorHandler?: ErrorHandler) =>
+    request.get<DocumentPermissionData>(`/api/v1/documents/${documentId}/permissions`, {
       errorHandler,
     }),
 
