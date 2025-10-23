@@ -8,6 +8,7 @@ import { Collaboration } from '@tiptap/extension-collaboration';
 import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
+import { Eye } from 'lucide-react';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
@@ -20,9 +21,12 @@ import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
-// import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableRowMenu, TableColumnMenu, TableMenu, TableCellMenu } from '@/extensions/Table/menus';
 import { ImageBlockMenu } from '@/components/menus';
+import DocumentApi from '@/services/document';
+import NoPermission from '@/app/docs/_components/NoPermission';
+import { DocumentPermissionData } from '@/services/document/type';
+
 // 类型定义
 interface CollaborationUser {
   id: string;
@@ -40,6 +44,11 @@ export default function DocumentPage() {
 
   // 防止水合不匹配的强制客户端渲染
   const [isMounted, setIsMounted] = useState(false);
+
+  // 权限相关状态
+  const [permissionData, setPermissionData] = useState<DocumentPermissionData | null>(null);
+  const [isLoadingPermission, setIsLoadingPermission] = useState(true);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   // 基本状态
   const [isTocOpen, setIsTocOpen] = useState(false);
@@ -81,17 +90,81 @@ export default function DocumentPage() {
     return currentFile?.name || null;
   };
 
-  // 初始化
+  // 获取文档权限
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setDoc(new Y.Doc());
-      setIsMounted(true);
+    if (!documentId) return;
+
+    async function fetchPermission() {
+      try {
+        setIsLoadingPermission(true);
+        setPermissionError(null);
+
+        const response = await DocumentApi.GetDocumentPermissions(Number(documentId));
+
+        // 检查响应是否有错误
+        if (response?.error) {
+          console.error('权限API返回错误:', response.error);
+          setPermissionError(response.error);
+
+          return;
+        }
+
+        // 检查响应数据
+        if (response?.data?.data) {
+          const permData = response.data.data as unknown as DocumentPermissionData;
+
+          setPermissionData(permData);
+        } else if (response?.data) {
+          const permData = response.data as unknown as DocumentPermissionData;
+          console.log('✅ 权限数据（直接）:', permData);
+          console.log('📝 准备设置权限数据:', {
+            documentId: permData.documentId,
+            userId: permData.userId,
+            permission: permData.permission,
+            isOwner: permData.isOwner,
+          });
+          setPermissionData(permData);
+        } else {
+          setPermissionError('无法获取文档权限信息');
+        }
+      } catch {
+        setPermissionError('获取文档权限失败，请稍后重试');
+      } finally {
+        setIsLoadingPermission(false);
+      }
     }
-  }, []);
+
+    fetchPermission();
+  }, [documentId]);
+
+  // 初始化 - 只有在权限验证通过后才初始化
+  useEffect(() => {
+    if (typeof window !== 'undefined' && permissionData) {
+      // 如果有permission字段，检查是否为NONE
+      if (permissionData.permission && permissionData.permission === 'NONE') {
+        setIsMounted(true);
+
+        return;
+      }
+
+      // 如果permission字段不存在，但有isOwner或documentId，说明有权限
+      if (permissionData.documentId || permissionData.isOwner !== undefined) {
+        setDoc(new Y.Doc());
+        setIsMounted(true);
+      } else {
+        console.warn('⚠️ 权限数据结构异常:', permissionData);
+      }
+    } else {
+      console.log('⏳ 等待权限数据...', {
+        hasWindow: typeof window !== 'undefined',
+        hasPermissionData: !!permissionData,
+      });
+    }
+  }, [permissionData]);
 
   // 获取当前用户信息
   useEffect(() => {
-    if (!documentId || typeof window === 'undefined') return;
+    if (!documentId || typeof window === 'undefined' || !permissionData) return;
 
     try {
       const userProfileStr = localStorage.getItem('user_profile');
@@ -108,22 +181,22 @@ export default function DocumentPage() {
     } catch (error) {
       console.error('解析用户信息失败:', error);
     }
-  }, [documentId]);
+  }, [documentId, permissionData]);
 
   // 本地持久化
   useEffect(() => {
-    if (!documentId || !doc || typeof window === 'undefined') return;
+    if (!documentId || !doc || typeof window === 'undefined' || !permissionData) return;
 
     const persistence = new IndexeddbPersistence(`tiptap-collaborative-${documentId}`, doc);
 
     return () => {
       persistence.destroy();
     };
-  }, [documentId, doc]);
+  }, [documentId, doc, permissionData]);
 
   // 协作提供者
   useEffect(() => {
-    if (!documentId || !doc) return;
+    if (!documentId || !doc || !permissionData) return;
 
     const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
@@ -146,7 +219,7 @@ export default function DocumentPage() {
     return () => {
       hocuspocusProvider.destroy();
     };
-  }, [documentId, doc]);
+  }, [documentId, doc, permissionData]);
 
   // 设置用户awareness信息
   useEffect(() => {
@@ -187,6 +260,9 @@ export default function DocumentPage() {
     return () => provider.awareness?.off('update', handleAwarenessUpdate);
   }, [provider, currentUser]);
 
+  // 判断是否为只读模式
+  const isReadOnly = permissionData?.permission === 'VIEW';
+
   // 创建编辑器
   const editor = useEditor(
     {
@@ -198,6 +274,7 @@ export default function DocumentPage() {
           : []),
       ],
       content: '<p>开始编写您的文档...</p>',
+      editable: !isReadOnly,
       editorProps: {
         attributes: {
           autocomplete: 'off',
@@ -210,15 +287,54 @@ export default function DocumentPage() {
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
     },
-    [doc, provider, currentUser],
+    [doc, provider, currentUser, isReadOnly],
   );
 
+  // 加载中状态
+  if (isLoadingPermission) {
+    return (
+      <div
+        className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
+        suppressHydrationWarning
+      >
+        <div className="text-center">
+          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <p className="text-lg text-gray-600 dark:text-gray-400">正在加载文档权限...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 权限错误状态
+  if (permissionError) {
+    return <NoPermission message={permissionError} />;
+  }
+
+  // 无权限访问 - 只在明确permission为NONE时才拒绝
+  if (permissionData?.permission === 'NONE') {
+    return (
+      <NoPermission
+        documentTitle={permissionData?.documentTitle}
+        message="您没有访问此文档的权限。请联系文档所有者获取访问权限。"
+      />
+    );
+  }
+
+  // 编辑器未初始化（等待编辑器准备）
   if (!isMounted || !doc || !editor) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div
+        className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
+        suppressHydrationWarning
+      >
         <div className="text-center">
           <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" suppressHydrationWarning>
+            {!isMounted && '等待挂载...'}
+            {isMounted && !doc && '创建文档...'}
+            {isMounted && doc && !editor && '初始化编辑器...'}
+          </p>
         </div>
       </div>
     );
@@ -230,6 +346,14 @@ export default function DocumentPage() {
       ref={menuContainerRef}
       suppressHydrationWarning
     >
+      {/* 只读模式提示条 */}
+      {isReadOnly && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-center gap-2 text-amber-800 dark:text-amber-200">
+          <Eye className="w-4 h-4" />
+          <span className="text-sm font-medium">只读模式 - 您只能查看此文档，无法编辑</span>
+        </div>
+      )}
+
       {/* Header */}
       <DocumentHeader
         isSidebarOpen={sidebar.isOpen}
@@ -240,7 +364,7 @@ export default function DocumentPage() {
         connectedUsers={connectedUsers}
         currentUser={currentUser}
         documentId={documentId}
-        documentTitle={getCurrentDocumentName() ?? undefined}
+        documentTitle={permissionData?.documentTitle ?? getCurrentDocumentName() ?? undefined}
         documentName={`文档 ${documentId}`}
       />
 
@@ -264,18 +388,17 @@ export default function DocumentPage() {
         )}
       </div>
 
-      {/* 编辑器菜单 */}
-      {editor && (
+      {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
+      {editor && !isReadOnly && (
         <>
           <ContentItemMenu editor={editor} />
           <LinkMenu editor={editor} appendTo={menuContainerRef} />
           <TextMenu editor={editor} />
-          {/* <ColumnsMenu editor={editor} appendTo={menuContainerRef} /> */}
           <TableRowMenu editor={editor} appendTo={menuContainerRef} />
           <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
           <TableMenu editor={editor} appendTo={menuContainerRef} />
           <TableCellMenu editor={editor} appendTo={menuContainerRef} />
-          <ImageBlockMenu editor={editor}></ImageBlockMenu>
+          <ImageBlockMenu editor={editor} />
         </>
       )}
     </div>
