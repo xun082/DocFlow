@@ -83,10 +83,6 @@ function UserAvatar({
 }
 
 interface DocumentHeaderProps {
-  isSidebarOpen?: boolean;
-  toggleSidebar?: () => void;
-  isTocOpen?: boolean;
-  toggleToc?: () => void;
   provider?: any;
   connectedUsers?: CollaborationUser[];
   currentUser?: CollaborationUser | null;
@@ -97,10 +93,6 @@ interface DocumentHeaderProps {
 }
 
 export default function DocumentHeader({
-  isSidebarOpen,
-  toggleSidebar,
-  isTocOpen,
-  toggleToc,
   provider,
   connectedUsers = [],
   currentUser,
@@ -140,43 +132,8 @@ export default function DocumentHeader({
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 min-h-[60px] relative z-10">
-      {/* 左侧：侧边栏切换按钮、目录按钮和文档标题 */}
+      {/* 左侧：文档标题 */}
       <div className="flex items-center space-x-3 min-w-0 flex-1">
-        <div className="flex items-center space-x-1">
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-            aria-label={isSidebarOpen ? '隐藏侧边栏' : '显示侧边栏'}
-          >
-            <Icon name={isSidebarOpen ? 'PanelLeftClose' : 'PanelLeft'} />
-          </button>
-
-          {/* 目录控制按钮 */}
-          {toggleToc && (
-            <button
-              type="button"
-              onClick={toggleToc}
-              className={`
-                flex-shrink-0 p-2 rounded-lg transition-all duration-300 hover:scale-105
-                ${
-                  isTocOpen
-                    ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/50 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
-                }
-              `}
-              aria-label={isTocOpen ? '隐藏目录' : '显示目录'}
-            >
-              <div className="relative">
-                <Icon name="List" className="w-4 h-4" />
-                {isTocOpen && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full animate-pulse" />
-                )}
-              </div>
-            </button>
-          )}
-        </div>
-
         {/* 文档标题 */}
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
           {displayTitle || (isCollaborationMode ? '协作文档' : '文档编辑器')}
@@ -185,7 +142,7 @@ export default function DocumentHeader({
         {/* 协作状态指示器 */}
         {isCollaborationMode && (
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm font-medium text-green-600 dark:text-green-400 hidden sm:inline">
               协作中
             </span>
@@ -253,34 +210,28 @@ export default function DocumentHeader({
           </>
         )}
 
-        {/* 分享按钮 - 优化样式 */}
+        {/* 分享按钮 */}
         {documentId && (
           <button
             type="button"
             onClick={handleShare}
-            className="relative group flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
+            aria-label="分享文档"
           >
             <Icon name="Share" className="w-4 h-4" />
-            <span className="hidden sm:inline">分享文档</span>
-
-            {/* 光晕效果 */}
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-20 transition-opacity duration-200 -z-10 blur-xl"></div>
+            <span className="hidden sm:inline text-sm font-medium">分享</span>
           </button>
         )}
 
-        {/* GitHub 链接 - 移动到最右边 */}
+        {/* GitHub 链接 */}
         <a
           href="https://github.com/xun082/DocFlow"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center w-9 h-9 text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all duration-200 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/80 group backdrop-blur-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+          className="flex items-center justify-center p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
           aria-label="查看 GitHub 仓库"
         >
-          <svg
-            className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
           </svg>
         </a>
