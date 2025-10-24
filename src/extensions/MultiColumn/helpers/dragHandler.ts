@@ -90,17 +90,6 @@ export function dragHandlerDirect(
       const { tr } = view.state;
       view.state.doc.descendants((node, pos) => {
         if (node.type.name === 'columns') {
-          // const columnInfo = { node, pos, uuid: node.attrs.uuid };
-          // columnsNodes.push(columnInfo);
-
-          // if (node.attrs.uuid === uuid) {
-          //   tr.setNodeAttribute(pos, 'rows', node.attrs.rows - 1);
-          // }
-
-          // if (node.childCount === 1) {
-          //   tr.setNodeAttribute(pos, 'rows', 1);
-          // }
-
           tr.setNodeAttribute(pos, 'rows', node.childCount);
         }
       });

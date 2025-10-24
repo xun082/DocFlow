@@ -203,6 +203,14 @@ const BlocksTab = () => {
       blockType: 'ai',
       category: 'interactive',
     },
+    // 插入倒计时组件
+    {
+      icon: 'Timer' as keyof typeof icons,
+      label: '倒计时',
+      description: '插入倒计时组件',
+      blockType: 'countdown',
+      category: 'interactive',
+    },
   ];
 
   // 过滤区块

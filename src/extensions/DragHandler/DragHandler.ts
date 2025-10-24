@@ -288,6 +288,42 @@ class ChartBlockStrategy implements BlockContentStrategy {
   }
 }
 
+// 增加多列块策略
+class ColumnsBlockStrategy implements BlockContentStrategy {
+  create() {
+    return {
+      type: 'columns',
+      attrs: {
+        rows: 2,
+      },
+      content: [
+        { type: 'column', content: [{ type: 'paragraph' }] },
+        { type: 'column', content: [{ type: 'paragraph' }] },
+      ],
+    };
+  }
+}
+
+// 增加倒计时组件策略
+class CountdownBlockStrategy implements BlockContentStrategy {
+  create() {
+    // 设置结束时间为当前时间增加半小时
+    const now = new Date();
+    const targetDate = new Date(now.getTime() + 30 * 60 * 1000); // 30分钟 = 30 * 60 * 1000毫秒
+
+    return {
+      type: 'countdown',
+      attrs: {
+        targetDate: targetDate.toISOString(),
+        showDays: true,
+        showHours: true,
+        showMinutes: true,
+        showSeconds: true,
+      },
+    };
+  }
+}
+
 // 默认块策略
 class DefaultBlockStrategy implements BlockContentStrategy {
   create() {
@@ -309,6 +345,8 @@ class BlockContentStrategyFactory {
     ['divider', new HorizontalRulerBlockStrategy()],
     ['ai', new AIBlockStrategy()],
     ['chart', new ChartBlockStrategy()],
+    ['columns', new ColumnsBlockStrategy()],
+    ['countdown', new CountdownBlockStrategy()],
   ]);
 
   static getStrategy(blockType: string): BlockContentStrategy {
@@ -323,6 +361,8 @@ class BlockContentStrategyFactory {
 
 // 重构后的函数
 function createContentForBlockType(blockType: string) {
+  console.log('blockType', blockType);
+
   const strategy = BlockContentStrategyFactory.getStrategy(blockType);
 
   return strategy.create();
