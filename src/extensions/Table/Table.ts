@@ -41,9 +41,11 @@ export const Table = TiptapTable.extend({
           // 存储按钮和对应的事件监听器
           const buttonListeners = new Map<HTMLElement, () => void>();
 
-          // 提取的点击事件处理函数
-          const createClickHandler = (node: Node, pos: number) => {
+          // 添加行的点击事件处理函数
+          const createAddRowHandler = (node: Node, pos: number) => {
             return () => {
+              console.log('add row');
+
               // 直接使用 ProseMirror 的方式添加行
               const schema = editorView.state.schema;
               const tableRow = schema.nodes.tableRow;
@@ -57,7 +59,7 @@ export const Table = TiptapTable.extend({
                 });
 
                 // 创建新行
-                const cells: Node[] | null = [];
+                const cells: Node[] = [];
 
                 for (let i = 0; i < colCount; i++) {
                   const cell = tableCell.createAndFill();
@@ -86,6 +88,43 @@ export const Table = TiptapTable.extend({
             };
           };
 
+          // 添加列的点击事件处理函数
+          const createAddColumnHandler = (node: Node, pos: number) => {
+            return () => {
+              console.log('add column');
+
+              const schema = editorView.state.schema;
+              const tableCell = schema.nodes.tableCell;
+
+              if (tableCell) {
+                const tr = editorView.state.tr;
+                let insertOffset = 0; // 用于跟踪插入操作对位置的影响
+
+                // 遍历每一行，在每行末尾添加一个新单元格
+                node.forEach((row, rowOffset) => {
+                  if (row.type.name === 'tableRow') {
+                    const newCell = tableCell.createAndFill();
+
+                    if (newCell) {
+                      // 计算当前行的结束位置（行内容结束，但在行节点结束之前）
+                      // pos + 1: 表格内容开始位置
+                      // rowOffset: 当前行在表格中的偏移量
+                      // row.content.size: 当前行内容的大小
+                      // insertOffset: 之前插入操作对位置的累积影响
+                      const rowEndPos = pos + 1 + rowOffset + row.content.size + insertOffset;
+                      tr.insert(rowEndPos, newCell);
+
+                      // 更新插入偏移量，每插入一个单元格，后续位置需要相应调整
+                      insertOffset += newCell.nodeSize;
+                    }
+                  }
+                });
+
+                editorView.dispatch(tr);
+              }
+            };
+          };
+
           // 移除按钮的事件监听器
           const removeButtonListener = (button: HTMLElement) => {
             const listener = buttonListeners.get(button);
@@ -96,33 +135,54 @@ export const Table = TiptapTable.extend({
             }
           };
 
-          const addButtonListener = (button: HTMLElement, node: Node, pos: number) => {
+          const addButtonListener = (button: HTMLElement, handler: () => void) => {
             removeButtonListener(button);
+            console.log('add button listener', button.className);
 
-            const clickHandler = createClickHandler(node, pos);
+            // 创建包装的处理器来添加调试信息
+            const wrappedHandler = () => {
+              console.log('Button clicked!', button.className);
+              handler();
+            };
 
             // 添加新的监听器
-            button.addEventListener('click', clickHandler);
+            button.addEventListener('click', wrappedHandler);
 
             // 存储监听器引用
-            buttonListeners.set(button, clickHandler);
+            buttonListeners.set(button, wrappedHandler);
           };
 
           const updateButtonStates = () => {
-            // 先清理所有现有的监听器
-            buttonListeners.forEach((listener, button) => {
+            // 先获取所有按钮的数组，避免在遍历时修改Map
+            const buttonsToRemove = Array.from(buttonListeners.keys());
+
+            // 清理所有现有的监听器
+            buttonsToRemove.forEach((button) => {
               removeButtonListener(button);
             });
 
             editorView.state.doc.descendants((node, pos) => {
               if (node.type.name === 'table') {
-                const button = editorView.dom
-                  .querySelector(`[data-id="${node.attrs.id}"]`)
-                  ?.parentElement?.querySelector('.add-row-btn') as HTMLElement;
+                const parentElement = editorView.dom.querySelector(
+                  `[data-id="${node.attrs.id}"]`,
+                )?.parentElement;
 
-                if (button) {
-                  // 重新绑定事件监听器
-                  addButtonListener(button, node, pos);
+                console.log('parentElement found:', !!parentElement);
+
+                const addRowButton = parentElement?.querySelector('.add-row-btn') as HTMLElement;
+                const addColButton = parentElement?.querySelector('.add-col-btn') as HTMLElement;
+
+                console.log('addRowButton found:', !!addRowButton);
+                console.log('addColButton found:', !!addColButton);
+
+                if (addRowButton) {
+                  // 重新绑定添加行事件监听器
+                  addButtonListener(addRowButton, createAddRowHandler(node, pos));
+                }
+
+                if (addColButton) {
+                  // 重新绑定添加列事件监听器
+                  addButtonListener(addColButton, createAddColumnHandler(node, pos));
                 }
               }
             });
