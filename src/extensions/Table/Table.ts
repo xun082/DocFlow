@@ -8,7 +8,21 @@ export const Table = TiptapTable.extend({
     return [
       'div',
       { class: 'table-wrapper my-8 group' },
-      ['table', HTMLAttributes, 0],
+      [
+        'div',
+        { class: 'flex' },
+        ['table', HTMLAttributes, 0],
+        [
+          'div',
+          {
+            class:
+              'add-col-btn group-hover:text-black text-white cursor-pointer px-1 text-[10px] transition-all duration-200 shadow-sm active:bg-primary-700 opacity-0 group-hover:opacity-100 flex items-center justify-center',
+            style: 'writing-mode: vertical-rl; text-orientation: mixed;',
+            tabindex: '-1',
+          },
+          '+ 添加列',
+        ],
+      ],
       [
         'div',
         {
