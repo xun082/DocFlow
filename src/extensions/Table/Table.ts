@@ -43,10 +43,11 @@ export const Table = TiptapTable.extend({
                 });
 
                 // 创建新行
-                const cells: any[] = [];
+                const cells: Node[] | null = [];
 
                 for (let i = 0; i < colCount; i++) {
-                  cells.push(tableCell.createAndFill());
+                  const cell = tableCell.createAndFill();
+                  if (cell) cells.push(cell);
                 }
 
                 const newRow = tableRow.create(null, cells);
@@ -56,6 +57,10 @@ export const Table = TiptapTable.extend({
 
                 node.forEach((child, offset) => {
                   if (child.type.name === 'tableRow') {
+                    // pos: 表格节点在文档中的位置
+                    // offset: 当前行节点在表格中的偏移量
+                    // child.nodeSize: 当前行节点的总大小(包括其内容)
+                    // 计算表格最后一行的结束位置
                     lastRowPos = pos + 1 + offset + child.nodeSize;
                   }
                 });
@@ -63,8 +68,6 @@ export const Table = TiptapTable.extend({
                 // 在最后一行之后插入新行
                 const tr = editorView.state.tr.insert(lastRowPos, newRow);
                 editorView.dispatch(tr);
-
-                console.log('新行已插入');
               }
             };
           };
