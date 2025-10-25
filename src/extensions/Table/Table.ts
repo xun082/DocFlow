@@ -30,8 +30,6 @@ export const Table = TiptapTable.extend({
           // 提取的点击事件处理函数
           const createClickHandler = (node: Node, pos: number) => {
             return () => {
-              console.log('按钮被点击了');
-
               // 直接使用 ProseMirror 的方式添加行
               const schema = editorView.state.schema;
               const tableRow = schema.nodes.tableRow;
@@ -43,8 +41,6 @@ export const Table = TiptapTable.extend({
                 node.firstChild?.forEach(() => {
                   colCount++;
                 });
-
-                console.log('表格列数:', colCount);
 
                 // 创建新行
                 const cells: any[] = [];
