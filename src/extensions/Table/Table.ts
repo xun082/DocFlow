@@ -1,18 +1,20 @@
 import { Table as TiptapTable } from '@tiptap/extension-table';
 import { Plugin } from '@tiptap/pm/state';
+import { Node } from '@tiptap/pm/model';
 
 export const Table = TiptapTable.extend({
   renderHTML({ HTMLAttributes }) {
     // 返回新的节点结构，在最外层包裹 div
     return [
       'div',
-      { class: 'table-wrapper' },
+      { class: 'table-wrapper my-8 group' },
       ['table', HTMLAttributes, 0],
       [
         'div',
         {
           class:
-            'add-row-btn bg-primary-500 hover:bg-primary-600 hover:text-black text-white border-none px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md active:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+            'text-center add-row-btn group-hover:text-black text-white  cursor-pointer py-1 text-[10px] transition-all duration-200 shadow-sm active:bg-primary-700 opacity-0 group-hover:opacity-100',
+          tabindex: '-1',
         },
         '+ 添加行',
       ],
@@ -22,58 +24,92 @@ export const Table = TiptapTable.extend({
     return [
       new Plugin({
         view: (editorView) => {
-          // 存储已绑定事件的按钮
-          const boundButtons = new Set();
+          // 存储按钮和对应的事件监听器
+          const buttonListeners = new Map<HTMLElement, () => void>();
 
-          // 更新按钮状态和绑定事件
+          // 提取的点击事件处理函数
+          const createClickHandler = (node: Node, pos: number) => {
+            return () => {
+              console.log('按钮被点击了');
+
+              // 直接使用 ProseMirror 的方式添加行
+              const schema = editorView.state.schema;
+              const tableRow = schema.nodes.tableRow;
+              const tableCell = schema.nodes.tableCell;
+
+              if (tableRow && tableCell) {
+                // 获取表格的列数
+                let colCount = 0;
+                node.firstChild?.forEach(() => {
+                  colCount++;
+                });
+
+                console.log('表格列数:', colCount);
+
+                // 创建新行
+                const cells: any[] = [];
+
+                for (let i = 0; i < colCount; i++) {
+                  cells.push(tableCell.createAndFill());
+                }
+
+                const newRow = tableRow.create(null, cells);
+
+                // 找到表格的最后一行位置
+                let lastRowPos = pos + 1;
+
+                node.forEach((child, offset) => {
+                  if (child.type.name === 'tableRow') {
+                    lastRowPos = pos + 1 + offset + child.nodeSize;
+                  }
+                });
+
+                // 在最后一行之后插入新行
+                const tr = editorView.state.tr.insert(lastRowPos, newRow);
+                editorView.dispatch(tr);
+
+                console.log('新行已插入');
+              }
+            };
+          };
+
+          // 移除按钮的事件监听器
+          const removeButtonListener = (button: HTMLElement) => {
+            const listener = buttonListeners.get(button);
+
+            if (listener) {
+              button.removeEventListener('click', listener);
+              buttonListeners.delete(button);
+            }
+          };
+
+          const addButtonListener = (button: HTMLElement, node: Node, pos: number) => {
+            removeButtonListener(button);
+
+            const clickHandler = createClickHandler(node, pos);
+
+            // 添加新的监听器
+            button.addEventListener('click', clickHandler);
+
+            // 存储监听器引用
+            buttonListeners.set(button, clickHandler);
+          };
+
           const updateButtonStates = () => {
-            // 查找所有表格包装器中的按钮
-            // 在文档中查找对应的表格节点
+            // 先清理所有现有的监听器
+            buttonListeners.forEach((listener, button) => {
+              removeButtonListener(button);
+            });
+
             editorView.state.doc.descendants((node, pos) => {
               if (node.type.name === 'table') {
                 const button = editorView.dom
                   .querySelector(`[data-id="${node.attrs.id}"]`)
-                  ?.parentElement?.querySelector('.add-row-btn');
+                  ?.parentElement?.querySelector('.add-row-btn') as HTMLElement;
 
-                // 检查是否已经绑定过事件
-                if (button && !boundButtons.has(button)) {
-                  boundButtons.add(button);
-
-                  button.addEventListener('click', () => {
-                    console.log('按钮被点击了');
-
-                    // 直接使用 ProseMirror 的方式添加行
-                    const schema = editorView.state.schema;
-                    const tableRow = schema.nodes.tableRow;
-                    const tableCell = schema.nodes.tableCell;
-
-                    if (tableRow && tableCell) {
-                      // 获取表格的列数
-                      let colCount = 0;
-                      node.firstChild?.forEach(() => {
-                        colCount++;
-                      });
-
-                      console.log('表格列数:', colCount);
-
-                      // 创建新行
-                      const cells: any[] = [];
-
-                      for (let i = 0; i < colCount; i++) {
-                        cells.push(tableCell.createAndFill());
-                      }
-
-                      const newRow = tableRow.create(null, cells);
-                      console.log('🚀 ~ button.addEventListener ~ newRow:', newRow);
-
-                      // 在表格末尾插入新行
-                      const insertPos = pos + node.nodeSize - 1;
-                      const tr = editorView.state.tr.insert(insertPos, newRow);
-                      editorView.dispatch(tr);
-
-                      console.log('新行已插入');
-                    }
-                  });
+                if (button) {
+                  // 重新绑定事件监听器
+                  addButtonListener(button, node, pos);
                 }
               }
             });
@@ -84,7 +120,11 @@ export const Table = TiptapTable.extend({
               updateButtonStates();
             },
             destroy: () => {
-              boundButtons.clear();
+              // 清理所有事件监听器
+              buttonListeners.forEach((listener, button) => {
+                removeButtonListener(button);
+              });
+              buttonListeners.clear();
             },
           };
         },
