@@ -7,7 +7,7 @@ export const Table = TiptapTable.extend({
     // 返回新的节点结构，在最外层包裹 div
     return [
       'div',
-      { class: 'table-wrapper my-8 group' },
+      { class: 'table-wrapper  group' },
       [
         'div',
         { class: 'flex' },
@@ -27,7 +27,7 @@ export const Table = TiptapTable.extend({
         'div',
         {
           class:
-            'text-center add-row-btn group-hover:text-black text-white  cursor-pointer py-1 text-[10px] transition-all duration-200 shadow-sm active:bg-primary-700 opacity-0 group-hover:opacity-100',
+            'w-full text-center add-row-btn group-hover:text-black text-white  cursor-pointer py-1 text-[10px] transition-all duration-200 shadow-sm active:bg-primary-700 opacity-0 group-hover:opacity-100',
           tabindex: '-1',
         },
         '+ 添加行',
@@ -44,8 +44,6 @@ export const Table = TiptapTable.extend({
           // 添加行的点击事件处理函数
           const createAddRowHandler = (node: Node, pos: number) => {
             return () => {
-              console.log('add row');
-
               // 直接使用 ProseMirror 的方式添加行
               const schema = editorView.state.schema;
               const tableRow = schema.nodes.tableRow;
@@ -91,8 +89,6 @@ export const Table = TiptapTable.extend({
           // 添加列的点击事件处理函数
           const createAddColumnHandler = (node: Node, pos: number) => {
             return () => {
-              console.log('add column');
-
               const schema = editorView.state.schema;
               const tableCell = schema.nodes.tableCell;
 
@@ -137,19 +133,12 @@ export const Table = TiptapTable.extend({
 
           const addButtonListener = (button: HTMLElement, handler: () => void) => {
             removeButtonListener(button);
-            console.log('add button listener', button.className);
-
-            // 创建包装的处理器来添加调试信息
-            const wrappedHandler = () => {
-              console.log('Button clicked!', button.className);
-              handler();
-            };
 
             // 添加新的监听器
-            button.addEventListener('click', wrappedHandler);
+            button.addEventListener('click', handler);
 
             // 存储监听器引用
-            buttonListeners.set(button, wrappedHandler);
+            buttonListeners.set(button, handler);
           };
 
           const updateButtonStates = () => {
@@ -167,13 +156,10 @@ export const Table = TiptapTable.extend({
                   `[data-id="${node.attrs.id}"]`,
                 )?.parentElement;
 
-                console.log('parentElement found:', !!parentElement);
-
-                const addRowButton = parentElement?.querySelector('.add-row-btn') as HTMLElement;
+                const addRowButton = parentElement?.parentElement?.querySelector(
+                  '.add-row-btn',
+                ) as HTMLElement;
                 const addColButton = parentElement?.querySelector('.add-col-btn') as HTMLElement;
-
-                console.log('addRowButton found:', !!addRowButton);
-                console.log('addColButton found:', !!addColButton);
 
                 if (addRowButton) {
                   // 重新绑定添加行事件监听器
@@ -204,6 +190,6 @@ export const Table = TiptapTable.extend({
       }),
     ];
   },
-}).configure({ resizable: true, lastColumnResizable: false });
+}).configure({ resizable: false, lastColumnResizable: false });
 
 export default Table;
