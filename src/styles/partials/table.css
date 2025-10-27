@@ -8,7 +8,45 @@
   }
 
   .ProseMirror table {
-    @apply border-collapse rounded box-border w-full border border-black/10;
+    @apply border-collapse rounded box-border w-full border border-black/10 relative mr-8 mb-6;
+  }
+
+  /* 右侧添加列按钮 - 挂在 wrapper */
+  .ProseMirror .tableWrapper::after {
+    content: '+ 添加列';
+    @apply absolute top-0 -right-4 h-full w-4 flex items-center justify-center cursor-pointer
+        text-[10px] text-white opacity-0 border-t border-r border-b border-gray-300;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    z-index: 10;
+    pointer-events: auto;
+    transition: opacity 200ms ease-in-out;
+    transition-delay: 300ms; /* 隐藏延迟 */
+  }
+
+  .ProseMirror .tableWrapper:hover::after {
+    @apply opacity-100 text-black;
+    transition-delay: 0ms; /* 显示无延迟 */
+  }
+
+  /* 底部添加行按钮 - 挂在 wrapper */
+  .ProseMirror .tableWrapper::before {
+    content: '+ 添加行';
+    @apply absolute -bottom-6 left-0 h-6 w-full flex items-center justify-center !cursor-pointer
+    text-[10px] text-white opacity-0 text-center border-l border-r border-b border-gray-300;
+    z-index: 100;
+    pointer-events: auto;
+    transition: opacity 200ms ease-in-out;
+    transition-delay: 300ms; /* 隐藏延迟 */
+  }
+
+  .ProseMirror .tableWrapper:hover::before {
+    @apply opacity-100 text-black;
+    transition-delay: 0ms; /* 显示无延迟 */
+  }
+
+  .ProseMirror table:hover::after {
+    @apply opacity-100 text-black;
   }
 
   .dark .ProseMirror table {
