@@ -63,6 +63,9 @@ export const TableCell = Node.create<TableCellOptions>({
       style: {
         default: null,
       },
+      showMenu: {
+        default: false,
+      },
     };
   },
 
@@ -82,7 +85,6 @@ export const TableCell = Node.create<TableCellOptions>({
             const { doc, selection } = state;
             const decorations: Decoration[] = [];
             const cells = getCellsInColumn(0)(selection);
-            console.log('🚀 ~ addProseMirrorPlugins ~ cells:', cells);
 
             if (cells) {
               cells.forEach(({ pos }: { pos: number }, index: number) => {
@@ -123,18 +125,49 @@ export const TableCell = Node.create<TableCellOptions>({
             const allCells = getCellsInTable(selection);
 
             if (allCells && allCells?.length !== 0) {
-              allCells.forEach(({ pos }: { pos: number }, index: number) => {
+              allCells.forEach(({ pos }: { pos: number }) => {
                 decorations.push(
                   Decoration.widget(pos + 1, () => {
                     const grip = document.createElement('a');
 
                     grip.className += ' right';
+                    grip.setAttribute('data-table-cell-grip', 'true');
 
                     grip.addEventListener('mousedown', (event) => {
                       event.preventDefault();
                       event.stopImmediatePropagation();
 
-                      this.editor.view.dispatch(selectRow(index)(this.editor.state.tr));
+                      // 获取当前单元格的位置
+                      const cellPos = pos + 1;
+                      const { tr } = this.editor.state;
+
+                      // 首先清除所有单元格的 showMenu 属性
+                      const allTableCells = getCellsInTable(this.editor.state.selection);
+
+                      if (allTableCells) {
+                        allTableCells.forEach(({ pos: cellPosition }) => {
+                          const resolvedPos = tr.doc.resolve(cellPosition + 1);
+
+                          if (resolvedPos.parent.type.name === 'tableCell') {
+                            tr.setNodeMarkup(cellPosition, undefined, {
+                              ...resolvedPos.parent.attrs,
+                              showMenu: false,
+                            });
+                          }
+                        });
+                      }
+
+                      // 设置当前单元格的 showMenu 为 true
+                      const resolvedPos = tr.doc.resolve(cellPos);
+
+                      if (resolvedPos.parent.type.name === 'tableCell') {
+                        tr.setNodeMarkup(pos, undefined, {
+                          ...resolvedPos.parent.attrs,
+                          showMenu: true,
+                        });
+                      }
+
+                      this.editor.view.dispatch(tr);
                     });
 
                     return grip;

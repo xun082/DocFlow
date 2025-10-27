@@ -62,12 +62,35 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
     const cellStart = cellPos;
     const cellEnd = cellPos + cellNode.nodeSize;
 
-    return selection.from >= cellStart && selection.to <= cellEnd;
+    return cellNode.attrs.showMenu && selection.from >= cellStart && selection.to <= cellEnd;
   };
 
   const shouldShow = ({ state, from }: ShouldShowProps) => {
     return isCellSelected({ state, from });
   };
+
+  // 隐藏所有单元格菜单的函数
+  const hideAllCellMenus = useCallback(() => {
+    const { tr } = editor.state;
+    let hasChanges = false;
+
+    editor.state.doc.descendants((node, pos) => {
+      if (
+        (node.type.name === 'tableCell' || node.type.name === 'tableHeader') &&
+        node.attrs.showMenu
+      ) {
+        tr.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          showMenu: false,
+        });
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      editor.view.dispatch(tr);
+    }
+  }, [editor]);
 
   // 处理图片文件上传 - 表格专用
   const handleImageFile = useCallback(
@@ -172,10 +195,11 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
         updateDelay={0}
         options={{
           offset: 15,
+          onHide: hideAllCellMenus,
         }}
         shouldShow={shouldShow}
       >
-        <Toolbar.Wrapper isVertical>
+        <Toolbar.Wrapper isVertical data-bubble-menu="tableCellMenu">
           {/* 图片插入 */}
           <PopoverMenu.Item
             iconComponent={<Icon name="Image" />}
