@@ -2,7 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-import { getCellsInColumn, isRowSelected, selectRow } from './utils';
+import { getCellsInColumn, isRowSelected, selectRow, getCellsInTable } from './utils';
 
 export interface TableCellOptions {
   HTMLAttributes: Record<string, any>;
@@ -77,9 +77,12 @@ export const TableCell = Node.create<TableCellOptions>({
               return DecorationSet.empty;
             }
 
+            // 获取所有的 cell
+
             const { doc, selection } = state;
             const decorations: Decoration[] = [];
             const cells = getCellsInColumn(0)(selection);
+            console.log('🚀 ~ addProseMirrorPlugins ~ cells:', cells);
 
             if (cells) {
               cells.forEach(({ pos }: { pos: number }, index: number) => {
@@ -103,6 +106,30 @@ export const TableCell = Node.create<TableCellOptions>({
                     const grip = document.createElement('a');
 
                     grip.className = className;
+                    grip.addEventListener('mousedown', (event) => {
+                      event.preventDefault();
+                      event.stopImmediatePropagation();
+
+                      this.editor.view.dispatch(selectRow(index)(this.editor.state.tr));
+                    });
+
+                    return grip;
+                  }),
+                );
+              });
+            }
+
+            // 给每个 cell 的右边增加一个 a 标签
+            const allCells = getCellsInTable(selection);
+
+            if (allCells && allCells?.length !== 0) {
+              allCells.forEach(({ pos }: { pos: number }, index: number) => {
+                decorations.push(
+                  Decoration.widget(pos + 1, () => {
+                    const grip = document.createElement('a');
+
+                    grip.className += ' right';
+
                     grip.addEventListener('mousedown', (event) => {
                       event.preventDefault();
                       event.stopImmediatePropagation();
