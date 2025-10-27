@@ -146,6 +146,15 @@ export interface AccessSharedDocumentResponse {
   };
 }
 
+export interface DocumentPermissionData {
+  documentId: number;
+  userId: number;
+  documentTitle: string;
+  documentType: 'FILE' | 'FOLDER';
+  isOwner: boolean;
+  permission: 'NONE' | 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
+}
+
 export interface GetDocumentPermissionResponse {
   documentId: number;
   userId: number;
@@ -156,7 +165,7 @@ export interface GetDocumentPermissionResponse {
 }
 
 // 获取文档内容的响应类型
-export interface GetDocumentContentResponse {
+export interface DocumentPermissionsResponse {
   code: number;
   message: string;
   data: {
