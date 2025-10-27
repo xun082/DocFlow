@@ -224,7 +224,7 @@ PR 中没有包含需要审查的代码文件
 
 ## 📝 审查报告格式
 
-请严格按照以下 Markdown 格式返回代码审查报告：
+请严格按照以下 Markdown 格式返回代码审查报告，不要使用 JSON 格式，直接返回 Markdown 文本：
 
 ## 🤖 AI 代码审查报告
 
@@ -290,7 +290,9 @@ ${files.map((file) => `- \`${file}\``).join('\n')}
 ${diff}
 \`\`\`
 
-请进行专业、详细的代码审查，重点关注 DocFlow 项目的技术栈特点和架构规范，提供具体的改进建议和代码示例。`;
+请进行专业、详细的代码审查，重点关注 DocFlow 项目的技术栈特点和架构规范，提供具体的改进建议和代码示例。
+
+**重要提醒：请直接返回 Markdown 格式的审查报告，不要使用 JSON 格式包装！**`;
   }
 
   private async callDeepSeekAPI(prompt: string): Promise<string> {
@@ -306,7 +308,8 @@ ${diff}
           messages: [
             {
               role: 'system',
-              content: '你是一位专业的代码审查专家，请严格按照要求的 JSON 格式返回审查结果。',
+              content:
+                '你是一位专业的代码审查专家，请严格按照要求的 Markdown 格式返回审查结果。不要使用 JSON 格式，直接返回纯 Markdown 文本。',
             },
             {
               role: 'user',
