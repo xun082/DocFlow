@@ -63,6 +63,48 @@
     @apply border-white/20;
   }
 
+  /* 单元格右侧按钮：默认隐藏，hover 显示，位于边框上 */
+  .ProseMirror table td a.right {
+    @apply absolute top-1/2 z-[2] w-4 h-6 grid place-items-center transition-opacity duration-200;
+    right: -8px; /* 位于右边框上 */
+    transform: translateY(-50%);
+    opacity: 0; /* 默认隐藏 */
+    color: rgb(0 0 0 / 0.6);
+    background: rgb(255 255 255 / 0.9);
+    pointer-events: auto;
+    user-select: none;
+    z-index: 1000;
+    cursor: pointer;
+  }
+
+  .dark .ProseMirror table td a.right {
+    color: rgb(255 255 255 / 0.6);
+    background: rgb(0 0 0 / 0.9);
+  }
+
+  .ProseMirror table td.has-focus a.right {
+    opacity: 1; /* 只有 has-focus 时显示 */
+  }
+
+  /* 使用伪元素绘制三个竖直排列的点 */
+  .ProseMirror table td a.right::before {
+    content: '';
+    width: 2px;
+    height: 2px;
+    border-radius: 9999px;
+    background: currentColor;
+    box-shadow:
+      0 -4px 0 currentColor,
+      0 4px 0 currentColor; /* 上下两个点 */
+  }
+
+  .dark .ProseMirror table td a.right::before {
+    background: currentColor;
+    box-shadow:
+      0 -4px 0 currentColor,
+      0 4px 0 currentColor;
+  }
+
   .ProseMirror table th {
     @apply font-bold;
   }

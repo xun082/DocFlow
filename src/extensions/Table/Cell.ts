@@ -2,7 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-import { getCellsInColumn, isRowSelected, selectRow } from './utils';
+import { getCellsInColumn, isRowSelected, selectRow, getCellsInTable } from './utils';
 
 export interface TableCellOptions {
   HTMLAttributes: Record<string, any>;
@@ -63,6 +63,9 @@ export const TableCell = Node.create<TableCellOptions>({
       style: {
         default: null,
       },
+      showMenu: {
+        default: false,
+      },
     };
   },
 
@@ -76,6 +79,8 @@ export const TableCell = Node.create<TableCellOptions>({
             if (!isEditable) {
               return DecorationSet.empty;
             }
+
+            // 获取所有的 cell
 
             const { doc, selection } = state;
             const decorations: Decoration[] = [];
@@ -108,6 +113,61 @@ export const TableCell = Node.create<TableCellOptions>({
                       event.stopImmediatePropagation();
 
                       this.editor.view.dispatch(selectRow(index)(this.editor.state.tr));
+                    });
+
+                    return grip;
+                  }),
+                );
+              });
+            }
+
+            // 给每个 cell 的右边增加一个 a 标签
+            const allCells = getCellsInTable(selection);
+
+            if (allCells && allCells?.length !== 0) {
+              allCells.forEach(({ pos }: { pos: number }) => {
+                decorations.push(
+                  Decoration.widget(pos + 1, () => {
+                    const grip = document.createElement('a');
+
+                    grip.className += ' right';
+                    grip.setAttribute('data-table-cell-grip', 'true');
+
+                    grip.addEventListener('mousedown', (event) => {
+                      event.preventDefault();
+                      event.stopImmediatePropagation();
+
+                      // 获取当前单元格的位置
+                      const cellPos = pos + 1;
+                      const { tr } = this.editor.state;
+
+                      // 首先清除所有单元格的 showMenu 属性
+                      const allTableCells = getCellsInTable(this.editor.state.selection);
+
+                      if (allTableCells) {
+                        allTableCells.forEach(({ pos: cellPosition }) => {
+                          const resolvedPos = tr.doc.resolve(cellPosition + 1);
+
+                          if (resolvedPos.parent.type.name === 'tableCell') {
+                            tr.setNodeMarkup(cellPosition, undefined, {
+                              ...resolvedPos.parent.attrs,
+                              showMenu: false,
+                            });
+                          }
+                        });
+                      }
+
+                      // 设置当前单元格的 showMenu 为 true
+                      const resolvedPos = tr.doc.resolve(cellPos);
+
+                      if (resolvedPos.parent.type.name === 'tableCell') {
+                        tr.setNodeMarkup(pos, undefined, {
+                          ...resolvedPos.parent.attrs,
+                          showMenu: true,
+                        });
+                      }
+
+                      this.editor.view.dispatch(tr);
                     });
 
                     return grip;
