@@ -78,16 +78,26 @@ export const Table = TiptapTable.extend({
           };
 
           // 创建table点击事件处理器
-          const createTableClickHandler = (node: Node, pos: number, tableElement: HTMLElement) => {
+          const createTableClickHandler = (
+            node: Node,
+            pos: number,
+            wrapperElement: HTMLElement,
+          ) => {
             return (event: MouseEvent) => {
-              const rect = tableElement.getBoundingClientRect();
+              const rect = wrapperElement.getBoundingClientRect();
               const clickX = event.clientX;
               const clickY = event.clientY;
 
-              // 检查是否点击了右侧的"添加列"伪元素区域
+              // 动态读取伪元素尺寸，避免写死像素值
+              const afterStyle = getComputedStyle(wrapperElement, '::after');
+              const beforeStyle = getComputedStyle(wrapperElement, '::before');
+              const afterWidth = parseFloat(afterStyle.width) || 16; // w-4 ≈ 16px
+              const beforeHeight = parseFloat(beforeStyle.height) || 24; // h-6 ≈ 24px
+
+              // 右侧“添加列”点击区域
               if (
                 clickX >= rect.right &&
-                clickX <= rect.right + 32 &&
+                clickX <= rect.right + afterWidth &&
                 clickY >= rect.top &&
                 clickY <= rect.bottom
               ) {
@@ -98,12 +108,12 @@ export const Table = TiptapTable.extend({
                 return;
               }
 
-              // 检查是否点击了底部的"添加行"伪元素区域
+              // 底部“添加行”点击区域
               if (
                 clickX >= rect.left &&
                 clickX <= rect.right &&
                 clickY >= rect.bottom &&
-                clickY <= rect.bottom + 24
+                clickY <= rect.bottom + beforeHeight
               ) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -140,13 +150,12 @@ export const Table = TiptapTable.extend({
 
             editorView.state.doc.descendants((node, pos) => {
               if (node.type.name === 'table') {
-                const tableElement = editorView.dom.querySelector(
-                  `table[data-id="${node.attrs.id}"]`,
-                ) as HTMLElement;
+                // 直接拿到该节点的 NodeView DOM（就是 tableWrapper）
+                const wrapper = editorView.nodeDOM(pos) as HTMLElement;
 
-                if (tableElement) {
-                  const clickHandler = createTableClickHandler(node, pos, tableElement);
-                  addTableListener(tableElement, clickHandler);
+                if (wrapper && wrapper.classList.contains('tableWrapper')) {
+                  const clickHandler = createTableClickHandler(node, pos, wrapper);
+                  addTableListener(wrapper, clickHandler);
                 }
               }
             });
@@ -168,6 +177,6 @@ export const Table = TiptapTable.extend({
       }),
     ];
   },
-}).configure({ resizable: false, lastColumnResizable: false });
+}).configure({ resizable: true, lastColumnResizable: false });
 
 export default Table;
