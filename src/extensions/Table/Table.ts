@@ -4,7 +4,11 @@ import { Node } from '@tiptap/pm/model';
 
 export const Table = TiptapTable.extend({
   addProseMirrorPlugins() {
+    // 获取父类的插件
+    const plugins = this.parent?.() || [];
+
     return [
+      ...plugins,
       new Plugin({
         view: (editorView) => {
           // 存储table元素和对应的事件监听器
