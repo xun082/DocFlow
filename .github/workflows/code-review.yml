@@ -1,8 +1,11 @@
 name: Code Review
 
 on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   code-review:
@@ -14,10 +17,11 @@ jobs:
       issues: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout base repo (trusted)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,8 +31,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Install dependencies
+      - name: Install dependencies (from base repo)
         run: pnpm install --frozen-lockfile
+
+      - name: Fetch PR head (as data only)
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr
+          echo "PR_HEAD_SHA=$(git rev-parse pr)" >> $GITHUB_ENV
+          echo "BASE_SHA=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
 
       - name: Run Code Review
         id: review
@@ -36,7 +46,7 @@ jobs:
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
         run: |
           # 直接运行 TypeScript 文件
-          OUTPUT=$(npx tsx scripts/code-review.ts ${{ github.event.pull_request.number }} ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          OUTPUT=$(npx tsx scripts/code-review.ts ${{ github.event.pull_request.number }} $BASE_SHA $PR_HEAD_SHA)
 
           # 提取报告内容
           REPORT=$(echo "$OUTPUT" | sed -n '/---REPORT_START---/,/---REPORT_END---/p' | sed '1d;$d')

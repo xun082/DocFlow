@@ -49,38 +49,18 @@ PR 中没有包含需要审查的代码文件
 
   private getChangedFiles(baseSha: string, headSha: string): string[] {
     try {
-      console.log(`🔍 检查 git 状态...`);
-      console.log(
-        `📋 当前分支: ${execSync('git branch --show-current', { encoding: 'utf-8' }).trim()}`,
-      );
-      console.log(`📋 当前提交: ${execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()}`);
-      console.log(`📋 基础提交: ${baseSha}`);
-      console.log(`📋 头部提交: ${headSha}`);
+      console.log(`🔍 计算变更文件 (基准: ${baseSha} → 头部: ${headSha})`);
 
-      // 首先尝试获取分支与主分支的差异
-      let command: string;
-      let output: string;
+      const command = `git diff --name-only ${baseSha} ${headSha}`;
+      console.log(`🔍 执行命令: ${command}`);
 
-      try {
-        // 尝试获取与主分支的差异（包含所有提交）
-        command = `git diff --name-only origin/main...HEAD`;
-        console.log(`🔍 执行命令: ${command}`);
-        output = execSync(command, { encoding: 'utf-8' });
-        console.log(`📋 分支差异输出: ${output}`);
-      } catch {
-        console.log(`⚠️ 无法获取分支差异，回退到提交差异`);
-        // 如果无法获取分支差异，回退到原来的方法
-        command = `git diff --name-only ${baseSha} ${headSha}`;
-        console.log(`🔍 执行命令: ${command}`);
-        output = execSync(command, { encoding: 'utf-8' });
-        console.log(`📋 提交差异输出: ${output}`);
-      }
+      const output: string = execSync(command, { encoding: 'utf-8' }) as unknown as string;
 
-      const allFiles = output.split('\n').filter((file) => file.trim());
+      const allFiles: string[] = output.split('\n').filter((file: string) => file.trim());
 
       console.log(`📁 所有变更文件: ${allFiles.join(', ')}`);
 
-      const filteredFiles = allFiles.filter((file) => {
+      const filteredFiles: string[] = allFiles.filter((file: string) => {
         // 只忽略 pnpm-lock.yaml 文件，其他文件都进行审查
         if (file === 'pnpm-lock.yaml') {
           console.log(`🚫 忽略文件: ${file}`);
@@ -104,22 +84,10 @@ PR 中没有包含需要审查的代码文件
 
   private getDiff(baseSha: string, headSha: string): string {
     try {
-      let command: string;
+      const command = `git diff ${baseSha} ${headSha}`;
+      console.log(`🔍 获取提交差异: ${command}`);
 
-      try {
-        // 首先尝试获取与主分支的差异（包含所有提交）
-        command = `git diff origin/main...HEAD`;
-        console.log(`🔍 获取分支差异: ${command}`);
-
-        return execSync(command, { encoding: 'utf-8' });
-      } catch {
-        console.log(`⚠️ 无法获取分支差异，回退到提交差异`);
-        // 如果无法获取分支差异，回退到原来的方法
-        command = `git diff ${baseSha} ${headSha}`;
-        console.log(`🔍 获取提交差异: ${command}`);
-
-        return execSync(command, { encoding: 'utf-8' });
-      }
+      return execSync(command, { encoding: 'utf-8' });
     } catch (error) {
       console.error('获取代码差异失败:', error);
       console.error('错误详情:', error instanceof Error ? error.message : String(error));
