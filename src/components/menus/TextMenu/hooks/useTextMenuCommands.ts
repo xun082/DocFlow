@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
+import { v4 as uuid } from 'uuid';
 
 export const useTextmenuCommands = (editor: Editor) => {
   const onBold = useCallback(() => editor.chain().focus().toggleBold().run(), [editor]);
@@ -78,6 +79,20 @@ export const useTextmenuCommands = (editor: Editor) => {
     [editor],
   );
 
+  const onComment = useCallback(() => {
+    const commentId = uuid();
+    console.log('onComment', editor.chain().focus());
+
+    return editor.chain().focus().setComment(commentId).run();
+  }, [editor]);
+
+  const onRemoveComment = useCallback(
+    (commentId: string) => {
+      return editor.chain().focus().unsetComment(commentId).run();
+    },
+    [editor],
+  );
+
   return {
     onBold,
     onItalic,
@@ -98,5 +113,7 @@ export const useTextmenuCommands = (editor: Editor) => {
     onSetFont,
     onSetFontSize,
     onLink,
+    onComment,
+    onRemoveComment,
   };
 };

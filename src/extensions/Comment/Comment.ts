@@ -97,6 +97,7 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
         (commentId) =>
         ({ commands }) => {
           if (!commentId) return false;
+          console.log('setComment', commentId);
 
           return commands.setMark('comment', { commentId });
         },

@@ -25,6 +25,7 @@ export const useTextmenuStates = (editor: Editor) => {
         currentHighlight: ctx.editor.getAttributes('highlight')?.color || undefined,
         currentFont: ctx.editor.getAttributes('textStyle')?.fontFamily || undefined,
         currentSize: ctx.editor.getAttributes('textStyle')?.fontSize || undefined,
+        isComment: ctx.editor.isActive('comment'),
       };
     },
   });
