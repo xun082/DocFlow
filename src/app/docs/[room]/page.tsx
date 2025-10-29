@@ -10,6 +10,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Eye } from 'lucide-react';
 
+import { CommentInput } from '@/app/docs/_components/CommentInput';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
@@ -347,7 +348,21 @@ export default function DocumentPage() {
       </div>
 
       {/* 右侧悬浮目录 - Notion 风格 */}
-      {editor && <FloatingToc editor={editor} />}
+      {editor && (
+        <>
+          <FloatingToc editor={editor} />
+          <CommentInput
+            editor={editor}
+            onCommentSubmit={(content: string) => {
+              // 处理评论提交
+              console.log('评论内容:', content);
+            }}
+            onCancel={() => {
+              // 处理取消操作
+            }}
+          />
+        </>
+      )}
 
       {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
       {editor && !isReadOnly && (
