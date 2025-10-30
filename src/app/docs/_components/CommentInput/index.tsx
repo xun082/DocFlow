@@ -30,6 +30,11 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
   // 使用useCallback优化updatePosition函数
   const updatePosition = useCallback(() => {
+    // 检查编辑器视图是否可用
+    if (!editor.view) {
+      return;
+    }
+
     const { selection } = editor.state;
     const { from, to } = selection;
     const startPos = editor.view.coordsAtPos(from);
@@ -53,15 +58,21 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
     if (isOpen) {
+      // 检查编辑器视图是否可用
+      if (!editor.view) {
+        return;
+      }
+
       updatePosition();
 
-      // 获取选择comment
+      // 每次弹窗显示时重新获取comment的激活状态和属性
       const isCommentActive = editor.isActive('comment');
-
       const attrs = editor.getAttributes('comment') || {};
 
       if (isCommentActive) {
-        setMarkText(attrs.markText);
+        setMarkText(attrs.markText || '');
+      } else {
+        setMarkText('');
       }
 
       const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
@@ -81,6 +92,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       };
     } else {
       setCommentContent('');
+      setMarkText('');
     }
   }, [isOpen, updatePosition]);
 

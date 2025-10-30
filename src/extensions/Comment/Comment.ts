@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes, Range } from '@tiptap/core';
 import { Mark as PMMark } from '@tiptap/pm/model';
+import { v4 as uuid } from 'uuid';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -59,7 +60,18 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
     return [
       {
         tag: 'span[data-comment-id]',
-        getAttrs: (el) => !!(el as HTMLSpanElement).getAttribute('data-comment-id')?.trim() && null,
+        getAttrs: (el) => {
+          const commentId = (el as HTMLSpanElement).getAttribute('data-comment-id');
+
+          if (commentId?.trim()) {
+            return {
+              commentId: commentId.trim(),
+              markText: (el as HTMLSpanElement).getAttribute('data-mark-text') || null,
+            };
+          }
+
+          return false;
+        },
       },
     ];
   },
@@ -114,22 +126,27 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
           const prev = editor.getAttributes('comment');
           const oldCommentId = prev.commentId;
 
-          // 统一计算最终属性
-          const finalCommentId = oldCommentId || commentId;
-          if (!finalCommentId) return false;
-
-          const newAttrs = {
-            commentId: finalCommentId,
-            markText: markText || null,
-          };
-
-          // 场景一：选区模式，直接使用 setMark 创建或更新
+          // 场景一：选区模式 - 创建新评论或更新现有评论
           if (!selection.empty) {
+            const newAttrs = {
+              commentId: uuid(),
+              markText: markText || null,
+            };
+
+            // 使用正确的命令语法设置 mark
             return commands.setMark('comment', newAttrs);
           }
 
-          // 场景二：光标模式，遍历文档进行更新
+          // 场景二：光标模式 - 更新现有评论
           if (selection.empty && oldCommentId) {
+            const finalCommentId = commentId || oldCommentId;
+            if (!finalCommentId) return false;
+
+            const newAttrs = {
+              commentId: finalCommentId,
+              markText: markText || null,
+            };
+
             const commentMarkType = editor.schema.marks.comment;
             let markApplied = false;
 
