@@ -63,49 +63,111 @@ jobs:
           envs: DOCKER_USERNAME,DOCKER_PASSWORD,VERSION
           script: |
             IMAGE="${DOCKER_USERNAME}/docflow:latest"
+            # 使用 DaoCloud 镜像加速
+            MIRROR_IMAGE="m.daocloud.io/docker.io/${IMAGE}"
 
             echo "================================"
             echo "🚀 Starting deployment"
             echo "📦 Version: $VERSION"
-            echo "🐳 Image: $IMAGE"
+            echo "🐳 Original: $IMAGE"
+            echo "🚄 Mirror: $MIRROR_IMAGE"
             echo "================================"
 
-            # 登录 Docker Hub
-            echo "🔐 Logging into Docker Hub..."
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            # 测试网络连接
+            echo "🔍 Testing network connectivity..."
+            if curl -sL -m 5 https://docker.m.daocloud.io > /dev/null; then
+              echo "✅ DaoCloud mirror accessible"
+            else
+              echo "❌ DaoCloud mirror not accessible"
+              exit 1
+            fi
 
-            # 拉取最新镜像
-            echo "📦 Pulling image..."
-            docker pull $IMAGE
+            # 从 DaoCloud 镜像加速拉取
+            echo ""
+            echo "📦 Pulling image via DaoCloud mirror..."
+            PULL_SUCCESS=0
+            for i in 1 2 3; do
+              echo "🔄 Pull attempt $i/3..."
+              if timeout 600 docker pull $MIRROR_IMAGE; then
+                echo "✅ Image pulled successfully from mirror"
+                PULL_SUCCESS=1
+                break
+              fi
+              echo "⚠️  Pull attempt $i failed, retrying..."
+              sleep 10
+            done
+
+            if [ $PULL_SUCCESS -eq 0 ]; then
+              echo "❌ Failed to pull image after 3 attempts"
+              echo "Please check: https://hub.docker.com/r/${DOCKER_USERNAME}/docflow"
+              exit 1
+            fi
+
+            # 重新标记为原始镜像名（方便后续使用）
+            echo ""
+            echo "🏷️  Tagging image as: $IMAGE"
+            docker tag $MIRROR_IMAGE $IMAGE
+
+            echo "✅ Image ready: $IMAGE"
 
             # 停止旧容器
+            echo ""
             echo "🛑 Stopping old container..."
             docker stop docflow 2>/dev/null || true
             docker rm docflow 2>/dev/null || true
 
             # 启动新容器
+            echo ""
             echo "🚀 Starting new container..."
-            docker run -d \
+            CONTAINER_ID=$(docker run -d \
               --name docflow \
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
-              $IMAGE
+              $IMAGE)
 
-            # 检查状态
-            sleep 3
-
-            if docker ps | grep -q docflow; then
-              echo "✅ Deployment successful!"
-              docker logs --tail 20 docflow
-            else
-              echo "❌ Deployment failed!"
-              docker logs docflow 2>&1
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "❌ Failed to start container"
+              docker logout 2>/dev/null
               exit 1
             fi
 
-            docker logout
-            echo "🎉 Done!"
+            echo "Container ID: $CONTAINER_ID"
+
+            # 等待容器启动
+            echo "⏳ Waiting for container to start..."
+            sleep 5
+
+            # 检查容器状态
+            echo ""
+            echo "================================"
+            echo "📊 Container Status Check"
+            echo "================================"
+
+            CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' docflow 2>/dev/null)
+
+            if [ "$CONTAINER_STATUS" = "running" ]; then
+              echo "✅ Container is running!"
+              echo ""
+              echo "📋 Container Info:"
+              docker ps --filter "name=docflow" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+              echo ""
+              echo "📋 Recent Logs:"
+              docker logs --tail 30 docflow
+              echo ""
+              echo "🎉 Deployment successful!"
+            else
+              echo "❌ Container is not running (Status: $CONTAINER_STATUS)"
+              echo ""
+              echo "📋 Container Logs:"
+              docker logs docflow 2>&1
+              echo ""
+              docker logout 2>/dev/null
+              exit 1
+            fi
+
+            docker logout 2>/dev/null
+            echo "Done!"
 
       - name: Deployment summary
         if: always()
