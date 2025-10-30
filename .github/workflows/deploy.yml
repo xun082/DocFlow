@@ -1,38 +1,26 @@
-name: Deploy Next.js to Server via Docker Hub
+name: Deploy to Server via Docker Hub
 
 on:
   push:
     branches:
       - main
 
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/docflow
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      commit_message: ${{ steps.version.outputs.commit_message }}
-      image_tag: ${{ steps.version.outputs.image_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
 
-      - name: Extract version information
+      - name: Extract version
         id: version
         run: |
           VERSION="$(echo ${{ github.sha }} | cut -c1-7)"
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/docflow:latest"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
-          echo "💬 Commit: $COMMIT_MSG"
-          echo "🐳 Image: $IMAGE_TAG"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,19 +39,9 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/docflow:latest
             ${{ secrets.DOCKER_USERNAME }}/docflow:${{ steps.version.outputs.version }}
-          labels: |
-            org.opencontainers.image.title=DocFlow
-            org.opencontainers.image.description=Modern collaborative document editing platform
-            org.opencontainers.image.vendor=DocFlow Team
-            org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
-          build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            GIT_COMMIT=${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -73,172 +51,67 @@ jobs:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.2.1
         env:
-          VERSION: ${{ needs.build-and-push.outputs.version }}
-          COMMIT_MSG: ${{ needs.build-and-push.outputs.commit_message }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_SHA: ${{ github.sha }}
+          VERSION: ${{ needs.build-and-push.outputs.version }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
           command_timeout: 30m
-          timeout: 30m
-          envs: VERSION,COMMIT_MSG,DOCKER_USERNAME,DOCKER_PASSWORD,IMAGE_TAG,GITHUB_ACTOR,GITHUB_SHA
+          envs: DOCKER_USERNAME,DOCKER_PASSWORD,VERSION
           script: |
-            set -e  # 遇到错误立即退出
+            IMAGE="${DOCKER_USERNAME}/docflow:latest"
 
-            # 设置变量
-            CONTAINER_NAME="docflow"
-            PROJECT_DIR="/home/DocFlow"
-            DEPLOY_LOG="$PROJECT_DIR/deploy.log"
-
-            # 创建项目目录
-            echo "📁 Creating project directory..."
-            mkdir -p $PROJECT_DIR
-            cd $PROJECT_DIR
-
-            # 记录部署信息
-            echo "=====================================" | tee -a $DEPLOY_LOG
-            echo "🚀 Deployment at: $(date '+%Y-%m-%d %H:%M:%S')" | tee -a $DEPLOY_LOG
-            echo "📦 Version: $VERSION" | tee -a $DEPLOY_LOG
-            echo "💬 Commit: $COMMIT_MSG" | tee -a $DEPLOY_LOG
-            echo "👤 By: $GITHUB_ACTOR" | tee -a $DEPLOY_LOG
-            echo "🐳 Image: $IMAGE_TAG" | tee -a $DEPLOY_LOG
-            echo "=====================================" | tee -a $DEPLOY_LOG
+            echo "================================"
+            echo "🚀 Starting deployment"
+            echo "📦 Version: $VERSION"
+            echo "🐳 Image: $IMAGE"
+            echo "================================"
 
             # 登录 Docker Hub
             echo "🔐 Logging into Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            if [ $? -eq 0 ]; then
-              echo "✅ Docker Hub login successful"
-            else
-              echo "❌ Failed to login to Docker Hub"
-              exit 1
-            fi
-
             # 拉取最新镜像
-            echo "📦 Pulling latest image from Docker Hub..."
-            echo "🐳 Image: $IMAGE_TAG"
-            echo "⏳ This may take a few minutes, please wait..."
+            echo "📦 Pulling image..."
+            docker pull $IMAGE
 
-            if docker pull $IMAGE_TAG; then
-              echo "✅ Image pulled successfully!"
-            else
-              echo "❌ Failed to pull image from Docker Hub"
-              docker logout
-              exit 1
-            fi
-
-            # 停止并删除旧容器
+            # 停止旧容器
             echo "🛑 Stopping old container..."
-            if docker ps -a | grep -q $CONTAINER_NAME; then
-              docker stop $CONTAINER_NAME 2>/dev/null || true
-              docker rm $CONTAINER_NAME 2>/dev/null || true
-              echo "✅ Old container removed"
-            else
-              echo "ℹ️  No existing container found"
-            fi
+            docker stop docflow 2>/dev/null || true
+            docker rm docflow 2>/dev/null || true
 
-            # 清理悬空镜像
-            echo "🧹 Cleaning up old images..."
-            docker image prune -f
-            echo "✅ Cleanup completed"
-
-            # 运行新容器
+            # 启动新容器
             echo "🚀 Starting new container..."
             docker run -d \
-              --name $CONTAINER_NAME \
+              --name docflow \
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
-              -e NEXT_TELEMETRY_DISABLED=1 \
-              -e APP_VERSION="$VERSION" \
-              -e GIT_COMMIT="$GITHUB_SHA" \
-              -e DEPLOYED_BY="$GITHUB_ACTOR" \
-              -e DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-              $IMAGE_TAG
+              $IMAGE
 
-            if [ $? -eq 0 ]; then
-              echo "✅ Container started successfully"
+            # 检查状态
+            sleep 3
+
+            if docker ps | grep -q docflow; then
+              echo "✅ Deployment successful!"
+              docker logs --tail 20 docflow
             else
-              echo "❌ Failed to start container"
-              docker logout
+              echo "❌ Deployment failed!"
+              docker logs docflow 2>&1
               exit 1
             fi
 
-            # 等待并检查容器状态
-            echo "⏳ Waiting for container to be ready..."
-            sleep 5
-
-            MAX_RETRIES=30
-            RETRY_COUNT=0
-            CONTAINER_READY=false
-
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              if docker ps --filter "name=$CONTAINER_NAME" --filter "status=running" | grep -q $CONTAINER_NAME; then
-                echo "✅ Container is running!"
-                CONTAINER_READY=true
-                break
-              fi
-              
-              RETRY_COUNT=$((RETRY_COUNT+1))
-              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "⏳ Waiting... ($RETRY_COUNT/$MAX_RETRIES)"
-                sleep 2
-              fi
-            done
-
-            # 最终状态检查和日志输出
-            echo ""
-            echo "================================"
-            echo "📊 Deployment Status Check"
-            echo "================================"
-
-            if [ "$CONTAINER_READY" = true ]; then
-              echo "✅ Container Status: Running"
-              echo ""
-              echo "📋 Container Information:"
-              docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-              echo ""
-              echo "📋 Recent Container Logs:"
-              docker logs --tail 30 $CONTAINER_NAME
-              echo ""
-              echo "✅ Deployment completed successfully!" | tee -a $DEPLOY_LOG
-              echo "🌐 Application should be available at: http://$(hostname -I | awk '{print $1}'):3000"
-            else
-              echo "❌ Container Status: Failed to start"
-              echo ""
-              echo "📋 Container Logs:"
-              docker logs $CONTAINER_NAME 2>&1 || echo "No logs available"
-              echo ""
-              echo "📋 Container Inspect:"
-              docker inspect $CONTAINER_NAME 2>&1 || echo "Container not found"
-              echo ""
-              echo "❌ Deployment failed!" | tee -a $DEPLOY_LOG
-              docker logout
-              exit 1
-            fi
-
-            # 登出 Docker Hub
             docker logout
-            echo "🔓 Logged out from Docker Hub"
+            echo "🎉 Done!"
 
-      - name: Create deployment summary
+      - name: Deployment summary
         if: always()
         run: |
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 Version | \`${{ needs.build-and-push.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| 💬 Commit | ${{ needs.build-and-push.outputs.commit_message }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 👤 Deployed by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🕐 Time | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔗 Commit | [\`${{ github.sha }}\`](${{ github.event.repository.html_url }}/commit/${{ github.sha }}) |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐳 Docker Hub | [View Image](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/docflow) |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏷️ Image Tags | \`latest\`, \`${{ needs.build-and-push.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Version: \`${{ needs.build-and-push.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 Image: [Docker Hub](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/docflow)" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏰ Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
