@@ -13,11 +13,19 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
+
+# 构建参数
+ARG VERSION=unknown
+ARG GIT_COMMIT=unknown
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# 构建时环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN pnpm build && \
     rm -rf .next/cache
 
@@ -38,12 +46,23 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     find node_modules -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true
 
 FROM node:22-alpine AS runner
+
+# 构建参数
+ARG VERSION=unknown
+ARG GIT_COMMIT=unknown
+
 WORKDIR /app
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0
+
+# 镜像标签
+LABEL org.opencontainers.image.title="DocFlow" \
+      org.opencontainers.image.description="Modern collaborative document editing platform" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${GIT_COMMIT}"
 
 RUN apk add --no-cache libc6-compat && \
     addgroup --system --gid 1001 nodejs && \

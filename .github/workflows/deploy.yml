@@ -5,67 +5,169 @@ on:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      commit_message: ${{ steps.version.outputs.commit_message }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
 
+      - name: Extract version information
+        id: version
+        run: |
+          VERSION="$(echo ${{ github.sha }} | cut -c1-7)"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+          echo "💬 Commit: $COMMIT_MSG"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=DocFlow
+            org.opencontainers.image.description=Modern collaborative document editing platform
+            org.opencontainers.image.vendor=DocFlow Team
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            GIT_COMMIT=${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.2.1
+        env:
+          VERSION: ${{ needs.build-and-push.outputs.version }}
+          COMMIT_MSG: ${{ needs.build-and-push.outputs.commit_message }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          envs: VERSION,COMMIT_MSG
           script: |
-            # 加载环境配置
-            source ~/.bashrc 2>/dev/null || true
-            source ~/.profile 2>/dev/null || true
-
-            # 加载 NVM 环境
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-            # 设置 PATH
-            export PATH="$HOME/.nvm/versions/node/*/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.npm-global/bin:$PATH"
-
-            # 设置工作目录
+            # 设置变量
+            IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
+            CONTAINER_NAME="docflow"
             PROJECT_DIR="/home/DocFlow"
+            DEPLOY_LOG="$PROJECT_DIR/deploy.log"
+
+            # 创建项目目录
             mkdir -p $PROJECT_DIR
             cd $PROJECT_DIR
 
-            # 克隆或更新代码
-            if [ ! -d ".git" ]; then
-              echo "Cloning repository..."
-              rm -rf ./*
-              git clone git@github.com:xun082/DocFlow.git .
+            # 记录部署信息
+            echo "=====================================" >> $DEPLOY_LOG
+            echo "🚀 Deployment at: $(date '+%Y-%m-%d %H:%M:%S')" >> $DEPLOY_LOG
+            echo "📦 Version: $VERSION" >> $DEPLOY_LOG
+            echo "💬 Commit: $COMMIT_MSG" >> $DEPLOY_LOG
+            echo "👤 By: ${{ github.actor }}" >> $DEPLOY_LOG
+            echo "=====================================" >> $DEPLOY_LOG
+
+            # 登录 GitHub Container Registry
+            echo "🔐 Logging into GHCR..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 拉取最新镜像
+            echo "📦 Pulling latest image..."
+            docker pull $IMAGE_NAME
+
+            # 停止并删除旧容器
+            echo "🛑 Stopping old container..."
+            docker stop $CONTAINER_NAME 2>/dev/null || true
+            docker rm $CONTAINER_NAME 2>/dev/null || true
+
+            # 清理悬空镜像
+            echo "🧹 Cleaning up..."
+            docker image prune -f
+
+            # 运行新容器
+            echo "🚀 Starting new container..."
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              -e NEXT_TELEMETRY_DISABLED=1 \
+              -e APP_VERSION="$VERSION" \
+              -e GIT_COMMIT="${{ github.sha }}" \
+              -e DEPLOYED_BY="${{ github.actor }}" \
+              -e DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              $IMAGE_NAME
+
+            # 等待容器启动
+            echo "⏳ Waiting for container..."
+            sleep 10
+
+            # 检查容器状态
+            if docker ps | grep -q $CONTAINER_NAME; then
+              echo "✅ Container started successfully!"
+              docker logs --tail 20 $CONTAINER_NAME
+              echo "✅ Deployment completed!" >> $DEPLOY_LOG
             else
-              echo "Updating repository..."
-              git fetch origin main
-              git reset --hard origin/main
+              echo "❌ Container failed to start!"
+              echo "❌ Deployment failed!" >> $DEPLOY_LOG
+              docker logs $CONTAINER_NAME
+              exit 1
             fi
 
-            # 创建 .npmrc 文件 (如果不存在)
-            if [ ! -f ".npmrc" ]; then
-              echo "Creating .npmrc file..."
-              echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
-              echo "//registry.tiptap.dev/:_authToken=${{ secrets.TIPTAP_AUTH_TOKEN }}" >> .npmrc
-            else
-              echo ".npmrc file already exists, skipping creation."
-            fi
+            # 登出
+            docker logout ghcr.io
 
-            # 安装全局依赖 (只在需要时安装)
-            command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@9.4.0
-            command -v pm2 >/dev/null 2>&1 || npm install -g pm2
-
-            # 安装项目依赖
-            pnpm install
-
-            # 构建项目
-            pnpm run build
-
-            # 重启应用
-            pm2 restart DocFlow 2>/dev/null || pm2 start "pnpm start" --name DocFlow
+      - name: Create deployment summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Version | \`${{ needs.build-and-push.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💬 Commit | ${{ needs.build-and-push.outputs.commit_message }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 👤 Deployed by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🕐 Time | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 Commit | [\`${{ github.sha }}\`](${{ github.event.repository.html_url }}/commit/${{ github.sha }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Registry | [GHCR](https://github.com/${{ github.repository }}/pkgs/container/docflow) |" >> $GITHUB_STEP_SUMMARY
