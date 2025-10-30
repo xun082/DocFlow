@@ -83,15 +83,19 @@ jobs:
         env:
           VERSION: ${{ needs.build-and-push.outputs.version }}
           COMMIT_MSG: ${{ needs.build-and-push.outputs.commit_message }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          envs: VERSION,COMMIT_MSG
+          envs: VERSION,COMMIT_MSG,GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_REPOSITORY,GITHUB_SHA
           script: |
             # 设置变量
-            IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
+            IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY}:latest"
             CONTAINER_NAME="docflow"
             PROJECT_DIR="/home/DocFlow"
             DEPLOY_LOG="$PROJECT_DIR/deploy.log"
@@ -105,12 +109,12 @@ jobs:
             echo "🚀 Deployment at: $(date '+%Y-%m-%d %H:%M:%S')" >> $DEPLOY_LOG
             echo "📦 Version: $VERSION" >> $DEPLOY_LOG
             echo "💬 Commit: $COMMIT_MSG" >> $DEPLOY_LOG
-            echo "👤 By: ${{ github.actor }}" >> $DEPLOY_LOG
+            echo "👤 By: $GITHUB_ACTOR" >> $DEPLOY_LOG
             echo "=====================================" >> $DEPLOY_LOG
 
             # 登录 GitHub Container Registry
             echo "🔐 Logging into GHCR..."
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
             # 拉取最新镜像
             echo "📦 Pulling latest image..."
@@ -134,8 +138,8 @@ jobs:
               -e NODE_ENV=production \
               -e NEXT_TELEMETRY_DISABLED=1 \
               -e APP_VERSION="$VERSION" \
-              -e GIT_COMMIT="${{ github.sha }}" \
-              -e DEPLOYED_BY="${{ github.actor }}" \
+              -e GIT_COMMIT="$GITHUB_SHA" \
+              -e DEPLOYED_BY="$GITHUB_ACTOR" \
               -e DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
               $IMAGE_NAME
 
