@@ -2,9 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/core';
-import { Send, X, MessageCircle } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { v4 as uuid } from 'uuid';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -80,10 +79,20 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
   const handleSubmit = () => {
     if (commentContent.trim()) {
-      editor.chain().focus().setComment(uuid(), commentContent).run();
+      const newMarkText = [...markItems, commentContent].join(' & ');
+      editor.chain().focus().setComment(null, newMarkText).run();
+      setMarkText(`${markText}&${commentContent}`);
       setCommentContent('');
-      closeComment();
     }
+  };
+
+  const handleRemoveMark = (index: number) => {
+    const newMarkItems = [...markItems];
+    newMarkItems.splice(index, 1);
+
+    const newMarkText = newMarkItems.join(' & ');
+    editor.chain().focus().setComment(null, newMarkText).run();
+    setMarkText(newMarkText);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -92,16 +101,6 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       handleSubmit();
     } else if (e.key === 'Escape') {
       closeComment();
-    }
-  };
-
-  const handleTriggerClick = () => {
-    setIsExpanded(!isExpanded);
-
-    if (!isExpanded) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   };
 
@@ -132,35 +131,29 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
           isExpanded ? 'w-full' : 'w-10',
         )}
       >
-        {/* 触发器 */}
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleTriggerClick}
-          className={cn(
-            'h-8 w-8 p-0 flex-shrink-0 transition-all',
-            isExpanded ? 'ml-1' : 'mx-auto',
-          )}
-        >
-          <MessageCircle className="h-4 w-4" />
-        </Button>
-
         {/* 输入区域 */}
         <div
           className={cn(
-            'flex-1 transition-all duration-300 overflow-hidden',
+            'flex-1 transition-all duration-300 overflow-hidden py-2',
             isExpanded ? 'max-w-full opacity-100' : 'max-w-0 opacity-0',
           )}
         >
           {markItems.length > 0 && (
-            <div className="px-2 py-1 flex flex-wrap gap-1 border-b border-gray-100 dark:border-gray-700">
+            <div className="px-2 py-1 flex flex-col gap-1 border-b border-gray-100 dark:border-gray-700">
               {markItems.map((item, idx) => (
-                <span
-                  key={`${item}-${idx}`}
-                  className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-                >
-                  {item}
-                </span>
+                <div key={`${item}-${idx}`} className="group flex items-center justify-between">
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    {item}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleRemoveMark(idx)}
+                    className="h-6 w-6 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
               ))}
             </div>
           )}
@@ -172,7 +165,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
               onChange={(e) => setCommentContent(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="输入评论内容..."
-              className="flex-1 border-0 shadow-none focus-visible:ring-0"
+              className="flex-1 border-0 shadow-none focus-visible:ring-0 focus-visible-border-0"
               autoFocus
             />
             <Button

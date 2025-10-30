@@ -7,7 +7,7 @@ declare module '@tiptap/core' {
       /**
        * Set a comment (add)
        */
-      setComment: (commentId: string, markText?: string) => ReturnType;
+      setComment: (commentId: string | null, markText?: string) => ReturnType;
       /**
        * Unset a comment (remove)
        */
@@ -118,13 +118,9 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
           const finalCommentId = oldCommentId || commentId;
           if (!finalCommentId) return false;
 
-          const prevMarkText = typeof prev.markText === 'string' ? prev.markText.trim() : '';
-          const nextText = typeof markText === 'string' ? String(markText).trim() : '';
-          const joinedMarkText = [prevMarkText, nextText].filter(Boolean).join('&') || null;
-
           const newAttrs = {
             commentId: finalCommentId,
-            markText: joinedMarkText,
+            markText: markText || null,
           };
 
           // 场景一：选区模式，直接使用 setMark 创建或更新
