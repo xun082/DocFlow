@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Editor } from '@tiptap/core';
 import { Send, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { debounce } from 'lodash-es';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,23 +28,31 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const [markText, setMarkText] = useState('');
   const markItems = markText ? markText.split('&').filter(Boolean) : [];
 
+  // 使用useCallback优化updatePosition函数
+  const updatePosition = useCallback(() => {
+    const { selection } = editor.state;
+    const { from, to } = selection;
+    const startPos = editor.view.coordsAtPos(from);
+    const endPos = editor.view.coordsAtPos(to);
+
+    if (startPos && endPos) {
+      const x = (startPos.left + endPos.left) / 2;
+      const y = endPos.bottom + 4;
+      setPosition({ x, y });
+    }
+  }, [editor]);
+
+  // 使用useRef存储防抖函数，避免重复创建
+  const debouncedUpdatePositionRef = useRef(debounce(updatePosition, 16));
+
+  // 当updatePosition变化时，更新防抖函数
+  useEffect(() => {
+    debouncedUpdatePositionRef.current = debounce(updatePosition, 16);
+  }, [updatePosition]);
+
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
     if (isOpen) {
-      // 更新位置的函数
-      const updatePosition = () => {
-        const { selection } = editor.state;
-        const { from, to } = selection;
-        const startPos = editor.view.coordsAtPos(from);
-        const endPos = editor.view.coordsAtPos(to);
-
-        if (startPos && endPos) {
-          const x = (startPos.left + endPos.left) / 2;
-          const y = endPos.bottom + 4;
-          setPosition({ x, y });
-        }
-      };
-
       updatePosition();
 
       // 获取选择comment
@@ -58,28 +67,22 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
 
       if (scrollContainer) {
-        scrollContainer.addEventListener('scroll', updatePosition, { passive: true });
+        scrollContainer.addEventListener('scroll', debouncedUpdatePositionRef.current, {
+          passive: true,
+        });
       }
-
-      // 监听窗口大小变化
-      const handleResize = () => {
-        updatePosition();
-      };
-
-      window.addEventListener('resize', handleResize);
 
       // 清理函数
       return () => {
         if (scrollContainer) {
-          scrollContainer.removeEventListener('scroll', updatePosition);
+          scrollContainer.removeEventListener('scroll', debouncedUpdatePositionRef.current);
+          debouncedUpdatePositionRef.current.cancel();
         }
-
-        window.removeEventListener('resize', handleResize);
       };
     } else {
       setCommentContent('');
     }
-  }, [isOpen]);
+  }, [isOpen, updatePosition]);
 
   // 点击外部关闭
   useEffect(() => {
