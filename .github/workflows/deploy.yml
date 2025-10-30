@@ -94,8 +94,8 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           envs: VERSION,COMMIT_MSG,GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_REPOSITORY,GITHUB_SHA
           script: |
-            # 设置变量
-            IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY}:latest"
+            # 设置变量（将仓库名转换为小写）
+            IMAGE_NAME="ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):latest"
             CONTAINER_NAME="docflow"
             PROJECT_DIR="/home/DocFlow"
             DEPLOY_LOG="$PROJECT_DIR/deploy.log"
