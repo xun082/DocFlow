@@ -1,4 +1,4 @@
-name: Deploy Next.js to JD Cloud
+name: Deploy Next.js to Server via Docker Hub
 
 on:
   push:
@@ -6,18 +6,16 @@ on:
       - main
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/docflow
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     outputs:
       version: ${{ steps.version.outputs.version }}
       commit_message: ${{ steps.version.outputs.commit_message }}
+      image_tag: ${{ steps.version.outputs.image_tag }}
 
     steps:
       - name: Checkout code
@@ -28,44 +26,38 @@ jobs:
         run: |
           VERSION="$(echo ${{ github.sha }} | cut -c1-7)"
           COMMIT_MSG="${{ github.event.head_commit.message }}"
+          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/docflow:latest"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
           echo "💬 Commit: $COMMIT_MSG"
+          echo "🐳 Image: $IMAGE_TAG"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-          labels: |
-            org.opencontainers.image.title=DocFlow
-            org.opencontainers.image.description=Modern collaborative document editing platform
-            org.opencontainers.image.vendor=DocFlow Team
-            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/docflow:latest
+            ${{ secrets.DOCKER_USERNAME }}/docflow:${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=DocFlow
+            org.opencontainers.image.description=Modern collaborative document editing platform
+            org.opencontainers.image.vendor=DocFlow Team
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
@@ -83,9 +75,10 @@ jobs:
         env:
           VERSION: ${{ needs.build-and-push.outputs.version }}
           COMMIT_MSG: ${{ needs.build-and-push.outputs.commit_message }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
           GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -94,56 +87,67 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           command_timeout: 30m
           timeout: 30m
-          envs: VERSION,COMMIT_MSG,GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_REPOSITORY,GITHUB_SHA
+          envs: VERSION,COMMIT_MSG,DOCKER_USERNAME,DOCKER_PASSWORD,IMAGE_TAG,GITHUB_ACTOR,GITHUB_SHA
           script: |
-            # 设置变量（将仓库名转换为小写）
-            IMAGE_NAME="ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):latest"
+            set -e  # 遇到错误立即退出
+
+            # 设置变量
             CONTAINER_NAME="docflow"
             PROJECT_DIR="/home/DocFlow"
             DEPLOY_LOG="$PROJECT_DIR/deploy.log"
 
             # 创建项目目录
+            echo "📁 Creating project directory..."
             mkdir -p $PROJECT_DIR
             cd $PROJECT_DIR
 
             # 记录部署信息
-            echo "=====================================" >> $DEPLOY_LOG
-            echo "🚀 Deployment at: $(date '+%Y-%m-%d %H:%M:%S')" >> $DEPLOY_LOG
-            echo "📦 Version: $VERSION" >> $DEPLOY_LOG
-            echo "💬 Commit: $COMMIT_MSG" >> $DEPLOY_LOG
-            echo "👤 By: $GITHUB_ACTOR" >> $DEPLOY_LOG
-            echo "=====================================" >> $DEPLOY_LOG
+            echo "=====================================" | tee -a $DEPLOY_LOG
+            echo "🚀 Deployment at: $(date '+%Y-%m-%d %H:%M:%S')" | tee -a $DEPLOY_LOG
+            echo "📦 Version: $VERSION" | tee -a $DEPLOY_LOG
+            echo "💬 Commit: $COMMIT_MSG" | tee -a $DEPLOY_LOG
+            echo "👤 By: $GITHUB_ACTOR" | tee -a $DEPLOY_LOG
+            echo "🐳 Image: $IMAGE_TAG" | tee -a $DEPLOY_LOG
+            echo "=====================================" | tee -a $DEPLOY_LOG
 
-            # 登录 GitHub Container Registry
-            echo "🔐 Logging into GHCR..."
-            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+            # 登录 Docker Hub
+            echo "🔐 Logging into Docker Hub..."
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            if [ $? -ne 0 ]; then
-              echo "❌ Failed to login to GHCR"
+            if [ $? -eq 0 ]; then
+              echo "✅ Docker Hub login successful"
+            else
+              echo "❌ Failed to login to Docker Hub"
               exit 1
             fi
 
             # 拉取最新镜像
-            echo "📦 Pulling latest image: $IMAGE_NAME"
-            echo "⏳ This may take a few minutes..."
-            docker pull $IMAGE_NAME
+            echo "📦 Pulling latest image from Docker Hub..."
+            echo "🐳 Image: $IMAGE_TAG"
+            echo "⏳ This may take a few minutes, please wait..."
 
-            if [ $? -ne 0 ]; then
-              echo "❌ Failed to pull image"
-              docker logout ghcr.io
+            if docker pull $IMAGE_TAG; then
+              echo "✅ Image pulled successfully!"
+            else
+              echo "❌ Failed to pull image from Docker Hub"
+              docker logout
               exit 1
             fi
 
-            echo "✅ Image pulled successfully"
-
             # 停止并删除旧容器
             echo "🛑 Stopping old container..."
-            docker stop $CONTAINER_NAME 2>/dev/null || true
-            docker rm $CONTAINER_NAME 2>/dev/null || true
+            if docker ps -a | grep -q $CONTAINER_NAME; then
+              docker stop $CONTAINER_NAME 2>/dev/null || true
+              docker rm $CONTAINER_NAME 2>/dev/null || true
+              echo "✅ Old container removed"
+            else
+              echo "ℹ️  No existing container found"
+            fi
 
             # 清理悬空镜像
-            echo "🧹 Cleaning up..."
+            echo "🧹 Cleaning up old images..."
             docker image prune -f
+            echo "✅ Cleanup completed"
 
             # 运行新容器
             echo "🚀 Starting new container..."
@@ -157,49 +161,72 @@ jobs:
               -e GIT_COMMIT="$GITHUB_SHA" \
               -e DEPLOYED_BY="$GITHUB_ACTOR" \
               -e DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-              $IMAGE_NAME
+              $IMAGE_TAG
 
-            if [ $? -ne 0 ]; then
+            if [ $? -eq 0 ]; then
+              echo "✅ Container started successfully"
+            else
               echo "❌ Failed to start container"
-              docker logout ghcr.io
+              docker logout
               exit 1
             fi
 
-            # 等待容器启动并检查状态
+            # 等待并检查容器状态
             echo "⏳ Waiting for container to be ready..."
+            sleep 5
+
             MAX_RETRIES=30
             RETRY_COUNT=0
+            CONTAINER_READY=false
 
             while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              if docker ps | grep -q $CONTAINER_NAME; then
+              if docker ps --filter "name=$CONTAINER_NAME" --filter "status=running" | grep -q $CONTAINER_NAME; then
                 echo "✅ Container is running!"
+                CONTAINER_READY=true
                 break
               fi
               
               RETRY_COUNT=$((RETRY_COUNT+1))
-              echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
-              sleep 2
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⏳ Waiting... ($RETRY_COUNT/$MAX_RETRIES)"
+                sleep 2
+              fi
             done
 
-            # 最终检查容器状态
-            if docker ps | grep -q $CONTAINER_NAME; then
-              echo "✅ Container started successfully!"
-              echo "📋 Container logs:"
+            # 最终状态检查和日志输出
+            echo ""
+            echo "================================"
+            echo "📊 Deployment Status Check"
+            echo "================================"
+
+            if [ "$CONTAINER_READY" = true ]; then
+              echo "✅ Container Status: Running"
+              echo ""
+              echo "📋 Container Information:"
+              docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+              echo ""
+              echo "📋 Recent Container Logs:"
               docker logs --tail 30 $CONTAINER_NAME
-              echo "✅ Deployment completed!" >> $DEPLOY_LOG
+              echo ""
+              echo "✅ Deployment completed successfully!" | tee -a $DEPLOY_LOG
+              echo "🌐 Application should be available at: http://$(hostname -I | awk '{print $1}'):3000"
             else
-              echo "❌ Container failed to start!"
-              echo "📋 Container logs:"
+              echo "❌ Container Status: Failed to start"
+              echo ""
+              echo "📋 Container Logs:"
               docker logs $CONTAINER_NAME 2>&1 || echo "No logs available"
-              echo "📋 Container inspect:"
+              echo ""
+              echo "📋 Container Inspect:"
               docker inspect $CONTAINER_NAME 2>&1 || echo "Container not found"
-              echo "❌ Deployment failed!" >> $DEPLOY_LOG
-              docker logout ghcr.io
+              echo ""
+              echo "❌ Deployment failed!" | tee -a $DEPLOY_LOG
+              docker logout
               exit 1
             fi
 
-            # 登出
-            docker logout ghcr.io
+            # 登出 Docker Hub
+            docker logout
+            echo "🔓 Logged out from Docker Hub"
 
       - name: Create deployment summary
         if: always()
@@ -213,4 +240,5 @@ jobs:
           echo "| 👤 Deployed by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🕐 Time | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
           echo "| 🔗 Commit | [\`${{ github.sha }}\`](${{ github.event.repository.html_url }}/commit/${{ github.sha }}) |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐳 Registry | [GHCR](https://github.com/${{ github.repository }}/pkgs/container/docflow) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Docker Hub | [View Image](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/docflow) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏷️ Image Tags | \`latest\`, \`${{ needs.build-and-push.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
