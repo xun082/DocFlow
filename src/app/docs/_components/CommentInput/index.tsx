@@ -17,7 +17,6 @@ interface CommentInputGroupProps {
 export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const { isOpen, closeComment } = useCommentStore();
   const [commentContent, setCommentContent] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({
@@ -31,31 +30,53 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
     if (isOpen) {
-      const { selection } = editor.state;
-      const { from, to } = selection;
-      const startPos = editor.view.coordsAtPos(from);
-      const endPos = editor.view.coordsAtPos(to);
+      // 更新位置的函数
+      const updatePosition = () => {
+        const { selection } = editor.state;
+        const { from, to } = selection;
+        const startPos = editor.view.coordsAtPos(from);
+        const endPos = editor.view.coordsAtPos(to);
 
-      const x = (startPos.left + endPos.left) / 2;
-      const y = endPos.bottom + 4;
+        if (startPos && endPos) {
+          const x = (startPos.left + endPos.left) / 2;
+          const y = endPos.bottom + 4;
+          setPosition({ x, y });
+        }
+      };
+
+      updatePosition();
 
       // 获取选择comment
       const isCommentActive = editor.isActive('comment');
 
       const attrs = editor.getAttributes('comment') || {};
 
-      setPosition({ x, y });
-
       if (isCommentActive) {
         setMarkText(attrs.markText);
       }
 
-      setIsExpanded(true);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
+
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', updatePosition, { passive: true });
+      }
+
+      // 监听窗口大小变化
+      const handleResize = () => {
+        updatePosition();
+      };
+
+      window.addEventListener('resize', handleResize);
+
+      // 清理函数
+      return () => {
+        if (scrollContainer) {
+          scrollContainer.removeEventListener('scroll', updatePosition);
+        }
+
+        window.removeEventListener('resize', handleResize);
+      };
     } else {
-      setIsExpanded(false);
       setCommentContent('');
     }
   }, [isOpen]);
@@ -115,7 +136,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const commentInputGroup = (
     <div
       ref={containerRef}
-      className={cn('fixed z-50 transition-all duration-300', isExpanded ? 'w-80' : 'w-10')}
+      className={cn('fixed z-50 transition-all duration-300 w-80')}
       style={{
         left: position?.x,
         top: position?.y,
@@ -127,15 +148,13 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
         className={cn(
           'flex items-center transition-all duration-300 rounded-lg border shadow-lg overflow-hidden',
           'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600',
-          'backdrop-blur-sm bg-white/95 dark:bg-gray-800/95',
-          isExpanded ? 'w-full' : 'w-10',
+          'backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 w-full',
         )}
       >
         {/* 输入区域 */}
         <div
           className={cn(
-            'flex-1 transition-all duration-300 overflow-hidden py-2',
-            isExpanded ? 'max-w-full opacity-100' : 'max-w-0 opacity-0',
+            'flex-1 transition-all duration-300 overflow-hidden py-2 max-w-full opacity-100',
           )}
         >
           {markItems.length > 0 && (
