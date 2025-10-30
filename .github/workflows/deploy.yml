@@ -92,6 +92,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 30m
+          timeout: 30m
           envs: VERSION,COMMIT_MSG,GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_REPOSITORY,GITHUB_SHA
           script: |
             # 设置变量（将仓库名转换为小写）
@@ -116,9 +118,23 @@ jobs:
             echo "🔐 Logging into GHCR..."
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to login to GHCR"
+              exit 1
+            fi
+
             # 拉取最新镜像
-            echo "📦 Pulling latest image..."
+            echo "📦 Pulling latest image: $IMAGE_NAME"
+            echo "⏳ This may take a few minutes..."
             docker pull $IMAGE_NAME
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to pull image"
+              docker logout ghcr.io
+              exit 1
+            fi
+
+            echo "✅ Image pulled successfully"
 
             # 停止并删除旧容器
             echo "🛑 Stopping old container..."
@@ -143,19 +159,42 @@ jobs:
               -e DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
               $IMAGE_NAME
 
-            # 等待容器启动
-            echo "⏳ Waiting for container..."
-            sleep 10
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to start container"
+              docker logout ghcr.io
+              exit 1
+            fi
 
-            # 检查容器状态
+            # 等待容器启动并检查状态
+            echo "⏳ Waiting for container to be ready..."
+            MAX_RETRIES=30
+            RETRY_COUNT=0
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if docker ps | grep -q $CONTAINER_NAME; then
+                echo "✅ Container is running!"
+                break
+              fi
+              
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
+              sleep 2
+            done
+
+            # 最终检查容器状态
             if docker ps | grep -q $CONTAINER_NAME; then
               echo "✅ Container started successfully!"
-              docker logs --tail 20 $CONTAINER_NAME
+              echo "📋 Container logs:"
+              docker logs --tail 30 $CONTAINER_NAME
               echo "✅ Deployment completed!" >> $DEPLOY_LOG
             else
               echo "❌ Container failed to start!"
+              echo "📋 Container logs:"
+              docker logs $CONTAINER_NAME 2>&1 || echo "No logs available"
+              echo "📋 Container inspect:"
+              docker inspect $CONTAINER_NAME 2>&1 || echo "Container not found"
               echo "❌ Deployment failed!" >> $DEPLOY_LOG
-              docker logs $CONTAINER_NAME
+              docker logout ghcr.io
               exit 1
             fi
 
