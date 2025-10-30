@@ -16,15 +16,41 @@ interface CommentInputGroupProps {
 }
 
 export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
-  const { isOpen, position, closeComment } = useCommentStore();
+  const { isOpen, closeComment } = useCommentStore();
   const [commentContent, setCommentContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({
+    x: 1000,
+    y: 1000,
+  });
+
+  const [markText, setMarkText] = useState('');
+  const markItems = markText ? markText.split('&').filter(Boolean) : [];
 
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
     if (isOpen) {
+      const { selection } = editor.state;
+      const { from, to } = selection;
+      const startPos = editor.view.coordsAtPos(from);
+      const endPos = editor.view.coordsAtPos(to);
+
+      const x = (startPos.left + endPos.left) / 2;
+      const y = endPos.bottom + 4;
+
+      // 获取选择comment
+      const isCommentActive = editor.isActive('comment');
+
+      const attrs = editor.getAttributes('comment') || {};
+
+      setPosition({ x, y });
+
+      if (isCommentActive) {
+        setMarkText(attrs.markText);
+      }
+
       setIsExpanded(true);
       setTimeout(() => {
         inputRef.current?.focus();
@@ -92,8 +118,8 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       ref={containerRef}
       className={cn('fixed z-50 transition-all duration-300', isExpanded ? 'w-80' : 'w-10')}
       style={{
-        left: position.x,
-        top: position.y,
+        left: position?.x,
+        top: position?.y,
         transform: 'translateX(-50%)',
       }}
     >
@@ -126,6 +152,19 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
             isExpanded ? 'max-w-full opacity-100' : 'max-w-0 opacity-0',
           )}
         >
+          {markItems.length > 0 && (
+            <div className="px-2 py-1 flex flex-wrap gap-1 border-b border-gray-100 dark:border-gray-700">
+              {markItems.map((item, idx) => (
+                <span
+                  key={`${item}-${idx}`}
+                  className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-1 px-2">
             <Input
               ref={inputRef}

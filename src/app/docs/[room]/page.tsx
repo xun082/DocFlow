@@ -26,6 +26,8 @@ import { ImageBlockMenu } from '@/components/menus';
 import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
+import { useCommentStore } from '@/stores/commentStore';
+import { Comment } from '@/extensions/Comment';
 
 // 类型定义
 interface CollaborationUser {
@@ -55,6 +57,7 @@ export default function DocumentPage() {
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const { openComment } = useCommentStore();
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
@@ -246,6 +249,15 @@ export default function DocumentPage() {
         ...(provider && currentUser && doc
           ? [CollaborationCaret.configure({ provider, user: currentUser })]
           : []),
+        Comment.configure({
+          HTMLAttributes: {
+            class: 'comment',
+          },
+          onCommentActivated: (commentId) => {
+            openComment();
+            console.log('Comment activated:', commentId);
+          },
+        }),
       ],
       content: '<p>开始编写您的文档...</p>',
       editable: !isReadOnly,

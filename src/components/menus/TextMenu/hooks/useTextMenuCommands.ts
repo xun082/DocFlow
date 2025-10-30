@@ -82,28 +82,7 @@ export const useTextmenuCommands = (editor: Editor) => {
   );
 
   const onComment = useCallback(() => {
-    const { selection } = editor.state;
-    const selectedText = editor.state.doc.textBetween(selection.from, selection.to);
-
-    // 获取选中文本的位置
-    if (!selection.empty) {
-      try {
-        const { from, to } = selection;
-        const startPos = editor.view.coordsAtPos(from);
-        const endPos = editor.view.coordsAtPos(to);
-
-        // 计算选中区域的中心位置
-        const x = (startPos.left + endPos.left) / 2;
-        const y = endPos.bottom + 4; // 在选中文本下方8px
-
-        // 打开评论弹窗
-        openComment({ x, y }, selectedText);
-      } catch (error) {
-        console.error('获取选中位置失败:', error);
-        // 如果获取位置失败，使用默认位置
-        openComment({ x: 0, y: 0 }, selectedText);
-      }
-    }
+    openComment();
   }, [editor, openComment]);
 
   const onRemoveComment = useCallback(

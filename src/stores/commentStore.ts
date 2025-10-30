@@ -4,7 +4,7 @@ interface CommentState {
   isOpen: boolean;
   position: { x: number; y: number } | null;
   selectedText: string;
-  openComment: (position: { x: number; y: number }, selectedText?: string) => void;
+  openComment: (position?: { x: number; y: number }, selectedText?: string) => void;
   closeComment: () => void;
 }
 

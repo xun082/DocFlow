@@ -73,20 +73,30 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
 
     const marks = $from.marks();
 
-    if (!marks.length) {
-      this.storage.activeCommentId = null;
-      this.options.onCommentActivated(this?.storage.activeCommentId || '');
+    if (marks.length > 0) {
+      const commentMark = this.editor.schema.marks.comment;
+      // 返回第一个返回的mark
+      const activeCommentMark = marks.find((mark) => mark.type === commentMark);
 
-      return;
+      this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
+
+      this.options.onCommentActivated(this?.storage.activeCommentId || '');
     }
 
-    const commentMark = this.editor.schema.marks.comment;
+    // if (!marks.length) {
+    //   this.storage.activeCommentId = null;
+    //   this.options.onCommentActivated(this?.storage.activeCommentId || '');
 
-    const activeCommentMark = marks.find((mark) => mark.type === commentMark);
+    //   return;
+    // }
 
-    this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
+    // const commentMark = this.editor.schema.marks.comment; // 获取所有的comment
 
-    this.options.onCommentActivated(this?.storage.activeCommentId || '');
+    // const activeCommentMark = marks.find((mark) => mark.type === commentMark);
+
+    // this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
+
+    // this.options.onCommentActivated(this?.storage.activeCommentId || '');
   },
 
   addStorage() {
@@ -99,11 +109,16 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
     return {
       setComment:
         (commentId, markText = '') =>
-        ({ commands }) => {
+        ({ commands, editor }) => {
           if (!commentId) return false;
-          console.log('setComment', commentId, markText);
 
-          return commands.setMark('comment', { commentId, markText });
+          return commands.setMark('comment', {
+            ...editor.getAttributes('comment'),
+            commentId,
+            markText:
+              [editor.getAttributes('comment')?.markText, markText].filter(Boolean).join('&') ||
+              null,
+          });
         },
       unsetComment:
         (commentId) =>
