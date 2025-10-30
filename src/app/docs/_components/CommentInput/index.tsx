@@ -161,22 +161,24 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
           )}
         >
           {markItems.length > 0 && (
-            <div className="px-2 py-1 flex flex-col gap-1 border-b border-gray-100 dark:border-gray-700">
-              {markItems.map((item, idx) => (
-                <div key={`${item}-${idx}`} className="group flex items-center justify-between">
-                  <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                    {item}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleRemoveMark(idx)}
-                    className="h-6 w-6 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+            <div className="px-2 py-1 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex flex-col gap-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                {markItems.map((item, idx) => (
+                  <div key={`${item}-${idx}`} className="group flex items-center justify-between">
+                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 truncate max-w-[180px]">
+                      {item}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveMark(idx)}
+                      className="h-6 w-6 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
