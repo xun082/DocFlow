@@ -1,8 +1,10 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
-import { v4 as uuid } from 'uuid';
+
+import { useCommentStore } from '@/stores/commentStore';
 
 export const useTextmenuCommands = (editor: Editor) => {
+  const { openComment } = useCommentStore();
   const onBold = useCallback(() => editor.chain().focus().toggleBold().run(), [editor]);
   const onItalic = useCallback(() => editor.chain().focus().toggleItalic().run(), [editor]);
   const onStrike = useCallback(() => editor.chain().focus().toggleStrike().run(), [editor]);
@@ -80,11 +82,29 @@ export const useTextmenuCommands = (editor: Editor) => {
   );
 
   const onComment = useCallback(() => {
-    const commentId = uuid();
-    console.log('onComment', editor.chain().focus());
+    const { selection } = editor.state;
+    const selectedText = editor.state.doc.textBetween(selection.from, selection.to);
 
-    return editor.chain().focus().setComment(commentId).run();
-  }, [editor]);
+    // 获取选中文本的位置
+    if (!selection.empty) {
+      try {
+        const { from, to } = selection;
+        const startPos = editor.view.coordsAtPos(from);
+        const endPos = editor.view.coordsAtPos(to);
+
+        // 计算选中区域的中心位置
+        const x = (startPos.left + endPos.left) / 2;
+        const y = endPos.bottom + 4; // 在选中文本下方8px
+
+        // 打开评论弹窗
+        openComment({ x, y }, selectedText);
+      } catch (error) {
+        console.error('获取选中位置失败:', error);
+        // 如果获取位置失败，使用默认位置
+        openComment({ x: 0, y: 0 }, selectedText);
+      }
+    }
+  }, [editor, openComment]);
 
   const onRemoveComment = useCallback(
     (commentId: string) => {

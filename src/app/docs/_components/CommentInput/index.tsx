@@ -4,113 +4,59 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/core';
 import { Send, X, MessageCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { v4 as uuid } from 'uuid';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
+import { useCommentStore } from '@/stores/commentStore';
 
 interface CommentInputGroupProps {
   editor: Editor;
-  onCommentSubmit: (content: string) => void;
-  onCancel: () => void;
-  triggerPosition?: { x: number; y: number };
 }
 
-export const CommentInput: React.FC<CommentInputGroupProps> = ({
-  editor,
-  onCommentSubmit,
-  onCancel,
-  triggerPosition,
-}) => {
+export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
+  const { isOpen, position, closeComment } = useCommentStore();
   const [commentContent, setCommentContent] = useState('');
-  const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 获取选中文本的位置
-  const getSelectionPosition = () => {
-    if (!editor || !editor.view) return null;
-
-    const { selection } = editor.state;
-    if (selection.empty) return null;
-
-    try {
-      const { from, to } = selection;
-      const startPos = editor.view.coordsAtPos(from);
-      const endPos = editor.view.coordsAtPos(to);
-
-      // 计算选中区域的中心位置
-      const x = (startPos.left + endPos.left) / 2;
-      const y = endPos.bottom + 8; // 在选中文本下方8px
-
-      return { x, y };
-    } catch (error) {
-      console.error('获取选中位置失败:', error);
-
-      return null;
-    }
-  };
-
-  // 监听编辑器选择变化
+  // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
-    const handleSelectionUpdate = () => {
-      const selectionPosition = getSelectionPosition();
-
-      if (selectionPosition) {
-        setIsVisible(true);
-        setIsExpanded(true);
-        // 延迟一点确保DOM已经更新
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-      } else {
-        setIsExpanded(false);
-        // 延迟隐藏，给用户操作时间
-        setTimeout(() => {
-          if (!isExpanded) {
-            setIsVisible(false);
-          }
-        }, 300);
-      }
-    };
-
-    editor.on('selectionUpdate', handleSelectionUpdate);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-    };
-  }, [editor, isExpanded]);
+    if (isOpen) {
+      setIsExpanded(true);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    } else {
+      setIsExpanded(false);
+      setCommentContent('');
+    }
+  }, [isOpen]);
 
   // 点击外部关闭
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsExpanded(false);
-        setTimeout(() => {
-          if (!isExpanded) {
-            setIsVisible(false);
-            onCancel();
-          }
-        }, 300);
+        closeComment();
       }
     };
 
-    if (isVisible) {
+    if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isVisible, isExpanded, onCancel]);
+  }, [isOpen, closeComment]);
 
   const handleSubmit = () => {
     if (commentContent.trim()) {
-      onCommentSubmit(commentContent.trim());
+      editor.chain().focus().setComment(uuid(), commentContent).run();
       setCommentContent('');
-      setIsExpanded(false);
-      setIsVisible(false);
+      closeComment();
     }
   };
 
@@ -119,9 +65,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({
       e.preventDefault();
       handleSubmit();
     } else if (e.key === 'Escape') {
-      onCancel();
-      setIsExpanded(false);
-      setIsVisible(false);
+      closeComment();
     }
   };
 
@@ -135,9 +79,11 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({
     }
   };
 
-  const currentPosition = triggerPosition || getSelectionPosition();
+  const handleCancel = () => {
+    closeComment();
+  };
 
-  if (!isVisible || !currentPosition) {
+  if (!isOpen || !position) {
     return null;
   }
 
@@ -146,8 +92,8 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({
       ref={containerRef}
       className={cn('fixed z-50 transition-all duration-300', isExpanded ? 'w-80' : 'w-10')}
       style={{
-        left: currentPosition.x,
-        top: currentPosition.y,
+        left: position.x,
+        top: position.y,
         transform: 'translateX(-50%)',
       }}
     >
@@ -202,11 +148,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => {
-                onCancel();
-                setIsExpanded(false);
-                setIsVisible(false);
-              }}
+              onClick={handleCancel}
               className="h-8 w-8 p-0 flex-shrink-0"
             >
               <X className="h-4 w-4" />

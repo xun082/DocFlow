@@ -351,16 +351,7 @@ export default function DocumentPage() {
       {editor && (
         <>
           <FloatingToc editor={editor} />
-          <CommentInput
-            editor={editor}
-            onCommentSubmit={(content: string) => {
-              // 处理评论提交
-              console.log('评论内容:', content);
-            }}
-            onCancel={() => {
-              // 处理取消操作
-            }}
-          />
+          <CommentInput editor={editor} />
         </>
       )}
 

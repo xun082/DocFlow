@@ -399,7 +399,11 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Chart,
   Countdown,
   Gantt,
-  Comment,
+  Comment.configure({
+    HTMLAttributes: {
+      class: 'comment',
+    },
+  }),
 ];
 
 export default ExtensionKit;

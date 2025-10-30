@@ -7,7 +7,7 @@ declare module '@tiptap/core' {
       /**
        * Set a comment (add)
        */
-      setComment: (commentId: string) => ReturnType;
+      setComment: (commentId: string, markText?: string) => ReturnType;
       /**
        * Unset a comment (remove)
        */
@@ -47,6 +47,11 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
         parseHTML: (el) => (el as HTMLSpanElement).getAttribute('data-comment-id'),
         renderHTML: (attrs) => ({ 'data-comment-id': attrs.commentId }),
       },
+      markText: {
+        default: null,
+        parseHTML: (el) => (el as HTMLSpanElement).getAttribute('data-mark-text'),
+        renderHTML: (attrs) => ({ 'data-mark-text': attrs.markText }),
+      },
     };
   },
 
@@ -63,7 +68,6 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
     return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
   },
 
-  // TipTap 3.x 使用 onSelectionUpdate 替代 onSelectionUpdate
   onSelectionUpdate() {
     const { $from } = this.editor.state.selection;
 
@@ -94,12 +98,12 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
   addCommands() {
     return {
       setComment:
-        (commentId) =>
+        (commentId, markText = '') =>
         ({ commands }) => {
           if (!commentId) return false;
-          console.log('setComment', commentId);
+          console.log('setComment', commentId, markText);
 
-          return commands.setMark('comment', { commentId });
+          return commands.setMark('comment', { commentId, markText });
         },
       unsetComment:
         (commentId) =>
