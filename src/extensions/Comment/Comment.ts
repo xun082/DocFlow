@@ -109,16 +109,58 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
     return {
       setComment:
         (commentId, markText = '') =>
-        ({ commands, editor }) => {
-          if (!commentId) return false;
+        ({ editor, commands, tr, dispatch }) => {
+          const { selection } = editor.state;
+          const prev = editor.getAttributes('comment');
+          const oldCommentId = prev.commentId;
 
-          return commands.setMark('comment', {
-            ...editor.getAttributes('comment'),
-            commentId,
-            markText:
-              [editor.getAttributes('comment')?.markText, markText].filter(Boolean).join('&') ||
-              null,
-          });
+          // 统一计算最终属性
+          const finalCommentId = oldCommentId || commentId;
+          if (!finalCommentId) return false;
+
+          const prevMarkText = typeof prev.markText === 'string' ? prev.markText.trim() : '';
+          const nextText = typeof markText === 'string' ? String(markText).trim() : '';
+          const joinedMarkText = [prevMarkText, nextText].filter(Boolean).join('&') || null;
+
+          const newAttrs = {
+            commentId: finalCommentId,
+            markText: joinedMarkText,
+          };
+
+          // 场景一：选区模式，直接使用 setMark 创建或更新
+          if (!selection.empty) {
+            return commands.setMark('comment', newAttrs);
+          }
+
+          // 场景二：光标模式，遍历文档进行更新
+          if (selection.empty && oldCommentId) {
+            const commentMarkType = editor.schema.marks.comment;
+            let markApplied = false;
+
+            tr.doc.descendants((node, pos) => {
+              if (!node.isInline) return;
+
+              const mark = node.marks.find(
+                (m) => m.type === commentMarkType && m.attrs.commentId === oldCommentId,
+              );
+
+              if (mark) {
+                const from = pos;
+                const to = pos + node.nodeSize;
+                tr.removeMark(from, to, mark); // 移除精确的 mark 实例
+                tr.addMark(from, to, commentMarkType.create(newAttrs));
+                markApplied = true;
+              }
+            });
+
+            if (markApplied && dispatch) {
+              dispatch(tr);
+
+              return true;
+            }
+          }
+
+          return false;
         },
       unsetComment:
         (commentId) =>
