@@ -63,52 +63,59 @@ jobs:
           envs: DOCKER_USERNAME,DOCKER_PASSWORD,VERSION
           script: |
             IMAGE="${DOCKER_USERNAME}/docflow:latest"
-            # 使用 DaoCloud 镜像加速
-            MIRROR_IMAGE="m.daocloud.io/docker.io/${IMAGE}"
 
             echo "================================"
             echo "🚀 Starting deployment"
             echo "📦 Version: $VERSION"
-            echo "🐳 Original: $IMAGE"
-            echo "🚄 Mirror: $MIRROR_IMAGE"
+            echo "🐳 Image: $IMAGE"
             echo "================================"
 
-            # 测试网络连接
-            echo "🔍 Testing network connectivity..."
-            if curl -sL -m 5 https://docker.m.daocloud.io > /dev/null; then
-              echo "✅ DaoCloud mirror accessible"
-            else
-              echo "❌ DaoCloud mirror not accessible"
-              exit 1
-            fi
+            # 配置 Docker 镜像加速器
+            echo "🔧 Configuring Docker registry mirrors..."
+            sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+            {
+              "registry-mirrors": [
+                "https://docker.m.daocloud.io",
+                "https://docker.1panel.live",
+                "https://hub.rat.dev",
+                "https://dockerproxy.com",
+                "https://hub-mirror.c.163.com"
+              ]
+            }
+            EOF
 
-            # 从 DaoCloud 镜像加速拉取
+            echo "✅ Registry mirrors configured"
+            cat /etc/docker/daemon.json
+
+            # 重启 Docker 服务
             echo ""
-            echo "📦 Pulling image via DaoCloud mirror..."
-            PULL_SUCCESS=0
-            for i in 1 2 3; do
-              echo "🔄 Pull attempt $i/3..."
-              if timeout 600 docker pull $MIRROR_IMAGE; then
-                echo "✅ Image pulled successfully from mirror"
-                PULL_SUCCESS=1
+            echo "🔄 Restarting Docker service..."
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker
+            sleep 8
+
+            # 等待 Docker 启动
+            echo "⏳ Waiting for Docker to be ready..."
+            for i in {1..30}; do
+              if docker info > /dev/null 2>&1; then
+                echo "✅ Docker is ready"
                 break
               fi
-              echo "⚠️  Pull attempt $i failed, retrying..."
-              sleep 10
+              echo "Waiting... ($i/30)"
+              sleep 2
             done
 
-            if [ $PULL_SUCCESS -eq 0 ]; then
-              echo "❌ Failed to pull image after 3 attempts"
-              echo "Please check: https://hub.docker.com/r/${DOCKER_USERNAME}/docflow"
-              exit 1
-            fi
-
-            # 重新标记为原始镜像名（方便后续使用）
+            # 验证镜像加速器配置
             echo ""
-            echo "🏷️  Tagging image as: $IMAGE"
-            docker tag $MIRROR_IMAGE $IMAGE
+            echo "📋 Docker registry mirrors:"
+            docker info | grep -A 10 "Registry Mirrors" || echo "Mirror info not available"
 
-            echo "✅ Image ready: $IMAGE"
+            # 拉取镜像
+            echo ""
+            echo "📦 Pulling image..."
+            docker pull $IMAGE
+
+            echo "✅ Image pulled successfully"
 
             # 停止旧容器
             echo ""
