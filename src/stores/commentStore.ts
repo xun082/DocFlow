@@ -2,26 +2,19 @@ import { create } from 'zustand';
 
 interface CommentState {
   isOpen: boolean;
-  position: { x: number; y: number } | null;
-  selectedText: string;
-  openComment: (position?: { x: number; y: number }, selectedText?: string) => void;
+  openComment: () => void;
   closeComment: () => void;
 }
 
 export const useCommentStore = create<CommentState>((set) => ({
   isOpen: false,
-  position: null,
-  selectedText: '',
-  openComment: (position, selectedText = '') =>
+  openComment: () =>
     set({
       isOpen: true,
-      position,
-      selectedText,
     }),
+
   closeComment: () =>
     set({
       isOpen: false,
-      position: null,
-      selectedText: '',
     }),
 }));

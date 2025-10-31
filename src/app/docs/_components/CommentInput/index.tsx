@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { Send, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { debounce } from 'lodash-es';
+import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -47,13 +48,8 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     }
   }, [editor]);
 
-  // 使用useRef存储防抖函数，避免重复创建
-  const debouncedUpdatePositionRef = useRef(debounce(updatePosition, 16));
-
-  // 当updatePosition变化时，更新防抖函数
-  useEffect(() => {
-    debouncedUpdatePositionRef.current = debounce(updatePosition, 16);
-  }, [updatePosition]);
+  // 使用useMemo优化防抖函数，避免重复创建
+  const debouncedUpdatePosition = useMemo(() => debounce(updatePosition, 16), [updatePosition]);
 
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
@@ -78,7 +74,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
 
       if (scrollContainer) {
-        scrollContainer.addEventListener('scroll', debouncedUpdatePositionRef.current, {
+        scrollContainer.addEventListener('scroll', debouncedUpdatePosition, {
           passive: true,
         });
       }
@@ -86,8 +82,8 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       // 清理函数
       return () => {
         if (scrollContainer) {
-          scrollContainer.removeEventListener('scroll', debouncedUpdatePositionRef.current);
-          debouncedUpdatePositionRef.current.cancel();
+          scrollContainer.removeEventListener('scroll', debouncedUpdatePosition);
+          debouncedUpdatePosition.cancel();
         }
       };
     } else {
@@ -114,11 +110,37 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   }, [isOpen, closeComment]);
 
   const handleSubmit = () => {
-    if (commentContent.trim()) {
-      const newMarkText = [...markItems, commentContent].join(' & ');
+    const trimmedContent = commentContent.trim();
+
+    // 输入验证
+    if (!trimmedContent) {
+      toast.error('评论内容不能为空');
+
+      return;
+    }
+
+    if (trimmedContent.length > 500) {
+      toast.error('评论内容不能超过500个字符');
+
+      return;
+    }
+
+    try {
+      // 统一计算新的标记文本
+      const newMarkItems = markItems.length > 0 ? [...markItems, trimmedContent] : [trimmedContent];
+
+      const newMarkText = newMarkItems.join(' & ');
+
+      // 更新编辑器状态
       editor.chain().focus().setComment(null, newMarkText).run();
-      setMarkText(`${markText}&${commentContent}`);
+
+      // 更新本地状态
+      setMarkText(newMarkText);
       setCommentContent('');
+      toast.success('评论提交成功');
+    } catch (error) {
+      console.error('提交评论失败:', error);
+      toast.error('评论提交失败，请重试');
     }
   };
 
@@ -201,7 +223,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
               onChange={(e) => setCommentContent(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="输入评论内容..."
-              className="flex-1 border-0 shadow-none focus-visible:ring-0 focus-visible-border-0"
+              className="my-2 flex-1 !border-0 !shadow-none !ring-0 !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!border-0 focus-visible:!outline-none focus-visible:!ring-0 bg-transparent"
               autoFocus
             />
             <Button
