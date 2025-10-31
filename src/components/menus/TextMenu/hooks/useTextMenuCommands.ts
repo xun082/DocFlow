@@ -1,7 +1,10 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
 
+import { useCommentStore } from '@/stores/commentStore';
+
 export const useTextmenuCommands = (editor: Editor) => {
+  const { openComment } = useCommentStore();
   const onBold = useCallback(() => editor.chain().focus().toggleBold().run(), [editor]);
   const onItalic = useCallback(() => editor.chain().focus().toggleItalic().run(), [editor]);
   const onStrike = useCallback(() => editor.chain().focus().toggleStrike().run(), [editor]);
@@ -78,6 +81,17 @@ export const useTextmenuCommands = (editor: Editor) => {
     [editor],
   );
 
+  const onComment = useCallback(() => {
+    openComment();
+  }, [editor, openComment]);
+
+  const onRemoveComment = useCallback(
+    (commentId: string) => {
+      return editor.chain().focus().unsetComment(commentId).run();
+    },
+    [editor],
+  );
+
   return {
     onBold,
     onItalic,
@@ -98,5 +112,7 @@ export const useTextmenuCommands = (editor: Editor) => {
     onSetFont,
     onSetFontSize,
     onLink,
+    onComment,
+    onRemoveComment,
   };
 };

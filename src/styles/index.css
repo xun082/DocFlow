@@ -155,6 +155,10 @@
     @apply caret-black;
   }
 
+  .comment {
+    @apply bg-yellow-700 border-b-2 border-yellow-200;
+  }
+
   [data-theme='slash-command'] {
     width: 1000vw;
   }

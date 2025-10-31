@@ -63,6 +63,7 @@ import {
   Chart,
   Countdown,
   Gantt,
+  Comment,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -398,6 +399,11 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Chart,
   Countdown,
   Gantt,
+  Comment.configure({
+    HTMLAttributes: {
+      class: 'comment',
+    },
+  }),
 ];
 
 export default ExtensionKit;
