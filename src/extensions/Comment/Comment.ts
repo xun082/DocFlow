@@ -1,6 +1,7 @@
 import { Mark, mergeAttributes, Range } from '@tiptap/core';
 import { Mark as PMMark } from '@tiptap/pm/model';
 import { v4 as uuid } from 'uuid';
+import { debounce } from 'lodash-es';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -92,7 +93,16 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
 
       this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
 
-      this.options.onCommentActivated(this?.storage.activeCommentId || '');
+      // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
+      const debouncedOnCommentActivated = debounce(
+        (commentId: string) => {
+          this.options.onCommentActivated(commentId);
+        },
+        300, // 300ms 延迟
+        { trailing: true },
+      );
+
+      debouncedOnCommentActivated(this?.storage.activeCommentId || '');
     }
   },
 
@@ -106,7 +116,7 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
     return {
       setComment:
         (commentId, markText = '') =>
-        ({ editor, commands, tr, dispatch }) => {
+        ({ editor, tr, dispatch }) => {
           const { selection } = editor.state;
           const prev = editor.getAttributes('comment');
           const oldCommentId = prev.commentId;
@@ -118,8 +128,73 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
               markText: markText || null,
             };
 
-            // 使用正确的命令语法设置 mark
-            return commands.setMark('comment', newAttrs);
+            const { from, to } = selection;
+            const commentMarkType = editor.schema.marks.comment;
+
+            // 检查选区是否与现有评论标记重叠
+            const overlappingRanges: { from: number; to: number }[] = [];
+            const nonOverlappingRanges: { from: number; to: number }[] = [];
+
+            // 遍历文档查找现有的评论标记
+            tr.doc.descendants((node, pos) => {
+              if (!node.isInline) return;
+
+              const existingCommentMark = node.marks.find((mark) => mark.type === commentMarkType);
+
+              if (existingCommentMark) {
+                const nodeFrom = pos;
+                const nodeTo = pos + node.nodeSize;
+
+                // 检查当前选区是否与现有标记重叠
+                const overlapFrom = Math.max(from, nodeFrom);
+                const overlapTo = Math.min(to, nodeTo);
+
+                if (overlapFrom < overlapTo) {
+                  // 有重叠部分，只对重叠部分设置新标记
+                  overlappingRanges.push({ from: overlapFrom, to: overlapTo });
+
+                  // 非重叠部分：选区开始到现有标记开始
+                  if (from < nodeFrom) {
+                    nonOverlappingRanges.push({ from, to: nodeFrom });
+                  }
+
+                  // 非重叠部分：现有标记结束到选区结束
+                  if (nodeTo < to) {
+                    nonOverlappingRanges.push({ from: nodeTo, to });
+                  }
+                } else {
+                  // 没有重叠，整个选区都是非重叠部分
+                  nonOverlappingRanges.push({ from, to });
+                }
+              }
+            });
+
+            if (dispatch) {
+              // 对非重叠部分设置新标记
+              if (nonOverlappingRanges.length > 0) {
+                nonOverlappingRanges.forEach((range) => {
+                  tr.addMark(range.from, range.to, commentMarkType.create(newAttrs));
+                });
+              }
+
+              // 如果有重叠部分，只对重叠部分设置新标记
+              if (overlappingRanges.length > 0) {
+                overlappingRanges.forEach((range) => {
+                  tr.addMark(range.from, range.to, commentMarkType.create(newAttrs));
+                });
+              }
+
+              // 如果没有找到任何现有标记，对整个选区设置新标记
+              if (overlappingRanges.length === 0 && nonOverlappingRanges.length === 0) {
+                tr.addMark(from, to, commentMarkType.create(newAttrs));
+              }
+
+              dispatch(tr);
+
+              return true;
+            }
+
+            return false;
           }
 
           // 场景二：光标模式 - 更新现有评论

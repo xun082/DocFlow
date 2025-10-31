@@ -156,7 +156,11 @@
   }
 
   .comment {
-    @apply bg-yellow-700 border-b-2 border-yellow-200;
+    @apply bg-yellow-400 border-b-2 border-yellow-200;
+  }
+
+  .comment .comment{
+     @apply bg-yellow-700 border-b-2 border-yellow-400;
   }
 
   [data-theme='slash-command'] {
