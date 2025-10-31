@@ -94,21 +94,6 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
 
       this.options.onCommentActivated(this?.storage.activeCommentId || '');
     }
-
-    // if (!marks.length) {
-    //   this.storage.activeCommentId = null;
-    //   this.options.onCommentActivated(this?.storage.activeCommentId || '');
-
-    //   return;
-    // }
-
-    // const commentMark = this.editor.schema.marks.comment; // 获取所有的comment
-
-    // const activeCommentMark = marks.find((mark) => mark.type === commentMark);
-
-    // this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
-
-    // this.options.onCommentActivated(this?.storage.activeCommentId || '');
   },
 
   addStorage() {

@@ -6,7 +6,7 @@ import { Send, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { debounce } from 'lodash-es';
 import { toast } from 'sonner';
-import { computePosition, autoUpdate, offset, shift, flip, size, inline } from '@floating-ui/dom';
+import { computePosition, offset, shift, flip, size, inline } from '@floating-ui/dom';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,8 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     x: 1000,
     y: 1000,
   });
-  const autoUpdateCleanupRef = useRef<(() => void) | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const intersectionObserverRef = useRef<IntersectionObserver | null>(null);
 
   const [markText, setMarkText] = useState('');
   const markItems = markText ? markText.split('&').filter(Boolean) : [];
@@ -108,6 +109,22 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   // 使用useMemo优化防抖函数，避免重复创建
   const debouncedUpdatePosition = useMemo(() => debounce(updatePosition, 16), [updatePosition]);
 
+  // 监听编辑器选区变化，实时更新弹窗位置
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleSelectionUpdate = () => {
+      debouncedUpdatePosition();
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      debouncedUpdatePosition.cancel();
+    };
+  }, [isOpen, editor, debouncedUpdatePosition]);
+
   // 当弹窗打开时自动展开并聚焦输入框
   useEffect(() => {
     if (isOpen) {
@@ -130,45 +147,47 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       const editorElement = editor.view.dom.parentElement?.parentElement;
       if (!editorElement) return;
 
-      // 创建虚拟的锚点元素
-      const virtualAnchor = {
-        getBoundingClientRect: () => {
-          const { selection } = editor.state;
-          const { from, to } = selection;
-          const startPos = editor.view.coordsAtPos(from);
-          const endPos = editor.view.coordsAtPos(to);
+      // 使用ResizeObserver和IntersectionObserver优化定位逻辑
+      const setupObservers = () => {
+        // 清理现有的观察器
+        if (resizeObserverRef.current) {
+          resizeObserverRef.current.disconnect();
+        }
 
-          if (startPos && endPos) {
-            const left = Math.min(startPos.left, endPos.left);
-            const right = Math.max(startPos.right, endPos.right);
-            // const top = Math.min(startPos.top, endPos.top);
-            const bottom = Math.max(startPos.bottom, endPos.bottom);
+        if (intersectionObserverRef.current) {
+          intersectionObserverRef.current.disconnect();
+        }
 
-            return new DOMRect(
-              left,
-              bottom + 4, // 在选中文本下方4px
-              right - left,
-              1, // 高度设为1px，作为锚点
-            );
-          }
+        // 创建ResizeObserver监听编辑器容器尺寸变化
+        resizeObserverRef.current = new ResizeObserver(debouncedUpdatePosition);
 
-          return new DOMRect(0, 0, 0, 0);
-        },
-        contextElement: editor.view.dom,
+        if (editor.view?.dom) {
+          resizeObserverRef.current.observe(editor.view.dom);
+        }
+
+        // 创建IntersectionObserver监听可见性变化
+        intersectionObserverRef.current = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                debouncedUpdatePosition();
+              }
+            });
+          },
+          {
+            root: editor.view?.dom.parentElement?.parentElement,
+            threshold: 0.1,
+          },
+        );
+
+        if (editor.view?.dom) {
+          intersectionObserverRef.current.observe(editor.view.dom);
+        }
       };
-
-      // 启动自动更新定位
-      autoUpdateCleanupRef.current = autoUpdate(
-        virtualAnchor,
-        containerRef.current,
-        updatePosition,
-        {
-          animationFrame: true, // 使用requestAnimationFrame提高性能
-        },
-      );
 
       // 初始定位
       updatePosition();
+      setupObservers();
 
       const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
 
@@ -180,10 +199,15 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
       // 清理函数
       return () => {
-        // 停止自动更新
-        if (autoUpdateCleanupRef.current) {
-          autoUpdateCleanupRef.current();
-          autoUpdateCleanupRef.current = null;
+        // 停止观察器
+        if (resizeObserverRef.current) {
+          resizeObserverRef.current.disconnect();
+          resizeObserverRef.current = null;
+        }
+
+        if (intersectionObserverRef.current) {
+          intersectionObserverRef.current.disconnect();
+          intersectionObserverRef.current = null;
         }
 
         if (scrollContainer) {
