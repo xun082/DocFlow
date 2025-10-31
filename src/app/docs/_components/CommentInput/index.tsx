@@ -6,6 +6,7 @@ import { Send, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { debounce } from 'lodash-es';
 import { toast } from 'sonner';
+import { computePosition, autoUpdate, offset, shift, flip, size, inline } from '@floating-ui/dom';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,26 +26,82 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     x: 1000,
     y: 1000,
   });
+  const autoUpdateCleanupRef = useRef<(() => void) | null>(null);
 
   const [markText, setMarkText] = useState('');
   const markItems = markText ? markText.split('&').filter(Boolean) : [];
 
-  // 使用useCallback优化updatePosition函数
-  const updatePosition = useCallback(() => {
+  // 使用floating-ui的智能定位函数
+  const updatePosition = useCallback(async () => {
     // 检查编辑器视图是否可用
-    if (!editor.view) {
+    if (!editor.view || !containerRef.current) {
       return;
     }
 
     const { selection } = editor.state;
     const { from, to } = selection;
-    const startPos = editor.view.coordsAtPos(from);
-    const endPos = editor.view.coordsAtPos(to);
 
-    if (startPos && endPos) {
-      const x = (startPos.left + endPos.left) / 2;
-      const y = endPos.bottom + 4;
+    // 获取编辑器DOM元素作为边界容器
+    const editorElement = editor.view.dom.parentElement?.parentElement;
+    if (!editorElement) return;
+
+    // 创建虚拟的锚点元素
+    const virtualAnchor = {
+      getBoundingClientRect: () => {
+        const startPos = editor.view.coordsAtPos(from);
+        const endPos = editor.view.coordsAtPos(to);
+
+        if (startPos && endPos) {
+          const left = Math.min(startPos.left, endPos.left);
+          const right = Math.max(startPos.right, endPos.right);
+          const bottom = Math.max(startPos.bottom, endPos.bottom);
+
+          return new DOMRect(
+            left,
+            bottom + 4, // 在选中文本下方4px
+            right - left,
+            1, // 高度设为1px，作为锚点
+          );
+        }
+
+        return new DOMRect(0, 0, 0, 0);
+      },
+      contextElement: editor.view.dom,
+    };
+
+    try {
+      const { x, y } = await computePosition(virtualAnchor, containerRef.current, {
+        placement: 'bottom',
+        middleware: [
+          offset(8), // 距离锚点8px
+          shift({ padding: 8 }), // 边界检测，距离边界8px
+          flip(), // 自动翻转位置
+          inline(), // 内联定位
+          size({
+            apply({ availableWidth, availableHeight, elements }) {
+              // 限制弹窗最大宽度和高度
+              Object.assign(elements.floating.style, {
+                maxWidth: `${Math.min(availableWidth, 320)}px`,
+                maxHeight: `${Math.min(availableHeight, 400)}px`,
+              });
+            },
+          }),
+        ],
+      });
+
       setPosition({ x, y });
+    } catch (error) {
+      console.warn('Failed to compute position:', error);
+
+      // 降级方案：使用原始定位逻辑
+      const startPos = editor.view.coordsAtPos(from);
+      const endPos = editor.view.coordsAtPos(to);
+
+      if (startPos && endPos) {
+        const x = (startPos.left + endPos.left) / 2;
+        const y = endPos.bottom + 4;
+        setPosition({ x, y });
+      }
     }
   }, [editor]);
 
@@ -55,11 +112,9 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   useEffect(() => {
     if (isOpen) {
       // 检查编辑器视图是否可用
-      if (!editor.view) {
+      if (!editor.view || !containerRef.current) {
         return;
       }
-
-      updatePosition();
 
       // 每次弹窗显示时重新获取comment的激活状态和属性
       const isCommentActive = editor.isActive('comment');
@@ -71,6 +126,50 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
         setMarkText('');
       }
 
+      // 获取编辑器DOM元素作为边界容器
+      const editorElement = editor.view.dom.parentElement?.parentElement;
+      if (!editorElement) return;
+
+      // 创建虚拟的锚点元素
+      const virtualAnchor = {
+        getBoundingClientRect: () => {
+          const { selection } = editor.state;
+          const { from, to } = selection;
+          const startPos = editor.view.coordsAtPos(from);
+          const endPos = editor.view.coordsAtPos(to);
+
+          if (startPos && endPos) {
+            const left = Math.min(startPos.left, endPos.left);
+            const right = Math.max(startPos.right, endPos.right);
+            // const top = Math.min(startPos.top, endPos.top);
+            const bottom = Math.max(startPos.bottom, endPos.bottom);
+
+            return new DOMRect(
+              left,
+              bottom + 4, // 在选中文本下方4px
+              right - left,
+              1, // 高度设为1px，作为锚点
+            );
+          }
+
+          return new DOMRect(0, 0, 0, 0);
+        },
+        contextElement: editor.view.dom,
+      };
+
+      // 启动自动更新定位
+      autoUpdateCleanupRef.current = autoUpdate(
+        virtualAnchor,
+        containerRef.current,
+        updatePosition,
+        {
+          animationFrame: true, // 使用requestAnimationFrame提高性能
+        },
+      );
+
+      // 初始定位
+      updatePosition();
+
       const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
 
       if (scrollContainer) {
@@ -81,6 +180,12 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
       // 清理函数
       return () => {
+        // 停止自动更新
+        if (autoUpdateCleanupRef.current) {
+          autoUpdateCleanupRef.current();
+          autoUpdateCleanupRef.current = null;
+        }
+
         if (scrollContainer) {
           scrollContainer.removeEventListener('scroll', debouncedUpdatePosition);
           debouncedUpdatePosition.cancel();
@@ -89,6 +194,11 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     } else {
       setCommentContent('');
       setMarkText('');
+      // 重置position状态，避免下次打开时位置不正确
+      setPosition({
+        x: 1000,
+        y: 1000,
+      });
     }
   }, [isOpen, updatePosition]);
 
@@ -173,27 +283,22 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const commentInputGroup = (
     <div
       ref={containerRef}
-      className={cn('fixed z-50 transition-all duration-300 w-80')}
+      className={cn('fixed z-50 w-80')}
       style={{
         left: position?.x,
         top: position?.y,
-        transform: 'translateX(-50%)',
       }}
     >
       {/* 触发器按钮 */}
       <div
         className={cn(
-          'flex items-center transition-all duration-300 rounded-lg border shadow-lg overflow-hidden',
+          'flex items-center rounded-lg border shadow-lg overflow-hidden',
           'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600',
           'backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 w-full',
         )}
       >
         {/* 输入区域 */}
-        <div
-          className={cn(
-            'flex-1 transition-all duration-300 overflow-hidden py-2 max-w-full opacity-100',
-          )}
-        >
+        <div className={cn('flex-1 overflow-hidden py-2 max-w-full opacity-100')}>
           {markItems.length > 0 && (
             <div className="px-2 py-1 border-b border-gray-100 dark:border-gray-700">
               <div className="flex flex-col gap-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
