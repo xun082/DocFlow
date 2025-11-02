@@ -3,13 +3,16 @@
 @import './partials/animations.css';
 @import './partials/blocks.css';
 @import './partials/code.css';
+@import './partials/code-block.css';
 @import './partials/collab.css';
 @import './partials/lists.css';
 @import './partials/placeholder.css';
+@import './partials/syntax-highlight.css';
 @import './partials/table.css';
 @import './partials/typography.css';
 @import './partials/draggable.css';
 @import './partials/frappe-gantt.css';
+@import './partials/youtube.css';
 
 @custom-variant dark (&:is(.dark *));
 .bg-\[--color-bg\] {

@@ -53,8 +53,6 @@ export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
 export { MarkdownPaste } from './MarkdownPaste';
 
-export { ExcalidrawImage } from './ExcalidrawImage';
-
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Audio } from './Audio';
 export { AI } from './AI';

@@ -1,0 +1,122 @@
+.syntax-highlight {
+  margin: 0;
+  padding: 20px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  font-weight: 400;
+  border: none;
+}
+
+.syntax-highlight.word-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: visible;
+}
+
+.syntax-highlight code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  outline: none;
+  caret-color: #58a6ff;
+  box-shadow: none;
+}
+
+.syntax-highlight code:focus {
+  outline: none;
+}
+
+/* GitHub 暗色主题语法高亮 */
+.syntax-highlight .hljs-comment,
+.syntax-highlight .hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.syntax-highlight .hljs-keyword,
+.syntax-highlight .hljs-selector-tag,
+.syntax-highlight .hljs-literal,
+.syntax-highlight .hljs-section,
+.syntax-highlight .hljs-link {
+  color: #ff7b72;
+}
+
+.syntax-highlight .hljs-function .hljs-keyword {
+  color: #d2a8ff;
+}
+
+.syntax-highlight .hljs-subst {
+  color: #e6edf3;
+}
+
+.syntax-highlight .hljs-string,
+.syntax-highlight .hljs-attr,
+.syntax-highlight .hljs-symbol,
+.syntax-highlight .hljs-bullet,
+.syntax-highlight .hljs-addition {
+  color: #a5d6ff;
+}
+
+.syntax-highlight .hljs-title,
+.syntax-highlight .hljs-name,
+.syntax-highlight .hljs-selector-id,
+.syntax-highlight .hljs-selector-class,
+.syntax-highlight .hljs-type,
+.syntax-highlight .hljs-template-tag {
+  color: #79c0ff;
+}
+
+.syntax-highlight .hljs-number,
+.syntax-highlight .hljs-meta,
+.syntax-highlight .hljs-built_in,
+.syntax-highlight .hljs-builtin-name,
+.syntax-highlight .hljs-params {
+  color: #79c0ff;
+}
+
+.syntax-highlight .hljs-variable,
+.syntax-highlight .hljs-template-variable {
+  color: #ffa657;
+}
+
+.syntax-highlight .hljs-regexp,
+.syntax-highlight .hljs-deletion {
+  color: #ff7b72;
+}
+
+.syntax-highlight .hljs-tag {
+  color: #7ee787;
+}
+
+.syntax-highlight .hljs-tag .hljs-attr {
+  color: #79c0ff;
+}
+
+.syntax-highlight .hljs-tag .hljs-name {
+  color: #7ee787;
+}
+
+.syntax-highlight .hljs-attribute {
+  color: #79c0ff;
+}
+
+.syntax-highlight .hljs-emphasis {
+  font-style: italic;
+}
+
+.syntax-highlight .hljs-strong {
+  font-weight: 600;
+}
+
+/* 选中文本样式 */
+.syntax-highlight::selection,
+.syntax-highlight *::selection {
+  background: rgba(56, 139, 253, 0.4);
+}
+

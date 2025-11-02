@@ -67,7 +67,6 @@ import {
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
-import { ExcalidrawImage } from './ExcalidrawImage';
 import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 
 import uploadService from '@/services/upload';
@@ -140,7 +139,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   ImageBlock,
   TableImage,
-  ExcalidrawImage,
   DraggableBlock,
   DragHandler,
   FileHandler.configure({

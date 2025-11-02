@@ -231,17 +231,6 @@ export const GROUPS: Group[] = [
         },
       },
       {
-        name: 'excalidraw',
-        label: 'Excalidraw',
-        iconName: 'Image',
-        description: 'Insert an Excalidraw diagram',
-        aliases: ['excalidraw'],
-        action: (editor) => {
-          editor.chain().focus().setExcalidrawImage({ type: '' }).run();
-          // window.open(`${window.location.origin}/excalidraw`);
-        },
-      },
-      {
         name: 'youtube',
         label: 'YouTube Video',
         iconName: 'Youtube',

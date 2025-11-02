@@ -133,7 +133,7 @@ export const useQuestion = ({
       const requestData: any = {
         question: question,
         model: selectedModel,
-        useKnowledgeBase: true,
+        // knowledgeIds 可选，不指定则检索所有知识库
       };
 
       // 只有当API密钥存在且不为空时才添加到请求参数中

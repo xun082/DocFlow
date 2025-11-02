@@ -1,0 +1,45 @@
+/* Youtube embed */
+.tiptap div[data-youtube-video] {
+  cursor: move;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tiptap div[data-youtube-video]:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.tiptap div[data-youtube-video] iframe {
+  border: none;
+  display: block;
+  min-height: 180px;
+  min-width: 320px;
+  max-width: 100%;
+  outline: 0px solid transparent;
+  border-radius: 10px;
+}
+
+.tiptap div[data-youtube-video].ProseMirror-selectednode {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tiptap div[data-youtube-video].ProseMirror-selectednode iframe {
+  outline: 3px solid #3b82f6;
+  transition: outline 0.15s;
+}
+

@@ -1,6 +1,5 @@
 'use client';
 
-import './CodeBlockComponent.scss';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import React, { useState, useRef } from 'react';
 import type { ReactNodeViewProps } from '@tiptap/react';

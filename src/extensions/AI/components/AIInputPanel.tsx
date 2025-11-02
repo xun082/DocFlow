@@ -7,6 +7,7 @@ import Button from './Button';
 import Textarea from './Textarea';
 import CustomDivider from './CustomDivider';
 import ModelSelector from './ModelSelector';
+import KnowledgeBaseSelector from './KnowledgeBaseSelector';
 
 import { cn } from '@/utils/utils';
 
@@ -31,6 +32,8 @@ interface AIInputPanelProps {
   actionButtons: ActionButton[];
   selectedModel: string;
   setSelectedModel: (model: string) => void;
+  selectedKnowledgeIds: number[];
+  setSelectedKnowledgeIds: (ids: number[]) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   uploadInputRef: React.RefObject<HTMLInputElement | null>;
   componentRef: React.RefObject<HTMLDivElement | null>;
@@ -46,6 +49,8 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   actionButtons,
   selectedModel,
   setSelectedModel,
+  selectedKnowledgeIds,
+  setSelectedKnowledgeIds,
   textareaRef,
   uploadInputRef,
   componentRef,
@@ -257,6 +262,23 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
                   <ModelSelector
                     selectedModel={selectedModel}
                     setSelectedModel={setSelectedModel}
+                    disabled={buttonConfig.disabled}
+                    buttonConfig={buttonConfig}
+                  />
+                </div>
+              );
+            }
+
+            if (buttonConfig.id === 'knowledge') {
+              return (
+                <div
+                  key={`knowledge-${buttonConfig.id}-${index}`}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <KnowledgeBaseSelector
+                    selectedKnowledgeIds={selectedKnowledgeIds}
+                    setSelectedKnowledgeIds={setSelectedKnowledgeIds}
                     disabled={buttonConfig.disabled}
                     buttonConfig={buttonConfig}
                   />

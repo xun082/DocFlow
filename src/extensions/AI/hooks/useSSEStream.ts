@@ -20,6 +20,7 @@ interface UseSSEStreamProps {
   setResponse: (response: string) => void;
   editor: Editor;
   useKnowledgeBase: boolean; // 添加知识库开关参数
+  selectedKnowledgeIds: number[]; // 选中的知识库ID列表
 }
 
 export const useSSEStream = ({
@@ -32,6 +33,7 @@ export const useSSEStream = ({
   setResponse,
   editor,
   useKnowledgeBase,
+  selectedKnowledgeIds,
 }: UseSSEStreamProps) => {
   const accumulatedResponseRef = useRef('');
 
@@ -200,6 +202,11 @@ export const useSSEStream = ({
           model: selectedModel,
           useKnowledgeBase: useKnowledgeBase, // 使用传入的知识库开关状态
         };
+
+        // 如果启用了知识库且有选中的知识库，则传递knowledgeIds
+        if (useKnowledgeBase && selectedKnowledgeIds.length > 0) {
+          questionParams.knowledgeIds = selectedKnowledgeIds;
+        }
 
         // 只有存在API密钥时才添加
         if (requestData.apiKey) {

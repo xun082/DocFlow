@@ -1,0 +1,330 @@
+.ProseMirror .tiptap .code-block,
+.tiptap .code-block {
+  position: relative;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 16px 0;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.ProseMirror .tiptap .code-block .code-block-header,
+.tiptap .code-block .code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+  border-bottom: 1px solid #21262d;
+  min-height: 48px;
+}
+
+/* 暗色主题的语言选择器样式会由 Popover 组件处理 */
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls,
+.tiptap .code-block .code-block-header .code-block-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(99, 110, 123, 0.1);
+  border: 1px solid rgba(99, 110, 123, 0.2);
+  border-radius: 6px;
+  color: #8b949e;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn:hover,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn:hover {
+  background: rgba(99, 110, 123, 0.2);
+  color: #f0f6fc;
+  border-color: rgba(99, 110, 123, 0.4);
+  transform: translateY(-1px);
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn.active,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn.active {
+  background: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+  border-color: rgba(56, 139, 253, 0.3);
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn.copied,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn.copied {
+  background: rgba(46, 160, 67, 0.15);
+  color: #3fb950;
+  border-color: rgba(46, 160, 67, 0.3);
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn:disabled,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn svg,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn:hover svg,
+.tiptap .code-block .code-block-header .code-block-controls .control-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.ProseMirror .tiptap .code-block .code-block-content,
+.tiptap .code-block .code-block-content {
+  position: relative;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre,
+.tiptap .code-block .code-block-content pre {
+  margin: 0;
+  padding: 20px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  font-weight: 400;
+  border: none;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre.word-wrap,
+.tiptap .code-block .code-block-content pre.word-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: visible;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre code,
+.tiptap .code-block .code-block-content pre code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  outline: none;
+  caret-color: #58a6ff;
+  box-shadow: none;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre code:focus,
+.tiptap .code-block .code-block-content pre code:focus {
+  outline: none;
+}
+
+/* GitHub 暗色主题语法高亮 */
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-comment,
+.tiptap .code-block .code-block-content pre .hljs-comment,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-quote,
+.tiptap .code-block .code-block-content pre .hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-keyword,
+.tiptap .code-block .code-block-content pre .hljs-keyword,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-selector-tag,
+.tiptap .code-block .code-block-content pre .hljs-selector-tag,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-literal,
+.tiptap .code-block .code-block-content pre .hljs-literal,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-section,
+.tiptap .code-block .code-block-content pre .hljs-section,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-link,
+.tiptap .code-block .code-block-content pre .hljs-link {
+  color: #ff7b72;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-function .hljs-keyword,
+.tiptap .code-block .code-block-content pre .hljs-function .hljs-keyword {
+  color: #d2a8ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-subst,
+.tiptap .code-block .code-block-content pre .hljs-subst {
+  color: #e6edf3;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-string,
+.tiptap .code-block .code-block-content pre .hljs-string,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-attr,
+.tiptap .code-block .code-block-content pre .hljs-attr,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-symbol,
+.tiptap .code-block .code-block-content pre .hljs-symbol,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-bullet,
+.tiptap .code-block .code-block-content pre .hljs-bullet,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-addition,
+.tiptap .code-block .code-block-content pre .hljs-addition {
+  color: #a5d6ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-title,
+.tiptap .code-block .code-block-content pre .hljs-title,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-name,
+.tiptap .code-block .code-block-content pre .hljs-name,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-selector-id,
+.tiptap .code-block .code-block-content pre .hljs-selector-id,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-selector-class,
+.tiptap .code-block .code-block-content pre .hljs-selector-class,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-type,
+.tiptap .code-block .code-block-content pre .hljs-type,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-template-tag,
+.tiptap .code-block .code-block-content pre .hljs-template-tag {
+  color: #79c0ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-number,
+.tiptap .code-block .code-block-content pre .hljs-number,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-meta,
+.tiptap .code-block .code-block-content pre .hljs-meta,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-built_in,
+.tiptap .code-block .code-block-content pre .hljs-built_in,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-builtin-name,
+.tiptap .code-block .code-block-content pre .hljs-builtin-name,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-params,
+.tiptap .code-block .code-block-content pre .hljs-params {
+  color: #79c0ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-variable,
+.tiptap .code-block .code-block-content pre .hljs-variable,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-template-variable,
+.tiptap .code-block .code-block-content pre .hljs-template-variable {
+  color: #ffa657;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-regexp,
+.tiptap .code-block .code-block-content pre .hljs-regexp,
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-deletion,
+.tiptap .code-block .code-block-content pre .hljs-deletion {
+  color: #ff7b72;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-tag,
+.tiptap .code-block .code-block-content pre .hljs-tag {
+  color: #7ee787;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-tag .hljs-attr,
+.tiptap .code-block .code-block-content pre .hljs-tag .hljs-attr {
+  color: #79c0ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-tag .hljs-name,
+.tiptap .code-block .code-block-content pre .hljs-tag .hljs-name {
+  color: #7ee787;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-attribute,
+.tiptap .code-block .code-block-content pre .hljs-attribute {
+  color: #79c0ff;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-emphasis,
+.tiptap .code-block .code-block-content pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre .hljs-strong,
+.tiptap .code-block .code-block-content pre .hljs-strong {
+  font-weight: 600;
+}
+
+/* 选中文本样式 */
+.ProseMirror .tiptap .code-block .code-block-content pre::selection,
+.tiptap .code-block .code-block-content pre::selection,
+.ProseMirror .tiptap .code-block .code-block-content pre *::selection,
+.tiptap .code-block .code-block-content pre *::selection {
+  background: rgba(56, 139, 253, 0.4);
+}
+
+/* 焦点状态 */
+.ProseMirror .tiptap .code-block:focus-within,
+.tiptap .code-block:focus-within {
+  border-color: #388bfd;
+  box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.12);
+}
+
+/* 折叠状态 */
+.ProseMirror .tiptap .code-block.collapsed .code-block-content,
+.tiptap .code-block.collapsed .code-block-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ProseMirror .tiptap .code-block.collapsed .code-block-header .code-block-controls .control-btn svg,
+.tiptap .code-block.collapsed .code-block-header .code-block-controls .control-btn svg {
+  transform: rotate(180deg);
+}
+
+.ProseMirror .tiptap .code-block:not(.collapsed) .code-block-content,
+.tiptap .code-block:not(.collapsed) .code-block-content {
+  max-height: none;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ProseMirror .tiptap .code-block .code-block-header,
+  .tiptap .code-block .code-block-header {
+    padding: 8px 12px;
+    min-height: 44px;
+  }
+
+  .ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn,
+  .tiptap .code-block .code-block-header .code-block-controls .control-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn svg,
+  .tiptap .code-block .code-block-header .code-block-controls .control-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .ProseMirror .tiptap .code-block .code-block-content pre,
+  .tiptap .code-block .code-block-content pre {
+    padding: 16px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 滚动条样式 */
+.ProseMirror .tiptap .code-block .code-block-content pre::-webkit-scrollbar,
+.tiptap .code-block .code-block-content pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre::-webkit-scrollbar-track,
+.tiptap .code-block .code-block-content pre::-webkit-scrollbar-track {
+  background: rgba(99, 110, 123, 0.1);
+  border-radius: 4px;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre::-webkit-scrollbar-thumb,
+.tiptap .code-block .code-block-content pre::-webkit-scrollbar-thumb {
+  background: rgba(99, 110, 123, 0.3);
+  border-radius: 4px;
+}
+
+.ProseMirror .tiptap .code-block .code-block-content pre::-webkit-scrollbar-thumb:hover,
+.tiptap .code-block .code-block-content pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 110, 123, 0.5);
+}
+
