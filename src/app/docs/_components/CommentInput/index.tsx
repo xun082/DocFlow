@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
-import { Send, X } from 'lucide-react';
+import { Send, X, Trash2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { debounce } from 'lodash-es';
 import { toast } from 'sonner';
@@ -300,6 +300,21 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     closeComment();
   };
 
+  const handleDeleteMark = () => {
+    // 获取当前激活的评论ID
+    const activeCommentId = editor.getAttributes('comment').commentId;
+
+    if (activeCommentId) {
+      // 使用unsetComment命令删除整个mark
+      editor.chain().focus().unsetComment(activeCommentId).run();
+      toast.success('评论标记已删除');
+    } else {
+      toast.error('未找到可删除的评论标记');
+    }
+
+    closeComment();
+  };
+
   if (!isOpen || !position) {
     return null;
   }
@@ -364,6 +379,17 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
             >
               <Send className="h-4 w-4" />
             </Button>
+            {markItems.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDeleteMark}
+                className="h-8 w-8 p-0 flex-shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                title="删除评论标记"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"

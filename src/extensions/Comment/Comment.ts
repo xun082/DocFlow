@@ -82,7 +82,11 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
   },
 
   onSelectionUpdate() {
+    const { selection } = this.editor.state;
     const { $from } = this.editor.state.selection;
+
+    // 如果是选取模式，可能是想增加评论
+    if (!selection.empty) return;
 
     const marks = $from.marks();
 
