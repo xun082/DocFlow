@@ -1,6 +1,5 @@
 import { all, createLowlight } from 'lowlight';
 import { toHtml } from 'hast-util-to-html';
-import './SyntaxHighlight.scss';
 
 const lowlight = createLowlight(all);
 
@@ -11,9 +10,8 @@ const SyntaxHighlight = ({ className, children, ...props }: any) => {
   const htmlString = toHtml(highlightedResult);
 
   return (
-    <pre className="m-0 p-5 bg-[#0d1117] text-[#e6edf3] text-sm leading-relaxed overflow-x-auto whitespace-pre font-normal border-none">
+    <pre className="syntax-highlight">
       <code
-        className="font-inherit text-inherit bg-transparent p-0 outline-none caret-[#58a6ff] shadow-none"
         dangerouslySetInnerHTML={{
           __html: htmlString,
         }}

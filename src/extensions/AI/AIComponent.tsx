@@ -54,6 +54,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
   const [showImage, setShowImage] = useState(false); // 图片生成状态
   const [useKnowledgeBase, setUseKnowledgeBase] = useState(true); // 知识库开关状态，默认开启
+  const [selectedKnowledgeIds, setSelectedKnowledgeIds] = useState<number[]>([]); // 选中的知识库ID列表
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
@@ -112,6 +113,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     setResponse,
     editor,
     useKnowledgeBase, // 传递知识库开关状态
+    selectedKnowledgeIds, // 传递选中的知识库ID列表
   });
 
   const { generateImage } = useTextToImage({
@@ -269,7 +271,16 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       hoverBgColor: useKnowledgeBase ? 'hover:bg-[#10B981]/30' : 'hover:bg-gray-300',
       isActive: useKnowledgeBase,
       disabled: aiState === AIState.LOADING,
-      onClick: () => setUseKnowledgeBase(!useKnowledgeBase),
+      onClick: () => {
+        const newValue = !useKnowledgeBase;
+
+        setUseKnowledgeBase(newValue);
+
+        // 如果关闭知识库，清除选中的知识库ID
+        if (!newValue) {
+          setSelectedKnowledgeIds([]);
+        }
+      },
     },
     {
       id: 'model',
@@ -471,6 +482,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                   actionButtons={actionButtons}
                   selectedModel={selectedModel}
                   setSelectedModel={setSelectedModel}
+                  selectedKnowledgeIds={selectedKnowledgeIds}
+                  setSelectedKnowledgeIds={setSelectedKnowledgeIds}
                   textareaRef={textareaRef}
                   uploadInputRef={uploadInputRef}
                   componentRef={componentRef}
