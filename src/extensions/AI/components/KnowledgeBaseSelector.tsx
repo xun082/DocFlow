@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Search, X } from 'lucide-react';
+import Link from 'next/link';
+import { Database, Search, X, Plus } from 'lucide-react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { AiApi } from '@/services/ai';
 import { KnowledgeOption } from '@/services/ai/type';
 import { cn } from '@/utils/utils';
@@ -205,11 +207,19 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
               <div className="text-sm text-gray-500 mt-2">加载中...</div>
             </div>
           ) : !Array.isArray(filteredOptions) || filteredOptions.length === 0 ? (
-            <div className="py-8 text-center">
-              <Database className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="py-8 px-4 text-center">
+              <Database className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 {searchQuery ? '未找到匹配的知识库' : '暂无知识库，请先创建'}
               </div>
+              {!searchQuery && (
+                <Link href="/dashboard/knowledge" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white" size="sm">
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    前往创建知识库
+                  </Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div
