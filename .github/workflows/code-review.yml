@@ -10,7 +10,9 @@ on:
 jobs:
   code-review:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    # 仅在 pull_request_target（可访问 secrets）且非草稿时运行
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.draft == false
+
     permissions:
       contents: read
       pull-requests: write
@@ -48,16 +50,18 @@ jobs:
           # 直接运行 TypeScript 文件
           OUTPUT=$(npx tsx scripts/code-review.ts ${{ github.event.pull_request.number }} $BASE_SHA $PR_HEAD_SHA)
 
-          # 提取报告内容
+          # 提取报告内容（由你的脚本以 --REPORT_START/END-- 包围）
           REPORT=$(echo "$OUTPUT" | sed -n '/---REPORT_START---/,/---REPORT_END---/p' | sed '1d;$d')
 
-          # 保存报告
+          # 保存报告供下一步评论使用
           echo "$REPORT" > review.md
 
-          # 输出到 GitHub Actions 日志
-          echo "review<<EOF" >> $GITHUB_OUTPUT
-          echo "$REPORT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 也输出到 job 输出（如需复用）
+          {
+            echo "review<<EOF"
+            echo "$REPORT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Post Review Comment
         uses: actions/github-script@v7
@@ -66,20 +70,18 @@ jobs:
             const fs = require('fs');
             const reviewContent = fs.readFileSync('review.md', 'utf8');
 
-            // 查找现有的审查评论
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const existingComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
+            const existingComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('🤖 AI 代码审查报告')
             );
 
             if (existingComment) {
-              // 更新现有评论
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -87,7 +89,6 @@ jobs:
                 body: reviewContent
               });
             } else {
-              // 创建新评论
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -95,10 +96,3 @@ jobs:
                 body: reviewContent
               });
             }
-
-      - name: Create Review Summary
-        run: |
-          echo "## 📋 代码审查摘要" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ 已使用 DeepSeek 模型完成代码审查" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 查看详细审查结果请查看 PR 评论" >> $GITHUB_STEP_SUMMARY

@@ -10,6 +10,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Eye } from 'lucide-react';
 
+import { CommentInput } from '@/app/docs/_components/CommentInput';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
@@ -25,6 +26,8 @@ import { ImageBlockMenu } from '@/components/menus';
 import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
+import { useCommentStore } from '@/stores/commentStore';
+import { Comment } from '@/extensions/Comment';
 
 // 类型定义
 interface CollaborationUser {
@@ -54,6 +57,7 @@ export default function DocumentPage() {
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const { openComment } = useCommentStore();
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
@@ -245,6 +249,15 @@ export default function DocumentPage() {
         ...(provider && currentUser && doc
           ? [CollaborationCaret.configure({ provider, user: currentUser })]
           : []),
+        Comment.configure({
+          HTMLAttributes: {
+            class: 'comment',
+          },
+          onCommentActivated: (commentId) => {
+            openComment();
+            console.log('Comment activated:', commentId);
+          },
+        }),
       ],
       content: '<p>开始编写您的文档...</p>',
       editable: !isReadOnly,
@@ -347,7 +360,12 @@ export default function DocumentPage() {
       </div>
 
       {/* 右侧悬浮目录 - Notion 风格 */}
-      {editor && <FloatingToc editor={editor} />}
+      {editor && (
+        <>
+          <FloatingToc editor={editor} />
+          <CommentInput editor={editor} />
+        </>
+      )}
 
       {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
       {editor && !isReadOnly && (
