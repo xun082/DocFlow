@@ -1,5 +1,5 @@
 import { BubbleMenu } from '@tiptap/react/menus';
-import React, { JSX, useCallback, ChangeEvent } from 'react';
+import React, { JSX, useCallback, ChangeEvent, useMemo } from 'react';
 
 import { findTable, isCellSelection, isAtLeastTwoCellsSelected } from '../../utils';
 
@@ -12,6 +12,36 @@ import { useFileUpload, useImgUpload } from '@/extensions/ImageUpload/view/hooks
 export function TableCellMenu({ editor }: MenuProps): JSX.Element {
   const { handleUploadClick, ref } = useFileUpload();
   const { isUploading } = useImgUpload();
+
+  // 查找最近的表格单元格节点
+  const findNearestTableCell = (state: ShouldShowProps['state'], from: number) => {
+    if (!state || !from) {
+      return null;
+    }
+
+    const pos = state.doc.resolve(from);
+    let depth = pos.depth;
+    let cellNode = null;
+    let cellPos = -1;
+
+    while (depth > 0) {
+      const node = pos.node(depth);
+
+      if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+        cellNode = node;
+        cellPos = pos.before(depth);
+        break;
+      }
+
+      depth--;
+    }
+
+    if (!cellNode) {
+      return null;
+    }
+
+    return { cellNode, cellPos };
+  };
 
   // 检查是否选中了一个表格单元格（单选，非多选）
   const isCellSelected = ({ state, from }: Pick<ShouldShowProps, 'state' | 'from'>) => {
@@ -35,28 +65,13 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
     }
 
     // 如果是普通的文本选择，检查是否在单个表格单元格内
-    const pos = state.doc.resolve(from);
+    const cellInfo = findNearestTableCell(state, from);
 
-    // 查找最近的表格单元格节点
-    let depth = pos.depth;
-    let cellNode = null;
-    let cellPos = -1;
-
-    while (depth > 0) {
-      const node = pos.node(depth);
-
-      if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-        cellNode = node;
-        cellPos = pos.before(depth);
-        break;
-      }
-
-      depth--;
-    }
-
-    if (!cellNode) {
+    if (!cellInfo) {
       return false;
     }
+
+    const { cellNode, cellPos } = cellInfo;
 
     // 检查选择是否完全在单个单元格内
     const cellStart = cellPos;
@@ -187,6 +202,112 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
     editor.chain().focus().setTextAlign('right').run();
   };
 
+  // 判断是否可以拆分单元格
+  const canSplitCell = useCallback((cellInfo: ReturnType<typeof findNearestTableCell>) => {
+    if (!cellInfo) return false;
+
+    const { cellNode } = cellInfo;
+    const { colspan, rowspan } = cellNode.attrs;
+
+    return (colspan && colspan > 1) || (rowspan && rowspan > 1);
+  }, []);
+
+  // 基础菜单项（总是显示）
+  const baseMenuItems = useMemo(
+    () => [
+      {
+        key: 'image',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="Image" />}
+            close={false}
+            label="Insert image"
+            onClick={onInsertImage}
+            disabled={isUploading}
+          />
+        ),
+      },
+      {
+        key: 'align-left',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="AlignLeft" />}
+            close={false}
+            label="Align left"
+            onClick={onAlignLeft}
+          />
+        ),
+      },
+      {
+        key: 'align-center',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="AlignCenter" />}
+            close={false}
+            label="Align center"
+            onClick={onAlignCenter}
+          />
+        ),
+      },
+      {
+        key: 'align-right',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="AlignRight" />}
+            close={false}
+            label="Align right"
+            onClick={onAlignRight}
+          />
+        ),
+      },
+    ],
+    [onInsertImage, onAlignLeft, onAlignCenter, onAlignRight, isUploading],
+  );
+
+  // 动态生成菜单项
+  const getMenuItems = () => {
+    const { state } = editor;
+    const { selection } = state;
+    const cellInfo = findNearestTableCell(state, selection.from);
+    const isMultiSelect = isCellSelection(selection);
+
+    const items = [...baseMenuItems];
+
+    // 动态添加拆分单元格按钮
+    if (cellInfo && canSplitCell(cellInfo)) {
+      items.splice(1, 0, {
+        key: 'split',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="TableCellsSplit" />}
+            close={false}
+            label="Split cell"
+            onClick={onSplitCell}
+          />
+        ),
+      });
+    }
+
+    // 动态添加合并单元格按钮
+    if (isMultiSelect) {
+      items.splice(1, 0, {
+        key: 'merge',
+        component: (
+          <PopoverMenu.Item
+            iconComponent={<Icon name="TableCellsMerge" />}
+            close={false}
+            label="Merge cells"
+            onClick={onMergeCells}
+          />
+        ),
+      });
+    }
+
+    return items;
+  };
+
+  const menuItems = useMemo(() => getMenuItems(), [editor.state.selection]);
+
   return (
     <>
       <BubbleMenu
@@ -200,48 +321,9 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
         shouldShow={shouldShow}
       >
         <Toolbar.Wrapper isVertical data-bubble-menu="tableCellMenu">
-          {/* 图片插入 */}
-          <PopoverMenu.Item
-            iconComponent={<Icon name="Image" />}
-            close={false}
-            label="Insert image"
-            onClick={onInsertImage}
-            disabled={isUploading}
-          />
-
-          {/* 单元格操作 */}
-          <PopoverMenu.Item
-            iconComponent={<Icon name="TableCellsMerge" />}
-            close={false}
-            label="Merge cells"
-            onClick={onMergeCells}
-          />
-          <PopoverMenu.Item
-            iconComponent={<Icon name="TableCellsSplit" />}
-            close={false}
-            label="Split cell"
-            onClick={onSplitCell}
-          />
-
-          {/* 对齐操作 */}
-          <PopoverMenu.Item
-            iconComponent={<Icon name="AlignLeft" />}
-            close={false}
-            label="Align left"
-            onClick={onAlignLeft}
-          />
-          <PopoverMenu.Item
-            iconComponent={<Icon name="AlignCenter" />}
-            close={false}
-            label="Align center"
-            onClick={onAlignCenter}
-          />
-          <PopoverMenu.Item
-            iconComponent={<Icon name="AlignRight" />}
-            close={false}
-            label="Align right"
-            onClick={onAlignRight}
-          />
+          {menuItems.map((item) => (
+            <React.Fragment key={item.key}>{item.component}</React.Fragment>
+          ))}
         </Toolbar.Wrapper>
       </BubbleMenu>
 

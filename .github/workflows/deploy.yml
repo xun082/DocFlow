@@ -1,4 +1,4 @@
-name: Deploy Next.js to JD Cloud
+name: Deploy to Server via Docker Hub
 
 on:
   push:
@@ -6,66 +6,181 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
 
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="$(echo ${{ github.sha }} | cut -c1-7)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/docflow:latest
+            ${{ secrets.DOCKER_USERNAME }}/docflow:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.2.1
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          VERSION: ${{ needs.build-and-push.outputs.version }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 30m
+          envs: DOCKER_USERNAME,DOCKER_PASSWORD,VERSION
           script: |
-            # 加载环境配置
-            source ~/.bashrc 2>/dev/null || true
-            source ~/.profile 2>/dev/null || true
+            IMAGE="${DOCKER_USERNAME}/docflow:latest"
 
-            # 加载 NVM 环境
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            echo "================================"
+            echo "🚀 Starting deployment"
+            echo "📦 Version: $VERSION"
+            echo "🐳 Image: $IMAGE"
+            echo "================================"
 
-            # 设置 PATH
-            export PATH="$HOME/.nvm/versions/node/*/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.npm-global/bin:$PATH"
+            # 配置 Docker 镜像加速器
+            echo "🔧 Configuring Docker registry mirrors..."
+            sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+            {
+              "registry-mirrors": [
+                "https://docker.m.daocloud.io",
+                "https://docker.1panel.live",
+                "https://hub.rat.dev",
+                "https://dockerproxy.com",
+                "https://hub-mirror.c.163.com"
+              ]
+            }
+            EOF
 
-            # 设置工作目录
-            PROJECT_DIR="/home/DocFlow"
-            mkdir -p $PROJECT_DIR
-            cd $PROJECT_DIR
+            echo "✅ Registry mirrors configured"
+            cat /etc/docker/daemon.json
 
-            # 克隆或更新代码
-            if [ ! -d ".git" ]; then
-              echo "Cloning repository..."
-              rm -rf ./*
-              git clone git@github.com:xun082/DocFlow.git .
-            else
-              echo "Updating repository..."
-              git fetch origin main
-              git reset --hard origin/main
+            # 重启 Docker 服务
+            echo ""
+            echo "🔄 Restarting Docker service..."
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker
+            sleep 8
+
+            # 等待 Docker 启动
+            echo "⏳ Waiting for Docker to be ready..."
+            for i in {1..30}; do
+              if docker info > /dev/null 2>&1; then
+                echo "✅ Docker is ready"
+                break
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 2
+            done
+
+            # 验证镜像加速器配置
+            echo ""
+            echo "📋 Docker registry mirrors:"
+            docker info | grep -A 10 "Registry Mirrors" || echo "Mirror info not available"
+
+            # 拉取镜像
+            echo ""
+            echo "📦 Pulling image..."
+            docker pull $IMAGE
+
+            echo "✅ Image pulled successfully"
+
+            # 停止旧容器
+            echo ""
+            echo "🛑 Stopping old container..."
+            docker stop docflow 2>/dev/null || true
+            docker rm docflow 2>/dev/null || true
+
+            # 启动新容器
+            echo ""
+            echo "🚀 Starting new container..."
+            CONTAINER_ID=$(docker run -d \
+              --name docflow \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              $IMAGE)
+
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "❌ Failed to start container"
+              docker logout 2>/dev/null
+              exit 1
             fi
 
-            # 创建 .npmrc 文件 (如果不存在)
-            if [ ! -f ".npmrc" ]; then
-              echo "Creating .npmrc file..."
-              echo "@tiptap-pro:registry=https://registry.tiptap.dev/" > .npmrc
-              echo "//registry.tiptap.dev/:_authToken=${{ secrets.TIPTAP_AUTH_TOKEN }}" >> .npmrc
+            echo "Container ID: $CONTAINER_ID"
+
+            # 等待容器启动
+            echo "⏳ Waiting for container to start..."
+            sleep 5
+
+            # 检查容器状态
+            echo ""
+            echo "================================"
+            echo "📊 Container Status Check"
+            echo "================================"
+
+            CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' docflow 2>/dev/null)
+
+            if [ "$CONTAINER_STATUS" = "running" ]; then
+              echo "✅ Container is running!"
+              echo ""
+              echo "📋 Container Info:"
+              docker ps --filter "name=docflow" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+              echo ""
+              echo "📋 Recent Logs:"
+              docker logs --tail 30 docflow
+              echo ""
+              echo "🎉 Deployment successful!"
             else
-              echo ".npmrc file already exists, skipping creation."
+              echo "❌ Container is not running (Status: $CONTAINER_STATUS)"
+              echo ""
+              echo "📋 Container Logs:"
+              docker logs docflow 2>&1
+              echo ""
+              docker logout 2>/dev/null
+              exit 1
             fi
 
-            # 安装全局依赖 (只在需要时安装)
-            command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@9.4.0
-            command -v pm2 >/dev/null 2>&1 || npm install -g pm2
+            docker logout 2>/dev/null
+            echo "Done!"
 
-            # 安装项目依赖
-            pnpm install
-
-            # 构建项目
-            pnpm run build
-
-            # 重启应用
-            pm2 restart DocFlow 2>/dev/null || pm2 start "pnpm start" --name DocFlow
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Version: \`${{ needs.build-and-push.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 Image: [Docker Hub](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/docflow)" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏰ Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

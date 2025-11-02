@@ -3,7 +3,6 @@ name: Code Review
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
-  # 如你仍有不需要密钥的检查（lint/test），可继续使用 pull_request 触发其他 job。
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -24,9 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # 只检出 base 的提交，避免执行 PR 中的任意代码
           ref: ${{ github.event.pull_request.base.sha }}
-          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,7 +36,6 @@ jobs:
       - name: Install dependencies (from base repo)
         run: pnpm install --frozen-lockfile
 
-      # 仅把 PR 的 head 当作“数据”拉取，不执行其中的代码
       - name: Fetch PR head (as data only)
         run: |
           git fetch origin pull/${{ github.event.pull_request.number }}/head:pr
@@ -51,6 +47,7 @@ jobs:
         env:
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
         run: |
+          # 直接运行 TypeScript 文件
           OUTPUT=$(npx tsx scripts/code-review.ts ${{ github.event.pull_request.number }} $BASE_SHA $PR_HEAD_SHA)
 
           # 提取报告内容（由你的脚本以 --REPORT_START/END-- 包围）
