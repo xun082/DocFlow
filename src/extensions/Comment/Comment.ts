@@ -1,6 +1,7 @@
 import { Mark, mergeAttributes, Range } from '@tiptap/core';
 import { Mark as PMMark } from '@tiptap/pm/model';
 import { v4 as uuid } from 'uuid';
+import { debounce } from 'lodash-es';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -92,7 +93,16 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
 
       this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
 
-      this.options.onCommentActivated(this?.storage.activeCommentId || '');
+      // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
+      const debouncedOnCommentActivated = debounce(
+        (commentId: string) => {
+          this.options.onCommentActivated(commentId);
+        },
+        300, // 300ms 延迟
+        { trailing: true },
+      );
+
+      debouncedOnCommentActivated(this?.storage.activeCommentId || '');
     }
   },
 
