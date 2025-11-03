@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import authApi from '@/services/auth';
-import { User } from '@/services/auth/type';
 import UserApi from '@/services/users';
+import type { User } from '@/types/auth';
 import { clearAuthData } from '@/utils/cookie';
 
 // Query Keys

@@ -5,10 +5,10 @@ import { toast } from 'sonner';
 import { userQueryKeys } from './useUserQuery';
 
 import authApi from '@/services/auth';
-import { User } from '@/services/auth/type';
+import type { User, AuthResponse } from '@/types/auth';
 import { saveAuthData } from '@/utils/cookie';
 
-// 邮箱验证码登录参数
+// 邮箱验证码登录参数（扩展）
 interface EmailLoginParams {
   email: string;
   code: string;
@@ -18,15 +18,6 @@ interface EmailLoginParams {
 // GitHub 回调参数
 interface GitHubCallbackParams {
   code: string;
-}
-
-// 登录响应数据
-interface AuthResponse {
-  token: string;
-  refresh_token?: string;
-  expires_in?: number;
-  refresh_expires_in?: number;
-  user?: User;
 }
 
 // 通用的登录成功处理函数

@@ -1,9 +1,26 @@
 import * as Sentry from '@sentry/nextjs';
 
-import { getCookie } from '@/utils/cookie';
+import { getCookie, saveAuthData, clearAuthData } from '@/utils/cookie';
 import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/http';
+import type { TokenRefreshResponse } from '@/types/auth';
 
 type Method = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
+
+// 在开发环境禁止 Sentry 上报和 breadcrumb 记录
+const isProduction = process.env.NODE_ENV === 'production';
+
+function addSentryBreadcrumb(breadcrumb: Parameters<typeof Sentry.addBreadcrumb>[0]) {
+  if (!isProduction) return;
+  Sentry.addBreadcrumb(breadcrumb);
+}
+
+function captureSentryException(
+  error: unknown,
+  options?: Parameters<typeof Sentry.captureException>[1],
+) {
+  if (!isProduction) return;
+  Sentry.captureException(error, options as any);
+}
 
 interface Params {
   cacheTime?: number; // 缓存时间，单位为秒。默认强缓存，0为不缓存
@@ -70,11 +87,23 @@ export type ErrorHandler =
       default?: (error: unknown) => void;
     };
 
+// 请求队列项类型
+interface QueuedRequest {
+  resolve: (value: any) => void;
+  reject: (reason?: any) => void;
+  requestFn: () => Promise<any>;
+}
+
 class Request {
   baseURL: string;
   defaultTimeout: number;
   defaultRetries: number;
   defaultRetryDelay: number;
+
+  // Token 刷新相关
+  private isRefreshing = false;
+  private refreshTokenPromise: Promise<string> | null = null;
+  private failedQueue: QueuedRequest[] = [];
 
   constructor(
     baseURL: string,
@@ -98,6 +127,187 @@ class Request {
       setTimeout(() => {
         reject(new RequestError('请求超时', '', undefined, 'Timeout'));
       }, timeout);
+    });
+  }
+
+  /**
+   * 刷新访问令牌
+   * 直接调用刷新 API，不经过常规的请求拦截器，避免循环依赖
+   */
+  private async refreshAccessToken(): Promise<string> {
+    const refreshToken = getCookie('refresh_token');
+
+    if (!refreshToken) {
+      throw new RequestError('未找到刷新令牌，请重新登录', '', 401, 'Unauthorized');
+    }
+
+    try {
+      const refreshUrl = this.baseURL + '/api/v1/auth/refresh';
+
+      // 添加 Sentry breadcrumb
+      addSentryBreadcrumb({
+        category: 'auth',
+        message: 'Refreshing access token',
+        level: 'info',
+      });
+
+      // 直接使用 fetch，不经过拦截器，避免无限循环
+      // 使用 refresh_token 作为请求参数（兼容后端）
+      const response = await fetch(refreshUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getCookie('auth_token') || ''}`,
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) {
+        // 刷新失败，清除所有认证信息
+        clearAuthData();
+
+        // 如果在浏览器环境，重定向到登录页
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth';
+        }
+
+        throw new RequestError(
+          '刷新令牌失败，请重新登录',
+          refreshUrl,
+          response.status,
+          response.statusText,
+        );
+      }
+
+      const result = await response.json();
+
+      // 检查业务状态码
+      if (
+        result.code !== undefined &&
+        result.code !== 0 &&
+        (result.code < 200 || result.code >= 300)
+      ) {
+        clearAuthData();
+
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth';
+        }
+
+        throw new RequestError(
+          result.message || '刷新令牌失败，请重新登录',
+          refreshUrl,
+          response.status,
+          response.statusText,
+          result,
+        );
+      }
+
+      const tokenData: TokenRefreshResponse = result.data || result;
+
+      // 保存新的 token 到 cookie
+      // 注意：后端返回的是毫秒，需要转换为秒
+      saveAuthData({
+        token: tokenData.token,
+        refresh_token: tokenData.refresh_token,
+        expires_in: Math.floor(tokenData.expires_in / 1000), // 毫秒转秒
+        refresh_expires_in: Math.floor(tokenData.refresh_expires_in / 1000), // 毫秒转秒
+      });
+
+      addSentryBreadcrumb({
+        category: 'auth',
+        message: 'Token refreshed successfully',
+        level: 'info',
+      });
+
+      return tokenData.token;
+    } catch (error) {
+      // 刷新失败，清除所有认证信息
+      clearAuthData();
+
+      addSentryBreadcrumb({
+        category: 'auth',
+        message: 'Token refresh failed',
+        level: 'error',
+      });
+
+      if (!(error instanceof RequestError)) {
+        captureSentryException(error, {
+          tags: {
+            errorType: 'TokenRefreshError',
+          },
+          level: 'error',
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * 处理token刷新和请求队列
+   */
+  private async handleTokenRefresh(): Promise<string> {
+    // 如果已经在刷新，返回现有的promise
+    if (this.isRefreshing && this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
+    // 标记正在刷新
+    this.isRefreshing = true;
+
+    // 创建刷新promise
+    this.refreshTokenPromise = this.refreshAccessToken()
+      .then((newToken) => {
+        // 刷新成功，处理队列中的请求
+        this.isRefreshing = false;
+        this.refreshTokenPromise = null;
+
+        // 重试队列中的所有请求
+        this.processQueue(null);
+
+        return newToken;
+      })
+      .catch((error) => {
+        // 刷新失败，拒绝队列中的所有请求
+        this.isRefreshing = false;
+        this.refreshTokenPromise = null;
+
+        this.processQueue(error);
+
+        throw error;
+      });
+
+    return this.refreshTokenPromise;
+  }
+
+  /**
+   * 处理请求队列
+   * @param error 错误信息（如果刷新失败）
+   */
+  private processQueue(error: Error | null) {
+    this.failedQueue.forEach((queuedRequest) => {
+      if (error) {
+        queuedRequest.reject(error);
+      } else {
+        // 使用新token重试请求
+        queuedRequest.requestFn().then(queuedRequest.resolve).catch(queuedRequest.reject);
+      }
+    });
+
+    // 清空队列
+    this.failedQueue = [];
+  }
+
+  /**
+   * 将请求添加到队列
+   */
+  private addRequestToQueue(requestFn: () => Promise<any>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.failedQueue.push({
+        resolve,
+        reject,
+        requestFn,
+      });
     });
   }
 
@@ -257,21 +467,47 @@ class Request {
   }
 
   /**
-   * 执行请求重试
+   * 执行请求重试（带token刷新支持）
    */
   async executeWithRetry<T>(
     requestFn: () => Promise<T>,
     retries: number,
     retryDelay: number,
+    isRetryAfterRefresh: boolean = false,
   ): Promise<T> {
     try {
       return await requestFn();
     } catch (error) {
+      // 处理401错误 - token过期
+      if (error instanceof RequestError && error.status === 401 && !isRetryAfterRefresh) {
+        // 只在客户端环境尝试刷新token
+        if (typeof window !== 'undefined') {
+          try {
+            // 如果正在刷新，将请求加入队列
+            if (this.isRefreshing) {
+              return this.addRequestToQueue(requestFn);
+            }
+
+            // 刷新token
+            await this.handleTokenRefresh();
+
+            // 使用新token重试请求（标记为刷新后的重试，避免无限循环）
+            return this.executeWithRetry(requestFn, 0, 0, true);
+          } catch {
+            // 刷新失败，抛出原始401错误
+            throw error;
+          }
+        } else {
+          // 服务端环境，直接抛出错误
+          throw error;
+        }
+      }
+
+      // 其他错误的重试逻辑
       if (retries > 0 && !(error instanceof RequestError && error.status === 401)) {
-        // 不重试 401 错误
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
-        return this.executeWithRetry(requestFn, retries - 1, retryDelay);
+        return this.executeWithRetry(requestFn, retries - 1, retryDelay, isRetryAfterRefresh);
       }
 
       throw error;
@@ -432,7 +668,7 @@ class Request {
     const fullUrl = this.baseURL + url;
 
     // 添加 Sentry breadcrumb 记录请求信息
-    Sentry.addBreadcrumb({
+    addSentryBreadcrumb({
       category: 'http',
       message: `${method} ${fullUrl}`,
       level: 'info',
@@ -456,36 +692,41 @@ class Request {
       withCredentials: rest.withCredentials,
     });
 
+    // 创建可重试的请求函数
+    const makeRequest = async (): Promise<T> => {
+      const fetchPromise = fetch(req.url, { ...req.options, signal });
+
+      let res: Response;
+
+      if (timeout) {
+        const timeoutPromise = this.createTimeoutPromise(timeout);
+        res = await Promise.race([fetchPromise, timeoutPromise]);
+      } else {
+        res = await fetchPromise;
+      }
+
+      // 添加成功响应的 breadcrumb
+      addSentryBreadcrumb({
+        category: 'http',
+        message: `${method} ${fullUrl} - ${res.status}`,
+        level: 'info',
+        data: {
+          url: fullUrl,
+          method,
+          status: res.status,
+          statusText: res.statusText,
+        },
+      });
+
+      return this.interceptorsResponse<T>(res, fullUrl);
+    };
+
     const requestFn = async () => {
       try {
-        const fetchPromise = fetch(req.url, { ...req.options, signal });
-
-        let res: Response;
-
-        if (timeout) {
-          const timeoutPromise = this.createTimeoutPromise(timeout);
-          res = await Promise.race([fetchPromise, timeoutPromise]);
-        } else {
-          res = await fetchPromise;
-        }
-
-        // 添加成功响应的 breadcrumb
-        Sentry.addBreadcrumb({
-          category: 'http',
-          message: `${method} ${fullUrl} - ${res.status}`,
-          level: 'info',
-          data: {
-            url: fullUrl,
-            method,
-            status: res.status,
-            statusText: res.statusText,
-          },
-        });
-
-        return this.interceptorsResponse<T>(res, fullUrl);
+        return await makeRequest();
       } catch (error) {
         // 添加失败响应的 breadcrumb
-        Sentry.addBreadcrumb({
+        addSentryBreadcrumb({
           category: 'http',
           message: `${method} ${fullUrl} - Failed`,
           level: 'error',
@@ -601,7 +842,7 @@ class Request {
     const fullUrl = this.baseURL + url;
 
     // 添加 SSE 请求的 breadcrumb
-    Sentry.addBreadcrumb({
+    addSentryBreadcrumb({
       category: 'sse',
       message: `SSE Connection: ${fullUrl}`,
       level: 'info',
@@ -660,7 +901,7 @@ class Request {
         );
 
         // 上报 SSE 错误到 Sentry
-        Sentry.captureException(sseError, {
+        captureSentryException(sseError, {
           tags: {
             errorType: 'SSEError',
             statusCode: response.status,
@@ -680,7 +921,7 @@ class Request {
       }
 
       // SSE 连接成功
-      Sentry.addBreadcrumb({
+      addSentryBreadcrumb({
         category: 'sse',
         message: `SSE Connected: ${fullUrl}`,
         level: 'info',
@@ -699,7 +940,7 @@ class Request {
         // 中止是预期行为，不需要额外处理和上报到 Sentry
       } else {
         // 添加 SSE 错误 breadcrumb
-        Sentry.addBreadcrumb({
+        addSentryBreadcrumb({
           category: 'sse',
           message: `SSE Error: ${fullUrl}`,
           level: 'error',
@@ -711,7 +952,7 @@ class Request {
 
         // 如果不是 RequestError（已经在上面上报过），则上报到 Sentry
         if (!(error instanceof RequestError)) {
-          Sentry.captureException(error, {
+          captureSentryException(error, {
             tags: {
               errorType: 'SSEConnectionError',
               url: fullUrl,
