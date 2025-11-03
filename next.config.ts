@@ -25,34 +25,8 @@ const nextConfig: NextConfig = {
   compress: true,
   productionBrowserSourceMaps: false, // 生产环境禁用 source maps 减少体积
 
-  // 实验性功能优化
-  experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-avatar',
-      '@radix-ui/react-checkbox',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-label',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-progress',
-      '@radix-ui/react-radio-group',
-      '@radix-ui/react-select',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-tooltip',
-      'framer-motion',
-      'react-hook-form',
-      'recharts',
-      'lodash-es',
-    ],
-  },
-
   // 优化模块导入
   modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-      skipDefaultConversion: true,
-    },
     'lodash-es': {
       transform: 'lodash-es/{{member}}',
     },
