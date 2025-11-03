@@ -1,18 +1,18 @@
 import * as Popover from '@radix-ui/react-popover';
-import { icons } from 'lucide-react';
-import { forwardRef } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 
 import { Surface } from './Surface';
 import { Toolbar } from './Toolbar';
 
+import { IconName, getIconComponent } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 
 export const Trigger = Popover.Trigger;
 export const Portal = Popover.Portal;
 
 export type MenuProps = {
-  children: React.ReactNode;
-  trigger: React.ReactNode;
+  children: ReactNode;
+  trigger: ReactNode;
   triggerClassName?: string;
   customTrigger?: boolean;
   isOpen?: boolean;
@@ -73,9 +73,9 @@ export const Item = ({
   onClick,
   isActive,
 }: {
-  label: string | React.ReactNode;
-  icon?: keyof typeof icons;
-  iconComponent?: React.ReactNode;
+  label: string | ReactNode;
+  icon?: IconName;
+  iconComponent?: ReactNode;
   close?: boolean;
   disabled?: boolean;
   onClick: () => void;
@@ -83,30 +83,45 @@ export const Item = ({
 }) => {
   const className = cn(
     'flex items-center gap-2 p-1.5 text-sm font-medium text-neutral-500 text-left bg-transparent w-full rounded',
-    !isActive && !disabled,
-    'hover:bg-neutral-100 hover:text-neutral-800 dark:hover:bg-neutral-900 dark:hover:text-neutral-200',
+    !isActive &&
+      !disabled &&
+      'hover:bg-neutral-100 hover:text-neutral-800 dark:hover:bg-neutral-900 dark:hover:text-neutral-200',
     isActive &&
       !disabled &&
       'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200',
     disabled && 'text-neutral-400 cursor-not-allowed dark:text-neutral-600',
   );
 
-  const IconComponent = icon ? icons[icon] : null;
+  const IconComponent = icon ? getIconComponent(icon) : null;
   const IconCustomComponent = iconComponent || null;
 
-  const ItemComponent = close ? Popover.Close : 'button';
-
-  return (
-    <ItemComponent className={className} onClick={onClick} disabled={disabled}>
+  const buttonContent = (
+    <>
       {IconComponent && <IconComponent className="w-4 h-4" />}
       {IconCustomComponent}
       {label}
-    </ItemComponent>
+    </>
+  );
+
+  if (close) {
+    return (
+      <Popover.Close asChild>
+        <button className={className} onClick={onClick} disabled={disabled}>
+          {buttonContent}
+        </button>
+      </Popover.Close>
+    );
+  }
+
+  return (
+    <button className={className} onClick={onClick} disabled={disabled}>
+      {buttonContent}
+    </button>
   );
 };
 
 export type CategoryTitle = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export const CategoryTitle = ({ children }: CategoryTitle) => {

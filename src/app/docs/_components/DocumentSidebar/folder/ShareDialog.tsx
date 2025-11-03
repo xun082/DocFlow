@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { FileItem } from './type';
@@ -278,11 +278,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? (
-                        <EyeOffIcon className="h-4 w-4" />
-                      ) : (
-                        <EyeIcon className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.password && (
@@ -313,7 +309,7 @@ const ShareDialog = ({ file, isOpen, onClose }: ShareDialogProps) => {
                           mode="single"
                           selected={watchedValues.expiresAt}
                           onSelect={handleDateSelect}
-                          disabled={(date) => date < new Date()}
+                          disabled={(date: Date) => date < new Date()}
                           initialFocus
                         />
                         <div className="p-3 border-t border-gray-200">

@@ -1,9 +1,9 @@
-import { Globe, BrainCog, FolderCode, ImageIcon } from 'lucide-react';
+import { Globe, Sparkles, FolderCode, Image } from 'lucide-react';
 
 export interface ActionButtonConfig {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<any>;
   color: string;
   bgColor: string;
   hoverBgColor: string;
@@ -38,7 +38,7 @@ export const createActionButtons = (
     {
       id: 'think',
       label: 'Think',
-      icon: BrainCog,
+      icon: Sparkles,
       color: '#8B5CF6',
       bgColor: 'bg-[#8B5CF6]/20',
       hoverBgColor: 'hover:bg-[#8B5CF6]/30',
@@ -60,7 +60,7 @@ export const createActionButtons = (
     {
       id: 'image',
       label: 'Generate Image',
-      icon: ImageIcon,
+      icon: Image,
       color: '#EC4899',
       bgColor: 'bg-[#EC4899]/20',
       hoverBgColor: 'hover:bg-[#EC4899]/30',

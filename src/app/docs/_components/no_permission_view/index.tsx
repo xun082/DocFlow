@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { LockIcon, FileIcon } from 'lucide-react';
+import { Lock, File } from 'lucide-react';
 
 interface NoPermissionViewProps {
   reason: string;
@@ -14,9 +14,9 @@ const NoPermissionView: React.FC<NoPermissionViewProps> = ({ reason }) => {
     <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center">
       <div className="mb-6 p-4 bg-gray-100 rounded-full">
         {isDocumentNotFound ? (
-          <FileIcon className="h-12 w-12 text-gray-500" />
+          <File className="h-12 w-12 text-gray-500" />
         ) : (
-          <LockIcon className="h-12 w-12 text-gray-500" />
+          <Lock className="h-12 w-12 text-gray-500" />
         )}
       </div>
 

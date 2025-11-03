@@ -1,8 +1,7 @@
-import { icons } from 'lucide-react';
 import { useMemo } from 'react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { DropdownButton, DropdownCategoryTitle } from '@/components/ui/Dropdown';
@@ -14,7 +13,7 @@ export type ContentTypePickerOption = {
   disabled: () => boolean;
   isActive: () => boolean;
   onClick: () => void;
-  icon: keyof typeof icons;
+  icon: IconName;
 };
 
 export type ContentTypePickerCategory = {

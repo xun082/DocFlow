@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react';
-import { ArrowUp, Paperclip, Square } from 'lucide-react';
+import { Send, Paperclip, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
@@ -8,20 +8,11 @@ import Textarea from './Textarea';
 import CustomDivider from './CustomDivider';
 import ModelSelector from './ModelSelector';
 import KnowledgeBaseSelector from './KnowledgeBaseSelector';
+import type { ActionButtonConfig } from '../actionButtons';
 
 import { cn } from '@/utils/utils';
 
-interface ActionButton {
-  id: string;
-  label: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  bgColor: string;
-  hoverBgColor: string;
-  isActive: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-}
+type ActionButton = ActionButtonConfig;
 
 interface AIInputPanelProps {
   prompt: string;
@@ -359,9 +350,9 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
           {isLoading ? (
             <Square className="h-4 w-4 animate-pulse" />
           ) : (hasContent && prompt?.trim()) || node.attrs.op === 'continue' ? (
-            <ArrowUp className="h-4 w-4" />
+            <Send className="h-4 w-4" />
           ) : (
-            <ArrowUp className="h-4 w-4 opacity-50" />
+            <Send className="h-4 w-4 opacity-50" />
           )}
         </Button>
       </div>

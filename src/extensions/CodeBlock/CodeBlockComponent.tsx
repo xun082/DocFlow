@@ -3,7 +3,7 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import React, { useState, useRef } from 'react';
 import type { ReactNodeViewProps } from '@tiptap/react';
-import { CheckIcon, ChevronsUpDownIcon, Code2Icon } from 'lucide-react';
+import { ChevronsUpDown, Code2, Check } from 'lucide-react';
 import { js as jsBeautify, html as htmlBeautify, css as cssBeautify } from 'js-beautify';
 
 import { Button } from '@/components/ui/button';
@@ -248,7 +248,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
                 className="w-[160px] justify-between h-8 text-xs"
               >
                 {selectedLanguage?.label || '选择语言'}
-                <ChevronsUpDownIcon className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0">
@@ -266,7 +266,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
                           setLanguageOpen(false);
                         }}
                       >
-                        <CheckIcon
+                        <Check
                           className={cn(
                             'mr-2 h-3 w-3',
                             defaultLanguage === language.value ? 'opacity-100' : 'opacity-0',
@@ -289,7 +289,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
             disabled={isFormatting}
             title={isFormatting ? '格式化中...' : '格式化代码'}
           >
-            <Code2Icon width="16" height="16" />
+            <Code2 width="16" height="16" />
           </button>
 
           <button

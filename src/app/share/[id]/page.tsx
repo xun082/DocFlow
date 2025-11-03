@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  EyeIcon,
-  EyeOffIcon,
-  FileTextIcon,
-  LockIcon,
-  AlertTriangleIcon,
-  RefreshCwIcon,
-} from 'lucide-react';
+import { Eye, EyeOff, FileText, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import DocumentApi from '@/services/document';
 import { cn } from '@/utils/utils';
@@ -234,11 +227,11 @@ export default function SharePage() {
       switch (state.errorType) {
         case 'notFound':
         case 'expired':
-          return <AlertTriangleIcon className="h-8 w-8 text-orange-500" />;
+          return <AlertTriangle className="h-8 w-8 text-orange-500" />;
         case 'network':
-          return <RefreshCwIcon className="h-8 w-8 text-blue-500" />;
+          return <RefreshCw className="h-8 w-8 text-blue-500" />;
         default:
-          return <AlertTriangleIcon className="h-8 w-8 text-red-500" />;
+          return <AlertTriangle className="h-8 w-8 text-red-500" />;
       }
     };
 
@@ -294,7 +287,7 @@ export default function SharePage() {
                   </div>
                 ) : (
                   <>
-                    <RefreshCwIcon className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                     重新尝试
                   </>
                 )}
@@ -356,7 +349,7 @@ export default function SharePage() {
         {state.documentData ? (
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileTextIcon className="h-8 w-8 text-green-500" />
+              <FileText className="h-8 w-8 text-green-500" />
             </div>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">文档访问成功</h2>
             <p className="text-gray-600 mb-6">
@@ -367,7 +360,7 @@ export default function SharePage() {
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <FileTextIcon className="h-6 w-6 text-blue-500" />
+                  <FileText className="h-6 w-6 text-blue-500" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="font-medium text-gray-800">{state.documentData.title}</p>
@@ -406,7 +399,7 @@ export default function SharePage() {
                 }}
                 className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
               >
-                <FileTextIcon className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 mr-2" />
                 打开文档
               </button>
 
@@ -424,7 +417,7 @@ export default function SharePage() {
             {/* 密码验证界面 */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LockIcon className="h-8 w-8 text-blue-500" />
+                <Lock className="h-8 w-8 text-blue-500" />
               </div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">受密码保护的文档</h2>
               <p className="text-gray-600">请输入访问密码以查看此文档</p>
@@ -459,11 +452,7 @@ export default function SharePage() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                     disabled={isSubmitting}
                   >
-                    {showPassword ? (
-                      <EyeOffIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {state.hasError && state.errorMessage.includes('密码') && (
