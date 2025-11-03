@@ -189,7 +189,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       updatePosition();
       setupObservers();
 
-      const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
+      const scrollContainer = editor.isEditable && editor?.view?.dom.parentElement?.parentElement;
 
       if (scrollContainer) {
         scrollContainer.addEventListener('scroll', debouncedUpdatePosition, {

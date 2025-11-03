@@ -92,21 +92,30 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
 
     if (marks.length > 0) {
       const commentMark = this.editor.schema.marks.comment;
-      // 返回第一个返回的mark
+      // 只查找评论标记
       const activeCommentMark = marks.find((mark) => mark.type === commentMark);
 
-      this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
+      // 只有当找到评论标记时才触发回调
+      if (activeCommentMark) {
+        this.storage.activeCommentId = activeCommentMark.attrs.commentId || null;
 
-      // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
-      const debouncedOnCommentActivated = debounce(
-        (commentId: string) => {
-          this.options.onCommentActivated(commentId);
-        },
-        300, // 300ms 延迟
-        { trailing: true },
-      );
+        // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
+        const debouncedOnCommentActivated = debounce(
+          (commentId: string) => {
+            this.options.onCommentActivated(commentId);
+          },
+          300, // 300ms 延迟
+          { trailing: true },
+        );
 
-      debouncedOnCommentActivated(this?.storage.activeCommentId || '');
+        debouncedOnCommentActivated(this.storage.activeCommentId || '');
+      } else {
+        // 如果没有评论标记，清空 activeCommentId
+        this.storage.activeCommentId = null;
+      }
+    } else {
+      // 如果没有标记，清空 activeCommentId
+      this.storage.activeCommentId = null;
     }
   },
 
