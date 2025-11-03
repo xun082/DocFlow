@@ -535,7 +535,7 @@ class Request {
       const shouldReportToSentry = error.status !== 401 && error.status !== 404;
 
       if (shouldReportToSentry) {
-        Sentry.captureException(error, {
+        captureSentryException(error, {
           tags: {
             errorType: 'RequestError',
             statusCode: error.status,
@@ -584,7 +584,7 @@ class Request {
         error.message.includes('Network request failed'))
     ) {
       // 上报网络错误到 Sentry
-      Sentry.captureException(error, {
+      captureSentryException(error, {
         tags: {
           errorType: 'NetworkError',
         },
@@ -604,7 +604,7 @@ class Request {
     }
 
     // 处理其他类型错误
-    Sentry.captureException(error, {
+    captureSentryException(error, {
       tags: {
         errorType: 'UnknownError',
       },
