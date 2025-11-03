@@ -100,6 +100,9 @@ class Request {
   defaultTimeout: number;
   defaultRetries: number;
   defaultRetryDelay: number;
+  // 刷新尝试限制，避免潜在循环
+  private maxRefreshAttempts = 2;
+  private currentRefreshAttempts = 0;
 
   // Token 刷新相关
   private isRefreshing = false;
@@ -195,13 +198,8 @@ class Request {
           window.location.href = '/auth';
         }
 
-        throw new RequestError(
-          result.message,
-          refreshUrl,
-          response.status,
-          response.statusText,
-          result,
-        );
+        // 将业务失败规范化为未授权，确保后续流程不再尝试刷新并引导重新登录
+        throw new RequestError(result.message, refreshUrl, 401, 'Unauthorized', result);
       }
 
       const tokenData: TokenRefreshResponse = result.data;
@@ -244,8 +242,14 @@ class Request {
       return this.refreshTokenPromise;
     }
 
+    // 超过最大刷新次数时直接失败，避免循环
+    if (this.currentRefreshAttempts >= this.maxRefreshAttempts) {
+      throw new RequestError('刷新令牌次数过多，请重新登录', '', 401, 'Unauthorized');
+    }
+
     // 标记正在刷新
     this.isRefreshing = true;
+    this.currentRefreshAttempts += 1;
 
     // 创建刷新promise
     this.refreshTokenPromise = this.refreshAccessToken()
@@ -253,6 +257,7 @@ class Request {
         // 刷新成功，处理队列中的请求
         this.isRefreshing = false;
         this.refreshTokenPromise = null;
+        this.currentRefreshAttempts = 0;
 
         // 重试队列中的所有请求
         this.processQueue(null);
@@ -474,6 +479,11 @@ class Request {
       if (error instanceof RequestError && error.status === 401 && !isRetryAfterRefresh) {
         // 只在客户端环境尝试刷新token
         if (typeof window !== 'undefined') {
+          // 如果没有 refresh_token，直接抛出，避免无意义刷新
+          if (!getCookie('refresh_token')) {
+            throw error;
+          }
+
           try {
             // 如果正在刷新，将请求加入队列
             if (this.isRefreshing) {
@@ -973,7 +983,14 @@ class Request {
         if (response.body) {
           createSseStream(response.body);
         }
-      } catch {}
+      } catch (e) {
+        addSentryBreadcrumb({
+          category: 'sse',
+          message: `SSE parser init failed: ${fullUrl}`,
+          level: 'warning',
+          data: { error: e instanceof Error ? e.message : 'Unknown' },
+        });
+      }
 
       callback(response);
 
