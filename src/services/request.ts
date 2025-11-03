@@ -154,10 +154,12 @@ class Request {
 
       // 直接使用 fetch，不经过拦截器，避免无限循环
       // 使用 refresh_token 作为请求参数（兼容后端）
+      const csrfToken = typeof window !== 'undefined' ? getCookie('csrf_token') : undefined;
       const response = await fetch(refreshUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
@@ -204,13 +206,12 @@ class Request {
 
       const tokenData: TokenRefreshResponse = result.data;
 
-      // 保存新的 token 到 cookie
-      // 注意：后端返回的是毫秒，需要转换为秒
+      // 保存新的 token 到 cookie（单位：秒）
       saveAuthData({
         token: tokenData.token,
         refresh_token: tokenData.refresh_token,
-        expires_in: Math.floor(tokenData.expires_in / 1000), // 毫秒转秒
-        refresh_expires_in: Math.floor(tokenData.refresh_expires_in / 1000), // 毫秒转秒
+        expires_in: tokenData.expires_in,
+        refresh_expires_in: tokenData.refresh_expires_in,
       });
 
       addSentryBreadcrumb({
@@ -229,15 +230,6 @@ class Request {
         message: 'Token refresh failed',
         level: 'error',
       });
-
-      if (!(error instanceof RequestError)) {
-        captureSentryException(error, {
-          tags: {
-            errorType: 'TokenRefreshError',
-          },
-          level: 'error',
-        });
-      }
 
       throw error;
     }
