@@ -322,7 +322,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const commentInputGroup = (
     <div
       ref={containerRef}
-      className={cn('fixed z-50 w-80')}
+      className={cn('fixed z-5 w-80')}
       style={{
         left: position?.x,
         top: position?.y,
@@ -360,7 +360,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
             </div>
           )}
 
-          <div className="flex items-center gap-1 px-2">
+          <div className="flex items-center gap-[2px] px-2">
             <Input
               ref={inputRef}
               value={commentContent}
