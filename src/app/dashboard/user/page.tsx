@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import UserProfileForm from './_components/user-profile-form';
 
-import { User } from '@/services/auth/type';
+import type { User } from '@/types/auth';
 import { useUserQuery, getLocalUserData } from '@/hooks/useUserQuery';
 import Spinner from '@/components/ui/Spinner';
 

@@ -11,7 +11,7 @@ import { User as UserIcon, MapPin, Globe, Building, Edit3, Save, X } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Textarea from '@/components/ui/Textarea';
-import { User } from '@/services/auth/type';
+import type { User } from '@/types/auth';
 import { useUpdateUserMutation } from '@/hooks/useUserQuery';
 
 // 定义表单验证模式

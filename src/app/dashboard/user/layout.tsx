@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { User } from '@/services/auth/type';
+import type { User } from '@/types/auth';
 import Spinner from '@/components/ui/Spinner';
 import { useUserQuery, getLocalUserData } from '@/hooks/useUserQuery';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
