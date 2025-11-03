@@ -111,16 +111,16 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
   // 监听编辑器选区变化，实时更新弹窗位置
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !editor.view) return;
 
     const handleSelectionUpdate = () => {
       debouncedUpdatePosition();
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor?.on('selectionUpdate', handleSelectionUpdate);
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor?.off('selectionUpdate', handleSelectionUpdate);
       debouncedUpdatePosition.cancel();
     };
   }, [isOpen, editor, debouncedUpdatePosition]);
@@ -129,13 +129,13 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   useEffect(() => {
     if (isOpen) {
       // 检查编辑器视图是否可用
-      if (!editor.view || !containerRef.current) {
+      if (!editor?.view || !containerRef.current) {
         return;
       }
 
       // 每次弹窗显示时重新获取comment的激活状态和属性
       const isCommentActive = editor.isActive('comment');
-      const attrs = editor.getAttributes('comment') || {};
+      const attrs = editor?.getAttributes('comment') || {};
 
       if (isCommentActive) {
         setMarkText(attrs.markText || '');
@@ -144,7 +144,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       }
 
       // 获取编辑器DOM元素作为边界容器
-      const editorElement = editor.view.dom.parentElement?.parentElement;
+      const editorElement = editor?.view.dom.parentElement?.parentElement;
       if (!editorElement) return;
 
       // 使用ResizeObserver和IntersectionObserver优化定位逻辑

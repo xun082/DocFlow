@@ -103,7 +103,7 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
             (commentId: string) => {
               this.options.onCommentActivated(commentId);
             },
-            600, // 600ms 延迟
+            600, // 600ms 延迟，避免选择和光标同时触发，导致体验不好
             { trailing: true },
           );
 
