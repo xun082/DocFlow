@@ -2,7 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Save, Copy, Check, Bot, Mic } from 'lucide-react';
+import { Eye, EyeOff, Save, Copy, Bot, Mic } from 'lucide-react';
+
+// 简单的 Check 图标组件
+const CheckIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,7 +162,7 @@ export default function ApiKeySettings() {
                     className="h-9 px-3"
                   >
                     {copiedKey === provider.name ? (
-                      <Check className="w-3 h-3 text-green-600" />
+                      <CheckIcon className="w-3 h-3 text-green-600" />
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}

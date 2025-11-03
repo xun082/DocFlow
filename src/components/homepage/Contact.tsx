@@ -2,7 +2,23 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Github, Copy, Check, Sparkles, Users, Zap } from 'lucide-react';
+import { MessageCircle, Github, Copy, Sparkles, Users, Zap } from 'lucide-react';
+
+// 简单的 Check 图标组件
+const CheckIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
 
 const Contact: React.FC = () => {
   const [wechatCopied, setWechatCopied] = useState(false);
@@ -127,7 +143,11 @@ const Contact: React.FC = () => {
                     animate={wechatCopied ? { rotate: 360, scale: 1.1 } : { scale: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {wechatCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {wechatCopied ? (
+                      <CheckIcon className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </motion.div>
                 </button>
 

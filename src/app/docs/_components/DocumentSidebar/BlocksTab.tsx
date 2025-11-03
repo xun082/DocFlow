@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { icons } from 'lucide-react';
 
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 
 interface BlockItemProps {
-  icon: keyof typeof icons;
+  icon: IconName;
   label: string;
   description: string;
   blockType: string;
@@ -91,105 +90,105 @@ const BlocksTab = () => {
   // 区块数据
   const blocks = [
     {
-      icon: 'Heading' as keyof typeof icons,
+      icon: 'Heading',
       label: '标题',
       description: '添加不同级别的标题文本',
       blockType: 'heading',
       category: 'text',
     },
     {
-      icon: 'Type' as keyof typeof icons,
+      icon: 'Type',
       label: '段落',
       description: '插入普通文本段落',
       blockType: 'paragraph',
       category: 'text',
     },
     {
-      icon: 'List' as keyof typeof icons,
+      icon: 'List',
       label: '列表',
       description: '创建有序或无序列表',
       blockType: 'list',
       category: 'text',
     },
     {
-      icon: 'Quote' as keyof typeof icons,
+      icon: 'Quote',
       label: '引用',
       description: '添加引用文本块',
       blockType: 'blockquote',
       category: 'text',
     },
     {
-      icon: 'Code' as keyof typeof icons,
+      icon: 'Code',
       label: '代码块',
       description: '插入代码片段，支持语法高亮',
       blockType: 'codeblock',
       category: 'text',
     },
     {
-      icon: 'Image' as keyof typeof icons,
+      icon: 'Image',
       label: '图片',
       description: '上传或插入图片',
       blockType: 'image',
       category: 'media',
     },
     {
-      icon: 'Video' as keyof typeof icons,
+      icon: 'Video',
       label: '视频',
       description: '嵌入视频内容',
       blockType: 'video',
       category: 'media',
     },
     {
-      icon: 'FileAudio' as keyof typeof icons,
+      icon: 'FileAudio',
       label: '音频',
       description: '插入音频文件',
       blockType: 'audio',
       category: 'media',
     },
     {
-      icon: 'Table' as keyof typeof icons,
+      icon: 'Table',
       label: '表格',
       description: '创建数据表格',
       blockType: 'table',
       category: 'data',
     },
     {
-      icon: 'ChartColumnBig' as keyof typeof icons,
+      icon: 'ChartColumnBig',
       label: '图表',
       description: '插入各种类型的图表',
       blockType: 'chart',
       category: 'data',
     },
     {
-      icon: 'LayoutDashboard' as keyof typeof icons,
+      icon: 'LayoutDashboard',
       label: '多列布局',
       description: '创建多列内容布局',
       blockType: 'columns',
       category: 'layout',
     },
     {
-      icon: 'Minus' as keyof typeof icons,
+      icon: 'Minus',
       label: '分割线',
       description: '添加水平分割线',
       blockType: 'divider',
       category: 'layout',
     },
     {
-      icon: 'ListTodo' as keyof typeof icons,
+      icon: 'ListTodo',
       label: '任务列表',
       description: '创建可勾选的任务列表',
       blockType: 'todolist',
       category: 'interactive',
     },
     {
-      icon: 'Calendar' as keyof typeof icons,
+      icon: 'Calendar',
       label: '日历',
       description: '插入日历组件',
       blockType: 'calendar',
       category: 'interactive',
     },
     {
-      icon: 'Smile' as keyof typeof icons,
+      icon: 'Smile',
       label: 'emoji',
       description: '插入Emoji',
       blockType: 'emoji',
@@ -197,7 +196,7 @@ const BlocksTab = () => {
     },
     // 插入ai组件
     {
-      icon: 'Bot' as keyof typeof icons,
+      icon: 'Bot',
       label: 'AI',
       description: '插入AI组件',
       blockType: 'ai',
@@ -205,7 +204,7 @@ const BlocksTab = () => {
     },
     // 插入倒计时组件
     {
-      icon: 'Timer' as keyof typeof icons,
+      icon: 'Timer',
       label: '倒计时',
       description: '插入倒计时组件',
       blockType: 'countdown',

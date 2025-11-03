@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Link2 } from 'lucide-react';
+import { Clock, Link2 } from 'lucide-react';
 
 import { GanttTask } from '../Gantt';
 
@@ -121,7 +121,7 @@ export const GanttTaskDialog = ({
       <DialogContent className="sm:max-w-[540px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+            <Clock className="w-5 h-5" />
             {task ? '编辑任务' : '创建新任务'}
           </DialogTitle>
           <DialogDescription>

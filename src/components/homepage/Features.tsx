@@ -10,7 +10,7 @@ import {
   Mic,
   Sparkles,
   MessageCircle,
-  Bot,
+  UserCircle,
   Zap,
 } from 'lucide-react';
 
@@ -81,7 +81,7 @@ const featuresData = [
     bgGradient: 'from-purple-500/10 via-pink-500/5 to-purple-500/10',
   },
   {
-    icon: Bot,
+    icon: UserCircle,
     title: '生活智能助理',
     description:
       '全方位生活服务助手，智能规划出行路线、管理日程安排、提醒重要事项，让生活更有序高效',

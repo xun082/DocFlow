@@ -3,7 +3,7 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useEffect, useRef } from 'react';
 import Gantt from 'frappe-gantt';
-import { Plus, Trash2, GripVertical, Calendar } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Clock } from 'lucide-react';
 import type { NodeViewProps } from '@tiptap/react';
 
 import { GanttTask } from './Gantt';
@@ -196,7 +196,7 @@ export const GanttComponent = ({ node, updateAttributes, deleteNode, selected }:
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9 px-3 font-medium shadow-sm">
-                  <Calendar className="w-4 h-4 mr-1.5" />
+                  <Clock className="w-4 h-4 mr-1.5" />
                   {viewModeOptions.find((v) => v.value === viewMode)?.label || '天'}
                 </Button>
               </DropdownMenuTrigger>
@@ -233,7 +233,7 @@ export const GanttComponent = ({ node, updateAttributes, deleteNode, selected }:
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-800/50 dark:to-blue-950/20 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
             <div className="w-20 h-20 mb-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Calendar className="w-10 h-10 text-white" />
+              <Clock className="w-10 h-10 text-white" />
             </div>
             <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
               开始创建项目计划

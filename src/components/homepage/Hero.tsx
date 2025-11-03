@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Users, BookOpen, ArrowRight } from 'lucide-react';
+import { Sparkles, Users, FileText, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 import GroupQRDialog from './GroupQRDialog';
@@ -66,7 +66,7 @@ const Hero: React.FC<HeroProps> = () => {
                 <span className="relative flex items-center justify-center space-x-2 text-lg">
                   <Sparkles className="h-5 w-5" />
                   <span>开始创作</span>
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </motion.button>
             </Link>
@@ -82,7 +82,7 @@ const Hero: React.FC<HeroProps> = () => {
               }}
             >
               <span className="relative flex items-center justify-center space-x-2 text-lg">
-                <BookOpen className="h-5 w-5" />
+                <FileText className="h-5 w-5" />
                 <span>项目介绍</span>
               </span>
             </motion.button>

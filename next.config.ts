@@ -72,6 +72,19 @@ const nextConfig: NextConfig = {
       ],
     });
 
+    // 忽略来自 Sentry/OpenTelemetry 的依赖警告
+    config.ignoreWarnings = [
+      {
+        module: /node_modules\/@opentelemetry\/instrumentation/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+      {
+        module: /node_modules\/require-in-the-middle/,
+        message:
+          /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
+      },
+    ];
+
     // 生产环境优化（仅客户端） - 使用 Next.js 默认策略
     if (!dev && !isServer) {
       // 保留 Next.js 的默认代码分割，只做细微调整

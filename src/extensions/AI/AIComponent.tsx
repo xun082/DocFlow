@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
-import { BrainCircuit, Database } from 'lucide-react';
+import { Sparkles, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -15,12 +15,14 @@ enum AIState {
   DISPLAY = 'display', // 显示状态：显示AI响应结果
 }
 
-import { createActionButtons } from './actionButtons';
+import { createActionButtons, type ActionButtonConfig } from './actionButtons';
 import { useTextExtraction } from './hooks/useTextExtraction';
 import { useSSEStream } from './hooks/useSSEStream';
 import { useTextToImage } from './hooks/useTextToImage';
 import AIInputPanel from './components/AIInputPanel';
 import SyntaxHighlight from './components/SyntaxHighlight';
+
+type ActionButton = ActionButtonConfig;
 
 interface AIComponentProps {
   node: ProseMirrorNode;
@@ -285,7 +287,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     {
       id: 'model',
       label: 'Model',
-      icon: BrainCircuit,
+      icon: Sparkles,
       color: '#7C3AED',
       bgColor: 'bg-[#7C3AED]/20',
       hoverBgColor: 'hover:bg-[#7C3AED]/30',
@@ -321,8 +323,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                 remarkPlugins={[remarkGfm]}
                 components={{
                   code: SyntaxHighlight,
-                  pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
-                    <pre className="rounded" {...props}>
+                  pre: ({ children, className, ...props }: any) => (
+                    <pre className={`rounded ${className || ''}`} {...props}>
                       {children}
                     </pre>
                   ),
@@ -392,8 +394,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                     remarkPlugins={[remarkGfm]}
                     components={{
                       code: SyntaxHighlight,
-                      pre: ({ children, ...props }: React.HTMLProps<HTMLPreElement>) => (
-                        <pre className="rounded" {...props}>
+                      pre: ({ children, className, ...props }: any) => (
+                        <pre className={`rounded ${className || ''}`} {...props}>
                           {children}
                         </pre>
                       ),
@@ -479,7 +481,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                   onGenerateAI={handleGenerateAI}
                   isLoading={(aiState as AIState) === AIState.LOADING}
                   hasContent={hasContent}
-                  actionButtons={actionButtons}
+                  actionButtons={actionButtons as ActionButton[]}
                   selectedModel={selectedModel}
                   setSelectedModel={setSelectedModel}
                   selectedKnowledgeIds={selectedKnowledgeIds}

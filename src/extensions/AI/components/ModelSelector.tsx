@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BrainCircuit } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -55,7 +55,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               }}
               transition={{ type: 'spring', stiffness: 260, damping: 25 }}
             >
-              <BrainCircuit className="w-4 h-4" />
+              <Sparkles className="w-4 h-4" />
             </motion.div>
           </div>
           <span className="text-xs whitespace-nowrap">{selectedModel.split('/').pop()}</span>

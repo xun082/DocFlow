@@ -1,13 +1,12 @@
 import { forwardRef } from 'react';
-import { icons } from 'lucide-react';
 
 import { cn } from '@/utils/utils';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 
 export type CommandButtonProps = {
   active?: boolean;
   description: string;
-  icon: keyof typeof icons;
+  icon: IconName;
   onClick: () => void;
   title: string;
 };
