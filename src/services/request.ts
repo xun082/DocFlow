@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
+import { createSseStream } from '@azure/core-sse';
 
 import { getCookie, saveAuthData, clearAuthData } from '@/utils/cookie';
 import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/http';
@@ -157,7 +158,6 @@ class Request {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getCookie('auth_token') || ''}`,
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
@@ -194,7 +194,7 @@ class Request {
         }
 
         throw new RequestError(
-          result.message || '刷新令牌失败，请重新登录',
+          result.message,
           refreshUrl,
           response.status,
           response.statusText,
@@ -202,7 +202,7 @@ class Request {
         );
       }
 
-      const tokenData: TokenRefreshResponse = result.data || result;
+      const tokenData: TokenRefreshResponse = result.data;
 
       // 保存新的 token 到 cookie
       // 注意：后端返回的是毫秒，需要转换为秒
@@ -862,7 +862,7 @@ class Request {
         errorHandler: params?.errorHandler,
       });
 
-      const response = await fetch(req.url, {
+      let response = await fetch(req.url, {
         ...req.options,
         signal: controller.signal,
       });
@@ -870,6 +870,51 @@ class Request {
       // 使用响应拦截器进行统一的错误处理和状态检查
       // 注意：对于SSE，我们不需要解析响应体，只需要检查状态
       if (!response.ok) {
+        // 如果因为 401 失败，尝试刷新 token 后重连（仅在浏览器环境）
+        if (
+          response.status === 401 &&
+          typeof window !== 'undefined' &&
+          getCookie('refresh_token')
+        ) {
+          try {
+            if (this.isRefreshing) {
+              // 等待刷新结束即可，避免重复刷新
+              await this.refreshTokenPromise;
+            } else {
+              await this.handleTokenRefresh();
+            }
+
+            // 刷新后需要重新构建请求（以带上新的 Authorization）
+            const retryReq = this.interceptorsRequest({
+              url: fullUrl,
+              method: 'POST',
+              params: params.params,
+              headers: params.headers,
+              withCredentials: params.withCredentials,
+              errorHandler: params?.errorHandler,
+            });
+
+            response = await fetch(retryReq.url, {
+              ...retryReq.options,
+              signal: controller.signal,
+            });
+
+            if (response.ok) {
+              addSentryBreadcrumb({
+                category: 'sse',
+                message: `SSE Reconnected after refresh: ${fullUrl}`,
+                level: 'info',
+              });
+
+              callback(response);
+
+              return () => controller.abort();
+            }
+          } catch {
+            // 刷新或重连失败，继续走原有错误分支
+          }
+        }
+
         console.log('SSE响应拦截器 - 错误状态:', response.status, response.statusText);
 
         // 尝试获取错误信息
@@ -931,6 +976,13 @@ class Request {
         },
       });
 
+      // 使用 @azure/core-sse 创建解析流（供调用方读取或验证管道）
+      try {
+        if (response.body) {
+          createSseStream(response.body);
+        }
+      } catch {}
+
       callback(response);
 
       return () => controller.abort();
@@ -980,6 +1032,100 @@ class Request {
       // 重新抛出错误，让调用方能够捕获和处理
       throw error;
     }
+  }
+
+  /**
+   * 使用 @azure/core-sse 解析事件流并逐条回调
+   */
+  async sseStream(
+    url: string,
+    params: Params,
+    onMessage: (data: string) => void,
+  ): Promise<() => void> {
+    const controller = new AbortController();
+    const fullUrl = this.baseURL + url;
+
+    addSentryBreadcrumb({
+      category: 'sse',
+      message: `SSE Stream Connection: ${fullUrl}`,
+      level: 'info',
+    });
+
+    const connect = async (): Promise<Response> => {
+      const req = this.interceptorsRequest({
+        url: fullUrl,
+        method: 'POST',
+        params: params.params,
+        headers: params.headers,
+        withCredentials: params.withCredentials,
+        errorHandler: params?.errorHandler,
+      });
+
+      return fetch(req.url, { ...req.options, signal: controller.signal });
+    };
+
+    const open = async (): Promise<void> => {
+      let response = await connect();
+
+      if (!response.ok) {
+        if (
+          response.status === 401 &&
+          typeof window !== 'undefined' &&
+          getCookie('refresh_token')
+        ) {
+          try {
+            if (this.isRefreshing) {
+              await this.refreshTokenPromise;
+            } else {
+              await this.handleTokenRefresh();
+            }
+
+            response = await connect();
+          } catch {}
+        }
+      }
+
+      if (!response.ok) {
+        throw new RequestError('SSE连接失败', fullUrl, response.status, response.statusText);
+      }
+
+      if (!response.body) {
+        throw new RequestError('SSE响应无主体', fullUrl, response.status, response.statusText);
+      }
+
+      const stream = createSseStream(response.body);
+      const reader = stream.getReader();
+
+      const pump = async () => {
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            if (typeof value === 'string') onMessage(value);
+          }
+        } catch (err) {
+          if (!(err instanceof DOMException && err.name === 'AbortError')) {
+            throw err;
+          }
+        }
+      };
+
+      pump().catch((err) => {
+        captureSentryException(err, {
+          tags: { errorType: 'SSEStreamError', url: fullUrl },
+          level: 'error',
+        });
+      });
+    };
+
+    open().catch((err) => {
+      captureSentryException(err, {
+        tags: { errorType: 'SSEOpenError', url: fullUrl },
+        level: 'error',
+      });
+    });
+
+    return () => controller.abort();
   }
   /**
    * 创建取消令牌
