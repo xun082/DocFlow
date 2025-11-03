@@ -30,6 +30,9 @@ export const authApi = {
     request.post<SendCodeResponse>('/api/v1/auth/email/send-code', {
       params: { email },
       errorHandler,
+      // 网络较慢时避免自动重试造成的重复发送，适当延长超时
+      retries: 0,
+      timeout: 30000,
     }),
 
   /**
