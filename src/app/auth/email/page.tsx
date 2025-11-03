@@ -40,6 +40,9 @@ function EmailLoginContent() {
 
   // 使用 ref 保存定时器 ID，避免内存泄漏
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // 使用 ref 追踪请求状态，防止重复请求
+  const sendingCodeRef = useRef(false);
+  const loggingInRef = useRef(false);
 
   // 获取重定向地址
   const getRedirectUrl = useCallback(() => {
@@ -83,16 +86,17 @@ function EmailLoginContent() {
     }
   }, []);
 
-  // 组件卸载时清理定时器
+  // 组件卸载时清理定时器和重置状态
   useEffect(() => {
     return () => {
       clearTimer();
+      sendingCodeRef.current = false;
+      loggingInRef.current = false;
     };
   }, [clearTimer]);
 
   const errorHandler: ErrorHandler = {
-    onError: (error) => {
-      console.error('请求错误:', error);
+    onError: () => {
       toast.error('请求失败，请稍后重试');
     },
 
@@ -137,42 +141,48 @@ function EmailLoginContent() {
       return;
     }
 
-    // 防止重复提交
-    if (isSendingCode || countdown > 0) {
+    // 使用双重检查防止重复提交
+    if (isSendingCode || countdown > 0 || sendingCodeRef.current) {
       return;
     }
 
+    // 立即设置 ref 锁
+    sendingCodeRef.current = true;
     setIsSendingCode(true);
 
-    const { data, error } = await authApi.sendEmailCode(watchedEmail, errorHandler);
+    try {
+      const { data, error } = await authApi.sendEmailCode(watchedEmail, errorHandler);
 
-    if (error) {
-      console.error('发送验证码失败:', error);
+      if (error) {
+        return;
+      }
+
+      if (data && data.code === 200) {
+        toast.success('验证码已发送', {
+          description: `验证码已发送到 ${watchedEmail}，请查收`,
+        });
+        startCountdown();
+      } else {
+        toast.error(data?.message || '发送验证码失败');
+      }
+    } catch {
+      toast.error('发送验证码失败，请稍后重试');
+    } finally {
+      // 确保在请求完成后释放锁
       setIsSendingCode(false);
-
-      return;
+      sendingCodeRef.current = false;
     }
-
-    if (data && data.code === 200) {
-      toast.success('验证码已发送', {
-        description: `验证码已发送到 ${watchedEmail}，请查收`,
-      });
-      startCountdown();
-    } else {
-      toast.error(data?.message || '发送验证码失败');
-    }
-
-    setIsSendingCode(false);
   };
 
   // 处理登录提交
   const onSubmit = async (data: EmailLoginFormData) => {
-    // 防止重复提交
-    if (emailLoginMutation.isPending) {
+    // 使用双重检查防止重复提交
+    if (emailLoginMutation.isPending || loggingInRef.current) {
       return;
     }
 
-    console.log('开始登录请求:', { email: data.email, code: data.code });
+    // 立即设置 ref 锁
+    loggingInRef.current = true;
 
     // 使用 React Query mutation
     emailLoginMutation.mutate(
@@ -181,10 +191,15 @@ function EmailLoginContent() {
         onSuccess: () => {
           // 清理定时器
           clearTimer();
+          // 保持锁定状态，防止重复登录
         },
-        onError: (error) => {
-          console.error('登录失败:', error);
+        onError: () => {
           // 错误处理已在 useEmailLogin hook 中处理
+          // 释放锁，允许重试
+          loggingInRef.current = false;
+        },
+        onSettled: () => {
+          // 如果成功，保持锁定；如果失败，在 onError 中已释放
         },
       },
     );
@@ -196,11 +211,12 @@ function EmailLoginContent() {
     setValue('code', value, { shouldValidate: true });
   };
 
-  // 检查发送验证码按钮是否应该禁用
-  const isSendCodeDisabled = !watchedEmail || !!errors.email || isSendingCode || countdown > 0;
+  // 检查发送验证码按钮是否应该禁用（增强防重复检查）
+  const isSendCodeDisabled =
+    !watchedEmail || !!errors.email || isSendingCode || countdown > 0 || sendingCodeRef.current;
 
-  // 检查登录按钮是否应该禁用
-  const isLoginDisabled = !isValid || emailLoginMutation.isPending;
+  // 检查登录按钮是否应该禁用（增强防重复检查）
+  const isLoginDisabled = !isValid || emailLoginMutation.isPending || loggingInRef.current;
 
   return (
     <motion.div
@@ -423,12 +439,19 @@ function EmailLoginContent() {
                       maxLength={CODE_LENGTH}
                       autoComplete="one-time-code"
                     />
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <motion.div
+                      whileHover={{ scale: isSendCodeDisabled ? 1 : 1.02 }}
+                      whileTap={{ scale: isSendCodeDisabled ? 1 : 0.98 }}
+                    >
                       <Button
                         type="button"
                         variant="outline"
                         className="whitespace-nowrap min-w-[120px] bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                        onClick={handleSendCode}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSendCode();
+                        }}
                         disabled={isSendCodeDisabled}
                       >
                         {countdown > 0
@@ -462,8 +485,8 @@ function EmailLoginContent() {
                 </div>
 
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: isLoginDisabled ? 1 : 1.02 }}
+                  whileTap={{ scale: isLoginDisabled ? 1 : 0.98 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                   className="relative group"
                 >
@@ -474,6 +497,12 @@ function EmailLoginContent() {
                     type="submit"
                     className="relative w-full group overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                     disabled={isLoginDisabled}
+                    onClick={(e) => {
+                      if (isLoginDisabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   >
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -483,7 +512,11 @@ function EmailLoginContent() {
                     />
                     <div className="relative flex items-center justify-center space-x-3">
                       <Mail className="w-6 h-6" />
-                      <span>{emailLoginMutation.isPending ? '登录中...' : '登录'}</span>
+                      <span>
+                        {emailLoginMutation.isPending || loggingInRef.current
+                          ? '登录中...'
+                          : '登录'}
+                      </span>
                     </div>
                   </Button>
                 </motion.div>
