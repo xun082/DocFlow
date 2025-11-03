@@ -841,6 +841,7 @@ class Request {
     callback: (response: Response) => void,
   ): Promise<(() => void) | undefined> {
     const controller = new AbortController();
+    let activeController = controller; // 支持重连时替换 controller
     const fullUrl = this.baseURL + url;
 
     // 添加 SSE 请求的 breadcrumb
@@ -866,7 +867,7 @@ class Request {
 
       let response = await fetch(req.url, {
         ...req.options,
-        signal: controller.signal,
+        signal: activeController.signal,
       });
 
       // 使用响应拦截器进行统一的错误处理和状态检查
@@ -896,9 +897,12 @@ class Request {
               errorHandler: params?.errorHandler,
             });
 
+            // 重连使用新的 AbortController，避免使用已中止的 signal
+            activeController = new AbortController();
+
             response = await fetch(retryReq.url, {
               ...retryReq.options,
-              signal: controller.signal,
+              signal: activeController.signal,
             });
 
             if (response.ok) {
@@ -910,7 +914,7 @@ class Request {
 
               callback(response);
 
-              return () => controller.abort();
+              return () => activeController.abort();
             }
           } catch {
             // 刷新或重连失败，继续走原有错误分支
@@ -994,7 +998,7 @@ class Request {
 
       callback(response);
 
-      return () => controller.abort();
+      return () => activeController.abort();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         console.log('流读取被中止:', error);
@@ -1052,6 +1056,7 @@ class Request {
     onMessage: (data: string) => void,
   ): Promise<() => void> {
     const controller = new AbortController();
+    let activeController = controller; // 支持重连时替换 controller
     const fullUrl = this.baseURL + url;
 
     addSentryBreadcrumb({
@@ -1070,7 +1075,7 @@ class Request {
         errorHandler: params?.errorHandler,
       });
 
-      return fetch(req.url, { ...req.options, signal: controller.signal });
+      return fetch(req.url, { ...req.options, signal: activeController.signal });
     };
 
     const open = async (): Promise<void> => {
@@ -1089,6 +1094,8 @@ class Request {
               await this.handleTokenRefresh();
             }
 
+            // 重连前替换为新的 controller，避免使用已中止的 signal
+            activeController = new AbortController();
             response = await connect();
           } catch {}
         }
@@ -1134,7 +1141,7 @@ class Request {
       });
     });
 
-    return () => controller.abort();
+    return () => activeController.abort();
   }
   /**
    * 创建取消令牌
