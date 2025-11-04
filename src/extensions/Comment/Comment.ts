@@ -82,27 +82,43 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
   },
 
   onSelectionUpdate() {
+    const { selection } = this.editor.state;
     const { $from } = this.editor.state.selection;
 
-    const marks = $from.marks();
+    // 只有在光标模式（选区为空）时才执行评论标记检测
+    if (selection.empty) {
+      const marks = $from.marks();
 
-    if (marks.length > 0) {
-      const commentMark = this.editor.schema.marks.comment;
-      // 返回第一个返回的mark
-      const activeCommentMark = marks.find((mark) => mark.type === commentMark);
+      if (marks.length > 0) {
+        const commentMark = this.editor.schema.marks.comment;
+        // 只查找评论标记
+        const activeCommentMark = marks.find((mark) => mark.type === commentMark);
 
-      this.storage.activeCommentId = activeCommentMark?.attrs.commentId || null;
+        // 只有当找到评论标记时才触发回调
+        if (activeCommentMark) {
+          this.storage.activeCommentId = activeCommentMark.attrs.commentId || null;
 
-      // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
-      const debouncedOnCommentActivated = debounce(
-        (commentId: string) => {
-          this.options.onCommentActivated(commentId);
-        },
-        300, // 300ms 延迟
-        { trailing: true },
-      );
+          // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
+          const debouncedOnCommentActivated = debounce(
+            (commentId: string) => {
+              this.options.onCommentActivated(commentId);
+            },
+            600, // 600ms 延迟，避免选择和光标同时触发，导致体验不好
+            { trailing: true },
+          );
 
-      debouncedOnCommentActivated(this?.storage.activeCommentId || '');
+          debouncedOnCommentActivated(this.storage.activeCommentId || '');
+        } else {
+          // 如果没有评论标记，清空 activeCommentId
+          this.storage.activeCommentId = null;
+        }
+      } else {
+        // 如果没有标记，清空 activeCommentId
+        this.storage.activeCommentId = null;
+      }
+    } else {
+      // 如果是选取模式，清空 activeCommentId，避免冲突
+      this.storage.activeCommentId = null;
     }
   },
 

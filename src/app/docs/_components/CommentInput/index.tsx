@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Editor } from '@tiptap/core';
-import { Send, X } from 'lucide-react';
+import { Send, X, Trash2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { debounce } from 'lodash-es';
 import { toast } from 'sonner';
@@ -111,16 +111,16 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
 
   // 监听编辑器选区变化，实时更新弹窗位置
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !editor.view) return;
 
     const handleSelectionUpdate = () => {
       debouncedUpdatePosition();
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor?.on('selectionUpdate', handleSelectionUpdate);
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor?.off('selectionUpdate', handleSelectionUpdate);
       debouncedUpdatePosition.cancel();
     };
   }, [isOpen, editor, debouncedUpdatePosition]);
@@ -129,13 +129,13 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   useEffect(() => {
     if (isOpen) {
       // 检查编辑器视图是否可用
-      if (!editor.view || !containerRef.current) {
+      if (!editor?.view || !containerRef.current) {
         return;
       }
 
       // 每次弹窗显示时重新获取comment的激活状态和属性
       const isCommentActive = editor.isActive('comment');
-      const attrs = editor.getAttributes('comment') || {};
+      const attrs = editor?.getAttributes('comment') || {};
 
       if (isCommentActive) {
         setMarkText(attrs.markText || '');
@@ -144,7 +144,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       }
 
       // 获取编辑器DOM元素作为边界容器
-      const editorElement = editor.view.dom.parentElement?.parentElement;
+      const editorElement = editor?.view.dom.parentElement?.parentElement;
       if (!editorElement) return;
 
       // 使用ResizeObserver和IntersectionObserver优化定位逻辑
@@ -189,7 +189,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
       updatePosition();
       setupObservers();
 
-      const scrollContainer = editor.isEditable && editor.view?.dom.parentElement?.parentElement;
+      const scrollContainer = editor.isEditable && editor?.view?.dom.parentElement?.parentElement;
 
       if (scrollContainer) {
         scrollContainer.addEventListener('scroll', debouncedUpdatePosition, {
@@ -300,6 +300,21 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
     closeComment();
   };
 
+  const handleDeleteMark = () => {
+    // 获取当前激活的评论ID
+    const activeCommentId = editor.getAttributes('comment').commentId;
+
+    if (activeCommentId) {
+      // 使用unsetComment命令删除整个mark
+      editor.chain().focus().unsetComment(activeCommentId).run();
+      toast.success('评论标记已删除');
+    } else {
+      toast.error('未找到可删除的评论标记');
+    }
+
+    closeComment();
+  };
+
   if (!isOpen || !position) {
     return null;
   }
@@ -307,7 +322,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
   const commentInputGroup = (
     <div
       ref={containerRef}
-      className={cn('fixed z-50 w-80')}
+      className={cn('fixed z-5 w-80')}
       style={{
         left: position?.x,
         top: position?.y,
@@ -345,7 +360,7 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
             </div>
           )}
 
-          <div className="flex items-center gap-1 px-2">
+          <div className="flex items-center gap-[2px] px-2">
             <Input
               ref={inputRef}
               value={commentContent}
@@ -364,6 +379,17 @@ export const CommentInput: React.FC<CommentInputGroupProps> = ({ editor }) => {
             >
               <Send className="h-4 w-4" />
             </Button>
+            {markItems.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDeleteMark}
+                className="h-8 w-8 p-0 flex-shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                title="删除评论标记"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
