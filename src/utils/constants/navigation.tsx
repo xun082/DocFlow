@@ -10,6 +10,20 @@ import {
   Workflow,
 } from 'lucide-react';
 
+// 路由常量
+export const ROUTES = {
+  AUTH: '/auth',
+  DASHBOARD: '/dashboard',
+  DOCS: '/docs',
+  MESSAGES: '/dashboard/messages',
+  WORKFLOW: '/dashboard/workflow',
+  KNOWLEDGE: '/dashboard/knowledge',
+  PODCAST: '/dashboard/podcast',
+  USER: '/dashboard/user',
+  SETTINGS: '/dashboard/settings',
+  CONTACTS: '/dashboard/contacts',
+} as const;
+
 // 导航项接口
 export interface NavItem {
   name: string;
@@ -22,70 +36,70 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   {
     name: '仪表盘',
-    href: '/dashboard',
+    href: ROUTES.DASHBOARD,
     icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     name: '聊天助手',
-    href: '/dashboard/messages',
+    href: ROUTES.MESSAGES,
     icon: <Bot className="w-5 h-5" />,
   },
   {
     name: '工作流',
-    href: '/dashboard/workflow',
+    href: ROUTES.WORKFLOW,
     icon: <Workflow className="w-5 h-5" />,
   },
   {
     name: '文档',
-    href: '/docs',
+    href: ROUTES.DOCS,
     icon: <FileText className="w-5 h-5" />,
     external: true,
   },
   {
     name: '知识库',
-    href: '/dashboard/knowledge',
+    href: ROUTES.KNOWLEDGE,
     icon: <BookOpen className="w-5 h-5" />,
   },
   {
     name: '个人资料',
-    href: '/dashboard/user',
+    href: ROUTES.USER,
     icon: <User className="w-5 h-5" />,
   },
   {
     name: '播客',
-    href: '/dashboard/podcast',
+    href: ROUTES.PODCAST,
     icon: <Podcast className="w-5 h-5" />,
   },
   {
     name: '设置',
-    href: '/dashboard/settings',
+    href: ROUTES.SETTINGS,
     icon: <Settings className="w-5 h-5" />,
   },
 ];
 
 // 页面标题映射
 export const PAGE_TITLE_MAP: Record<string, string> = {
-  '/dashboard': '仪表盘',
-  '/dashboard/messages': 'AI聊天助手',
-  '/dashboard/workflow': '工作流编辑器',
-  '/dashboard/contacts': '通讯录',
-  '/dashboard/user': '个人资料',
-  '/dashboard/settings': '系统设置',
-  '/dashboard/knowledge': '知识库管理',
-  '/dashboard/podcast': '播客管理',
-  '/docs': '文档管理',
+  [ROUTES.DASHBOARD]: '仪表盘',
+  [ROUTES.MESSAGES]: 'AI聊天助手',
+  [ROUTES.WORKFLOW]: '工作流编辑器',
+  [ROUTES.CONTACTS]: '通讯录',
+  [ROUTES.USER]: '个人资料',
+  [ROUTES.SETTINGS]: '系统设置',
+  [ROUTES.KNOWLEDGE]: '知识库管理',
+  [ROUTES.PODCAST]: '播客管理',
+  [ROUTES.DOCS]: '文档管理',
 };
 
 // 页面描述映射
 export const PAGE_DESCRIPTION_MAP: Record<string, string> = {
-  '/dashboard': '欢迎回来，查看您的工作概览',
-  '/dashboard/user': '管理您的账户信息和资料',
-  '/dashboard/messages': '与AI助手进行智能对话和协作',
-  '/dashboard/workflow': '创建和管理自动化工作流程',
-  '/dashboard/settings': '配置您的偏好设置',
-  '/dashboard/knowledge': '管理和组织您的知识库内容',
-  '/dashboard/podcast': '管理您的播客内容和任务',
-  '/dashboard/contacts': '管理您的联系人信息',
+  [ROUTES.DASHBOARD]: '欢迎回来，查看您的工作概览',
+  [ROUTES.USER]: '管理您的账户信息和资料',
+  [ROUTES.MESSAGES]: '与AI助手进行智能对话和协作',
+  [ROUTES.WORKFLOW]: '创建和管理自动化工作流程',
+  [ROUTES.SETTINGS]: '配置您的偏好设置',
+  [ROUTES.KNOWLEDGE]: '管理和组织您的知识库内容',
+  [ROUTES.PODCAST]: '管理您的播客内容和任务',
+  [ROUTES.CONTACTS]: '管理您的联系人信息',
 };
 
 // 获取页面标题的函数
