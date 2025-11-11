@@ -4,6 +4,7 @@ import { createSseStream } from '@azure/core-sse';
 import { getCookie, saveAuthData, clearAuthData } from '@/utils/cookie';
 import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/http';
 import type { TokenRefreshResponse } from '@/types/auth';
+import { ROUTES } from '@/utils/constants/navigation';
 
 type Method = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
 
@@ -135,6 +136,28 @@ class Request {
   }
 
   /**
+   * 统一处理认证失败的方法
+   * 清除认证数据并在浏览器环境重定向到登录页
+   */
+  private handleAuthFailure(): void {
+    // 清除所有认证信息
+    clearAuthData();
+
+    // 仅在浏览器环境重定向
+    if (typeof window !== 'undefined') {
+      // 保存当前路径，登录后可以返回
+      const currentPath = window.location.pathname + window.location.search;
+      const loginUrl = new URL(ROUTES.AUTH, window.location.origin);
+
+      if (currentPath && currentPath !== ROUTES.AUTH) {
+        loginUrl.searchParams.set('redirect_to', encodeURIComponent(currentPath));
+      }
+
+      window.location.href = loginUrl.toString();
+    }
+  }
+
+  /**
    * 刷新访问令牌
    * 直接调用刷新 API，不经过常规的请求拦截器，避免循环依赖
    */
@@ -168,13 +191,8 @@ class Request {
       });
 
       if (!response.ok) {
-        // 刷新失败，清除所有认证信息
-        clearAuthData();
-
-        // 如果在浏览器环境，重定向到登录页
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth';
-        }
+        // 刷新失败，清除认证信息并重定向到登录页
+        this.handleAuthFailure();
 
         throw new RequestError(
           '刷新令牌失败，请重新登录',
@@ -192,11 +210,8 @@ class Request {
         result.code !== 0 &&
         (result.code < 200 || result.code >= 300)
       ) {
-        clearAuthData();
-
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth';
-        }
+        // 业务状态码失败，清除认证信息并重定向到登录页
+        this.handleAuthFailure();
 
         // 将业务失败规范化为未授权，确保后续流程不再尝试刷新并引导重新登录
         throw new RequestError(result.message, refreshUrl, 401, 'Unauthorized', result);
@@ -220,19 +235,14 @@ class Request {
 
       return tokenData.token;
     } catch (error) {
-      // 刷新失败，清除所有认证信息
-      clearAuthData();
+      // 刷新失败，清除认证信息并重定向到登录页
+      this.handleAuthFailure();
 
       addSentryBreadcrumb({
         category: 'auth',
         message: 'Token refresh failed',
         level: 'error',
       });
-
-      // 在浏览器环境，重定向到登录页
-      if (typeof window !== 'undefined') {
-        window.location.href = '/auth';
-      }
 
       throw error;
     }
@@ -501,11 +511,8 @@ class Request {
             // 使用新token重试请求（标记为刷新后的重试，避免无限循环）
             return this.executeWithRetry(requestFn, 0, 0, true);
           } catch {
-            // 刷新失败，清除认证数据并重定向到登录页（仅在浏览器环境）
-            if (typeof window !== 'undefined') {
-              clearAuthData();
-              window.location.href = '/auth';
-            }
+            // 刷新失败，清除认证数据并重定向到登录页
+            this.handleAuthFailure();
 
             // 抛出原始401错误
             throw error;
@@ -928,11 +935,8 @@ class Request {
               return () => activeController.abort();
             }
           } catch {
-            // 刷新或重连失败，清除认证数据并重定向到登录页（仅在浏览器环境）
-            if (typeof window !== 'undefined') {
-              clearAuthData();
-              window.location.href = '/auth';
-            }
+            // 刷新或重连失败，清除认证数据并重定向到登录页
+            this.handleAuthFailure();
             // 继续走原有错误分支
           }
         }
@@ -1114,11 +1118,8 @@ class Request {
             activeController = new AbortController();
             response = await connect();
           } catch {
-            // 刷新或重连失败，清除认证数据并重定向到登录页（仅在浏览器环境）
-            if (typeof window !== 'undefined') {
-              clearAuthData();
-              window.location.href = '/auth';
-            }
+            // 刷新或重连失败，清除认证数据并重定向到登录页
+            this.handleAuthFailure();
           }
         }
       }
