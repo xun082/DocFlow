@@ -229,6 +229,11 @@ class Request {
         level: 'error',
       });
 
+      // 在浏览器环境，重定向到登录页
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth';
+      }
+
       throw error;
     }
   }
@@ -496,7 +501,13 @@ class Request {
             // 使用新token重试请求（标记为刷新后的重试，避免无限循环）
             return this.executeWithRetry(requestFn, 0, 0, true);
           } catch {
-            // 刷新失败，抛出原始401错误
+            // 刷新失败，清除认证数据并重定向到登录页（仅在浏览器环境）
+            if (typeof window !== 'undefined') {
+              clearAuthData();
+              window.location.href = '/auth';
+            }
+
+            // 抛出原始401错误
             throw error;
           }
         } else {
@@ -917,7 +928,12 @@ class Request {
               return () => activeController.abort();
             }
           } catch {
-            // 刷新或重连失败，继续走原有错误分支
+            // 刷新或重连失败，清除认证数据并重定向到登录页（仅在浏览器环境）
+            if (typeof window !== 'undefined') {
+              clearAuthData();
+              window.location.href = '/auth';
+            }
+            // 继续走原有错误分支
           }
         }
 
@@ -1097,7 +1113,13 @@ class Request {
             // 重连前替换为新的 controller，避免使用已中止的 signal
             activeController = new AbortController();
             response = await connect();
-          } catch {}
+          } catch {
+            // 刷新或重连失败，清除认证数据并重定向到登录页（仅在浏览器环境）
+            if (typeof window !== 'undefined') {
+              clearAuthData();
+              window.location.href = '/auth';
+            }
+          }
         }
       }
 
