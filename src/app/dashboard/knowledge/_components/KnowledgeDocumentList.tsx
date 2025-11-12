@@ -9,6 +9,15 @@ import type { KnowledgeDetail } from '@/services/ai/type';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -54,6 +63,9 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
   }, [fetchDetail]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [addUrlOpen, setAddUrlOpen] = useState(false);
+  const [urlValue, setUrlValue] = useState('');
+  const [addingUrl, setAddingUrl] = useState(false);
 
   const handleUploadFileClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -86,28 +98,38 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
     [knowledgeId, fetchDetail],
   );
 
-  const handleAddUrlClick = useCallback(async () => {
-    const url = window.prompt('请输入要添加的链接 URL');
-    if (!url) return;
+  const handleAddUrlClick = useCallback(() => {
+    setUrlValue('');
+    setAddUrlOpen(true);
+  }, []);
+
+  const handleSubmitAddUrl = useCallback(async () => {
+    if (!urlValue.trim()) {
+      toast.error('链接不能为空');
+
+      return;
+    }
 
     try {
-      setLoading(true);
+      setAddingUrl(true);
 
-      const res = await AiApi.AddKnowledgeUrl(knowledgeId, { url }, (err) => {
+      const res = await AiApi.AddKnowledgeUrl(knowledgeId, { url: urlValue.trim() }, (err) => {
         console.error('添加链接失败:', err);
       });
 
       if (res?.data) {
         toast.success('链接已添加');
+        setAddUrlOpen(false);
+        setUrlValue('');
         await fetchDetail();
       }
     } catch (err) {
       console.error(err);
       toast.error('添加链接失败');
     } finally {
-      setLoading(false);
+      setAddingUrl(false);
     }
-  }, [knowledgeId, fetchDetail]);
+  }, [knowledgeId, urlValue, fetchDetail]);
 
   return (
     <div className="space-y-6">
@@ -126,9 +148,6 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel>操作</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={fetchDetail} disabled={loading}>
-                <RefreshCw className="h-4 w-4 mr-2" /> 刷新
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleUploadFileClick} disabled={loading}>
                 <FileText className="h-4 w-4 mr-2" /> 上传文件
               </DropdownMenuItem>
@@ -233,6 +252,33 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
         className="hidden"
         onChange={handleFileInputChange}
       />
+      <Dialog open={addUrlOpen} onOpenChange={setAddUrlOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>添加链接到知识库</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="kb-url">链接 URL</Label>
+              <Input
+                id="kb-url"
+                placeholder="https://example.com/article"
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
+                disabled={addingUrl}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUrlOpen(false)} disabled={addingUrl}>
+              取消
+            </Button>
+            <Button onClick={handleSubmitAddUrl} disabled={addingUrl}>
+              {addingUrl ? '添加中...' : '添加'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
