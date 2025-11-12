@@ -79,8 +79,12 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
       try {
         setLoading(true);
 
-        const res = await AiApi.AddKnowledgeFile(knowledgeId, file, {}, (err) => {
-          console.error('上传文件失败:', err);
+        const res = await AiApi.AddKnowledgeFile(knowledgeId, file, {}, (err: unknown) => {
+          // 统一处理未知错误类型，提取友好提示
+          const message =
+            err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+          console.error('添加链接失败:', err);
+          toast.error(message);
         });
 
         if (res?.data) {
@@ -88,8 +92,9 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
           await fetchDetail();
         }
       } catch (err) {
-        console.error(err);
-        toast.error('上传文件失败');
+        const message =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+        toast.error(message);
       } finally {
         if (e.target) e.target.value = '';
         setLoading(false);
@@ -113,9 +118,17 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
     try {
       setAddingUrl(true);
 
-      const res = await AiApi.AddKnowledgeUrl(knowledgeId, { url: urlValue.trim() }, (err) => {
-        console.error('添加链接失败:', err);
-      });
+      const res = await AiApi.AddKnowledgeUrl(
+        knowledgeId,
+        { url: urlValue.trim() },
+        (err: unknown) => {
+          // 统一处理未知错误类型，提取友好提示
+          const message =
+            err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+          console.error('添加链接失败:', err);
+          toast.error(message);
+        },
+      );
 
       if (res?.data) {
         toast.success('链接已添加');
@@ -124,8 +137,9 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
         await fetchDetail();
       }
     } catch (err) {
-      console.error(err);
-      toast.error('添加链接失败');
+      const message =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+      toast.error(message);
     } finally {
       setAddingUrl(false);
     }
@@ -163,11 +177,9 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
         </div>
       </div>
 
-      {loading && <div className="text-sm text-muted-foreground">加载中...</div>}
+      {error && <div className="text-sm text-red-500">{error}</div>}
 
-      {!loading && error && <div className="text-sm text-red-500">{error}</div>}
-
-      {!loading && detail && (
+      {detail && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>

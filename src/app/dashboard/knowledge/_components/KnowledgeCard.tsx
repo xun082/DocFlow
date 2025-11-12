@@ -1,18 +1,10 @@
 'use client';
 
-import { BookOpen, Calendar, X, Eye, Trash } from 'lucide-react';
+import { BookOpen, Calendar, Eye, Trash } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import KnowledgeDocumentList from './KnowledgeDocumentList';
-
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from '@/components/ui/drawer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +25,7 @@ interface KnowledgeCardProps {
 }
 
 export function KnowledgeCard({ knowledge, onClick, onDeleted }: KnowledgeCardProps) {
-  const [showDrawer, setShowDrawer] = useState(false);
+  const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -47,7 +39,7 @@ export function KnowledgeCard({ knowledge, onClick, onDeleted }: KnowledgeCardPr
 
   const handlePreviewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDrawer(true);
+    router.push(`/dashboard/knowledge/${knowledge.id}`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -148,60 +140,6 @@ export function KnowledgeCard({ knowledge, onClick, onDeleted }: KnowledgeCardPr
           </div>
         </div>
       </div>
-
-      {/* 使用优化后的 Drawer 组件 */}
-      <Drawer open={showDrawer} onOpenChange={setShowDrawer}>
-        <DrawerContent side="right" width="500px">
-          <div className="flex flex-col h-full">
-            {/* 头部 */}
-            <DrawerHeader className="border-b bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BookOpen className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <DrawerTitle className="text-lg font-semibold text-gray-900">
-                      {knowledge.title}
-                    </DrawerTitle>
-                    <DrawerDescription className="text-sm text-gray-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        更新于 {new Date(knowledge.updated_at).toLocaleDateString('zh-CN')}
-                      </span>
-                    </DrawerDescription>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowDrawer(false)}
-                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <X className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
-            </DrawerHeader>
-
-            {/* 内容区域 */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
-                {knowledge.description}
-              </div>
-
-              <div className="mt-6">
-                <KnowledgeDocumentList knowledgeId={knowledge.id} />
-              </div>
-            </div>
-
-            {/* 底部信息 */}
-            <div className="border-t bg-gray-50 p-4">
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>知识库内容</span>
-                <span>{knowledge.description?.length || 0} 字符</span>
-              </div>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
 
       {/* 删除确认弹窗 */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
