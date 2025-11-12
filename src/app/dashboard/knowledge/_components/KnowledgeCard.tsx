@@ -4,6 +4,8 @@ import { BookOpen, Calendar, X, Eye, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import KnowledgeDocumentList from './KnowledgeDocumentList';
+
 import {
   Drawer,
   DrawerContent,
@@ -183,6 +185,10 @@ export function KnowledgeCard({ knowledge, onClick, onDeleted }: KnowledgeCardPr
             <div className="flex-1 overflow-y-auto p-6">
               <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
                 {knowledge.description}
+              </div>
+
+              <div className="mt-6">
+                <KnowledgeDocumentList knowledgeId={knowledge.id} />
               </div>
             </div>
 

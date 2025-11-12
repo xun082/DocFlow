@@ -1,0 +1,238 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { FileText, Link as LinkIcon, RefreshCw, MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { AiApi } from '@/services/ai';
+import type { KnowledgeDetail } from '@/services/ai/type';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+
+interface KnowledgeDocumentListProps {
+  knowledgeId: number;
+}
+
+export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocumentListProps) {
+  const [detail, setDetail] = useState<KnowledgeDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDetail = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await AiApi.GetKnowledgeById(knowledgeId, (err) => {
+        console.error('获取知识库详情失败:', err);
+      });
+
+      if (res?.data) {
+        setDetail(res.data?.data ?? null);
+      } else {
+        setDetail(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setError('加载知识库详情失败');
+      toast.error('加载知识库详情失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [knowledgeId]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadFileClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        setLoading(true);
+
+        const res = await AiApi.AddKnowledgeFile(knowledgeId, file, {}, (err) => {
+          console.error('上传文件失败:', err);
+        });
+
+        if (res?.data) {
+          toast.success('文件已上传');
+          await fetchDetail();
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('上传文件失败');
+      } finally {
+        if (e.target) e.target.value = '';
+        setLoading(false);
+      }
+    },
+    [knowledgeId, fetchDetail],
+  );
+
+  const handleAddUrlClick = useCallback(async () => {
+    const url = window.prompt('请输入要添加的链接 URL');
+    if (!url) return;
+
+    try {
+      setLoading(true);
+
+      const res = await AiApi.AddKnowledgeUrl(knowledgeId, { url }, (err) => {
+        console.error('添加链接失败:', err);
+      });
+
+      if (res?.data) {
+        toast.success('链接已添加');
+        await fetchDetail();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('添加链接失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [knowledgeId, fetchDetail]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">知识库文档列表</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchDetail} disabled={loading}>
+            <RefreshCw className="h-4 w-4 mr-2" /> 刷新
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel>操作</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={fetchDetail} disabled={loading}>
+                <RefreshCw className="h-4 w-4 mr-2" /> 刷新
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleUploadFileClick} disabled={loading}>
+                <FileText className="h-4 w-4 mr-2" /> 上传文件
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAddUrlClick} disabled={loading}>
+                <LinkIcon className="h-4 w-4 mr-2" /> 添加链接
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled>
+                文件 {detail?.files?.length ?? 0} · 链接 {detail?.urls?.length ?? 0}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {loading && <div className="text-sm text-muted-foreground">加载中...</div>}
+
+      {!loading && error && <div className="text-sm text-red-500">{error}</div>}
+
+      {!loading && detail && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2" /> 文件
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {detail.files?.length ?? 0}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {detail.files && detail.files.length > 0 ? (
+                <ul className="space-y-3">
+                  {detail.files.map((f) => (
+                    <li
+                      key={f.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{f.fileName}</div>
+                        <div className="text-xs text-muted-foreground">{f.createdAt}</div>
+                      </div>
+                      <a
+                        href={f.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        查看
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">暂无文件</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <LinkIcon className="h-5 w-5 mr-2" /> 链接
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {detail.urls?.length ?? 0}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {detail.urls && detail.urls.length > 0 ? (
+                <ul className="space-y-3">
+                  {detail.urls.map((u) => (
+                    <li
+                      key={u.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <a
+                          href={u.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate block text-sm text-primary hover:underline"
+                        >
+                          {u.url}
+                        </a>
+                        <div className="text-xs text-muted-foreground">{u.createdAt}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">暂无链接</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="*/*"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
+    </div>
+  );
+}
