@@ -93,7 +93,7 @@ export interface KnowledgeDetail {
     id: number;
     fileName: string;
     fileUrl: string;
-    createdAt: string;
+    created_at: string;
   }>;
   urls?: Array<{
     id: number;

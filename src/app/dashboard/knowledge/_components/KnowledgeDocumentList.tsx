@@ -199,17 +199,11 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
                       className="flex items-center justify-between rounded-md border px-3 py-2"
                     >
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{f.fileName}</div>
-                        <div className="text-xs text-muted-foreground">{f.createdAt}</div>
+                        <div className="truncate font-medium">文档ID：{f.id}</div>
+                        <div className="text-xs text-muted-foreground">
+                          创建时间：{f.created_at}
+                        </div>
                       </div>
-                      <a
-                        href={f.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-primary hover:underline"
-                      >
-                        查看
-                      </a>
                     </li>
                   ))}
                 </ul>
@@ -236,7 +230,8 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
                       key={u.id}
                       className="flex items-center justify-between rounded-md border px-3 py-2"
                     >
-                      <div className="min-w-0">
+                      <div className="flex gap-1 items-center min-w-0">
+                        <span className="text-sm">链接URL：</span>
                         <a
                           href={u.url}
                           target="_blank"
