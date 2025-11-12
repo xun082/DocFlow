@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { FileText, Link as LinkIcon, RefreshCw, MoreHorizontal } from 'lucide-react';
+import {
+  FileText,
+  Link as LinkIcon,
+  RefreshCw,
+  MoreHorizontal,
+  ExternalLink,
+  Copy,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { AiApi } from '@/services/ai';
@@ -181,7 +189,7 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
 
       {detail && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
+          <Card className="relative">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FileText className="h-5 w-5 mr-2" /> 文件
@@ -190,19 +198,63 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent aria-busy={loading}>
+              {loading && (
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">处理中...</span>
+                </div>
+              )}
               {detail.files && detail.files.length > 0 ? (
                 <ul className="space-y-3">
                   {detail.files.map((f) => (
                     <li
                       key={f.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                      className="group flex items-center justify-between rounded-lg border bg-card/50 hover:bg-muted transition px-3 py-2"
                     >
-                      <div className="min-w-0">
-                        <div className="truncate font-medium">文档ID：{f.id}</div>
-                        <div className="text-xs text-muted-foreground">
-                          创建时间：{f.created_at}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div
+                            className="truncate font-medium"
+                            title={(f as any).fileName ?? `文件 #${f.id}`}
+                          >
+                            {(f as any).fileName ?? `文件 #${f.id}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {(f as any).createdAt ?? (f as any).created_at ?? ''}
+                          </div>
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {(f as any).fileUrl && (
+                          <a
+                            href={(f as any).fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center text-sm text-primary hover:underline"
+                            aria-label="查看文件"
+                          >
+                            查看 <ExternalLink className="ml-1 h-3 w-3" />
+                          </a>
+                        )}
+                        {(f as any).fileUrl && (
+                          <button
+                            type="button"
+                            className="inline-flex items-center rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-background"
+                            aria-label="复制文件链接"
+                            onClick={() => {
+                              const url = (f as any).fileUrl as string;
+                              if (!url) return;
+                              navigator.clipboard
+                                .writeText(url)
+                                .then(() => toast.success('链接已复制'))
+                                .catch(() => toast.error('复制失败'));
+                            }}
+                          >
+                            复制 <Copy className="ml-1 h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     </li>
                   ))}
@@ -213,7 +265,7 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <LinkIcon className="h-5 w-5 mr-2" /> 链接
@@ -222,25 +274,62 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent aria-busy={loading}>
+              {loading && (
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">处理中...</span>
+                </div>
+              )}
               {detail.urls && detail.urls.length > 0 ? (
                 <ul className="space-y-3">
                   {detail.urls.map((u) => (
                     <li
                       key={u.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                      className="group flex items-center justify-between rounded-lg border bg-card/50 hover:bg-muted transition px-3 py-2"
                     >
-                      <div className="flex gap-1 items-center min-w-0">
-                        <span className="text-sm">链接URL：</span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <LinkIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0">
+                          <a
+                            href={u.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate block text-sm font-medium text-primary hover:underline"
+                            title={u.url}
+                          >
+                            {u.url}
+                          </a>
+                          <div className="text-xs text-muted-foreground">
+                            {(u as any).createdAt ?? ''}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <a
                           href={u.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="truncate block text-sm text-primary hover:underline"
+                          className="inline-flex items-center text-sm text-primary hover:underline"
+                          aria-label="打开链接"
                         >
-                          {u.url}
+                          打开 <ExternalLink className="ml-1 h-3 w-3" />
                         </a>
-                        <div className="text-xs text-muted-foreground">{u.createdAt}</div>
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-background"
+                          aria-label="复制链接"
+                          onClick={() => {
+                            const url = u.url;
+                            if (!url) return;
+                            navigator.clipboard
+                              .writeText(url)
+                              .then(() => toast.success('链接已复制'))
+                              .catch(() => toast.error('复制失败'));
+                          }}
+                        >
+                          复制 <Copy className="ml-1 h-3 w-3" />
+                        </button>
                       </div>
                     </li>
                   ))}
