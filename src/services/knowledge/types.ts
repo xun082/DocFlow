@@ -1,8 +1,8 @@
 // 创建知识库请求参数
 export interface CreateKnowledge {
-  apiKey: string;
+  apiKey?: string;
   title: string;
-  content: string;
+  description: string;
 }
 
 // 获取知识库列表请求参数
@@ -28,7 +28,7 @@ export interface KnowledgeBase {
 export interface ApiKnowledgeItem {
   id: number;
   title: string;
-  content: string;
+  description: string;
   user_id: number;
   created_at: string;
   updated_at: string;

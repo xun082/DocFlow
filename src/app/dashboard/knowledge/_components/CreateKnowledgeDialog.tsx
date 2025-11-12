@@ -48,7 +48,7 @@ export function CreateKnowledgeDialog({
   onSuccess,
 }: CreateKnowledgeDialogProps) {
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [description, setDescription] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ file: File; content: string }>>([]);
@@ -228,9 +228,11 @@ export function CreateKnowledgeDialog({
 
         // 将新内容追加到现有内容后面
         const newContent = validFileData.map((item) => item.content).join('\n\n');
-        const updatedContent = content.trim() ? content + '\n\n' + newContent : newContent;
+        const updatedDescription = description.trim()
+          ? description + '\n\n' + newContent
+          : newContent;
 
-        setContent(updatedContent);
+        setDescription(updatedDescription);
         setUploadedFiles((prev) => [...prev, ...validFileData]);
 
         toast.success(`成功处理 ${validFileData.length} 个文件，新增 ${totalWordCount} 个字`);
@@ -246,13 +248,13 @@ export function CreateKnowledgeDialog({
         }
       }
     },
-    [title, content],
+    [title, description],
   );
 
   // 重置表单
   const resetForm = useCallback(() => {
     setTitle('');
-    setContent('');
+    setDescription('');
     setUploadedFiles([]);
 
     if (fileInputRef.current) {
@@ -272,12 +274,12 @@ export function CreateKnowledgeDialog({
       // 重新构建内容（移除被删除文件的内容）
       if (newUploadedFiles.length === 0) {
         // 如果没有文件了，清空内容
-        setContent('');
+        setDescription('');
       } else {
         // 重新组合剩余文件的内容
         const remainingContents = newUploadedFiles.map((item) => item.content);
-        const newContent = remainingContents.join('\n\n');
-        setContent(newContent);
+        const newDescription = remainingContents.join('\n\n');
+        setDescription(newDescription);
       }
 
       // 重置文件输入框，确保可以重新上传
@@ -303,14 +305,14 @@ export function CreateKnowledgeDialog({
     // Zod验证 - API Key 为可选字段
     const schema = z.object({
       title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
-      content: z.string().min(1, '内容不能为空'),
+      description: z.string().min(1, '内容不能为空'),
       apiKey: z.string().optional(), // API Key 设为可选
     });
 
     // 构建验证数据 - 只有存在API密钥时才包含
     const validationData: any = {
       title: title.trim(),
-      content: content.trim(),
+      description: description.trim(),
     };
 
     if (apiKey?.trim()) {
@@ -372,10 +374,10 @@ export function CreateKnowledgeDialog({
     }
 
     setIsProcessing(false);
-  }, [content, title, isProcessing, resetForm, onOpenChange, onSuccess]);
+  }, [description, title, isProcessing, resetForm, onOpenChange, onSuccess]);
 
-  const contentSize = new Blob([content]).size;
-  const wordCount = getWordCount(content);
+  const contentSize = new Blob([description]).size;
+  const wordCount = getWordCount(description);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -407,7 +409,7 @@ export function CreateKnowledgeDialog({
           {/* 内容输入区域 */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="content">内容 *</Label>
+              <Label htmlFor="description">内容 *</Label>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -426,7 +428,7 @@ export function CreateKnowledgeDialog({
                     size="sm"
                     onClick={() => {
                       setUploadedFiles([]);
-                      setContent('');
+                      setDescription('');
 
                       // 确保重置文件输入框
                       if (fileInputRef.current) {
@@ -485,10 +487,10 @@ export function CreateKnowledgeDialog({
 
             <div className="relative">
               <Textarea
-                id="content"
+                id="description"
                 placeholder="请输入知识库内容，支持 Markdown 格式...&#10;&#10;或点击上方按钮上传多个 MD、TXT、PDF、DOCX 文档（支持多选）"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[400px] resize-y"
                 disabled={isProcessing}
               />
@@ -519,7 +521,7 @@ export function CreateKnowledgeDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isProcessing || !title.trim() || !content.trim()}
+            disabled={isProcessing || !title.trim() || !description.trim()}
           >
             {isProcessing ? (
               <>

@@ -1,7 +1,8 @@
 'use client';
 
-import { BookOpen, Calendar, X, Eye } from 'lucide-react';
+import { BookOpen, Calendar, X, Eye, Trash } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   Drawer,
@@ -10,15 +11,29 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from '@/components/ui/drawer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ApiKnowledgeItem } from '@/services/knowledge/types';
+import { KnowledgeApi } from '@/services/knowledge';
 
 interface KnowledgeCardProps {
   knowledge: ApiKnowledgeItem;
   onClick?: () => void;
+  onDeleted?: () => void;
 }
 
-export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
+export function KnowledgeCard({ knowledge, onClick, onDeleted }: KnowledgeCardProps) {
   const [showDrawer, setShowDrawer] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,6 +46,37 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
   const handlePreviewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowDrawer(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleting) return;
+
+    try {
+      setDeleting(true);
+      await KnowledgeApi.DeleteKnowledge(knowledge.id, (err) => {
+        console.error('删除知识库失败:', err);
+      });
+
+      setConfirmOpen(false);
+
+      toast.success('删除成功', {
+        onDismiss: () => {
+          if (onDeleted) {
+            onDeleted();
+          }
+        },
+      });
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast.error('删除失败');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -51,24 +97,36 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
               </div>
             </div>
 
-            {/* 预览按钮 */}
-            {knowledge.content && (
-              <button
-                onClick={handlePreviewClick}
-                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-muted rounded-lg"
-                title="预览完整内容"
-              >
-                <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
+            {/* 预览与删除按钮 */}
+            {knowledge.description && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handlePreviewClick}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-muted rounded-lg"
+                  title="预览完整内容"
+                >
+                  <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  disabled={deleting}
+                  className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-lg ${
+                    deleting ? 'cursor-not-allowed opacity-50' : 'hover:bg-muted'
+                  }`}
+                  title={deleting ? '正在删除...' : '删除'}
+                >
+                  <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
             )}
           </div>
 
           {/* 描述 */}
-          {knowledge.content && (
+          {knowledge.description && (
             <p className="text-muted-foreground text-sm line-clamp-2">
-              {knowledge.content.length > 100
-                ? knowledge.content.substring(0, 100) + '...'
-                : knowledge.content}
+              {knowledge.description.length > 100
+                ? knowledge.description.substring(0, 100) + '...'
+                : knowledge.description}
             </p>
           )}
 
@@ -80,8 +138,10 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
                 <span>{new Date(knowledge.updated_at).toLocaleDateString('zh-CN')}</span>
               </div>
             </div>
-            {knowledge.content && (
-              <span className="text-xs text-muted-foreground">{knowledge.content.length} 字符</span>
+            {knowledge.description && (
+              <span className="text-xs text-muted-foreground">
+                {knowledge.description.length} 字符
+              </span>
             )}
           </div>
         </div>
@@ -122,7 +182,7 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
             {/* 内容区域 */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
-                {knowledge.content}
+                {knowledge.description}
               </div>
             </div>
 
@@ -130,12 +190,28 @@ export function KnowledgeCard({ knowledge, onClick }: KnowledgeCardProps) {
             <div className="border-t bg-gray-50 p-4">
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>知识库内容</span>
-                <span>{knowledge.content?.length || 0} 字符</span>
+                <span>{knowledge.description?.length || 0} 字符</span>
               </div>
             </div>
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* 删除确认弹窗 */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除该知识库？</AlertDialogTitle>
+            <AlertDialogDescription>删除后不可恢复，请谨慎操作。</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={deleting}>
+              {deleting ? '正在删除...' : '删除'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
