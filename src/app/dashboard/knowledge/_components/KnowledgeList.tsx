@@ -205,6 +205,10 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
               onClick={() => {
                 console.log('点击知识库:', item.title);
               }}
+              onDeleted={() => {
+                // 删除成功后重新获取当前页列表
+                fetchKnowledgeList(currentPage);
+              }}
             />
           ))}
         </div>

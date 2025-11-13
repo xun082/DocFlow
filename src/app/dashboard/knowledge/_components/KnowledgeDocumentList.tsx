@@ -1,0 +1,380 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  FileText,
+  Link as LinkIcon,
+  RefreshCw,
+  MoreHorizontal,
+  ExternalLink,
+  Copy,
+  Loader2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+import { AiApi } from '@/services/ai';
+import type { KnowledgeDetail } from '@/services/ai/type';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+
+interface KnowledgeDocumentListProps {
+  knowledgeId: number;
+}
+
+export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocumentListProps) {
+  const [detail, setDetail] = useState<KnowledgeDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDetail = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await AiApi.GetKnowledgeById(knowledgeId, (err) => {
+        console.error('获取知识库详情失败:', err);
+      });
+
+      if (res?.data) {
+        setDetail(res.data?.data ?? null);
+      } else {
+        setDetail(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setError('加载知识库详情失败');
+      toast.error('加载知识库详情失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [knowledgeId]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [addUrlOpen, setAddUrlOpen] = useState(false);
+  const [urlValue, setUrlValue] = useState('');
+  const [addingUrl, setAddingUrl] = useState(false);
+
+  const handleUploadFileClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        setLoading(true);
+
+        const res = await AiApi.AddKnowledgeFile(knowledgeId, file, {}, (err: unknown) => {
+          // 统一处理未知错误类型，提取友好提示
+          const message =
+            err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+          console.error('添加链接失败:', err);
+          toast.error(message);
+        });
+
+        if (res?.data) {
+          toast.success('文件已上传');
+          await fetchDetail();
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+        toast.error(message);
+      } finally {
+        if (e.target) e.target.value = '';
+        setLoading(false);
+      }
+    },
+    [knowledgeId, fetchDetail],
+  );
+
+  const handleAddUrlClick = useCallback(() => {
+    setUrlValue('');
+    setAddUrlOpen(true);
+  }, []);
+
+  const handleSubmitAddUrl = useCallback(async () => {
+    if (!urlValue.trim()) {
+      toast.error('链接不能为空');
+
+      return;
+    }
+
+    try {
+      setAddingUrl(true);
+
+      const res = await AiApi.AddKnowledgeUrl(
+        knowledgeId,
+        { url: urlValue.trim() },
+        (err: unknown) => {
+          // 统一处理未知错误类型，提取友好提示
+          const message =
+            err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+          console.error('添加链接失败:', err);
+          toast.error(message);
+        },
+      );
+
+      if (res?.data) {
+        toast.success('链接已添加');
+        setAddUrlOpen(false);
+        setUrlValue('');
+        await fetchDetail();
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : typeof err === 'string' ? err : '添加链接失败';
+      toast.error(message);
+    } finally {
+      setAddingUrl(false);
+    }
+  }, [knowledgeId, urlValue, fetchDetail]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">知识库文档列表</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchDetail} disabled={loading}>
+            <RefreshCw className="h-4 w-4 mr-2" /> 刷新
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel>操作</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleUploadFileClick} disabled={loading}>
+                <FileText className="h-4 w-4 mr-2" /> 上传文件
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAddUrlClick} disabled={loading}>
+                <LinkIcon className="h-4 w-4 mr-2" /> 添加链接
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled>
+                文件 {detail?.files?.length ?? 0} · 链接 {detail?.urls?.length ?? 0}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {error && <div className="text-sm text-red-500">{error}</div>}
+
+      {detail && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="relative">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2" /> 文件
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {detail.files?.length ?? 0}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent aria-busy={loading}>
+              {loading && (
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">处理中...</span>
+                </div>
+              )}
+              {detail.files && detail.files.length > 0 ? (
+                <ul className="space-y-3">
+                  {detail.files.map((f) => (
+                    <li
+                      key={f.id}
+                      className="group flex items-center justify-between rounded-lg border bg-card/50 hover:bg-muted transition px-3 py-2"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div
+                            className="truncate font-medium"
+                            title={(f as any).fileName ?? `文件 #${f.id}`}
+                          >
+                            {(f as any).fileName ?? `文件 #${f.id}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {(f as any).createdAt ?? (f as any).created_at ?? ''}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {(f as any).fileUrl && (
+                          <a
+                            href={(f as any).fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center text-sm text-primary hover:underline"
+                            aria-label="查看文件"
+                          >
+                            查看 <ExternalLink className="ml-1 h-3 w-3" />
+                          </a>
+                        )}
+                        {(f as any).fileUrl && (
+                          <button
+                            type="button"
+                            className="inline-flex items-center rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-background"
+                            aria-label="复制文件链接"
+                            onClick={() => {
+                              const url = (f as any).fileUrl as string;
+                              if (!url) return;
+                              navigator.clipboard
+                                .writeText(url)
+                                .then(() => toast.success('链接已复制'))
+                                .catch(() => toast.error('复制失败'));
+                            }}
+                          >
+                            复制 <Copy className="ml-1 h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">暂无文件</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="relative">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <LinkIcon className="h-5 w-5 mr-2" /> 链接
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {detail.urls?.length ?? 0}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent aria-busy={loading}>
+              {loading && (
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">处理中...</span>
+                </div>
+              )}
+              {detail.urls && detail.urls.length > 0 ? (
+                <ul className="space-y-3">
+                  {detail.urls.map((u) => (
+                    <li
+                      key={u.id}
+                      className="group flex items-center justify-between rounded-lg border bg-card/50 hover:bg-muted transition px-3 py-2"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <LinkIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0">
+                          <a
+                            href={u.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate block text-sm font-medium text-primary hover:underline"
+                            title={u.url}
+                          >
+                            {u.url}
+                          </a>
+                          <div className="text-xs text-muted-foreground">
+                            {(u as any).createdAt ?? ''}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a
+                          href={u.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center text-sm text-primary hover:underline"
+                          aria-label="打开链接"
+                        >
+                          打开 <ExternalLink className="ml-1 h-3 w-3" />
+                        </a>
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-background"
+                          aria-label="复制链接"
+                          onClick={() => {
+                            const url = u.url;
+                            if (!url) return;
+                            navigator.clipboard
+                              .writeText(url)
+                              .then(() => toast.success('链接已复制'))
+                              .catch(() => toast.error('复制失败'));
+                          }}
+                        >
+                          复制 <Copy className="ml-1 h-3 w-3" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">暂无链接</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="*/*"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
+      <Dialog open={addUrlOpen} onOpenChange={setAddUrlOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>添加链接到知识库</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="kb-url">链接 URL</Label>
+              <Input
+                id="kb-url"
+                placeholder="https://example.com/article"
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
+                disabled={addingUrl}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUrlOpen(false)} disabled={addingUrl}>
+              取消
+            </Button>
+            <Button onClick={handleSubmitAddUrl} disabled={addingUrl}>
+              {addingUrl ? '添加中...' : '添加'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
