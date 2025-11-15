@@ -32,6 +32,8 @@ export interface ApiKnowledgeItem {
   user_id: number;
   created_at: string;
   updated_at: string;
+  files_count: number;
+  urls_count: number;
 }
 
 // 分页信息

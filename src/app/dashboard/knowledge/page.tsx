@@ -26,7 +26,10 @@ export default function KnowledgePage() {
           <h1 className="text-3xl font-bold">知识库</h1>
           <p className="text-muted-foreground mt-2">管理和组织您的知识文档</p>
         </div>
-        <Button className="flex items-center gap-2" onClick={() => setIsDialogOpen(true)}>
+        <Button
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => setIsDialogOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           添加知识库
         </Button>

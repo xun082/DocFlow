@@ -221,5 +221,5 @@
     "pnpm": ">=9.0.0"
   },
   "engineStrict": true,
-  "packageManager": "pnpm@10.20.0"
+  "packageManager": "pnpm@10.22.0"
 }
