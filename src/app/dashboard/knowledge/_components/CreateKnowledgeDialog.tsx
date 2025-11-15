@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Activity } from 'react';
 import { Plus, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { CreateKnowledge } from '@/services/knowledge/types';
 import { KnowledgeApi } from '@/services/knowledge';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Textarea from '@/components/ui/Textarea';
@@ -26,8 +25,6 @@ interface CreateKnowledgeDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
-// 统计展示用工具函数
 
 export function CreateKnowledgeDialog({
   open,
@@ -70,10 +67,6 @@ export function CreateKnowledgeDialog({
 
     setIsProcessing(true);
 
-    // 获取 API Key（可选）
-    const apiKeys = storage.get(STORAGE_KEYS.API_KEYS);
-    const apiKey = apiKeys?.siliconflow;
-
     // Zod验证 - API Key 为可选字段
     const schema = z.object({
       title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
@@ -86,10 +79,6 @@ export function CreateKnowledgeDialog({
       title: title.trim(),
       description: description.trim(),
     };
-
-    if (apiKey?.trim()) {
-      validationData.apiKey = apiKey.trim();
-    }
 
     const validationResult = schema.safeParse(validationData);
 
@@ -107,27 +96,6 @@ export function CreateKnowledgeDialog({
         toast.error(errorMsg);
         setIsProcessing(false);
       },
-      unauthorized: () => {
-        toast.error('API Key 无效或已过期，请检查配置或联系管理员');
-        setIsProcessing(false);
-      },
-      forbidden: () => {
-        toast.error('API Key 权限不足，请联系管理员获取正确的权限');
-        setIsProcessing(false);
-      },
-      serverError: () => {
-        toast.error('服务器内部错误，请稍后重试或联系技术支持');
-        setIsProcessing(false);
-      },
-      networkError: () => {
-        toast.error('网络连接失败，请检查网络连接后重试');
-        setIsProcessing(false);
-      },
-      default: (error: unknown) => {
-        const errorMsg = error instanceof Error ? error.message : '请求失败，请稍后重试';
-        toast.error(errorMsg);
-        setIsProcessing(false);
-      },
     });
 
     if (response.error) {
@@ -141,8 +109,12 @@ export function CreateKnowledgeDialog({
     if (response.data) {
       toast.success('知识库创建成功！');
       resetForm();
-      onOpenChange(false);
+      // 先触发刷新，再关闭对话框
       onSuccess?.();
+      // 稍微延迟关闭对话框，确保刷新触发
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 100);
     }
 
     setIsProcessing(false);
@@ -156,80 +128,84 @@ export function CreateKnowledgeDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>添加知识库</DialogTitle>
-          <DialogDescription>
-            创建新的知识库
-            <br />
-          </DialogDescription>
+          <DialogDescription>创建新的知识库</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* 标题输入 */}
-          <div className="space-y-2">
-            <Label htmlFor="title">标题 *</Label>
-            <Input
-              id="title"
-              placeholder="请输入知识库标题"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isProcessing}
-            />
-          </div>
-
-          {/* 内容输入区域 */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description">描述 *</Label>
-            </div>
-
-            <div className="relative">
-              <Textarea
-                id="description"
-                placeholder="请输入知识库内容，支持 Markdown 格式..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[400px] resize-y"
+        <Activity mode={open ? 'visible' : 'hidden'}>
+          <div className="space-y-6">
+            {/* 标题输入 */}
+            <div className="space-y-2">
+              <Label htmlFor="title">标题 *</Label>
+              <Input
+                id="title"
+                placeholder="请输入知识库标题"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 disabled={isProcessing}
               />
+            </div>
 
-              {/* 统计信息 */}
-              <div className="absolute bottom-3 right-3 flex items-center gap-3 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-md border">
-                <div className="flex items-center gap-1">
-                  <FileText className="h-3 w-3" />
-                  <span>{wordCount} 字</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>{formatFileSize(contentSize)}</span>
+            {/* 内容输入区域 */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">描述 *</Label>
+              </div>
+
+              <div className="relative">
+                <Textarea
+                  id="description"
+                  placeholder="请输入知识库内容，支持 Markdown 格式..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[200px] resize-y"
+                  disabled={isProcessing}
+                />
+
+                {/* 统计信息 */}
+                <div className="absolute bottom-3 right-3 flex items-center gap-3 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-md border">
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    <span>{wordCount} 字</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>{formatFileSize(contentSize)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>支持 Markdown 格式</span>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>支持 Markdown 格式</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isProcessing || !title.trim() || !description.trim()}
-          >
-            {isProcessing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                创建中...
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-2" />
-                创建知识库
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="cursor-pointer"
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isProcessing || !title.trim() || !description.trim()}
+              className="cursor-pointer disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  创建中...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  创建知识库
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </Activity>
       </DialogContent>
     </Dialog>
   );

@@ -3,7 +3,7 @@ FROM node:22-alpine AS base
 RUN npm config set registry https://registry.npmmirror.com && \
     apk add --no-cache libc6-compat && \
     corepack enable && \
-    corepack prepare pnpm@9.12.3 --activate && \
+    corepack prepare pnpm@10.22.0 --activate && \
     pnpm config set registry https://registry.npmmirror.com
 
 WORKDIR /app

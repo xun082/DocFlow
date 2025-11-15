@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BookOpen } from 'lucide-react';
 
@@ -36,42 +36,45 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
   const pageSize = 9; // 每页显示9个，3x3网格
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
 
-  // 获取知识库列表
-  const fetchKnowledgeList = async (page: number = 1) => {
-    try {
-      setLoading(true);
+  // 获取知识库列表 - 使用 useCallback 确保引用稳定
+  const fetchKnowledgeList = useCallback(
+    async (page: number = 1) => {
+      try {
+        setLoading(true);
 
-      const params: GetKnowledgeParams = {
-        page,
-        limit: pageSize,
-      };
+        const params: GetKnowledgeParams = {
+          page,
+          limit: pageSize,
+        };
 
-      const response = await KnowledgeApi.getKnowledgeList(params, (error) => {
+        const response = await KnowledgeApi.getKnowledgeList(params, (error) => {
+          console.error('获取知识库列表失败:', error);
+        });
+
+        if (response?.data?.data) {
+          const responseData = response.data.data;
+          const knowledgeItems = responseData.data;
+          const pagination = responseData.pagination;
+
+          // 使用新的分页结构
+          setKnowledgeList(knowledgeItems);
+          setTotalCount(pagination.total);
+          setTotalPages(pagination.totalPages);
+        }
+      } catch (error) {
         console.error('获取知识库列表失败:', error);
-      });
-
-      if (response?.data?.data) {
-        const responseData = response.data.data;
-        const knowledgeItems = responseData.data;
-        const pagination = responseData.pagination;
-
-        // 使用新的分页结构
-        setKnowledgeList(knowledgeItems);
-        setTotalCount(pagination.total);
-        setTotalPages(pagination.totalPages);
+        setKnowledgeList([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('获取知识库列表失败:', error);
-      setKnowledgeList([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [pageSize],
+  );
 
   // 初始加载和刷新触发
   useEffect(() => {
     fetchKnowledgeList(currentPage);
-  }, [currentPage, refreshTrigger]);
+  }, [currentPage, refreshTrigger, fetchKnowledgeList]);
 
   // 页面变化处理 - 使用查询字符串
   const handlePageChange = (page: number) => {
@@ -182,8 +185,8 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
 
   return (
     <div className="space-y-6">
-      {/* 统计信息 */}
-      {!loading && (
+      {/* 统计信息 - 仅在有知识库时显示 */}
+      {!loading && totalCount > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>共 {totalCount} 个知识库</span>
           <span>
@@ -202,9 +205,6 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
             <KnowledgeCard
               key={item.id}
               knowledge={item}
-              onClick={() => {
-                console.log('点击知识库:', item.title);
-              }}
               onDeleted={() => {
                 // 删除成功后重新获取当前页列表
                 fetchKnowledgeList(currentPage);
@@ -259,7 +259,9 @@ export function KnowledgeList({ onCreateClick, refreshTrigger }: KnowledgeListPr
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">暂无知识库</h3>
           <p className="text-muted-foreground mb-4">开始创建您的第一个知识库</p>
-          <Button onClick={onCreateClick}>创建知识库</Button>
+          <Button onClick={onCreateClick} className="cursor-pointer">
+            创建知识库
+          </Button>
         </div>
       )}
     </div>
