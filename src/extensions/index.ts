@@ -56,6 +56,7 @@ export { MarkdownPaste } from './MarkdownPaste';
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Audio } from './Audio';
 export { AI } from './AI';
+export { TextToImage } from './TextToImage';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
 export { Bilibili } from './Bilibili';
