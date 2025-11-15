@@ -31,6 +31,16 @@ export const GROUPS: Group[] = [
             .run();
         },
       },
+      {
+        name: 'textToImage',
+        label: 'Text to Image',
+        iconName: 'Image',
+        description: 'Generate image from text description',
+        aliases: ['image', 'img', 'generate', 'draw'],
+        action: (editor) => {
+          editor.chain().focus().setTextToImage().run();
+        },
+      },
     ],
   },
   {

@@ -57,6 +57,7 @@ import {
   Audio,
   FileHandler,
   AI,
+  TextToImage,
   Youtube,
   ClearMarksOnEnter,
   Bilibili,
@@ -384,6 +385,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     temperature: 0.7,
     showLoading: true,
   }),
+  TextToImage,
   Youtube.configure({
     controls: false,
     nocookie: true,
