@@ -67,57 +67,65 @@ export function CreateKnowledgeDialog({
 
     setIsProcessing(true);
 
-    // Zod验证 - API Key 为可选字段
-    const schema = z.object({
-      title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
-      description: z.string().min(1, '内容不能为空'),
-      apiKey: z.string().optional(), // API Key 设为可选
-    });
+    try {
+      const schema = z.object({
+        title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100个字符'),
+        description: z.string().min(1, '内容不能为空'),
+      });
 
-    // 构建验证数据 - 只有存在API密钥时才包含
-    const validationData: any = {
-      title: title.trim(),
-      description: description.trim(),
-    };
+      const validationData: any = {
+        title: title.trim(),
+        description: description.trim(),
+      };
 
-    const validationResult = schema.safeParse(validationData);
+      const validationResult = schema.safeParse(validationData);
 
-    if (!validationResult.success) {
-      const errorMsg = validationResult.error.errors[0].message;
-      toast.error(errorMsg);
-      setIsProcessing(false);
-
-      return;
-    }
-
-    const response = await KnowledgeApi.CreateKnowledge(validationResult.data as CreateKnowledge, {
-      onError: (error: unknown) => {
-        const errorMsg = error instanceof Error ? error.message : '创建知识库失败';
+      if (!validationResult.success) {
+        const errorMsg = validationResult.error.errors[0].message;
         toast.error(errorMsg);
         setIsProcessing(false);
-      },
-    });
 
-    if (response.error) {
-      // 如果有错误但没有被 errorHandler 处理，显示通用错误
-      toast.error(response.error);
+        return;
+      }
+
+      const response = await KnowledgeApi.CreateKnowledge(
+        validationResult.data as CreateKnowledge,
+        {
+          onError: (error: unknown) => {
+            const errorMsg = error instanceof Error ? error.message : '创建知识库失败';
+            toast.error(errorMsg);
+            setIsProcessing(false);
+          },
+        },
+      );
+
+      if (response.error) {
+        // 如果有错误但没有被 errorHandler 处理，显示通用错误
+        toast.error(response.error);
+        setIsProcessing(false);
+
+        return;
+      }
+
+      if (response.data) {
+        toast.success('知识库创建成功！');
+        resetForm();
+        // 先触发刷新，再关闭对话框
+        onSuccess?.();
+        // 稍微延迟关闭对话框，确保刷新触发
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 100);
+      }
+
       setIsProcessing(false);
-
-      return;
+    } catch (error) {
+      // 捕获未预期的网络异常或其他错误
+      const errorMsg = error instanceof Error ? error.message : '创建知识库时发生未知错误';
+      console.error('创建知识库失败:', error);
+      toast.error(errorMsg);
+      setIsProcessing(false);
     }
-
-    if (response.data) {
-      toast.success('知识库创建成功！');
-      resetForm();
-      // 先触发刷新，再关闭对话框
-      onSuccess?.();
-      // 稍微延迟关闭对话框，确保刷新触发
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 100);
-    }
-
-    setIsProcessing(false);
   }, [description, title, isProcessing, resetForm, onOpenChange, onSuccess]);
 
   const contentSize = new Blob([description]).size;

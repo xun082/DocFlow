@@ -85,23 +85,31 @@ export interface KnowledgeOptionListResponse {
   data: KnowledgeOption[];
 }
 
+// 知识库文件对象
+export interface ApiKnowledgeFile {
+  id: number;
+  original_filename: string;
+  file_extension: string;
+  file_size: number;
+  file_url: string;
+  created_at: string;
+}
+
+// 知识库URL对象
+export interface ApiKnowledgeUrl {
+  id: number;
+  url: string;
+  created_at: string;
+}
+
 export interface KnowledgeDetail {
   id: number;
   title: string;
   description?: string;
-  files?: Array<{
-    id: number;
-    fileName: string;
-    fileUrl: string;
-    created_at: string;
-  }>;
-  urls?: Array<{
-    id: number;
-    url: string;
-    createdAt: string;
-  }>;
-  createdAt: string;
-  updatedAt: string;
+  files?: ApiKnowledgeFile[];
+  urls?: ApiKnowledgeUrl[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TextToImageParams {

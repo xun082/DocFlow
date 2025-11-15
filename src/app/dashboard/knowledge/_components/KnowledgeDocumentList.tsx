@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, Activity } from 'react';
+import { useEffect, useState, useRef, useCallback, Activity } from 'react';
 import {
   FileText,
   Link as LinkIcon,
@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 
 import { AiApi } from '@/services/ai';
-import type { KnowledgeDetail } from '@/services/ai/type';
+import type { KnowledgeDetail, ApiKnowledgeFile, ApiKnowledgeUrl } from '@/services/ai/type';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,7 +42,7 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDetail = async () => {
+  const fetchDetail = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -63,11 +63,11 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
     } finally {
       setLoading(false);
     }
-  };
+  }, [knowledgeId]);
 
   useEffect(() => {
     fetchDetail();
-  }, [knowledgeId]);
+  }, [fetchDetail]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [addUrlOpen, setAddUrlOpen] = useState(false);
@@ -249,12 +249,12 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
               )}
               {detail.files && detail.files.length > 0 ? (
                 <ul className="space-y-3">
-                  {detail.files.map((f: any) => {
-                    const fileName = f.original_filename || f.fileName || `文件 #${f.id}`;
+                  {detail.files.map((f: ApiKnowledgeFile) => {
+                    const fileName = f.original_filename || `文件 #${f.id}`;
                     const fileExtension = f.file_extension || '';
                     const fileSize = f.file_size || 0;
-                    const createdAt = f.created_at || f.createdAt || '';
-                    const fileUrl = f.file_url || f.fileUrl || '';
+                    const createdAt = f.created_at || '';
+                    const fileUrl = f.file_url || '';
                     const iconColor = getFileTypeColor(fileExtension);
 
                     return (
@@ -384,9 +384,9 @@ export default function KnowledgeDocumentList({ knowledgeId }: KnowledgeDocument
               )}
               {detail.urls && detail.urls.length > 0 ? (
                 <ul className="space-y-3">
-                  {detail.urls.map((u: any) => {
+                  {detail.urls.map((u: ApiKnowledgeUrl) => {
                     const url = u.url || '';
-                    const createdAt = u.created_at || u.createdAt || '';
+                    const createdAt = u.created_at || '';
 
                     return (
                       <li
