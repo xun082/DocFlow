@@ -6,6 +6,7 @@ import type {
   TokenRefreshResponse,
   SendCodeResponse,
   EmailCodeLoginParams,
+  EmailPasswordLoginParams,
 } from '@/types/auth';
 
 /**
@@ -88,10 +89,7 @@ export const authApi = {
    * @param errorHandler 自定义错误处理函数
    * @returns 认证结果，包含token等信息
    */
-  emailPasswordLogin: (
-    params: import('@/types/auth').EmailPasswordLoginParams,
-    errorHandler?: ErrorHandler,
-  ) =>
+  emailPasswordLogin: (params: EmailPasswordLoginParams, errorHandler?: ErrorHandler) =>
     request.post<AuthResponse>('/api/v1/auth/email-password/login', {
       params,
       errorHandler,
