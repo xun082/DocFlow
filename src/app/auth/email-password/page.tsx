@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useEmailPasswordLogin } from '@/hooks/useAuth';
+import { useEmailPasswordRegister } from '@/hooks/useAuth';
 
 export default function EmailPasswordLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailPasswordMutation = useEmailPasswordLogin();
+  const registerMutation = useEmailPasswordRegister();
 
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -28,7 +30,6 @@ export default function EmailPasswordLoginPage() {
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirm, setRegConfirm] = useState('');
-  const [isRegSubmitting, setIsRegSubmitting] = useState(false);
   const regSubmittingRef = useRef(false);
 
   useEffect(() => setMounted(true), []);
@@ -108,27 +109,30 @@ export default function EmailPasswordLoginPage() {
       return;
     }
 
-    if (isRegSubmitting || regSubmittingRef.current) {
+    if (registerMutation.isPending || regSubmittingRef.current) {
       return;
     }
 
-    setIsRegSubmitting(true);
     regSubmittingRef.current = true;
 
-    // 此处仅做前端交互，成功后切换到登录。若需接后端，请告知接口路径。
-    setTimeout(() => {
-      setIsRegSubmitting(false);
-      regSubmittingRef.current = false;
+    registerMutation.mutate(
+      { email: regEmail, password: regPassword, confirmPassword: regConfirm, redirectUrl },
+      {
+        onSuccess: () => {
+          // 若后端未返回 token（仅注册成功），切回登录卡片并回填邮箱
+          if (!registerMutation.data?.authData?.token) {
+            setActiveTab('login');
+            setEmail(regEmail);
+            setPassword('');
+          }
 
-      toast.success('注册成功，请使用邮箱密码登录', {
-        description: '我们已为你准备好了登录表单',
-      });
-
-      // 自动切换到登录卡片，并把注册邮箱回填到登录卡片
-      setActiveTab('login');
-      setEmail(regEmail);
-      setPassword('');
-    }, 1200);
+          regSubmittingRef.current = false;
+        },
+        onError: () => {
+          regSubmittingRef.current = false;
+        },
+      },
+    );
   };
 
   return (
@@ -223,7 +227,12 @@ export default function EmailPasswordLoginPage() {
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             onClick={() => setActiveTab('login')}
-            disabled={emailPasswordMutation.isPending || loggingInRef.current || isRegSubmitting}
+            disabled={
+              emailPasswordMutation.isPending ||
+              loggingInRef.current ||
+              registerMutation.isPending ||
+              regSubmittingRef.current
+            }
           >
             登录
           </Button>
@@ -235,7 +244,9 @@ export default function EmailPasswordLoginPage() {
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             onClick={() => setActiveTab('register')}
-            disabled={emailPasswordMutation.isPending || loggingInRef.current || isRegSubmitting}
+            disabled={
+              emailPasswordMutation.isPending || loggingInRef.current || registerMutation.isPending
+            }
           >
             注册
           </Button>
@@ -543,7 +554,7 @@ export default function EmailPasswordLoginPage() {
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="请输入密码（至少 6 位）"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg白/15 focus:border-violet-400"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
                         autoComplete="new-password"
                         required
                       />
@@ -561,7 +572,7 @@ export default function EmailPasswordLoginPage() {
                         value={regConfirm}
                         onChange={(e) => setRegConfirm(e.target.value)}
                         placeholder="请再次输入密码"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg白/15 focus:border-violet-400"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
                         autoComplete="new-password"
                         required
                       />
@@ -569,8 +580,12 @@ export default function EmailPasswordLoginPage() {
                   </div>
 
                   <motion.div
-                    whileHover={{ scale: isRegSubmitting || regSubmittingRef.current ? 1 : 1.02 }}
-                    whileTap={{ scale: isRegSubmitting || regSubmittingRef.current ? 1 : 0.98 }}
+                    whileHover={{
+                      scale: registerMutation.isPending || regSubmittingRef.current ? 1 : 1.02,
+                    }}
+                    whileTap={{
+                      scale: registerMutation.isPending || regSubmittingRef.current ? 1 : 0.98,
+                    }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     className="relative group"
                   >
@@ -580,22 +595,22 @@ export default function EmailPasswordLoginPage() {
                     <Button
                       type="submit"
                       className="relative w-full group overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                      disabled={isRegSubmitting || regSubmittingRef.current}
+                      disabled={registerMutation.isPending || regSubmittingRef.current}
                       onClick={(e) => {
-                        if (isRegSubmitting || regSubmittingRef.current) {
+                        if (registerMutation.isPending || regSubmittingRef.current) {
                           e.preventDefault();
                           e.stopPropagation();
                         }
                       }}
                     >
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via白/20 to-transparent"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                         initial={{ x: '-100%' }}
                         whileHover={{ x: '100%' }}
                         transition={{ duration: 0.6 }}
                       />
                       <div className="relative flex items-center justify-center space-x-3">
-                        {isRegSubmitting || regSubmittingRef.current ? (
+                        {registerMutation.isPending || regSubmittingRef.current ? (
                           <>
                             <Loader2 className="w-6 h-6 animate-spin" />
                             <span>注册中...</span>
@@ -622,7 +637,7 @@ export default function EmailPasswordLoginPage() {
                       variant="link"
                       className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
                       onClick={() => router.push('/auth')}
-                      disabled={isRegSubmitting}
+                      disabled={registerMutation.isPending}
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       返回登录页
@@ -631,7 +646,7 @@ export default function EmailPasswordLoginPage() {
                 </motion.div>
 
                 {/* 加载遮罩（注册中） */}
-                {(isRegSubmitting || regSubmittingRef.current) && (
+                {(registerMutation.isPending || regSubmittingRef.current) && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-3xl">
                     <Loader2 className="h-6 w-6 animate-spin text-white" />
                     <span className="ml-2 text-white/80">注册中...</span>

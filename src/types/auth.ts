@@ -55,3 +55,12 @@ export interface EmailPasswordLoginParams {
   email: string;
   password: string;
 }
+
+// 邮箱密码注册参数
+export interface EmailPasswordRegisterParams {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  // 前端本地重定向用，可选，不会传给后端
+  redirectUrl?: string;
+}

@@ -7,6 +7,7 @@ import type {
   SendCodeResponse,
   EmailCodeLoginParams,
   EmailPasswordLoginParams,
+  EmailPasswordRegisterParams,
 } from '@/types/auth';
 
 /**
@@ -90,9 +91,19 @@ export const authApi = {
    * @returns 认证结果，包含token等信息
    */
   emailPasswordLogin: (params: EmailPasswordLoginParams, errorHandler?: ErrorHandler) =>
-    request.post<AuthResponse>('/api/v1/auth/email-password/login', {
+    request.post<AuthResponse>('/api/v1/auth/email/login/password', {
       params,
       errorHandler,
+    }),
+  /**
+   * 使用邮箱+密码注册
+   */
+  emailPasswordRegister: (params: EmailPasswordRegisterParams, errorHandler?: ErrorHandler) =>
+    request.post<AuthResponse>('/api/v1/auth/register', {
+      params,
+      errorHandler,
+      timeout: 30000,
+      retries: 0,
     }),
 };
 
