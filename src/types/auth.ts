@@ -49,3 +49,9 @@ export interface EmailCodeLoginParams {
   email: string;
   code: string;
 }
+
+// 邮箱密码登录参数
+export interface EmailPasswordLoginParams {
+  email: string;
+  password: string;
+}

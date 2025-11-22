@@ -150,3 +150,41 @@ export function useTokenLogin() {
     },
   });
 }
+
+// 邮箱密码登录参数（扩展）
+interface EmailPasswordLoginParams {
+  email: string;
+  password: string;
+  redirectUrl?: string;
+}
+
+// 邮箱密码登录 hook
+export function useEmailPasswordLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (params: EmailPasswordLoginParams) => {
+      const { email, password, redirectUrl } = params;
+      const { data, error } = await authApi.emailPasswordLogin({ email, password });
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (!data || data.code !== 200) {
+        throw new Error(data?.message || '登录失败');
+      }
+
+      return { authData: data.data, redirectUrl };
+    },
+    onSuccess: async ({ authData, redirectUrl }) => {
+      toast.success('登录成功！', { description: '正在获取用户资料...' });
+      await handleAuthSuccess(authData, queryClient, router, redirectUrl);
+    },
+    onError: (error) => {
+      console.error('邮箱密码登录失败:', error);
+      toast.error(error instanceof Error ? error.message : '登录失败');
+    },
+  });
+}

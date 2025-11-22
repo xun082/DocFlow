@@ -82,6 +82,20 @@ export const authApi = {
       params: { refresh_token: refreshToken },
       errorHandler,
     }),
+  /**
+   * 使用邮箱+密码登录
+   * @param params 邮箱和密码
+   * @param errorHandler 自定义错误处理函数
+   * @returns 认证结果，包含token等信息
+   */
+  emailPasswordLogin: (
+    params: import('@/types/auth').EmailPasswordLoginParams,
+    errorHandler?: ErrorHandler,
+  ) =>
+    request.post<AuthResponse>('/api/v1/auth/email-password/login', {
+      params,
+      errorHandler,
+    }),
 };
 
 export default authApi;
