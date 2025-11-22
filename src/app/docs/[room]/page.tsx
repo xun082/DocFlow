@@ -57,6 +57,7 @@ export default function DocumentPage() {
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
+  const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const { openComment } = useCommentStore();
 
   // Editor编辑器的容器元素
@@ -166,7 +167,14 @@ export default function DocumentPage() {
   useEffect(() => {
     if (!documentId || !doc || typeof window === 'undefined' || !permissionData) return;
 
+    setIsIndexedDBReady(false);
+
     const persistence = new IndexeddbPersistence(`tiptap-collaborative-${documentId}`, doc);
+
+    // 等待 IndexedDB 加载完成
+    persistence.on('synced', () => {
+      setIsIndexedDBReady(true);
+    });
 
     return () => {
       persistence.destroy();
@@ -240,13 +248,15 @@ export default function DocumentPage() {
   // 判断是否为只读模式
   const isReadOnly = permissionData?.permission === 'VIEW';
 
-  // 创建编辑器
+  // 创建编辑器 - 只有在 IndexedDB 准备好之后才创建
   const editor = useEditor(
     {
       extensions: [
         ...ExtensionKit({ provider }),
-        ...(doc ? [Collaboration.configure({ document: doc, field: 'content' })] : []),
-        ...(provider && currentUser && doc
+        ...(doc && isIndexedDBReady
+          ? [Collaboration.configure({ document: doc, field: 'content' })]
+          : []),
+        ...(provider && currentUser && doc && isIndexedDBReady
           ? [CollaborationCaret.configure({ provider, user: currentUser })]
           : []),
         Comment.configure({
@@ -259,7 +269,6 @@ export default function DocumentPage() {
           },
         }),
       ],
-      content: '<p>开始编写您的文档...</p>',
       editable: !isReadOnly,
       editorProps: {
         attributes: {
@@ -273,7 +282,7 @@ export default function DocumentPage() {
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
     },
-    [doc, provider, currentUser, isReadOnly],
+    [doc, provider, currentUser, isReadOnly, isIndexedDBReady],
   );
 
   // 加载中状态
@@ -307,7 +316,7 @@ export default function DocumentPage() {
   }
 
   // 编辑器未初始化（等待编辑器准备）
-  if (!isMounted || !doc || !editor) {
+  if (!isMounted || !doc || !isIndexedDBReady || !editor) {
     return (
       <div
         className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
@@ -319,7 +328,8 @@ export default function DocumentPage() {
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" suppressHydrationWarning>
             {!isMounted && '等待挂载...'}
             {isMounted && !doc && '创建文档...'}
-            {isMounted && doc && !editor && '初始化编辑器...'}
+            {isMounted && doc && !isIndexedDBReady && '加载数据...'}
+            {isMounted && doc && isIndexedDBReady && !editor && '初始化编辑器...'}
           </p>
         </div>
       </div>
