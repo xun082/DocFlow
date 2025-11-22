@@ -396,16 +396,7 @@ export default function EmailPasswordLoginPage() {
                         transition={{ duration: 0.6 }}
                       />
                       <div className="relative flex items-center justify-center space-x-3">
-                        {emailPasswordMutation.isPending || loggingInRef.current ? (
-                          <>
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <span>登录中...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>登录</span>
-                          </>
-                        )}
+                        <span>登录</span>
                       </div>
                     </Button>
                   </motion.div>
@@ -443,14 +434,6 @@ export default function EmailPasswordLoginPage() {
                     <span>为了你的账户安全，请勿在不可信设备保存密码</span>
                   </div>
                 </motion.div>
-
-                {/* 加载遮罩（登录中） */}
-                {(emailPasswordMutation.isPending || loggingInRef.current) && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-3xl">
-                    <Loader2 className="h-6 w-6 animate-spin text-white" />
-                    <span className="ml-2 text-white/80">登录中...</span>
-                  </div>
-                )}
               </motion.div>
             </motion.div>
           )}
