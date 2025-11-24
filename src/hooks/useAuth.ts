@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { userQueryKeys } from './useUserQuery';
 
 import authApi from '@/services/auth';
-import type { User, AuthResponse } from '@/types/auth';
+import type { User, AuthResponse, EmailPasswordRegisterParams } from '@/types/auth';
 import { saveAuthData } from '@/utils/cookie';
 
 // 邮箱验证码登录参数（扩展）
@@ -147,6 +147,85 @@ export function useTokenLogin() {
     onError: (error) => {
       console.error('Token登录失败:', error);
       toast.error(error instanceof Error ? error.message : '登录失败');
+    },
+  });
+}
+
+// 邮箱密码登录参数（扩展）
+interface EmailPasswordLoginParams {
+  email: string;
+  password: string;
+  redirectUrl?: string;
+}
+
+// 邮箱密码登录 hook
+export function useEmailPasswordLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (params: EmailPasswordLoginParams) => {
+      const { email, password, redirectUrl } = params;
+      const { data, error } = await authApi.emailPasswordLogin({ email, password });
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (!data || data.code !== 200) {
+        throw new Error(data?.message || '登录失败');
+      }
+
+      return { authData: data.data, redirectUrl };
+    },
+    onSuccess: async ({ authData, redirectUrl }) => {
+      toast.success('登录成功！', { description: '正在获取用户资料...' });
+      await handleAuthSuccess(authData, queryClient, router, redirectUrl);
+    },
+    onError: (error) => {
+      console.error('邮箱密码登录失败:', error);
+      toast.error(error instanceof Error ? error.message : '登录失败');
+    },
+  });
+}
+
+// 使用公共类型 EmailPasswordRegisterParams（src/types/auth.ts）
+
+// 邮箱密码注册 hook
+export function useEmailPasswordRegister() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (params: EmailPasswordRegisterParams) => {
+      const { email, password, confirmPassword, redirectUrl } = params;
+      const { data, error } = await authApi.emailPasswordRegister({
+        email,
+        password,
+        confirmPassword,
+      });
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (!data || data.code !== 200) {
+        throw new Error(data?.message || '注册失败');
+      }
+
+      return { authData: data.data, redirectUrl };
+    },
+    onSuccess: async ({ authData, redirectUrl }) => {
+      if (authData?.token) {
+        toast.success('注册成功，已自动登录！', { description: '正在获取用户资料...' });
+        await handleAuthSuccess(authData, queryClient, router, redirectUrl);
+      } else {
+        toast.success('注册成功！', { description: '请使用邮箱密码进行登录' });
+      }
+    },
+    onError: (error) => {
+      console.error('邮箱密码注册失败:', error);
+      toast.error(error instanceof Error ? error.message : '注册失败');
     },
   });
 }

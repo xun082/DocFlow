@@ -64,6 +64,10 @@ function LoginContent() {
     router.push('/auth/email');
   };
 
+  const handleEmailPasswordLogin = () => {
+    router.push('/auth/email-password');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -361,6 +365,38 @@ function LoginContent() {
                     <div className="relative flex items-center justify-center space-x-3">
                       <Mail className="w-6 h-6" />
                       <span>使用邮箱登录</span>
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        whileHover={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Shield className="w-5 h-5" />
+                      </motion.div>
+                    </div>
+                  </Button>
+                </motion.div>
+
+                {/* 增加一个邮箱验证码登录 */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  className="relative group"
+                >
+                  <Button
+                    variant="outline"
+                    className="relative w-full group overflow-hidden bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-white/20 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-lg backdrop-blur-sm cursor-pointer"
+                    onClick={handleEmailPasswordLogin}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                      initial={{ x: '-100%' }}
+                      whileHover={{ x: '100%' }}
+                      transition={{ duration: 0.6 }}
+                    />
+                    <div className="relative flex items-center justify-center space-x-3">
+                      <Mail className="w-6 h-6" />
+                      <span>使用邮箱密码登录</span>
                       <motion.div
                         initial={{ opacity: 0, x: -10 }}
                         whileHover={{ opacity: 1, x: 0 }}

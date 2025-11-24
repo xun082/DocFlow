@@ -6,6 +6,8 @@ import type {
   TokenRefreshResponse,
   SendCodeResponse,
   EmailCodeLoginParams,
+  EmailPasswordLoginParams,
+  EmailPasswordRegisterParams,
 } from '@/types/auth';
 
 /**
@@ -81,6 +83,27 @@ export const authApi = {
     request.post<TokenRefreshResponse>('/api/v1/auth/refresh', {
       params: { refresh_token: refreshToken },
       errorHandler,
+    }),
+  /**
+   * 使用邮箱+密码登录
+   * @param params 邮箱和密码
+   * @param errorHandler 自定义错误处理函数
+   * @returns 认证结果，包含token等信息
+   */
+  emailPasswordLogin: (params: EmailPasswordLoginParams, errorHandler?: ErrorHandler) =>
+    request.post<AuthResponse>('/api/v1/auth/email/login/password', {
+      params,
+      errorHandler,
+    }),
+  /**
+   * 使用邮箱+密码注册
+   */
+  emailPasswordRegister: (params: EmailPasswordRegisterParams, errorHandler?: ErrorHandler) =>
+    request.post<AuthResponse>('/api/v1/auth/register', {
+      params,
+      errorHandler,
+      timeout: 30000,
+      retries: 0,
     }),
 };
 
