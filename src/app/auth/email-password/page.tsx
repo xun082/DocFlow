@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, ArrowLeft, Star, Loader2 } from 'lucide-react';
+import { Lock, ArrowLeft, Star, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useEmailPasswordLogin } from '@/hooks/useAuth';
-import { useEmailPasswordRegister } from '@/hooks/useAuth';
+import { useEmailPasswordLogin, useEmailPasswordRegister } from '@/hooks/useAuth';
 
 export default function EmailPasswordLoginPage() {
   const router = useRouter();
@@ -31,6 +30,14 @@ export default function EmailPasswordLoginPage() {
   const [regPassword, setRegPassword] = useState('');
   const [regConfirm, setRegConfirm] = useState('');
   const regSubmittingRef = useRef(false);
+
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirm, setShowRegConfirm] = useState(false);
+
+  // 提交中状态（统一引用）
+  const isLoginSubmitting = emailPasswordMutation.isPending || loggingInRef.current;
+  const isRegisterSubmitting = registerMutation.isPending || regSubmittingRef.current;
 
   useEffect(() => setMounted(true), []);
 
@@ -119,14 +126,7 @@ export default function EmailPasswordLoginPage() {
       { email: regEmail, password: regPassword, confirmPassword: regConfirm, redirectUrl },
       {
         onSuccess: () => {
-          // 若后端未返回 token（仅注册成功），切回登录卡片并回填邮箱
-          if (!registerMutation.data?.authData?.token) {
-            setActiveTab('login');
-            setEmail(regEmail);
-            setPassword('');
-          }
-
-          regSubmittingRef.current = false;
+          router.replace(redirectUrl);
         },
         onError: () => {
           regSubmittingRef.current = false;
@@ -227,12 +227,7 @@ export default function EmailPasswordLoginPage() {
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             onClick={() => setActiveTab('login')}
-            disabled={
-              emailPasswordMutation.isPending ||
-              loggingInRef.current ||
-              registerMutation.isPending ||
-              regSubmittingRef.current
-            }
+            disabled={isLoginSubmitting || isRegisterSubmitting}
           >
             登录
           </Button>
@@ -244,9 +239,7 @@ export default function EmailPasswordLoginPage() {
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             onClick={() => setActiveTab('register')}
-            disabled={
-              emailPasswordMutation.isPending || loggingInRef.current || registerMutation.isPending
-            }
+            disabled={isLoginSubmitting || isRegisterSubmitting}
           >
             注册
           </Button>
@@ -333,7 +326,6 @@ export default function EmailPasswordLoginPage() {
                       邮箱地址
                     </Label>
                     <div className="flex items-center gap-3">
-                      {/* <Mail className="h-5 w-5 text-white/50" /> */}
                       <Input
                         id="email"
                         type="email"
@@ -347,31 +339,39 @@ export default function EmailPasswordLoginPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 ">
                     <Label htmlFor="password" className="text-gray-300 font-medium">
                       密码
                     </Label>
-                    <div className="flex items-center gap-3">
+                    <div className="relative">
                       <Input
                         id="password"
-                        type="password"
+                        type={showLoginPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="请输入密码"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
                         autoComplete="current-password"
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showLoginPassword ? '隐藏密码' : '显示密码'}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
+                        onClick={() => setShowLoginPassword((v) => !v)}
+                      >
+                        {showLoginPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
                   <motion.div
-                    whileHover={{
-                      scale: emailPasswordMutation.isPending || loggingInRef.current ? 1 : 1.02,
-                    }}
-                    whileTap={{
-                      scale: emailPasswordMutation.isPending || loggingInRef.current ? 1 : 0.98,
-                    }}
+                    whileHover={{ scale: isLoginSubmitting ? 1 : 1.02 }}
+                    whileTap={{ scale: isLoginSubmitting ? 1 : 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     className="relative group"
                   >
@@ -381,9 +381,9 @@ export default function EmailPasswordLoginPage() {
                     <Button
                       type="submit"
                       className="relative w-full group overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                      disabled={emailPasswordMutation.isPending || loggingInRef.current}
+                      disabled={isLoginSubmitting}
                       onClick={(e) => {
-                        if (emailPasswordMutation.isPending || loggingInRef.current) {
+                        if (isLoginSubmitting) {
                           e.preventDefault();
                           e.stopPropagation();
                         }
@@ -414,7 +414,7 @@ export default function EmailPasswordLoginPage() {
                       variant="link"
                       className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
                       onClick={() => router.push('/auth')}
-                      disabled={emailPasswordMutation.isPending}
+                      disabled={isLoginSubmitting}
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       返回登录页
@@ -476,9 +476,7 @@ export default function EmailPasswordLoginPage() {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.8 }}
                     className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer"
-                  >
-                    {/* <Mail className="w-8 h-8 text-white" /> */}
-                  </motion.div>
+                  ></motion.div>
 
                   <motion.h1
                     initial={{ y: 20, opacity: 0 }}
@@ -512,7 +510,6 @@ export default function EmailPasswordLoginPage() {
                       邮箱地址
                     </Label>
                     <div className="flex items-center gap-3">
-                      {/* <Mail className="h-5 w-5 text-white/50" /> */}
                       <Input
                         id="reg-email"
                         type="email"
@@ -530,17 +527,29 @@ export default function EmailPasswordLoginPage() {
                     <Label htmlFor="reg-password" className="text-gray-300 font-medium">
                       设置密码
                     </Label>
-                    <div className="flex items-center gap-3">
+                    <div className="relative">
                       <Input
                         id="reg-password"
-                        type="password"
+                        type={showRegPassword ? 'text' : 'password'}
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="请输入密码（至少 6 位）"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
                         autoComplete="new-password"
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showRegPassword ? '隐藏密码' : '显示密码'}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
+                        onClick={() => setShowRegPassword((v) => !v)}
+                      >
+                        {showRegPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -548,27 +557,35 @@ export default function EmailPasswordLoginPage() {
                     <Label htmlFor="reg-confirm" className="text-gray-300 font-medium">
                       确认密码
                     </Label>
-                    <div className="flex items-center gap-3">
+                    <div className="relative">
                       <Input
                         id="reg-confirm"
-                        type="password"
+                        type={showRegConfirm ? 'text' : 'password'}
                         value={regConfirm}
                         onChange={(e) => setRegConfirm(e.target.value)}
                         placeholder="请再次输入密码"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
                         autoComplete="new-password"
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showRegConfirm ? '隐藏密码' : '显示密码'}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
+                        onClick={() => setShowRegConfirm((v) => !v)}
+                      >
+                        {showRegConfirm ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
                   <motion.div
-                    whileHover={{
-                      scale: registerMutation.isPending || regSubmittingRef.current ? 1 : 1.02,
-                    }}
-                    whileTap={{
-                      scale: registerMutation.isPending || regSubmittingRef.current ? 1 : 0.98,
-                    }}
+                    whileHover={{ scale: isRegisterSubmitting ? 1 : 1.02 }}
+                    whileTap={{ scale: isRegisterSubmitting ? 1 : 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     className="relative group"
                   >
@@ -578,9 +595,9 @@ export default function EmailPasswordLoginPage() {
                     <Button
                       type="submit"
                       className="relative w-full group overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                      disabled={registerMutation.isPending || regSubmittingRef.current}
+                      disabled={isRegisterSubmitting}
                       onClick={(e) => {
-                        if (registerMutation.isPending || regSubmittingRef.current) {
+                        if (isRegisterSubmitting) {
                           e.preventDefault();
                           e.stopPropagation();
                         }
@@ -620,7 +637,7 @@ export default function EmailPasswordLoginPage() {
                       variant="link"
                       className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
                       onClick={() => router.push('/auth')}
-                      disabled={registerMutation.isPending}
+                      disabled={isRegisterSubmitting}
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       返回登录页
