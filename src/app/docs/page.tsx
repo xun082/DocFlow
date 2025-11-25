@@ -1,3 +1,5 @@
+'use client';
+
 import {
   FileText,
   FileVideo,
@@ -8,7 +10,10 @@ import {
   FileMusic,
   FileImage,
 } from 'lucide-react';
-import React, { JSX } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
+
+import DocumentApi from '@/services/document';
+import { LatestDocumentItem } from '@/services/document/type';
 
 interface DocStatItem {
   name: string;
@@ -21,7 +26,7 @@ interface DocStatItem {
 interface RecentDoc {
   id: string;
   title: string;
-  type: 'text' | 'media' | 'code' | 'image' | 'audio' | 'video';
+  type: 'text' | 'media' | 'code' | 'image' | 'audio' | 'video' | 'file';
   updatedAt: string;
   author: string;
   isNew?: boolean;
@@ -72,44 +77,44 @@ const docStatus: DocStatItem[] = [
   },
 ];
 
-const recentDocs: RecentDoc[] = [
-  {
-    id: 'doc-1024',
-    title: '2024年产品迭代规划文档',
-    type: 'text',
-    updatedAt: '2024-05-20 14:30',
-    author: 'wangchaozi',
-  },
-  {
-    id: 'doc-1023',
-    title: '知识库API接口设计规范',
-    type: 'code',
-    updatedAt: '2024-05-19 09:15',
-    author: 'monent',
-  },
-  {
-    id: 'doc-1022',
-    title: 'Q2季度市场分析报告',
-    type: 'media',
-    updatedAt: '2024-05-18 16:45',
-    author: 'monent',
-    isNew: true,
-  },
-  {
-    id: 'doc-1021',
-    title: '用户调研访谈记录（五月）',
-    type: 'text',
-    updatedAt: '2024-05-17 11:20',
-    author: 'monent',
-  },
-  {
-    id: 'doc-1020',
-    title: '产品宣传视频分镜脚本',
-    type: 'video',
-    updatedAt: '2024-05-16 15:50',
-    author: 'monent',
-  },
-];
+// const recentDocs: RecentDoc[] = [
+//   {
+//     id: 'doc-1024',
+//     title: '2024年产品迭代规划文档',
+//     type: 'text',
+//     updatedAt: '2024-05-20 14:30',
+//     author: 'wangchaozi',
+//   },
+//   {
+//     id: 'doc-1023',
+//     title: '知识库API接口设计规范',
+//     type: 'code',
+//     updatedAt: '2024-05-19 09:15',
+//     author: 'monent',
+//   },
+//   {
+//     id: 'doc-1022',
+//     title: 'Q2季度市场分析报告',
+//     type: 'media',
+//     updatedAt: '2024-05-18 16:45',
+//     author: 'monent',
+//     isNew: true,
+//   },
+//   {
+//     id: 'doc-1021',
+//     title: '用户调研访谈记录（五月）',
+//     type: 'text',
+//     updatedAt: '2024-05-17 11:20',
+//     author: 'monent',
+//   },
+//   {
+//     id: 'doc-1020',
+//     title: '产品宣传视频分镜脚本',
+//     type: 'video',
+//     updatedAt: '2024-05-16 15:50',
+//     author: 'monent',
+//   },
+// ];
 
 const getDocIcon = (type: RecentDoc['type']): JSX.Element => {
   switch (type) {
@@ -129,8 +134,19 @@ const getDocIcon = (type: RecentDoc['type']): JSX.Element => {
 };
 
 const Page = () => {
+  // 获取最新的文档
+  const [recentDocs, setRecentDocs] = useState<LatestDocumentItem[]>([]);
+
+  useEffect(() => {
+    DocumentApi.GetLatestDocuments(5).then((res) => {
+      if (res?.data?.code === 200 && res.data?.data) {
+        setRecentDocs(res.data.data);
+      }
+    });
+  }, []);
+
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6 overflow-auto max-h-[calc(100vh-40px)]">
       {/* 统计卡片区域 */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="mb-6 pb-3 border-b border-gray-100">
@@ -176,20 +192,22 @@ const Page = () => {
             >
               {/* 文档信息 */}
               <div className="flex items-center">
-                <div className="mr-3 p-2 bg-gray-100 rounded">{getDocIcon(doc.type)}</div>
+                <div className="mr-3 p-2 bg-gray-100 rounded">
+                  {getDocIcon(doc.type.toLowerCase() as any)}
+                </div>
                 <div>
                   <div className="flex items-center">
                     <span className="text-gray-800 font-medium">{doc.title}</span>
-                    {doc.isNew && (
+                    {/* {doc.isNew && (
                       <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
                         新
                       </span>
-                    )}
+                    )} */}
                   </div>
                   <div className="flex items-center mt-1 text-xs text-gray-500">
                     <span>{doc.author}</span>
                     <span className="mx-1">•</span>
-                    <span>{doc.updatedAt}</span>
+                    <span>{doc.updated_at}</span>
                   </div>
                 </div>
               </div>

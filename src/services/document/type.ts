@@ -1,6 +1,6 @@
 import { JSONContent } from '@tiptap/core';
 
-interface DocumentItem {
+export interface DocumentItem {
   id: number;
   title: string;
   type: 'FILE' | 'FOLDER';
@@ -51,6 +51,10 @@ export interface SharedDocumentItem extends DocumentItem {
 export interface DocumentResponse {
   owned: DocumentItem[];
   shared: DocumentItem[];
+}
+
+export interface LatestDocumentItem extends DocumentItem {
+  author: string;
 }
 
 // 通过分享链接访问的文档响应

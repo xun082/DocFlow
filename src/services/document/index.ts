@@ -14,6 +14,7 @@ import {
   AccessSharedDocumentResponse,
   SharedDocumentItem,
   DocumentPermissionData,
+  LatestDocumentItem,
 } from './type';
 
 export const DocumentApi = {
@@ -121,6 +122,10 @@ export const DocumentApi = {
         target_folder_id: data.target_folder_id,
       },
     }),
+
+  // 查询最新的文档
+  GetLatestDocuments: (limit: number, errorHandler?: ErrorHandler) =>
+    request.get<LatestDocumentItem[]>(`/api/v1/documents/latest/${limit}`, { errorHandler }),
 };
 
 export default DocumentApi;
