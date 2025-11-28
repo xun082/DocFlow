@@ -76,11 +76,6 @@ export const DocumentApi = {
       },
     }),
 
-  GetDocumentPermission: (id: string, errorHandler?: ErrorHandler) =>
-    request.get<DocumentResponse>(`/api/v1/documents/${id}/user-permissions`, {
-      errorHandler,
-    }),
-
   // 复制文档
   DuplicateDocument: (data: DuplicateDocumentDto, errorHandler?: ErrorHandler) =>
     request.post<DocumentResponse>(`/api/v1/documents/${data.document_id}/duplicate`, {

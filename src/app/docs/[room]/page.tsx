@@ -86,82 +86,54 @@ export default function DocumentPage() {
     return currentFile?.name || null;
   };
 
-  // 获取文档权限
+  // 获取权限并初始化
   useEffect(() => {
-    if (!documentId) return;
+    if (!documentId || typeof window === 'undefined') return;
 
-    async function fetchPermission() {
-      try {
-        setIsLoadingPermission(true);
-        setPermissionError(null);
+    async function init() {
+      setIsLoadingPermission(true);
+      setPermissionError(null);
 
-        const response = await DocumentApi.GetDocumentPermissions(Number(documentId));
+      const { data, error } = await DocumentApi.GetDocumentPermissions(Number(documentId));
 
-        // 检查响应是否有错误
-        if (response?.error) {
-          setPermissionError(response.error);
-
-          return;
-        }
-
-        // 检查响应数据
-        if (response?.data?.data) {
-          const permData = response.data.data as unknown as DocumentPermissionData;
-          setPermissionData(permData);
-        } else if (response?.data) {
-          const permData = response.data as unknown as DocumentPermissionData;
-          setPermissionData(permData);
-        } else {
-          setPermissionError('无法获取文档权限信息');
-        }
-      } catch {
-        setPermissionError('获取文档权限失败，请稍后重试');
-      } finally {
+      if (error) {
+        setPermissionError(error);
         setIsLoadingPermission(false);
+
+        return;
       }
-    }
 
-    fetchPermission();
-  }, [documentId]);
+      if (!data?.data) {
+        setPermissionError('无法获取文档权限信息');
+        setIsLoadingPermission(false);
 
-  // 初始化 - 只有在权限验证通过后才初始化
-  useEffect(() => {
-    if (typeof window !== 'undefined' && permissionData) {
-      // 如果有permission字段，检查是否为NONE
-      if (permissionData.permission && permissionData.permission === 'NONE') {
+        return;
+      }
+
+      const permData = data.data;
+      setPermissionData(permData);
+      setIsLoadingPermission(false);
+
+      // 无权限时不初始化编辑器
+      if (permData.permission === 'NONE') {
         setIsMounted(true);
 
         return;
       }
 
-      // 如果permission字段不存在，但有isOwner或documentId，说明有权限
-      if (permissionData.documentId || permissionData.isOwner !== undefined) {
-        setDoc(new Y.Doc());
-        setIsMounted(true);
-      }
+      // 初始化编辑器和用户信息
+      setDoc(new Y.Doc());
+      setCurrentUser({
+        id: permData.userId.toString(),
+        name: permData.username,
+        color: getCursorColorByUserId(permData.userId.toString()),
+        avatar: permData.avatar,
+      });
+      setIsMounted(true);
     }
-  }, [permissionData]);
 
-  // 获取当前用户信息
-  useEffect(() => {
-    if (!documentId || typeof window === 'undefined' || !permissionData) return;
-
-    try {
-      const userProfileStr = localStorage.getItem('user_profile');
-
-      if (userProfileStr) {
-        const userProfile = JSON.parse(userProfileStr);
-        setCurrentUser({
-          id: userProfile.id.toString(),
-          name: userProfile.name,
-          color: getCursorColorByUserId(userProfile.id.toString()),
-          avatar: userProfile.avatar_url,
-        });
-      }
-    } catch {
-      // 静默处理用户信息解析错误
-    }
-  }, [documentId, permissionData]);
+    init();
+  }, [documentId]);
 
   // 本地持久化
   useEffect(() => {
