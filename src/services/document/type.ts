@@ -153,6 +153,8 @@ export interface AccessSharedDocumentResponse {
 export interface DocumentPermissionData {
   documentId: number;
   userId: number;
+  username: string;
+  avatar: string;
   documentTitle: string;
   documentType: 'FILE' | 'FOLDER';
   isOwner: boolean;
