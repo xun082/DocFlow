@@ -163,7 +163,6 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     if (isActive) {
       loadDocuments();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   // 实际搜索函数
@@ -256,7 +255,6 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     }, 300);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, searchMode, fileStructure, documents]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
