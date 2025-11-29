@@ -25,6 +25,8 @@ interface AIInputPanelProps {
   setSelectedModel: (model: string) => void;
   selectedKnowledgeIds: number[];
   setSelectedKnowledgeIds: (ids: number[]) => void;
+  knowledgeEnabled: boolean;
+  setKnowledgeEnabled: (enabled: boolean) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   uploadInputRef: React.RefObject<HTMLInputElement | null>;
   componentRef: React.RefObject<HTMLDivElement | null>;
@@ -42,6 +44,8 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   setSelectedModel,
   selectedKnowledgeIds,
   setSelectedKnowledgeIds,
+  knowledgeEnabled,
+  setKnowledgeEnabled,
   textareaRef,
   uploadInputRef,
   componentRef,
@@ -270,6 +274,8 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
                   <KnowledgeBaseSelector
                     selectedKnowledgeIds={selectedKnowledgeIds}
                     setSelectedKnowledgeIds={setSelectedKnowledgeIds}
+                    knowledgeEnabled={knowledgeEnabled}
+                    setKnowledgeEnabled={setKnowledgeEnabled}
                     disabled={buttonConfig.disabled}
                     buttonConfig={buttonConfig}
                   />

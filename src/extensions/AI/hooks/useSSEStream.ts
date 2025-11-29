@@ -200,11 +200,12 @@ export const useSSEStream = ({
         const questionParams: any = {
           question: prompt,
           model: selectedModel,
-          useKnowledgeBase: useKnowledgeBase, // 使用传入的知识库开关状态
+          useKnowledgeBase: false, // 默认不使用知识库
         };
 
-        // 如果启用了知识库且有选中的知识库，则传递knowledgeIds
+        // 只有启用了知识库且有选中的知识库，才传递知识库相关参数
         if (useKnowledgeBase && selectedKnowledgeIds.length > 0) {
+          questionParams.useKnowledgeBase = true;
           questionParams.knowledgeIds = selectedKnowledgeIds;
         }
 

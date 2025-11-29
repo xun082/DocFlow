@@ -55,7 +55,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
 
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
   const [showImage, setShowImage] = useState(false); // 图片生成状态
-  const [useKnowledgeBase, setUseKnowledgeBase] = useState(true); // 知识库开关状态，默认开启
+  const [knowledgeEnabled, setKnowledgeEnabled] = useState(false); // 知识库开关状态，默认关闭
   const [selectedKnowledgeIds, setSelectedKnowledgeIds] = useState<number[]>([]); // 选中的知识库ID列表
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -114,7 +114,7 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     selectedModel,
     setResponse,
     editor,
-    useKnowledgeBase, // 传递知识库开关状态
+    useKnowledgeBase: knowledgeEnabled, // 传递知识库开关状态
     selectedKnowledgeIds, // 传递选中的知识库ID列表
   });
 
@@ -221,6 +221,15 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       }
     }
 
+    // 知识库验证：如果开启了知识库但没有选择任何知识库，提示用户
+    if (knowledgeEnabled && selectedKnowledgeIds.length === 0) {
+      toast.warning('请先选择知识库', {
+        description: '您已开启知识库功能，但未选择任何知识库。请选择知识库或关闭知识库开关。',
+      });
+
+      return;
+    }
+
     // 设置加载状态
     setAiState(AIState.LOADING);
 
@@ -268,20 +277,13 @@ export const AIComponent: React.FC<AIComponentProps> = ({
       id: 'knowledge',
       label: '知识库',
       icon: Database,
-      color: useKnowledgeBase ? '#10B981' : '#6B7280',
-      bgColor: useKnowledgeBase ? 'bg-[#10B981]/20' : 'bg-gray-200',
-      hoverBgColor: useKnowledgeBase ? 'hover:bg-[#10B981]/30' : 'hover:bg-gray-300',
-      isActive: useKnowledgeBase,
+      color: knowledgeEnabled ? '#10B981' : '#6B7280',
+      bgColor: knowledgeEnabled ? 'bg-[#10B981]/20' : 'bg-gray-200',
+      hoverBgColor: knowledgeEnabled ? 'hover:bg-[#10B981]/30' : 'hover:bg-gray-300',
+      isActive: true, // 始终激活，让 KnowledgeBaseSelector 自己管理状态
       disabled: aiState === AIState.LOADING,
       onClick: () => {
-        const newValue = !useKnowledgeBase;
-
-        setUseKnowledgeBase(newValue);
-
-        // 如果关闭知识库，清除选中的知识库ID
-        if (!newValue) {
-          setSelectedKnowledgeIds([]);
-        }
+        // 点击事件由 KnowledgeBaseSelector 内部的开关处理
       },
     },
     {
@@ -486,6 +488,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                   setSelectedModel={setSelectedModel}
                   selectedKnowledgeIds={selectedKnowledgeIds}
                   setSelectedKnowledgeIds={setSelectedKnowledgeIds}
+                  knowledgeEnabled={knowledgeEnabled}
+                  setKnowledgeEnabled={setKnowledgeEnabled}
                   textareaRef={textareaRef}
                   uploadInputRef={uploadInputRef}
                   componentRef={componentRef}
