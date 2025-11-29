@@ -47,7 +47,13 @@ export interface SharedDocumentItem extends DocumentItem {
   shareInfo: ShareInfo;
 }
 
-// 返回结构类型
+// 获取文档列表响应
+export interface GetDocumentsResponse {
+  documents: DocumentItem[];
+  total: number;
+}
+
+// 返回结构类型（保留用于其他 API）
 export interface DocumentResponse {
   owned: DocumentItem[];
   shared: DocumentItem[];

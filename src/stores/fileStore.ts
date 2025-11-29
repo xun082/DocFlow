@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
 import DocumentApi from '@/services/document';
-import { DocumentResponse } from '@/services/document/type';
+import { DocumentItem } from '@/services/document/type';
 
 interface FileState {
   // 文件状态
@@ -43,7 +43,7 @@ interface FileState {
 
   // 文件操作
   loadFiles: (isInitialLoad?: boolean) => Promise<void>;
-  processApiDocuments: (documents: DocumentResponse['owned']) => FileItem[];
+  processApiDocuments: (documents: DocumentItem[]) => FileItem[];
   createNewItem: (name: string, type: 'file' | 'folder', parentId?: string) => Promise<boolean>;
   finishCreateNewItem: () => Promise<void>;
   cancelCreateNewItem: () => void;
@@ -94,7 +94,7 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   // 处理API返回的文档数据
   processApiDocuments: (documents) => {
-    const docMap = new Map<number, DocumentResponse['owned'][0]>();
+    const docMap = new Map<number, DocumentItem>();
     documents.forEach((doc) => {
       if (!doc.is_deleted) {
         docMap.set(doc.id, doc);
@@ -162,73 +162,61 @@ export const useFileStore = create<FileState>((set, get) => ({
 
     setIsLoading(true);
 
-    try {
-      const res = await DocumentApi.GetDocument();
+    const res = await DocumentApi.GetDocument();
 
-      if (res?.data?.code === 200 && res?.data?.data) {
-        const documentResponse = res.data.data as DocumentResponse;
-        const apiDocuments = documentResponse.owned || [];
-        const convertedFiles = processApiDocuments(apiDocuments);
-        setFiles(convertedFiles);
+    if (res?.data?.code === 200 && res?.data?.data?.documents) {
+      const apiDocuments = res.data.data.documents;
+      const convertedFiles = processApiDocuments(apiDocuments);
+      setFiles(convertedFiles);
 
-        if (!isInitialLoad && selectedFileId) {
-          const findFileById = (items: FileItem[], id: string): boolean => {
-            for (const item of items) {
-              if (item.id === id) return true;
-              if (item.children && findFileById(item.children, id)) return true;
-            }
-
-            return false;
-          };
-
-          if (!findFileById(convertedFiles, selectedFileId)) {
-            setSelectedFileId(null);
+      if (!isInitialLoad && selectedFileId) {
+        const findFileById = (items: FileItem[], id: string): boolean => {
+          for (const item of items) {
+            if (item.id === id) return true;
+            if (item.children && findFileById(item.children, id)) return true;
           }
-        }
 
-        if (isInitialLoad && convertedFiles.length > 0) {
-          const rootFolders = convertedFiles
-            .filter((file) => file.type === 'folder')
-            .map((folder) => folder.id);
+          return false;
+        };
 
-          const initialExpanded: Record<string, boolean> = {};
-          rootFolders.forEach((id) => {
-            initialExpanded[id] = true;
-          });
-
-          setExpandedFolders(initialExpanded);
-          setExpandedFolders(initialExpanded);
+        if (!findFileById(convertedFiles, selectedFileId)) {
+          setSelectedFileId(null);
         }
       }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error);
-    } finally {
-      setIsLoading(false);
+
+      if (isInitialLoad && convertedFiles.length > 0) {
+        const rootFolders = convertedFiles
+          .filter((file) => file.type === 'folder')
+          .map((folder) => folder.id);
+
+        const initialExpanded: Record<string, boolean> = {};
+        rootFolders.forEach((id) => {
+          initialExpanded[id] = true;
+        });
+
+        setExpandedFolders(initialExpanded);
+      }
     }
+
+    setIsLoading(false);
   },
 
   // 创建新文件/文件夹
   createNewItem: async (name, type, parentId) => {
-    try {
-      const res = await DocumentApi.CreateDocument({
-        title: name,
-        type: type === 'folder' ? 'FOLDER' : 'FILE',
-        parent_id: parentId ? Number(parentId) : undefined,
-      });
+    const res = await DocumentApi.CreateDocument({
+      title: name,
+      type: type === 'folder' ? 'FOLDER' : 'FILE',
+      parent_id: parentId ? Number(parentId) : undefined,
+    });
 
-      if (res?.data?.code === 200) {
-        // 创建成功后自动刷新文件列表
-        await get().loadFiles(false);
+    if (res?.data?.code === 200) {
+      // 创建成功后自动刷新文件列表
+      await get().loadFiles(false);
 
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Failed to create item:', error);
-
-      return false;
+      return true;
     }
+
+    return false;
   },
 
   // 完成创建新项目

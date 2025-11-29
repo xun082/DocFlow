@@ -4,6 +4,7 @@ import request, { ErrorHandler } from '../request';
 import {
   CreateDocumentDto,
   DocumentResponse,
+  GetDocumentsResponse,
   CreateShareLinkDto,
   ShareLinkResponse,
   DeleteDocumentDto,
@@ -20,7 +21,7 @@ import {
 export const DocumentApi = {
   // 获取文档列表
   GetDocument: (errorHandler?: ErrorHandler) =>
-    request.get<DocumentResponse>('/api/v1/documents', { errorHandler, cacheTime: 0 }),
+    request.get<GetDocumentsResponse>('/api/v1/documents', { errorHandler, cacheTime: 0 }),
 
   // 获取文档权限
   GetDocumentPermissions: (documentId: number, errorHandler?: ErrorHandler) =>

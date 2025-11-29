@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 import DocumentApi from '@/services/document';
-import { DocumentResponse } from '@/services/document/type';
+import { DocumentItem } from '@/services/document/type';
 
 interface SearchTabProps {
   isActive: boolean;
@@ -46,15 +46,15 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [documents, setDocuments] = useState<DocumentResponse['owned']>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [fileStructure, setFileStructure] = useState<FileStructure[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [searchMode, setSearchMode] = useState<'all' | 'files' | 'content'>('all');
 
   // 处理API返回的文档数据，转换为文件结构
-  const processDocumentsToFileStructure = (docs: DocumentResponse['owned']): FileStructure[] => {
-    const docMap = new Map<number, DocumentResponse['owned'][0]>();
+  const processDocumentsToFileStructure = (docs: DocumentItem[]): FileStructure[] => {
+    const docMap = new Map<number, DocumentItem>();
     docs.forEach((doc) => {
       if (!doc.is_deleted) {
         docMap.set(doc.id, doc);
@@ -147,20 +147,15 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
   // 加载所有文档数据
   const loadDocuments = async () => {
-    try {
-      const res = await DocumentApi.GetDocument();
+    const res = await DocumentApi.GetDocument();
 
-      if (res?.data?.code === 200 && res?.data?.data) {
-        const documentResponse = res.data.data as DocumentResponse;
-        const docs = documentResponse.owned || [];
-        setDocuments(docs);
+    if (res?.data?.code === 200 && res?.data?.data?.documents) {
+      const docs = res.data.data.documents;
+      setDocuments(docs);
 
-        // 转换为文件结构
-        const structure = processDocumentsToFileStructure(docs);
-        setFileStructure(structure);
-      }
-    } catch (error) {
-      console.error('Failed to load documents:', error);
+      // 转换为文件结构
+      const structure = processDocumentsToFileStructure(docs);
+      setFileStructure(structure);
     }
   };
 
@@ -168,7 +163,8 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     if (isActive) {
       loadDocuments();
     }
-  }, [isActive, loadDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
 
   // 实际搜索函数
   const performSearch = async (query: string) => {
@@ -180,75 +176,70 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
 
     setIsSearching(true);
 
-    try {
-      let results: SearchResult[] = [];
+    let results: SearchResult[] = [];
 
-      if (searchMode === 'all' || searchMode === 'files') {
-        // 搜索文件结构
-        const fileResults = searchInFileStructure(fileStructure, query);
-        results.push(...fileResults);
-      }
+    if (searchMode === 'all' || searchMode === 'files') {
+      // 搜索文件结构
+      const fileResults = searchInFileStructure(fileStructure, query);
+      results.push(...fileResults);
+    }
 
-      if (searchMode === 'all' || searchMode === 'content') {
-        // 搜索文档内容（标题）
-        const contentResults = documents
-          .filter((doc) => !doc.is_deleted)
-          .filter((doc) => {
-            const titleMatch = doc.title.toLowerCase().includes(query.toLowerCase());
+    if (searchMode === 'all' || searchMode === 'content') {
+      // 搜索文档内容（标题）
+      const contentResults = documents
+        .filter((doc) => !doc.is_deleted)
+        .filter((doc) => {
+          const titleMatch = doc.title.toLowerCase().includes(query.toLowerCase());
 
-            return titleMatch;
-          })
-          .map((doc) => {
-            const matches: SearchResult['matches'] = [];
-            const titleLower = doc.title.toLowerCase();
-            const queryLower = query.toLowerCase();
-            let titleIndex = titleLower.indexOf(queryLower);
+          return titleMatch;
+        })
+        .map((doc) => {
+          const matches: SearchResult['matches'] = [];
+          const titleLower = doc.title.toLowerCase();
+          const queryLower = query.toLowerCase();
+          let titleIndex = titleLower.indexOf(queryLower);
 
-            while (titleIndex !== -1) {
-              matches.push({
-                field: 'title',
-                text: doc.title.substring(titleIndex, titleIndex + query.length),
-                start: titleIndex,
-                end: titleIndex + query.length,
-              });
-              titleIndex = titleLower.indexOf(queryLower, titleIndex + 1);
-            }
+          while (titleIndex !== -1) {
+            matches.push({
+              field: 'title',
+              text: doc.title.substring(titleIndex, titleIndex + query.length),
+              start: titleIndex,
+              end: titleIndex + query.length,
+            });
+            titleIndex = titleLower.indexOf(queryLower, titleIndex + 1);
+          }
 
-            return {
-              id: String(doc.id),
-              title: doc.title,
-              type: doc.type,
-              is_starred: doc.is_starred,
-              updated_at: doc.updated_at,
-              created_at: doc.created_at,
-              parent_id: doc.parent_id ?? undefined,
-              matches,
-            } as SearchResult;
-          });
+          return {
+            id: String(doc.id),
+            title: doc.title,
+            type: doc.type,
+            is_starred: doc.is_starred,
+            updated_at: doc.updated_at,
+            created_at: doc.created_at,
+            parent_id: doc.parent_id ?? undefined,
+            matches,
+          } as SearchResult;
+        });
 
-        // 合并结果并去重
-        const existingIds = new Set(results.map((r) => r.id));
-        const uniqueContentResults = contentResults.filter((r) => !existingIds.has(r.id));
-        results.push(...uniqueContentResults);
-      }
+      // 合并结果并去重
+      const existingIds = new Set(results.map((r) => r.id));
+      const uniqueContentResults = contentResults.filter((r) => !existingIds.has(r.id));
+      results.push(...uniqueContentResults);
+    }
 
-      // 排序：收藏的在前，然后按更新时间
-      results.sort((a, b) => {
-        if (a.is_starred && !b.is_starred) return -1;
-        if (!a.is_starred && b.is_starred) return 1;
+    // 排序：收藏的在前，然后按更新时间
+    results.sort((a, b) => {
+      if (a.is_starred && !b.is_starred) return -1;
+      if (!a.is_starred && b.is_starred) return 1;
 
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      });
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
 
-      setSearchResults(results.slice(0, 20)); // 限制结果数量
+    setSearchResults(results.slice(0, 20)); // 限制结果数量
 
-      // 保存搜索历史
-      if (query.trim() && !searchHistory.includes(query.trim())) {
-        setSearchHistory((prev) => [query.trim(), ...prev.slice(0, 4)]);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
+    // 保存搜索历史
+    if (query.trim() && !searchHistory.includes(query.trim())) {
+      setSearchHistory((prev) => [query.trim(), ...prev.slice(0, 4)]);
     }
 
     setIsSearching(false);
@@ -265,7 +256,8 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, performSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, searchMode, fileStructure, documents]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
