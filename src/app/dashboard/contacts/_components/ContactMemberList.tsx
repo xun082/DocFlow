@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Search, UserPlus, Users } from 'lucide-react';
 
+import AddContactDialog from './AddContactDialog';
+import ContactListContainer from './ContactListContainer';
 import { MOCK_CONTACTS } from './mock-data';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,21 +12,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface ContactMemberListProps {
-  selectedCategory: string;
-  selectedContact: string | null;
-  onSelectContact: (contactId: string) => void;
+  category: string;
 }
 
-export default function ContactMemberList({
-  selectedCategory,
-  selectedContact,
-  onSelectContact,
-}: ContactMemberListProps) {
+export default function ContactMemberList({ category }: ContactMemberListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<string | null>(null);
+
+  const handleAddSuccess = () => {
+    console.log('好友申请发送成功');
+  };
 
   // 根据分类筛选联系人
   const filteredContacts = MOCK_CONTACTS.filter((contact) => {
-    // 根据搜索筛选
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch =
@@ -34,36 +35,26 @@ export default function ContactMemberList({
       if (!matchesSearch) return false;
     }
 
-    // 根据分类筛选
-    switch (selectedCategory) {
+    switch (category) {
       case 'org-all':
         return !contact.isExternal;
       case 'external':
         return contact.isExternal;
       case 'starred':
         return contact.isStarred;
-      case 'new':
-        // 假设最近 7 天创建的是新联系人
-        return false; // 这里可以根据实际的创建时间判断
-      case 'groups':
-        return false; // 群组功能暂未实现
-      case 'service':
-        return false; // 服务台功能暂未实现
       default:
         return true;
     }
   });
 
   const getCategoryTitle = () => {
-    switch (selectedCategory) {
+    switch (category) {
       case 'org-all':
         return '组织内联系人';
       case 'external':
         return '外部联系人';
       case 'starred':
         return '星标联系人';
-      case 'new':
-        return '新的联系人';
       case 'groups':
         return '我的群组';
       case 'service':
@@ -73,33 +64,55 @@ export default function ContactMemberList({
     }
   };
 
+  const getAddButtonText = () => {
+    switch (category) {
+      case 'external':
+        return '添加联系人';
+      case 'groups':
+        return '创建群组';
+      default:
+        return '添加企业成员';
+    }
+  };
+
+  const getDialogType = (): 'internal' | 'external' | 'group' => {
+    switch (category) {
+      case 'external':
+        return 'external';
+      case 'groups':
+        return 'group';
+      default:
+        return 'internal';
+    }
+  };
+
+  const showAddButton = !['starred', 'service'].includes(category);
+
+  // 搜索框组件
+  const searchBar = (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Input
+        type="text"
+        placeholder="搜索联系人"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pl-10 h-9"
+      />
+    </div>
+  );
+
+  // 操作按钮组件
+  const actionButton = showAddButton ? (
+    <Button size="sm" className="h-8" onClick={() => setAddDialogOpen(true)}>
+      <UserPlus className="w-4 h-4 mr-1.5" />
+      {getAddButtonText()}
+    </Button>
+  ) : null;
+
   return (
-    <div className="flex-1 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* 头部 */}
-      <div className="p-4 border-b border-gray-200 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">{getCategoryTitle()}</h3>
-          <Button size="sm" className="h-8">
-            <UserPlus className="w-4 h-4 mr-1.5" />
-            添加企业成员
-          </Button>
-        </div>
-
-        {/* 搜索框 */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="搜索联系人"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9"
-          />
-        </div>
-      </div>
-
-      {/* 联系人列表 */}
-      <div className="flex-1 overflow-y-auto">
+    <>
+      <ContactListContainer title={getCategoryTitle()} action={actionButton} searchBar={searchBar}>
         {filteredContacts.length > 0 ? (
           <ul className="divide-y divide-gray-100">
             {filteredContacts.map((contact) => {
@@ -108,7 +121,7 @@ export default function ContactMemberList({
               return (
                 <li key={contact.id}>
                   <button
-                    onClick={() => onSelectContact(contact.id)}
+                    onClick={() => setSelectedContact(contact.id)}
                     className={`
                       w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50
                       transition-colors duration-150
@@ -123,7 +136,6 @@ export default function ContactMemberList({
                           {contact.name.slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
-                      {/* 在线状态指示器 */}
                       {contact.status === 'online' && (
                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
                       )}
@@ -157,7 +169,15 @@ export default function ContactMemberList({
             <p className="text-sm">暂无联系人</p>
           </div>
         )}
-      </div>
-    </div>
+      </ContactListContainer>
+
+      {/* 添加联系人对话框 */}
+      <AddContactDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        type={getDialogType()}
+        onSuccess={handleAddSuccess}
+      />
+    </>
   );
 }

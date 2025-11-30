@@ -18,6 +18,7 @@ export interface ContactCategory {
   id: string;
   name: string;
   icon: React.ReactNode;
+  href: string;
   count?: number;
   badge?: string;
 }
