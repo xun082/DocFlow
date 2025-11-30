@@ -144,14 +144,12 @@ export function CommentPanel({ editor, documentId, currentUserId }: CommentPanel
       // 生成新的 commentId
       const newCommentId = crypto.randomUUID();
 
-      // 创建评论数据
+      // 创建评论数据（使用 mark_id，不再需要 from/to）
       const newThread = await CommentApi.createComment(
         {
           documentId,
-          commentId: newCommentId,
+          commentId: newCommentId, // mark_id
           text,
-          from,
-          to,
           content: newCommentContent.trim(),
         },
         userInfo,

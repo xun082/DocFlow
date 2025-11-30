@@ -66,10 +66,8 @@ class CommentApi {
     const newThread: CommentThread = {
       id: generateId(),
       documentId: data.documentId,
-      commentId: data.commentId,
+      commentId: data.commentId, // mark_id
       text: data.text,
-      from: data.from,
-      to: data.to,
       createdAt: now,
       updatedAt: now,
       userId: currentUser.id,

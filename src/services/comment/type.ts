@@ -6,10 +6,8 @@
 export interface CommentThread {
   id: string;
   documentId: string;
-  commentId: string; // 对应编辑器中的 commentId
+  commentId: string; // 评论标记 ID (mark_id)，对应编辑器中的 comment mark
   text: string; // 被评论的文本
-  from: number; // 起始位置
-  to: number; // 结束位置
   createdAt: string;
   updatedAt: string;
   userId: string;
@@ -37,11 +35,9 @@ export interface CommentReply {
  */
 export interface CreateCommentRequest {
   documentId: string;
-  commentId: string;
-  text: string;
-  from: number;
-  to: number;
-  content: string;
+  commentId: string; // 评论标记 ID (mark_id)
+  text: string; // 被评论的文本内容
+  content: string; // 评论内容
 }
 
 /**
