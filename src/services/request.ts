@@ -356,7 +356,7 @@ class Request {
         ? cacheTime > 0
           ? { next: { revalidate: cacheTime } }
           : { cache: 'no-store' }
-        : { cache: 'force-cache' };
+        : { cache: 'no-store' };
 
     if (method === HTTP_METHODS.GET || method === HTTP_METHODS.DELETE) {
       // fetch 对 GET 请求等，不支持将参数传在 body 上，只能拼接 url

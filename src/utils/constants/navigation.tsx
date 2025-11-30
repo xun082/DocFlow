@@ -8,6 +8,7 @@ import {
   Podcast,
   Bot,
   Workflow,
+  Users,
 } from 'lucide-react';
 
 // 路由常量
@@ -59,6 +60,11 @@ export const NAV_ITEMS: NavItem[] = [
     name: '知识库',
     href: ROUTES.KNOWLEDGE,
     icon: <BookOpen className="w-5 h-5" />,
+  },
+  {
+    name: '通讯录',
+    href: ROUTES.CONTACTS,
+    icon: <Users className="w-5 h-5" />,
   },
   {
     name: '个人资料',
