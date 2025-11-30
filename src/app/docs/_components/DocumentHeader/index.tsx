@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
 import { FileItem } from '../DocumentSidebar/folder/type';
 
 import { Icon } from '@/components/ui/Icon';
+import { useCommentStore } from '@/stores/commentStore';
 
 // 类型定义
 interface CollaborationUser {
@@ -113,6 +115,9 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
+  // 评论面板状态
+  const { isPanelOpen, togglePanel, comments } = useCommentStore();
+
   // 获取实际显示的标题 - 优先使用documentTitle（真实文档名），其次是documentName，最后是默认值
   const displayTitle = documentTitle || documentName || '未命名文档';
 
@@ -209,6 +214,26 @@ export default function DocumentHeader({
             <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
           </>
         )}
+
+        {/* 评论按钮 */}
+        <button
+          type="button"
+          onClick={togglePanel}
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 border ${
+            isPanelOpen
+              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
+          }`}
+          aria-label="评论"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span className="hidden sm:inline text-sm font-medium">评论</span>
+          {comments.length > 0 && (
+            <span className="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-500 text-white min-w-[20px] text-center">
+              {comments.length}
+            </span>
+          )}
+        </button>
 
         {/* 分享按钮 */}
         {documentId && (

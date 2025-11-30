@@ -7,11 +7,11 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     comment: {
       /**
-       * Set a comment (add)
+       * 添加评论标记
        */
-      setComment: (commentId: string | null, markText?: string) => ReturnType;
+      setComment: (commentId?: string) => ReturnType;
       /**
-       * Unset a comment (remove)
+       * 移除评论标记
        */
       unsetComment: (commentId: string) => ReturnType;
     };
@@ -23,22 +23,36 @@ export interface MarkWithRange {
   range: Range;
 }
 
+export interface CommentInfo {
+  commentId: string;
+  from: number;
+  to: number;
+  text: string;
+}
+
 export interface CommentOptions {
   HTMLAttributes: Record<string, any>;
-  onCommentActivated: (commentId: string) => void;
+  onCommentActivated: (commentId: string | null) => void;
+  onCommentClick: (commentId: string) => void;
 }
 
 export interface CommentStorage {
   activeCommentId: string | null;
+  hoveredCommentId: string | null;
 }
 
 export const Comment = Mark.create<CommentOptions, CommentStorage>({
   name: 'comment',
 
+  // 关键：允许多个评论标记重叠
+  inclusive: false,
+  excludes: '', // 空字符串表示不排斥任何标记，允许重叠
+
   addOptions() {
     return {
       HTMLAttributes: {},
       onCommentActivated: () => {},
+      onCommentClick: () => {},
     };
   },
 
@@ -48,11 +62,6 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
         default: null,
         parseHTML: (el) => (el as HTMLSpanElement).getAttribute('data-comment-id'),
         renderHTML: (attrs) => ({ 'data-comment-id': attrs.commentId }),
-      },
-      markText: {
-        default: null,
-        parseHTML: (el) => (el as HTMLSpanElement).getAttribute('data-mark-text'),
-        renderHTML: (attrs) => ({ 'data-mark-text': attrs.markText }),
       },
     };
   },
@@ -67,7 +76,6 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
           if (commentId?.trim()) {
             return {
               commentId: commentId.trim(),
-              markText: (el as HTMLSpanElement).getAttribute('data-mark-text') || null,
             };
           }
 
@@ -78,163 +86,245 @@ export const Comment = Mark.create<CommentOptions, CommentStorage>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
+    return [
+      'span',
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        'data-comment': 'true',
+      }),
+      0,
+    ];
   },
 
   onSelectionUpdate() {
     const { selection } = this.editor.state;
-    const { $from } = this.editor.state.selection;
+    const { $from } = selection;
 
     // 只有在光标模式（选区为空）时才执行评论标记检测
     if (selection.empty) {
       const marks = $from.marks();
+      const commentMark = this.editor.schema.marks.comment;
 
-      if (marks.length > 0) {
-        const commentMark = this.editor.schema.marks.comment;
-        // 只查找评论标记
-        const activeCommentMark = marks.find((mark) => mark.type === commentMark);
+      // 获取所有评论标记
+      const commentMarks = marks.filter((mark) => mark.type === commentMark);
 
-        // 只有当找到评论标记时才触发回调
-        if (activeCommentMark) {
-          this.storage.activeCommentId = activeCommentMark.attrs.commentId || null;
+      if (commentMarks.length > 0) {
+        // 如果有多个评论，选择最后一个（最内层的）
+        const activeCommentMark = commentMarks[commentMarks.length - 1];
+        const commentId = activeCommentMark.attrs.commentId;
 
-          // 使用防抖函数包装回调，避免频繁触发，避免选择和光标同时触发，导致体验不好
+        if (this.storage.activeCommentId !== commentId) {
+          this.storage.activeCommentId = commentId || null;
+
+          // 使用防抖函数包装回调，避免频繁触发
           const debouncedOnCommentActivated = debounce(
-            (commentId: string) => {
-              this.options.onCommentActivated(commentId);
+            (id: string) => {
+              this.options.onCommentActivated(id);
             },
-            600, // 600ms 延迟，避免选择和光标同时触发，导致体验不好
-            { trailing: true },
+            300,
+            { trailing: true, leading: false },
           );
 
-          debouncedOnCommentActivated(this.storage.activeCommentId || '');
-        } else {
-          // 如果没有评论标记，清空 activeCommentId
-          this.storage.activeCommentId = null;
+          debouncedOnCommentActivated(commentId || '');
         }
       } else {
-        // 如果没有标记，清空 activeCommentId
-        this.storage.activeCommentId = null;
+        // 如果没有评论标记，清空 activeCommentId
+        if (this.storage.activeCommentId !== null) {
+          this.storage.activeCommentId = null;
+          this.options.onCommentActivated(null);
+        }
       }
     } else {
-      // 如果是选取模式，清空 activeCommentId，避免冲突
-      this.storage.activeCommentId = null;
+      // 如果是选取模式，清空 activeCommentId
+      if (this.storage.activeCommentId !== null) {
+        this.storage.activeCommentId = null;
+      }
     }
   },
 
   addStorage() {
     return {
       activeCommentId: null,
+      hoveredCommentId: null,
     };
   },
 
   addCommands() {
     return {
+      // 添加评论标记
       setComment:
-        (commentId, markText = '') =>
-        ({ editor, commands, tr, dispatch }) => {
-          const { selection } = editor.state;
-          const prev = editor.getAttributes('comment');
-          const oldCommentId = prev.commentId;
+        (commentId) =>
+        ({ commands, state }) => {
+          const { selection } = state;
 
-          // 场景一：选区模式 - 创建新评论或更新现有评论
-          if (!selection.empty) {
-            const newAttrs = {
-              commentId: uuid(),
-              markText: markText || null,
-            };
-
-            // 使用正确的命令语法设置 mark
-            return commands.setMark('comment', newAttrs);
+          // 必须有选区才能添加评论
+          if (selection.empty) {
+            return false;
           }
 
-          // 场景二：光标模式 - 更新现有评论
-          if (selection.empty && oldCommentId) {
-            const finalCommentId = commentId || oldCommentId;
-            if (!finalCommentId) return false;
+          const newCommentId = commentId || uuid();
 
-            const newAttrs = {
-              commentId: finalCommentId,
-              markText: markText || null,
-            };
-
-            const commentMarkType = editor.schema.marks.comment;
-            let markApplied = false;
-
-            tr.doc.descendants((node, pos) => {
-              if (!node.isInline) return;
-
-              const mark = node.marks.find(
-                (m) => m.type === commentMarkType && m.attrs.commentId === oldCommentId,
-              );
-
-              if (mark) {
-                const from = pos;
-                const to = pos + node.nodeSize;
-                tr.removeMark(from, to, mark); // 移除精确的 mark 实例
-                tr.addMark(from, to, commentMarkType.create(newAttrs));
-                markApplied = true;
-              }
-            });
-
-            if (markApplied && dispatch) {
-              dispatch(tr);
-
-              return true;
-            }
-          }
-
-          return false;
+          // 添加评论标记
+          return commands.setMark('comment', { commentId: newCommentId });
         },
+
+      // 移除评论标记
       unsetComment:
         (commentId) =>
-        ({ tr, dispatch }) => {
-          if (!commentId) return false;
+        ({ tr, dispatch, state }) => {
+          if (!commentId) {
+            return false;
+          }
 
           const commentMarksWithRange: MarkWithRange[] = [];
+          const commentMarkType = state.schema.marks.comment;
 
+          // 收集所有匹配的评论标记
           tr.doc.descendants((node, pos) => {
             const commentMark = node.marks.find(
-              (mark) => mark.type.name === 'comment' && mark.attrs.commentId === commentId,
+              (mark) => mark.type === commentMarkType && mark.attrs.commentId === commentId,
             );
 
-            if (!commentMark) return;
-
-            commentMarksWithRange.push({
-              mark: commentMark,
-              range: {
-                from: pos,
-                to: pos + node.nodeSize,
-              },
-            });
+            if (commentMark) {
+              commentMarksWithRange.push({
+                mark: commentMark,
+                range: {
+                  from: pos,
+                  to: pos + node.nodeSize,
+                },
+              });
+            }
           });
 
+          // 移除所有匹配的标记
           commentMarksWithRange.forEach(({ mark, range }) => {
             tr.removeMark(range.from, range.to, mark);
           });
 
-          return dispatch?.(tr);
+          if (dispatch && commentMarksWithRange.length > 0) {
+            dispatch(tr);
+
+            return true;
+          }
+
+          return false;
         },
     };
   },
 
-  // TipTap 3.x 新增：添加键盘快捷键支持
+  // 添加键盘快捷键支持
   addKeyboardShortcuts() {
     return {
       'Mod-Shift-m': () => {
         // 快捷键：Cmd/Ctrl+Shift+M 用于快速添加评论
-        return false; // 返回 false 表示不阻止默认行为
+        // 这里只是占位符，实际逻辑在外部处理
+        return false;
       },
     };
   },
 
-  // TipTap 3.x 新增：添加输入规则支持
+  // 添加输入规则支持
   addInputRules() {
     return [];
   },
 
-  // TipTap 3.x 新增：添加粘贴规则支持
+  // 添加粘贴规则支持
   addPasteRules() {
     return [];
   },
+
+  // 添加 DOM 事件处理
+  onTransaction({ editor, transaction }) {
+    // 当文档更新时，检查是否需要更新激活的评论
+    if (transaction.docChanged || transaction.selectionSet) {
+      const { selection } = editor.state;
+
+      if (selection.empty) {
+        const marks = selection.$from.marks();
+        const commentMarks = marks.filter((mark) => mark.type.name === 'comment');
+
+        if (commentMarks.length > 0) {
+          const activeCommentMark = commentMarks[commentMarks.length - 1];
+          this.storage.activeCommentId = activeCommentMark.attrs.commentId || null;
+        } else {
+          this.storage.activeCommentId = null;
+        }
+      }
+    }
+  },
+
+  // 添加 DOM 事件监听（点击评论标记）
+  onCreate() {
+    // 在编辑器创建后添加点击事件监听
+    if (typeof window !== 'undefined') {
+      const handleClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        const commentSpan = target.closest('span[data-comment="true"]');
+
+        if (commentSpan) {
+          const commentId = commentSpan.getAttribute('data-comment-id');
+
+          if (commentId) {
+            // 触发点击回调
+            this.options.onCommentClick(commentId);
+          }
+        }
+      };
+
+      this.editor.view.dom.addEventListener('click', handleClick);
+
+      // 保存清理函数
+      this.editor.on('destroy', () => {
+        this.editor.view.dom.removeEventListener('click', handleClick);
+      });
+    }
+  },
 });
+
+// 导出实用函数：获取所有评论标记
+export function getAllComments(editor: any): CommentInfo[] {
+  const comments: CommentInfo[] = [];
+  const commentMarkType = editor.schema.marks.comment;
+  const seen = new Set<string>();
+
+  if (!commentMarkType) {
+    return comments;
+  }
+
+  editor.state.doc.descendants((node: any, pos: number) => {
+    node.marks.forEach((mark: any) => {
+      if (mark.type === commentMarkType && mark.attrs.commentId) {
+        const commentId = mark.attrs.commentId;
+
+        // 避免重复
+        if (!seen.has(commentId)) {
+          seen.add(commentId);
+
+          // 找到这个评论的完整范围
+          let from = pos;
+          let to = pos + node.nodeSize;
+          let text = node.text || '';
+
+          // 查找相同 commentId 的所有节点
+          editor.state.doc.descendants((n: any, p: number) => {
+            if (
+              n.marks.some(
+                (m: any) => m.type === commentMarkType && m.attrs.commentId === commentId,
+              )
+            ) {
+              from = Math.min(from, p);
+              to = Math.max(to, p + n.nodeSize);
+
+              if (n.text) {
+                text = editor.state.doc.textBetween(from, to);
+              }
+            }
+          });
+
+          comments.push({ commentId, from, to, text });
+        }
+      }
+    });
+  });
+
+  return comments;
+}

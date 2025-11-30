@@ -158,12 +158,66 @@
     @apply caret-black;
   }
 
+  /* 评论标记样式 - Notion 风格（下划线） */
   .comment {
-    @apply bg-yellow-400 border-b-2 border-yellow-200;
+    text-decoration: underline;
+    text-decoration-color: rgba(251, 191, 36, 0.6);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
   }
 
-  .comment .comment{
-     @apply bg-yellow-700 border-b-2 border-yellow-400;
+  /* 深色模式 */
+  .dark .comment {
+    text-decoration-color: rgba(251, 191, 36, 0.5);
+  }
+
+  /* 嵌套评论 - 更深的颜色 */
+  .comment .comment {
+    text-decoration-color: rgba(251, 191, 36, 0.8);
+    text-decoration-thickness: 2.5px;
+  }
+
+  /* 三层嵌套 */
+  .comment .comment .comment {
+    text-decoration-color: rgba(251, 191, 36, 1);
+    text-decoration-thickness: 3px;
+  }
+
+  /* 激活状态 - 蓝色下划线 + 淡蓝色背景 */
+  .comment.comment-active {
+    text-decoration-color: rgba(59, 130, 246, 0.8);
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 2px;
+  }
+
+  .dark .comment.comment-active {
+    text-decoration-color: rgba(96, 165, 250, 0.8);
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+
+  /* 悬停状态 - 背景高亮 */
+  .comment:hover:not(.comment-active) {
+    background-color: rgba(251, 191, 36, 0.1);
+    border-radius: 2px;
+    text-decoration-color: rgba(251, 191, 36, 1);
+  }
+
+  .dark .comment:hover:not(.comment-active) {
+    background-color: rgba(251, 191, 36, 0.08);
+  }
+
+  /* 悬停状态（从面板悬停） */
+  .comment.comment-hovered {
+    background-color: rgba(251, 191, 36, 0.15);
+    border-radius: 2px;
+    text-decoration-color: rgba(251, 191, 36, 1);
+  }
+
+  .dark .comment.comment-hovered {
+    background-color: rgba(251, 191, 36, 0.12);
   }
 
   [data-theme='slash-command'] {

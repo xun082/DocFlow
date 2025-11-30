@@ -76,8 +76,19 @@ export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
 }
 
+// CommentOptions 接口
+interface CommentCallbacks {
+  onCommentActivated?: (commentId: string | null) => void;
+  onCommentClick?: (commentId: string) => void;
+}
+
+// 扩展 ExtensionKitProps
+interface ExtensionKitPropsWithComment extends ExtensionKitProps {
+  commentCallbacks?: CommentCallbacks;
+}
+
 // 在ExtensionKit数组中添加
-export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
+export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWithComment) => [
   Document,
   HardBreak,
   Paragraph,
@@ -403,6 +414,8 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     HTMLAttributes: {
       class: 'comment',
     },
+    onCommentActivated: commentCallbacks?.onCommentActivated || (() => {}),
+    onCommentClick: commentCallbacks?.onCommentClick || (() => {}),
   }),
 ];
 

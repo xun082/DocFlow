@@ -9,8 +9,17 @@ import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Eye } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
-import { CommentInput } from '@/app/docs/_components/CommentInput';
+// 动态导入 CommentPanel，禁用 SSR
+const CommentPanel = dynamic(
+  () =>
+    import('@/app/docs/_components/CommentPanel').then((mod) => ({ default: mod.CommentPanel })),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId } from '@/utils/cursor_color';
 import { getAuthToken } from '@/utils/cookie';
@@ -27,7 +36,6 @@ import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
 import { useCommentStore } from '@/stores/commentStore';
-import { Comment } from '@/extensions/Comment';
 
 // 类型定义
 interface CollaborationUser {
@@ -58,7 +66,7 @@ export default function DocumentPage() {
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
-  const { openComment } = useCommentStore();
+  const { openPanel, setActiveCommentId, closePanel, isPanelOpen } = useCommentStore();
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
@@ -224,22 +232,33 @@ export default function DocumentPage() {
   const editor = useEditor(
     {
       extensions: [
-        ...ExtensionKit({ provider }),
+        ...ExtensionKit({
+          provider,
+          commentCallbacks: {
+            onCommentActivated: (commentId) => {
+              // 使用 setTimeout 确保在下一个事件循环中更新状态，避免渲染期间更新
+              setTimeout(() => {
+                setActiveCommentId(commentId);
+
+                if (commentId) {
+                  openPanel();
+                }
+              }, 0);
+            },
+            onCommentClick: (commentId) => {
+              setTimeout(() => {
+                setActiveCommentId(commentId);
+                openPanel();
+              }, 0);
+            },
+          },
+        }),
         ...(doc && isIndexedDBReady
           ? [Collaboration.configure({ document: doc, field: 'content' })]
           : []),
         ...(provider && currentUser && doc && isIndexedDBReady
           ? [CollaborationCaret.configure({ provider, user: currentUser })]
           : []),
-        Comment.configure({
-          HTMLAttributes: {
-            class: 'comment',
-          },
-          onCommentActivated: (commentId) => {
-            openComment();
-            console.log('Comment activated:', commentId);
-          },
-        }),
       ],
       editable: !isReadOnly,
       editorProps: {
@@ -256,6 +275,28 @@ export default function DocumentPage() {
     },
     [doc, provider, currentUser, isReadOnly, isIndexedDBReady],
   );
+
+  // 点击编辑器内容时关闭评论面板（除非点击评论标记）
+  useEffect(() => {
+    if (!editor || !isPanelOpen) return;
+
+    const handleEditorClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const isCommentMark = target.closest('span[data-comment="true"]');
+
+      // 如果点击的不是评论标记，则关闭面板
+      if (!isCommentMark) {
+        closePanel();
+      }
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', handleEditorClick);
+
+    return () => {
+      editorElement.removeEventListener('click', handleEditorClick);
+    };
+  }, [editor, isPanelOpen, closePanel]);
 
   // 加载中状态
   if (isLoadingPermission) {
@@ -345,7 +386,7 @@ export default function DocumentPage() {
       {editor && (
         <>
           <FloatingToc editor={editor} />
-          <CommentInput editor={editor} />
+          <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
         </>
       )}
 
