@@ -1,7 +1,32 @@
 // 评论相关类型定义
 
 /**
- * 评论数据
+ * 后端返回的评论数据
+ */
+export interface CommentApiResponse {
+  id: number;
+  document_id: number;
+  author_id: number;
+  content: string;
+  mark_id: string;
+  selection: {
+    text: string;
+  } | null;
+  parent_id: number | null;
+  is_root: boolean;
+  resolved: boolean;
+  reply_count?: number;
+  created_at: string;
+  updated_at: string;
+  author: {
+    id: number;
+    name: string;
+    avatar_url: string | null;
+  };
+}
+
+/**
+ * 评论数据（前端使用）
  */
 export interface CommentThread {
   id: string;
@@ -73,6 +98,14 @@ export interface DeleteReplyRequest {
 /**
  * 获取文档评论列表的响应
  */
-export interface GetCommentsResponse {
-  comments: CommentThread[];
+export interface GetCommentsApiResponse {
+  comments: CommentApiResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }

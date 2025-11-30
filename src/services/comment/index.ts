@@ -1,3 +1,4 @@
+import request from '../request';
 import type {
   CommentThread,
   CreateCommentRequest,
@@ -6,200 +7,210 @@ import type {
   DeleteCommentRequest,
   DeleteReplyRequest,
   CommentReply,
+  CommentApiResponse,
+  GetCommentsApiResponse,
 } from './type';
 
-// 本地存储的键名
-const STORAGE_KEY = 'docflow_comments';
+/**
+ * 将后端评论数据转换为前端格式
+ */
+function transformApiResponseToThread(
+  rootComment: CommentApiResponse,
+  replies: CommentApiResponse[],
+): CommentThread {
+  // 将根评论的内容作为第一条回复
+  const allReplies: CommentReply[] = [
+    {
+      id: String(rootComment.id),
+      threadId: String(rootComment.id),
+      content: rootComment.content,
+      createdAt: rootComment.created_at,
+      userId: String(rootComment.author_id),
+      userName: rootComment.author.name,
+      userAvatar: rootComment.author.avatar_url || undefined,
+    },
+    ...replies.map((reply) => ({
+      id: String(reply.id),
+      threadId: String(rootComment.id),
+      content: reply.content,
+      createdAt: reply.created_at,
+      userId: String(reply.author_id),
+      userName: reply.author.name,
+      userAvatar: reply.author.avatar_url || undefined,
+    })),
+  ];
 
-// 从本地存储获取所有评论
-function getCommentsFromStorage(): Record<string, CommentThread[]> {
-  if (typeof window === 'undefined') return {};
-
-  const stored = localStorage.getItem(STORAGE_KEY);
-
-  return stored ? JSON.parse(stored) : {};
-}
-
-// 保存评论到本地存储
-function saveCommentsToStorage(comments: Record<string, CommentThread[]>) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
-}
-
-// 生成唯一 ID
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-// 获取当前用户信息（模拟）
-function getCurrentUser() {
   return {
-    id: 'user-1',
-    name: '当前用户',
-    avatar: undefined,
+    id: String(rootComment.id),
+    documentId: String(rootComment.document_id),
+    commentId: rootComment.mark_id,
+    text: rootComment.selection?.text || '',
+    createdAt: rootComment.created_at,
+    updatedAt: rootComment.updated_at,
+    userId: String(rootComment.author_id),
+    userName: rootComment.author.name,
+    userAvatar: rootComment.author.avatar_url || undefined,
+    resolved: rootComment.resolved,
+    replies: allReplies,
   };
 }
 
 /**
- * 评论服务 API - 本地存储版本
+ * 评论服务 API
  */
 class CommentApi {
   /**
    * 获取文档的所有评论
    */
   async getComments(documentId: string): Promise<CommentThread[]> {
-    const allComments = getCommentsFromStorage();
+    const { data, error } = await request.get<GetCommentsApiResponse>(
+      `/api/v1/comments/documents/${documentId}`,
+      {
+        params: {
+          page: 1,
+          page_size: 100,
+        },
+        cacheTime: 0, // 禁用请求库缓存
+      },
+    );
 
-    return allComments[documentId] || [];
+    if (error || !data?.data) {
+      console.error('获取评论失败:', error);
+
+      return [];
+    }
+
+    const comments = data.data.comments;
+
+    // 按 mark_id 分组
+    const commentsByMarkId = new Map<string, CommentApiResponse[]>();
+
+    comments.forEach((comment) => {
+      const markId = comment.mark_id;
+
+      if (!commentsByMarkId.has(markId)) {
+        commentsByMarkId.set(markId, []);
+      }
+
+      commentsByMarkId.get(markId)!.push(comment);
+    });
+
+    // 转换为 CommentThread 格式
+    const threads: CommentThread[] = [];
+
+    commentsByMarkId.forEach((commentsGroup) => {
+      // 找到根评论
+      const rootComment = commentsGroup.find((c) => c.is_root);
+
+      if (!rootComment) return;
+
+      // 找到所有回复
+      const replies = commentsGroup.filter((c) => !c.is_root);
+
+      threads.push(transformApiResponseToThread(rootComment, replies));
+    });
+
+    return threads;
   }
 
   /**
    * 创建评论
    */
-  async createComment(
-    data: CreateCommentRequest,
-    user?: { id: string; name: string; avatar?: string },
-  ): Promise<CommentThread> {
-    const currentUser = user || getCurrentUser();
-    const now = new Date().toISOString();
-
-    const newThread: CommentThread = {
-      id: generateId(),
-      documentId: data.documentId,
-      commentId: data.commentId, // mark_id
-      text: data.text,
-      createdAt: now,
-      updatedAt: now,
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userAvatar: currentUser.avatar,
-      replies: [
-        {
-          id: generateId(),
-          threadId: '',
+  async createComment(data: CreateCommentRequest): Promise<CommentThread> {
+    const { data: response, error } = await request.post<CommentApiResponse>(
+      `/api/v1/comments/documents/${data.documentId}`,
+      {
+        params: {
           content: data.content,
-          createdAt: now,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userAvatar: currentUser.avatar,
+          mark_id: data.commentId,
+          selected_text: data.text,
         },
-      ],
-      resolved: false,
-    };
+      },
+    );
 
-    newThread.replies[0].threadId = newThread.id;
+    if (error || !response?.data) {
+      throw new Error(error || '创建评论失败');
+    }
 
-    const allComments = getCommentsFromStorage();
-    const docComments = allComments[data.documentId] || [];
-    docComments.push(newThread);
-    allComments[data.documentId] = docComments;
-    saveCommentsToStorage(allComments);
+    const apiComment = response.data;
 
-    return newThread;
+    // 转换为前端格式
+    return transformApiResponseToThread(apiComment, []);
   }
 
   /**
-   * 更新评论（例如标记为已解决）
+   * 更新评论（标记为已解决）
    */
   async updateComment(data: UpdateCommentRequest): Promise<CommentThread> {
-    const allComments = getCommentsFromStorage();
+    const { data: response, error } = await request.patch<CommentApiResponse>(
+      `/api/v1/comments/${data.id}/resolve`,
+      {
+        params: {
+          resolved: data.resolved ?? true,
+        },
+      },
+    );
 
-    for (const documentId in allComments) {
-      const docComments = allComments[documentId];
-      const commentIndex = docComments.findIndex((c) => c.id === data.id);
-
-      if (commentIndex !== -1) {
-        docComments[commentIndex] = {
-          ...docComments[commentIndex],
-          ...data,
-          updatedAt: new Date().toISOString(),
-        };
-        saveCommentsToStorage(allComments);
-
-        return docComments[commentIndex];
-      }
+    if (error || !response?.data) {
+      throw new Error(error || '更新评论失败');
     }
 
-    throw new Error('Comment not found');
+    const apiComment = response.data;
+
+    // 转换为前端格式（没有回复信息，需要额外获取）
+    return transformApiResponseToThread(apiComment, []);
   }
 
   /**
    * 删除评论
    */
   async deleteComment(data: DeleteCommentRequest): Promise<void> {
-    const allComments = getCommentsFromStorage();
+    const { error } = await request.delete<void>(`/api/v1/comments/${data.id}`);
 
-    for (const documentId in allComments) {
-      const docComments = allComments[documentId];
-      const newComments = docComments.filter((c) => c.id !== data.id);
-
-      if (newComments.length !== docComments.length) {
-        allComments[documentId] = newComments;
-        saveCommentsToStorage(allComments);
-
-        return;
-      }
+    if (error) {
+      throw new Error(error);
     }
   }
 
   /**
    * 创建回复
    */
-  async createReply(
-    data: CreateReplyRequest,
-    user?: { id: string; name: string; avatar?: string },
-  ): Promise<CommentReply> {
-    const currentUser = user || getCurrentUser();
-    const now = new Date().toISOString();
+  async createReply(data: CreateReplyRequest): Promise<CommentReply> {
+    const { data: response, error } = await request.post<CommentApiResponse>(
+      `/api/v1/comments/${data.threadId}/replies`,
+      {
+        params: {
+          content: data.content,
+        },
+      },
+    );
 
-    const newReply: CommentReply = {
-      id: generateId(),
-      threadId: data.threadId,
-      content: data.content,
-      createdAt: now,
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userAvatar: currentUser.avatar,
-    };
-
-    const allComments = getCommentsFromStorage();
-
-    for (const documentId in allComments) {
-      const docComments = allComments[documentId];
-      const thread = docComments.find((c) => c.id === data.threadId);
-
-      if (thread) {
-        thread.replies.push(newReply);
-        thread.updatedAt = now;
-        saveCommentsToStorage(allComments);
-
-        return newReply;
-      }
+    if (error || !response?.data) {
+      throw new Error(error || '创建回复失败');
     }
 
-    throw new Error('Thread not found');
+    const apiReply = response.data;
+
+    // 转换为前端格式
+    return {
+      id: String(apiReply.id),
+      threadId: String(apiReply.parent_id),
+      content: apiReply.content,
+      createdAt: apiReply.created_at,
+      userId: String(apiReply.author_id),
+      userName: apiReply.author.name,
+      userAvatar: apiReply.author.avatar_url || undefined,
+    };
   }
 
   /**
    * 删除回复
    */
   async deleteReply(data: DeleteReplyRequest): Promise<void> {
-    const allComments = getCommentsFromStorage();
+    const { error } = await request.delete<void>(`/api/v1/comments/${data.id}`);
 
-    for (const documentId in allComments) {
-      const docComments = allComments[documentId];
-
-      for (const thread of docComments) {
-        const replyIndex = thread.replies.findIndex((r) => r.id === data.id);
-
-        if (replyIndex !== -1) {
-          thread.replies.splice(replyIndex, 1);
-          thread.updatedAt = new Date().toISOString();
-          saveCommentsToStorage(allComments);
-
-          return;
-        }
-      }
+    if (error) {
+      throw new Error(error);
     }
   }
 }
