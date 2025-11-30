@@ -13,7 +13,6 @@ import Textarea from '@/components/ui/Textarea';
 import { useCommentStore } from '@/stores/commentStore';
 import CommentApi from '@/services/comment';
 import { getAllComments } from '@/extensions/Comment';
-import { useUserQuery } from '@/hooks/useUserQuery';
 
 interface CommentPanelProps {
   editor: Editor | null;
@@ -42,7 +41,6 @@ export function CommentPanel({ editor, documentId, currentUserId }: CommentPanel
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [selectedText, setSelectedText] = useState('');
-  const { data: currentUser } = useUserQuery();
 
   // 确保组件在客户端挂载后才渲染
   useEffect(() => {
@@ -133,27 +131,16 @@ export function CommentPanel({ editor, documentId, currentUserId }: CommentPanel
       const text = editor.state.doc.textBetween(from, to);
 
       // 先创建评论（不添加标记）
-      const userInfo = currentUser
-        ? {
-            id: String(currentUser.id),
-            name: currentUser.name,
-            avatar: currentUser.avatar_url,
-          }
-        : undefined;
-
       // 生成新的 commentId
       const newCommentId = crypto.randomUUID();
 
       // 创建评论数据（使用 mark_id，不再需要 from/to）
-      const newThread = await CommentApi.createComment(
-        {
-          documentId,
-          commentId: newCommentId, // mark_id
-          text,
-          content: newCommentContent.trim(),
-        },
-        userInfo,
-      );
+      const newThread = await CommentApi.createComment({
+        documentId,
+        commentId: newCommentId, // mark_id
+        text,
+        content: newCommentContent.trim(),
+      });
 
       // ✅ 评论创建成功后，再添加编辑器标记
       // 重新选中文本范围

@@ -12,7 +12,6 @@ import { cn } from '@/utils/utils';
 import CommentApi from '@/services/comment';
 import { useCommentStore } from '@/stores/commentStore';
 import type { CommentThread as CommentThreadType } from '@/services/comment/type';
-import { useUserQuery } from '@/hooks/useUserQuery';
 
 interface CommentThreadProps {
   thread: CommentThreadType;
@@ -41,7 +40,6 @@ export function CommentThread({
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { updateComment } = useCommentStore();
-  const { data: currentUser } = useUserQuery();
 
   const handleReply = async () => {
     if (!replyContent.trim()) {
@@ -53,21 +51,10 @@ export function CommentThread({
     setIsSubmitting(true);
 
     try {
-      const userInfo = currentUser
-        ? {
-            id: String(currentUser.id),
-            name: currentUser.name,
-            avatar: currentUser.avatar_url,
-          }
-        : undefined;
-
-      const newReply = await CommentApi.createReply(
-        {
-          threadId: thread.id,
-          content: replyContent.trim(),
-        },
-        userInfo,
-      );
+      const newReply = await CommentApi.createReply({
+        threadId: thread.id,
+        content: replyContent.trim(),
+      });
 
       // 更新本地状态
       updateComment(thread.id, {
