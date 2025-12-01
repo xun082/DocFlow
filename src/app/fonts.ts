@@ -1,11 +1,12 @@
+import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 
-// 优化 Inter 字体加载 - 使用本地字体文件，只加载需要的字重
-export const inter = localFont({
-  src: '../../public/fonts/Inter.ttf',
+// 使用 Google Fonts 的 Inter - Next.js 会自动优化
+export const inter = Inter({
+  subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap', // 优化字体加载性能
-  preload: true,
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
   fallback: [
     '-apple-system',
     'BlinkMacSystemFont',

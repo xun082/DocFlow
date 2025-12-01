@@ -98,17 +98,11 @@ const timeRangeOptions = [
 ];
 
 export default function DashboardPage() {
-  const { isConnected, isConnecting, onlineUsers, connect } = useNotificationSocket();
+  // 获取 WebSocket 状态（连接逻辑已在 layout 中处理）
+  const { isConnected, onlineUsers } = useNotificationSocket();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState(1); // 默认1天
-
-  // 自动连接WebSocket
-  useEffect(() => {
-    if (!isConnected && !isConnecting) {
-      connect();
-    }
-  }, [isConnected, isConnecting, connect]);
 
   // 获取分析数据
   const fetchAnalytics = async (days: number) => {

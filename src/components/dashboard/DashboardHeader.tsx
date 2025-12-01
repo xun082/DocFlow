@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, User, Settings, LogOut, HelpCircle, Menu, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, HelpCircle, Menu, ChevronDown } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { getPageDescription, PAGE_TITLE_MAP } from '@/utils/constants/navigation';
@@ -17,37 +17,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useUserQuery, useLogoutMutation, getLocalUserData } from '@/hooks/useUserQuery';
+import NotificationDropdown from '@/components/notifications/notification-dropdown';
 
 interface DashboardHeaderProps {
   onMenuToggle?: () => void;
   showMenuButton?: boolean;
   pageTitle?: string;
 }
-
-// 模拟通知数据
-const mockNotifications = [
-  {
-    id: 1,
-    title: '新文档分享',
-    message: 'John Doe 与您分享了"项目计划.docx"',
-    time: '2分钟前',
-    unread: true,
-  },
-  {
-    id: 2,
-    title: '会议提醒',
-    message: '团队会议将在15分钟后开始',
-    time: '13分钟前',
-    unread: true,
-  },
-  {
-    id: 3,
-    title: '系统更新',
-    message: 'DocFlow 已更新到版本 2.1.0',
-    time: '1小时前',
-    unread: false,
-  },
-];
 
 // Header用户区域骨架屏
 function UserAreaSkeleton() {
@@ -72,7 +48,6 @@ export default function DashboardHeader({
   const queryClient = useQueryClient();
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
-  const [notifications] = useState(mockNotifications);
   const [localUserData, setLocalUserData] = useState<any>(undefined);
 
   // 加载本地用户数据作为fallback
@@ -86,8 +61,6 @@ export default function DashboardHeader({
 
   // 优先使用服务器数据，回退到本地数据
   const displayUser = user || localUserData;
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -145,58 +118,7 @@ export default function DashboardHeader({
           </Button>
 
           {/* 通知下拉菜单 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
-                <Bell className="h-5 w-5 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)]">
-              <DropdownMenuLabel className="flex items-center justify-between py-3">
-                <span className="font-semibold">通知中心</span>
-                {unreadCount > 0 && (
-                  <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium">
-                    {unreadCount} 条未读
-                  </span>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className="flex flex-col items-start space-y-2 p-4 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span
-                        className={`font-medium text-sm ${
-                          notification.unread ? 'text-gray-900' : 'text-gray-600'
-                        }`}
-                      >
-                        {notification.title}
-                      </span>
-                      {notification.unread && (
-                        <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-600 leading-relaxed w-full">
-                      {notification.message}
-                    </p>
-                    <span className="text-xs text-gray-400">{notification.time}</span>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-center text-blue-600 font-medium hover:bg-blue-50 focus:bg-blue-50 py-3">
-                查看所有通知
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationDropdown />
 
           {/* 用户头像下拉菜单 */}
           {displayUser ? (
