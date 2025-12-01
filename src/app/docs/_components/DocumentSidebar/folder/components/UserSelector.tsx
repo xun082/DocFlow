@@ -220,7 +220,11 @@ const UserSelector = ({
                 >
                   <div className="flex-shrink-0">
                     {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full" />
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name || '用户'}
+                        className="w-8 h-8 rounded-full"
+                      />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                         <Icon name="User" className="h-4 w-4 text-gray-500" />

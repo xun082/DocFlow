@@ -1,5 +1,6 @@
 import request, { ErrorHandler } from '../request';
-import { SearchUsersResponse, UpdateUserDto } from './type';
+import { SearchUsersResponse, UpdateUserDto, User } from './type';
+
 export const UserApi = {
   /**
    * 搜索用户
@@ -20,6 +21,17 @@ export const UserApi = {
       errorHandler,
     }),
 
+  /**
+   * 通过ID获取用户详细信息
+   * @param userId 用户ID
+   * @param errorHandler 自定义错误处理函数
+   * @returns 用户详细信息
+   */
+  getUserById: (userId: number | string, errorHandler?: ErrorHandler) =>
+    request.get<User>(`/api/v1/users/${userId}`, {
+      errorHandler,
+    }),
+
   updateUser: (data: UpdateUserDto, errorHandler?: ErrorHandler) => {
     return request.put('/api/v1/users', {
       errorHandler,
@@ -29,3 +41,6 @@ export const UserApi = {
 };
 
 export default UserApi;
+
+// 导出类型
+export * from './type';
