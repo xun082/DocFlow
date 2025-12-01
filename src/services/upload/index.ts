@@ -1,54 +1,16 @@
-import request from '@/services/request';
+import type {
+  FileExistsResponse,
+  ChunkUploadResponse,
+  ChunkInfoResponse,
+  CompleteUploadResponse,
+  UploadProgressInfo,
+  UploadImageData,
+} from './types';
+
+import request, { ErrorHandler } from '@/services/request';
 
 /**
- * 上传相关的API接口类型定义
- */
-export interface FileExistsResponse {
-  exists: boolean;
-  fileUrl?: string;
-}
-
-export interface ChunkUploadResponse {
-  success: boolean;
-  message: string;
-  isComplete?: boolean;
-  fileUrl?: string;
-}
-
-export interface ChunkInfoResponse {
-  uploadedChunks: number[];
-  totalChunks: number;
-  isComplete: boolean;
-}
-
-export interface CompleteUploadResponse {
-  success: boolean;
-  fileUrl: string;
-  fileHash?: string;
-  message: string;
-}
-
-export interface UploadProgressInfo {
-  chunkNumber: number;
-  totalChunks: number;
-  bytesUploaded: number;
-  totalBytes: number;
-  speed?: number;
-  remainingTime?: number;
-}
-
-// 定义图片上传返回的 data 结构
-export interface UploadImageData {
-  fileUrl: string;
-  fileHash: string;
-  processedFileName: string;
-  originalMimeType: string;
-  processedMimeType: string;
-  imageKitFileId: string;
-}
-
-/**
- * 上传服务类 - 完全基于你已有的 request 服务
+ * 上传服务类
  */
 export class UploadService {
   private baseUrl = '/api/v1/upload';
@@ -56,12 +18,14 @@ export class UploadService {
   /**
    * 检查文件是否已存在（基于文件哈希）
    */
-  async checkFileExists(fileHash: string) {
+  async checkFileExists(fileHash: string, errorHandler?: ErrorHandler) {
     const result = await request.get<FileExistsResponse>(`${this.baseUrl}/check-file`, {
       params: { fileHash },
-      errorHandler: (error) => {
-        console.error('检查文件存在性时出错:', error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('检查文件存在性时出错:', error);
+        }),
     });
 
     return result.data?.data || { exists: false };
@@ -70,18 +34,20 @@ export class UploadService {
   /**
    * 获取已上传的分块信息
    */
-  async getUploadedChunks(fileId: string) {
+  async getUploadedChunks(fileId: string, errorHandler?: ErrorHandler) {
     const result = await request.get<ChunkInfoResponse>(`${this.baseUrl}/chunk-info/${fileId}`, {
-      errorHandler: (error) => {
-        console.error('获取已上传分块信息时出错:', error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('获取已上传分块信息时出错:', error);
+        }),
     });
 
     return result.data?.data?.uploadedChunks || [];
   }
 
   /**
-   * 上传单个分块 - 直接使用你的 request 服务
+   * 上传单个分块
    */
   async uploadChunk(
     chunk: Blob,
@@ -94,17 +60,17 @@ export class UploadService {
     fileHash: string,
     chunkSize: number,
     onProgress?: (progress: UploadProgressInfo) => void,
+    errorHandler?: ErrorHandler,
   ) {
     const formData = new FormData();
 
-    // 根据后端API要求添加所有必要字段
     formData.append('file', chunk);
-    formData.append('fileId', fileId); // 后端需要的fileId字段
+    formData.append('fileId', fileId);
     formData.append('fileName', fileName);
     formData.append('totalSize', totalSize.toString());
     formData.append('mimeType', mimeType || 'application/octet-stream');
     formData.append('chunkNumber', chunkNumber.toString());
-    formData.append('chunkSize', chunkSize.toString()); // 后端需要的chunkSize字段
+    formData.append('chunkSize', chunkSize.toString());
     formData.append('totalChunks', totalChunks.toString());
     formData.append('fileHash', fileHash);
 
@@ -123,9 +89,11 @@ export class UploadService {
       params: formData,
       timeout: 60000,
       retries: 2,
-      errorHandler: (error) => {
-        console.error(`上传分块 ${chunkNumber} 失败:`, error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error(`上传分块 ${chunkNumber} 失败:`, error);
+        }),
     });
 
     // 触发进度回调
@@ -158,6 +126,7 @@ export class UploadService {
     fileHash: string,
     totalSize: number,
     mimeType: string,
+    errorHandler?: ErrorHandler,
   ) {
     const result = await request.post<CompleteUploadResponse>(`${this.baseUrl}/complete-file`, {
       params: {
@@ -168,9 +137,11 @@ export class UploadService {
         totalSize,
         mimeType,
       },
-      errorHandler: (error) => {
-        console.error('完成文件上传时出错:', error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('完成文件上传时出错:', error);
+        }),
     });
 
     return (
@@ -181,11 +152,13 @@ export class UploadService {
   /**
    * 取消上传
    */
-  async cancelUpload(fileId: string) {
+  async cancelUpload(fileId: string, errorHandler?: ErrorHandler) {
     const result = await request.delete<{ success: boolean }>(`${this.baseUrl}/cancel/${fileId}`, {
-      errorHandler: (error) => {
-        console.error('取消上传时出错:', error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('取消上传时出错:', error);
+        }),
     });
 
     return result.data?.data?.success || false;
@@ -194,11 +167,13 @@ export class UploadService {
   /**
    * 获取上传状态
    */
-  async getUploadStatus(fileId: string) {
+  async getUploadStatus(fileId: string, errorHandler?: ErrorHandler) {
     const result = await request.get<ChunkInfoResponse>(`${this.baseUrl}/status/${fileId}`, {
-      errorHandler: (error) => {
-        console.error('获取上传状态时出错:', error);
-      },
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('获取上传状态时出错:', error);
+        }),
     });
 
     return result.data?.data || { uploadedChunks: [], totalChunks: 0, isComplete: false };
@@ -207,22 +182,27 @@ export class UploadService {
   /**
    * 上传图片或GIF
    * @param file 要上传的图片文件
-   * @param token 授权token（可选）
    * @returns 图片URL字符串
    */
-  async uploadImage(file: File): Promise<string> {
+  async uploadImage(file: File, errorHandler?: ErrorHandler): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const { data, error } = await request.post<UploadImageData>('/api/v1/upload/avatar', {
+    const result = await request.post<UploadImageData>(`${this.baseUrl}/avatar`, {
       params: formData,
+      timeout: 30000,
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('图片上传时出错:', error);
+        }),
     });
 
-    if (error || !data?.data?.fileUrl) {
-      throw new Error(error || '图片上传失败');
+    if (result.error || !result.data?.data?.fileUrl) {
+      throw new Error(result.error || '图片上传失败');
     }
 
-    return data.data.fileUrl;
+    return result.data.data.fileUrl;
   }
 }
 
@@ -231,3 +211,6 @@ export const uploadService = new UploadService();
 
 // 导出默认实例
 export default uploadService;
+
+// 导出所有类型
+export * from './types';

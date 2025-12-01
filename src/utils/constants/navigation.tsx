@@ -9,6 +9,7 @@ import {
   Bot,
   Workflow,
   Users,
+  Building2,
 } from 'lucide-react';
 
 // 路由常量
@@ -23,6 +24,7 @@ export const ROUTES = {
   USER: '/dashboard/user',
   SETTINGS: '/dashboard/settings',
   CONTACTS: '/dashboard/contacts',
+  ORGANIZATIONS: '/dashboard/organizations',
 } as const;
 
 // 导航项接口
@@ -67,6 +69,11 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Users className="w-5 h-5" />,
   },
   {
+    name: '组织管理',
+    href: ROUTES.ORGANIZATIONS,
+    icon: <Building2 className="w-5 h-5" />,
+  },
+  {
     name: '个人资料',
     href: ROUTES.USER,
     icon: <User className="w-5 h-5" />,
@@ -89,6 +96,7 @@ export const PAGE_TITLE_MAP: Record<string, string> = {
   [ROUTES.MESSAGES]: 'AI聊天助手',
   [ROUTES.WORKFLOW]: '工作流编辑器',
   [ROUTES.CONTACTS]: '通讯录',
+  [ROUTES.ORGANIZATIONS]: '组织管理',
   [ROUTES.USER]: '个人资料',
   [ROUTES.SETTINGS]: '系统设置',
   [ROUTES.KNOWLEDGE]: '知识库管理',
@@ -106,6 +114,7 @@ export const PAGE_DESCRIPTION_MAP: Record<string, string> = {
   [ROUTES.KNOWLEDGE]: '管理和组织您的知识库内容',
   [ROUTES.PODCAST]: '管理您的播客内容和任务',
   [ROUTES.CONTACTS]: '管理您的联系人信息',
+  [ROUTES.ORGANIZATIONS]: '管理您的组织和团队协作',
 };
 
 // 获取页面标题的函数
