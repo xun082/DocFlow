@@ -65,6 +65,8 @@ import {
   Countdown,
   Gantt,
   Comment,
+  Mention,
+  mentionSuggestion,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -416,6 +418,12 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
     },
     onCommentActivated: commentCallbacks?.onCommentActivated || (() => {}),
     onCommentClick: commentCallbacks?.onCommentClick || (() => {}),
+  }),
+  Mention.configure({
+    HTMLAttributes: {
+      class: 'mention',
+    },
+    suggestion: mentionSuggestion,
   }),
 ];
 

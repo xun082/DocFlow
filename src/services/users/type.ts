@@ -6,13 +6,19 @@ export interface User {
   company?: string | null;
   created_at: string;
   email?: string | null;
-  github_id: string;
-  is_active: boolean;
-  last_login_at: string;
-  location?: string;
+  github_id?: string;
+  is_active?: boolean;
+  last_login_at?: string;
+  location?: string | null;
   role: string;
-  updated_at: string;
-  website_url?: string;
+  updated_at?: string;
+  website_url?: string | null;
+  match_score?: number;
+}
+
+export interface UserDetailResponse {
+  user: User;
+  timestamp: number;
 }
 
 export interface ImageUploadResponse {

@@ -64,3 +64,5 @@ export { Chart } from './Chart';
 export { Countdown } from './Countdown';
 export { Gantt } from './Gantt';
 export { Comment } from './Comment';
+export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache } from './Mention';
+export type { MentionUser } from './Mention';

@@ -138,11 +138,29 @@ const Page = () => {
   const [recentDocs, setRecentDocs] = useState<LatestDocumentItem[]>([]);
 
   useEffect(() => {
-    DocumentApi.GetLatestDocuments(5).then((res) => {
-      if (res?.data?.code === 200 && res.data?.data) {
-        setRecentDocs(res.data.data);
-      }
-    });
+    DocumentApi.GetLatestDocuments(5)
+      .then((res) => {
+        // 检查响应数据结构
+        if (res?.data) {
+          // 如果 data 本身就是数组
+          if (Array.isArray(res.data)) {
+            setRecentDocs(res.data);
+          }
+          // 如果 data 包含 data 属性且是数组
+          else if (res.data?.data && Array.isArray(res.data.data)) {
+            setRecentDocs(res.data.data);
+          }
+          // 如果有 code 200 和 data
+          else if (res.data?.code === 200 && res.data?.data && Array.isArray(res.data.data)) {
+            setRecentDocs(res.data.data);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('获取最新文档失败:', error);
+        // 出错时设置为空数组
+        setRecentDocs([]);
+      });
   }, []);
 
   return (
@@ -185,39 +203,46 @@ const Page = () => {
         </div>
 
         <div className="space-y-3">
-          {recentDocs.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-200"
-            >
-              {/* 文档信息 */}
-              <div className="flex items-center">
-                <div className="mr-3 p-2 bg-gray-100 rounded">
-                  {getDocIcon(doc.type.toLowerCase() as any)}
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <span className="text-gray-800 font-medium">{doc.title}</span>
-                    {/* {doc.isNew && (
+          {Array.isArray(recentDocs) && recentDocs.length > 0 ? (
+            recentDocs.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-200"
+              >
+                {/* 文档信息 */}
+                <div className="flex items-center">
+                  <div className="mr-3 p-2 bg-gray-100 rounded">
+                    {getDocIcon(doc.type.toLowerCase() as any)}
+                  </div>
+                  <div>
+                    <div className="flex items-center">
+                      <span className="text-gray-800 font-medium">{doc.title}</span>
+                      {/* {doc.isNew && (
                       <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
                         新
                       </span>
                     )} */}
-                  </div>
-                  <div className="flex items-center mt-1 text-xs text-gray-500">
-                    <span>{doc.author}</span>
-                    <span className="mx-1">•</span>
-                    <span>{doc.updated_at}</span>
+                    </div>
+                    <div className="flex items-center mt-1 text-xs text-gray-500">
+                      <span>{doc.author}</span>
+                      <span className="mx-1">•</span>
+                      <span>{doc.updated_at}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* 操作按钮，目前是一个查看图标，之后会改为一个tool工具栏，包括但不限于分享，编辑，打印，删除 */}
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <FileText className="w-4 h-4" />
-              </button>
+                {/* 操作按钮，目前是一个查看图标，之后会改为一个tool工具栏，包括但不限于分享，编辑，打印，删除 */}
+                <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <FileText className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>暂无最近文档</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

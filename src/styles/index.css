@@ -13,6 +13,7 @@
 @import './partials/draggable.css';
 @import './partials/frappe-gantt.css';
 @import './partials/youtube.css';
+@import './partials/mention.css';
 
 @custom-variant dark (&:is(.dark *));
 .bg-\[--color-bg\] {

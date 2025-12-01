@@ -1,0 +1,53 @@
+/* Mention 扩展样式 - Notion 风格 */
+.ProseMirror .mention-wrapper {
+  @apply inline;
+}
+
+.ProseMirror .mention {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-sm cursor-pointer;
+  @apply transition-all duration-200 ease-in-out;
+  @apply bg-blue-50 text-blue-700 border border-blue-200;
+  @apply shadow-sm;
+  user-select: none;
+}
+
+.ProseMirror .mention::before {
+  content: '@';
+  @apply opacity-60 mr-0.5;
+}
+
+/* 悬停效果 */
+.ProseMirror .mention:hover {
+  @apply bg-blue-100 text-blue-800 border-blue-300;
+  @apply shadow-md transform scale-[1.02];
+}
+
+/* 深色模式 */
+.dark .ProseMirror .mention {
+  @apply bg-blue-500/20 text-blue-300 border-blue-400/30;
+  @apply shadow-blue-500/10;
+}
+
+.dark .ProseMirror .mention:hover {
+  @apply bg-blue-500/30 text-blue-200 border-blue-400/50;
+  @apply shadow-blue-500/20;
+}
+
+/* 焦点状态 */
+.ProseMirror .mention:focus {
+  @apply outline-none ring-2 ring-blue-400/50 ring-offset-1;
+}
+
+.dark .ProseMirror .mention:focus {
+  @apply ring-blue-400/30;
+}
+
+/* 选中状态 */
+.ProseMirror .mention.ProseMirror-selectednode {
+  @apply ring-2 ring-blue-500 bg-blue-100;
+}
+
+.dark .ProseMirror .mention.ProseMirror-selectednode {
+  @apply ring-blue-400 bg-blue-500/25;
+}
+
