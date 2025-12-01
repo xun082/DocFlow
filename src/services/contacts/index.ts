@@ -40,7 +40,7 @@ export const ContactApi = {
    * 接受好友请求
    */
   acceptFriendRequest: (requestId: number, errorHandler?: ErrorHandler) => {
-    return request.post(`/api/v1/friend/request/${requestId}/accept`, {
+    return request.patch<void>(`/api/v1/friend/${requestId}/accept`, {
       errorHandler,
     });
   },
@@ -49,7 +49,16 @@ export const ContactApi = {
    * 拒绝好友请求
    */
   rejectFriendRequest: (requestId: number, errorHandler?: ErrorHandler) => {
-    return request.post(`/api/v1/friend/request/${requestId}/reject`, {
+    return request.patch<void>(`/api/v1/friend/${requestId}/reject`, {
+      errorHandler,
+    });
+  },
+
+  /**
+   * 删除好友
+   */
+  removeFriend: (friendId: number, errorHandler?: ErrorHandler) => {
+    return request.delete<void>(`/api/v1/friend/${friendId}`, {
       errorHandler,
     });
   },

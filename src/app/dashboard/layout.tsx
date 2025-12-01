@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { getPageTitle, NAV_ITEMS } from '@/utils/constants/navigation';
+import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,6 +15,16 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false); // 移动端默认关闭
+
+  // WebSocket 连接 - 在 layout 层级管理，确保所有 dashboard 页面都能使用
+  const { isConnected, isConnecting, connect } = useNotificationSocket();
+
+  // 自动连接 WebSocket
+  useEffect(() => {
+    if (!isConnected && !isConnecting) {
+      connect();
+    }
+  }, [isConnected, isConnecting, connect]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
