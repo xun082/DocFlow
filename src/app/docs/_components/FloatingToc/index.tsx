@@ -151,7 +151,7 @@ export function FloatingToc({ editor }: FloatingTocProps) {
                   key={item.id}
                   onClick={() => scrollToHeading(item.pos, item.id)}
                   className={`
-                    w-full text-left py-1.5 rounded-md transition-all duration-200 text-sm relative
+                    w-full text-left py-1.5 px-2 rounded-md transition-all duration-200 text-sm
                     ${
                       isActive
                         ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-medium'
@@ -159,12 +159,8 @@ export function FloatingToc({ editor }: FloatingTocProps) {
                     }
                     ${item.level === 1 ? 'font-semibold' : item.level === 2 ? 'font-medium' : 'font-normal'}
                   `}
-                  style={{ paddingLeft: `${8 + (item.level - 1) * 12}px`, paddingRight: '8px' }}
+                  style={{ paddingLeft: `${8 + (item.level - 1) * 12}px` }}
                 >
-                  {/* 高亮指示点 */}
-                  {isActive && (
-                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full" />
-                  )}
                   <span className="block truncate">{item.text}</span>
                 </button>
               );
