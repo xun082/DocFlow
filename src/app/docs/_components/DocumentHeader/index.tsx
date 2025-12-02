@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, FileText } from 'lucide-react';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
 import { FileItem } from '../DocumentSidebar/folder/type';
@@ -140,19 +140,12 @@ export default function DocumentHeader({
       {/* 左侧：文档标题 */}
       <div className="flex items-center space-x-3 min-w-0 flex-1">
         {/* 文档标题 */}
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-          {displayTitle || (isCollaborationMode ? '协作文档' : '文档编辑器')}
-        </h1>
-
-        {/* 协作状态指示器 */}
-        {isCollaborationMode && (
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-green-600 dark:text-green-400 hidden sm:inline">
-              协作中
-            </span>
-          </div>
-        )}
+        <div className="flex items-center space-x-2 min-w-0">
+          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+            {displayTitle || (isCollaborationMode ? '协作文档' : '文档编辑器')}
+          </h1>
+        </div>
       </div>
 
       {/* 右侧：协作用户列表和操作按钮 */}
@@ -162,8 +155,7 @@ export default function DocumentHeader({
           <>
             <div className="flex items-center space-x-3 px-3 py-1.5 bg-green-50/80 dark:bg-green-950/30 rounded-lg border border-green-200/50 dark:border-green-800/50">
               {/* 桌面端显示完整信息 */}
-              <div className="hidden lg:flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <div className="hidden lg:flex items-center">
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
                   在线协作
                 </span>
@@ -190,23 +182,9 @@ export default function DocumentHeader({
               </div>
 
               {/* 用户数量文字说明 */}
-              <div className="text-sm font-medium">
-                {allUsers.length === 1 ? (
-                  currentUser && allUsers[0].id === currentUser.id ? (
-                    <span className="text-blue-600 dark:text-blue-400 hidden sm:inline">
-                      只有您在线
-                    </span>
-                  ) : (
-                    <span className="text-gray-600 dark:text-gray-400 hidden sm:inline">
-                      1位用户在线
-                    </span>
-                  )
-                ) : (
-                  <span className="text-green-600 dark:text-green-400">
-                    <span className="hidden sm:inline">{allUsers.length}位用户在线</span>
-                    <span className="sm:hidden">{allUsers.length}人</span>
-                  </span>
-                )}
+              <div className="text-sm font-medium text-green-600 dark:text-green-400">
+                <span className="hidden sm:inline">{allUsers.length}位用户在线</span>
+                <span className="sm:hidden">{allUsers.length}人</span>
               </div>
             </div>
 
