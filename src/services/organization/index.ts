@@ -14,6 +14,9 @@ import type {
   UpdateMemberRoleRequest,
   GetOrganizationsQuery,
   GetRolesResponse,
+  PendingItemsResponse,
+  ProcessItemRequest,
+  InvitationListResponse,
 } from './types';
 
 /**
@@ -338,6 +341,177 @@ export class OrganizationService {
           console.error('退出组织时出错:', error);
         }),
     });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * 获取我的待处理项（邀请和申请）
+   * @param errorHandler 错误处理函数
+   */
+  async getMyPendingItems(errorHandler?: ErrorHandler) {
+    const result = await request.get<PendingItemsResponse>(`${this.baseUrl}/pending-items`, {
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('获取待处理项时出错:', error);
+        }),
+    });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data?.data;
+  }
+
+  /**
+   * 接受邀请
+   * @param data 包含邀请ID
+   * @param errorHandler 错误处理函数
+   */
+  async acceptInvitation(data: ProcessItemRequest, errorHandler?: ErrorHandler) {
+    const result = await request.post<void>(`${this.baseUrl}/invitations/accept`, {
+      params: data,
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('接受邀请时出错:', error);
+        }),
+    });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * 拒绝邀请
+   * @param data 包含邀请ID
+   * @param errorHandler 错误处理函数
+   */
+  async rejectInvitation(data: ProcessItemRequest, errorHandler?: ErrorHandler) {
+    const result = await request.post<void>(`${this.baseUrl}/invitations/reject`, {
+      params: data,
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('拒绝邀请时出错:', error);
+        }),
+    });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * 批准加入申请
+   * @param organizationId 组织ID
+   * @param data 包含申请ID
+   * @param errorHandler 错误处理函数
+   */
+  async approveJoinRequest(
+    organizationId: string | number,
+    data: ProcessItemRequest,
+    errorHandler?: ErrorHandler,
+  ) {
+    const result = await request.post<void>(`${this.baseUrl}/${organizationId}/requests/approve`, {
+      params: data,
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('批准申请时出错:', error);
+        }),
+    });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * 拒绝加入申请
+   * @param organizationId 组织ID
+   * @param data 包含申请ID
+   * @param errorHandler 错误处理函数
+   */
+  async rejectJoinRequest(
+    organizationId: string | number,
+    data: ProcessItemRequest,
+    errorHandler?: ErrorHandler,
+  ) {
+    const result = await request.post<void>(`${this.baseUrl}/${organizationId}/requests/reject`, {
+      params: data,
+      errorHandler:
+        errorHandler ||
+        ((error) => {
+          console.error('拒绝申请时出错:', error);
+        }),
+    });
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * 获取组织的邀请列表
+   * @param organizationId 组织ID
+   * @param errorHandler 错误处理函数
+   */
+  async getOrganizationInvitations(organizationId: string | number, errorHandler?: ErrorHandler) {
+    const result = await request.get<InvitationListResponse>(
+      `${this.baseUrl}/${organizationId}/invites`,
+      {
+        errorHandler:
+          errorHandler ||
+          ((error) => {
+            console.error('获取组织邀请列表时出错:', error);
+          }),
+      },
+    );
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.data?.data;
+  }
+
+  /**
+   * 取消邀请
+   * @param organizationId 组织ID
+   * @param invitationId 邀请ID
+   * @param errorHandler 错误处理函数
+   */
+  async cancelInvitation(
+    organizationId: string | number,
+    invitationId: string,
+    errorHandler?: ErrorHandler,
+  ) {
+    const result = await request.delete<void>(
+      `${this.baseUrl}/${organizationId}/invites/${invitationId}`,
+      {
+        errorHandler:
+          errorHandler ||
+          ((error) => {
+            console.error('取消邀请时出错:', error);
+          }),
+      },
+    );
 
     if (result.error) {
       throw new Error(result.error);

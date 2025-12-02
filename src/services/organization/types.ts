@@ -106,14 +106,40 @@ export interface JoinRequest {
  */
 export interface Invitation {
   id: string;
-  organization_id: string;
+  type: string;
+  status: string;
   email: string;
-  role: OrganizationRole;
-  message?: string;
-  invited_by: string;
-  status: 'pending' | 'accepted' | 'expired';
-  created_at: string;
+  role: string;
+  message: string;
+  code: string;
   expires_at: string;
+  created_at: string;
+  updated_at: string;
+  accepted_at?: string | null;
+  inviter_id: number;
+  invitee_id?: number | null;
+  organization_id?: number | null;
+  organization?: Organization;
+  inviter?: {
+    id: number;
+    name: string;
+    email: string;
+    avatar_url: string;
+  };
+  invitee?: {
+    id: number;
+    name: string;
+    email: string;
+    avatar_url: string;
+  };
+}
+
+/**
+ * 邀请列表响应
+ */
+export interface InvitationListResponse {
+  invitations: Invitation[];
+  total: number;
 }
 
 /**
@@ -140,7 +166,7 @@ export interface UpdateOrganizationRequest {
  * 邀请成员请求
  */
 export interface InviteMemberRequest {
-  email: string;
+  user_id: number;
   role?: OrganizationRole;
   message?: string;
 }
@@ -180,4 +206,21 @@ export interface GetOrganizationsQuery {
  */
 export interface GetRolesResponse {
   roles: RoleInfo[];
+}
+
+/**
+ * 待处理项响应
+ */
+export interface PendingItemsResponse {
+  invitations: Invitation[];
+  requests: JoinRequest[];
+  invitations_total: number;
+  requests_total: number;
+}
+
+/**
+ * 处理邀请/申请请求
+ */
+export interface ProcessItemRequest {
+  id: string;
 }

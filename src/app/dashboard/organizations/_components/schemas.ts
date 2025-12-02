@@ -32,7 +32,7 @@ export type UpdateOrganizationFormData = z.infer<typeof updateOrganizationSchema
  * 邀请成员表单验证 Schema
  */
 export const inviteMemberSchema = z.object({
-  email: z.string().email('请输入有效的邮箱地址'),
+  user_id: z.number({ required_error: '请选择要邀请的用户' }).int().positive(),
   role: z.nativeEnum(OrganizationRole),
   message: z.string().max(500, '邀请消息最多500个字符').optional(),
 });
