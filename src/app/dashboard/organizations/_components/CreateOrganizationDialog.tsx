@@ -32,10 +32,23 @@ import Textarea from '@/components/ui/Textarea';
 import { useToast } from '@/hooks/use-toast';
 import organizationService from '@/services/organization';
 
-export default function CreateOrganizationDialog() {
+interface CreateOrganizationDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export default function CreateOrganizationDialog({
+  open: controlledOpen,
+  onOpenChange,
+}: CreateOrganizationDialogProps = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // 如果传入了 open 和 onOpenChange，使用受控模式；否则使用非受控模式
+  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const form = useForm<CreateOrganizationFormData>({
     resolver: zodResolver(createOrganizationSchema),
@@ -83,12 +96,15 @@ export default function CreateOrganizationDialog() {
         }
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
-          <Plus className="w-4 h-4" />
-          创建组织
-        </Button>
-      </DialogTrigger>
+      {/* 只在非受控模式下显示触发按钮 */}
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button size="sm" className="gap-2">
+            <Plus className="w-4 h-4" />
+            创建组织
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

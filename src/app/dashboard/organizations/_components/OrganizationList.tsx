@@ -52,11 +52,11 @@ function OrganizationItem({
     <button
       onClick={onClick}
       className={`
-        w-full text-left p-4 rounded-lg border transition-all duration-200
+        group w-full text-left p-4 rounded-xl border transition-all duration-300 cursor-pointer
         ${
           isSelected
-            ? 'bg-blue-50 border-blue-200 shadow-sm'
-            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+            ? 'bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-300 shadow-md shadow-blue-100/50 scale-[1.02]'
+            : 'bg-white/50 border-gray-200/50 hover:border-blue-200 hover:shadow-md hover:shadow-gray-100/50 hover:scale-[1.01] hover:bg-white'
         }
       `}
     >
@@ -64,11 +64,11 @@ function OrganizationItem({
         {/* Logo/Avatar */}
         <div className="flex-shrink-0">
           {org.logo_url ? (
-            <Avatar className="w-12 h-12">
+            <Avatar className="w-12 h-12 ring-2 ring-offset-2 ring-transparent group-hover:ring-blue-100 transition-all">
               <img src={org.logo_url} alt={org.name} />
             </Avatar>
           ) : (
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
               <Building2 className="w-6 h-6 text-white" />
             </div>
           )}
@@ -140,7 +140,7 @@ export default function OrganizationList({ selectedOrgId, onSelectOrg }: Organiz
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50/30 to-transparent">
         <OrganizationListSkeleton />
       </div>
     );
@@ -149,7 +149,7 @@ export default function OrganizationList({ selectedOrgId, onSelectOrg }: Organiz
   if (error) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center shadow-sm">
           <p className="text-sm text-red-600">加载组织列表失败</p>
           <p className="text-xs text-red-500 mt-1">{(error as Error).message}</p>
         </div>
@@ -162,9 +162,9 @@ export default function OrganizationList({ selectedOrgId, onSelectOrg }: Organiz
   if (organizations.length === 0) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200/50 rounded-xl p-8 text-center shadow-sm">
           <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-sm text-gray-600 mb-1">暂无组织</p>
+          <p className="text-sm text-gray-600 mb-1 font-medium">暂无组织</p>
           <p className="text-xs text-gray-500">创建或加入一个组织开始协作</p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function OrganizationList({ selectedOrgId, onSelectOrg }: Organiz
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50/30 to-transparent">
       <div className="space-y-3">
         {organizations.map((org: Organization) => (
           <OrganizationItem

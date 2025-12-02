@@ -7,6 +7,7 @@ import { Building2, Globe, Calendar, LogOut, Trash2, UserPlus, Users } from 'luc
 
 import EditOrganizationDialog from '../_components/EditOrganizationDialog';
 import InviteMemberDialog from '../_components/InviteMemberDialog';
+import InvitationListDialog from '../_components/InvitationListDialog';
 
 import organizationService from '@/services/organization';
 import { Button } from '@/components/ui/button';
@@ -157,50 +158,56 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
         {/* 组织信息卡片 */}
         <div className="bg-white border-b border-gray-200">
           {/* 头部：Logo + 标题 + 操作按钮 */}
-          <div className="p-6">
-            <div className="flex items-start justify-between gap-4">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               {/* 左侧：Logo + 标题信息 */}
-              <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
                 {organization.logo_url ? (
-                  <Avatar className="w-16 h-16 flex-shrink-0">
+                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
                     <img src={organization.logo_url} alt={organization.name} />
                   </Avatar>
                 ) : (
-                  <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-white" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center flex-wrap gap-2 mb-2">
-                    <h1 className="text-2xl font-bold text-gray-900">{organization.name}</h1>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${getRoleBadgeColor(organization.user_role)}`}
-                    >
-                      {getRoleLabel(organization.user_role)}
-                    </Badge>
-                    {organization.is_verified && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                      {organization.name}
+                    </h1>
+                    <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="text-xs bg-green-100 text-green-700 border-green-200"
+                        className={`text-xs ${getRoleBadgeColor(organization.user_role)}`}
                       >
-                        已验证
+                        {getRoleLabel(organization.user_role)}
                       </Badge>
-                    )}
+                      {organization.is_verified && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-green-100 text-green-700 border-green-200"
+                        >
+                          已验证
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {organization.description && (
-                    <p className="text-sm text-gray-600 mb-3">{organization.description}</p>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {organization.description}
+                    </p>
                   )}
 
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-sm text-gray-600">
                     {organization.website && (
                       <a
                         href={organization.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                        className="flex items-center gap-1.5 text-blue-600 hover:underline truncate"
                       >
                         <Globe className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate">{organization.website}</span>
@@ -208,7 +215,7 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
                     )}
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span>
+                      <span className="whitespace-nowrap">
                         创建于 {new Date(organization.created_at).toLocaleDateString('zh-CN')}
                       </span>
                     </div>
@@ -217,7 +224,7 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
               </div>
 
               {/* 右侧：操作按钮 */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-shrink-0">
                 {/* 所有者：显示编辑和删除 */}
                 {isOwner && (
                   <>
@@ -225,11 +232,11 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200 flex-1 sm:flex-initial"
                       onClick={() => setShowDeleteDialog(true)}
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      删除
+                      <Trash2 className="w-4 h-4 sm:mr-1" />
+                      <span className="hidden sm:inline">删除</span>
                     </Button>
                   </>
                 )}
@@ -241,11 +248,11 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:border-orange-200"
+                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:border-orange-200 flex-1 sm:flex-initial"
                       onClick={() => setShowLeaveDialog(true)}
                     >
-                      <LogOut className="w-4 h-4 mr-1" />
-                      退出
+                      <LogOut className="w-4 h-4 sm:mr-1" />
+                      <span className="hidden sm:inline">退出</span>
                     </Button>
                   </>
                 )}
@@ -255,7 +262,7 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:border-orange-200"
+                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:border-orange-200 w-full sm:w-auto"
                     onClick={() => setShowLeaveDialog(true)}
                   >
                     <LogOut className="w-4 h-4 mr-1" />
@@ -268,36 +275,47 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
         </div>
 
         {/* 成员列表卡片 */}
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 m-4 sm:m-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">成员列表</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">成员列表</h2>
                 <Badge variant="outline" className="text-xs">
                   {members.length} 人
                 </Badge>
               </div>
-              {canInvite && <InviteMemberDialog organizationId={orgId} />}
+              {canInvite && (
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <InvitationListDialog organizationId={orgId} />
+                  <InviteMemberDialog organizationId={orgId} />
+                </div>
+              )}
             </div>
 
             {membersLoading ? (
-              <div className="grid grid-cols-6 gap-4">
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))' }}
+              >
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="flex flex-col items-center gap-2">
-                    <Skeleton className="w-16 h-16 rounded-lg" />
-                    <Skeleton className="w-16 h-4" />
-                    <Skeleton className="w-12 h-3" />
+                    <Skeleton className="w-14 h-14 rounded-lg" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-2 w-3/4" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))' }}
+              >
                 {members.map((member: Member) => (
                   <button
                     key={member.id}
                     type="button"
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
                   >
                     <div className="relative">
                       <Avatar className="w-14 h-14">
@@ -334,7 +352,7 @@ export default function OrganizationDetailPage({ params }: OrganizationDetailPag
                   <InviteMemberDialog organizationId={orgId}>
                     <button
                       type="button"
-                      className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
                     >
                       <div className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 group-hover:border-blue-500 flex items-center justify-center bg-gray-50 group-hover:bg-blue-50 transition-colors">
                         <UserPlus className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
