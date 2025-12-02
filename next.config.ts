@@ -25,6 +25,18 @@ const nextConfig: NextConfig = {
   compress: true,
   productionBrowserSourceMaps: false, // 生产环境禁用 source maps 减少体积
 
+  // 禁用过度预加载，减少资源预加载警告
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts', '@radix-ui/react-icons'],
+    // 优化 CSS 加载
+    optimizeCss: true,
+  },
+
+  // 开发模式优化
+  devIndicators: {
+    position: 'bottom-right',
+  },
+
   // 优化模块导入
   modularizeImports: {
     'lodash-es': {
@@ -58,6 +70,15 @@ const nextConfig: NextConfig = {
           /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
       },
     ];
+
+    // 开发模式下减少预加载
+    if (dev && !isServer) {
+      // 禁用某些自动优化以减少预加载警告
+      config.optimization = {
+        ...config.optimization,
+        runtimeChunk: false, // 禁用运行时 chunk
+      };
+    }
 
     // 生产环境优化（仅客户端） - 使用 Next.js 默认策略
     if (!dev && !isServer) {
