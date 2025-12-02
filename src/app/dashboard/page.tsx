@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Bot,
   Users,
@@ -17,7 +18,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
+import { useNotificationSocketContext } from '@/providers/NotificationSocketProvider';
 import { TraceApi } from '@/services/trace';
 import { AnalyticsData } from '@/services/trace/types';
 
@@ -98,8 +99,8 @@ const timeRangeOptions = [
 ];
 
 export default function DashboardPage() {
-  // 获取 WebSocket 状态（连接逻辑已在 layout 中处理）
-  const { isConnected, onlineUsers } = useNotificationSocket();
+  // 从 Context 获取 WebSocket 状态（连接逻辑已在 Provider 中处理）
+  const { isConnected, onlineUsers } = useNotificationSocketContext();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState(1); // 默认1天
@@ -432,34 +433,38 @@ export default function DashboardPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">快捷导航</h3>
             <div className="space-y-3">
-              <a
+              <Link
                 href="/dashboard/messages"
+                prefetch={false}
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
                 <Bot className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">查看消息</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/dashboard/contacts"
+                prefetch={false}
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">通讯录</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/docs"
+                prefetch={false}
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">文档协作</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/dashboard/calendar"
+                prefetch={false}
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
               >
                 <Calendar className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">查看日历</span>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

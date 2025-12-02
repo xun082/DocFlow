@@ -14,7 +14,7 @@
     "format:ci": "prettier --list-different \"**/*.{ts,tsx,js,jsx}\"",
     "prepare": "husky",
     "commit": "git-cz",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --noEmit --project tsconfig.build.json"
   },
   "dependencies": {
     "@azure/core-sse": "^2.3.0",
