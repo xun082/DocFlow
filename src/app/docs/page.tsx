@@ -206,7 +206,6 @@ const Page = () => {
   // 监听 refreshTrigger 变化，当从侧边栏触发刷新时重新获取数据
   useEffect(() => {
     if (refreshTrigger > 0 && lastOperationSource !== 'latestDoc') {
-      // console.log('🚀 ~ file: page.tsx:209 ~ lastOperationSource:', lastOperationSource);
       refreshDocuments();
     }
   }, [refreshTrigger, lastOperationSource]);

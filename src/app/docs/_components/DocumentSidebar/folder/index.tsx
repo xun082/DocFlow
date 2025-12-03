@@ -110,8 +110,6 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
 
   // 监听 refreshTrigger 变化，当从外部触发刷新时重新加载文件列表
   useEffect(() => {
-    console.log('🚀 ~ file: index.tsx:114 ~ lastOperationSource:', lastOperationSource);
-
     if (refreshTrigger > 0 && lastOperationSource !== 'side') {
       loadFiles(true);
     }
