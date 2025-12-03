@@ -10,13 +10,14 @@ import {
   FileMusic,
   FileImage,
   Share,
-  Printer,
   Trash2,
   Download,
   MoreHorizontal,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { JSX, useEffect, useState } from 'react';
+
+import { FileItem } from './_components/DocumentSidebar/folder/type';
 
 import DocumentApi from '@/services/document';
 import { LatestDocumentItem } from '@/services/document/type';
@@ -36,9 +37,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-// 导入分享 dialog
-import ShareDialog from '@/app/docs/_components/DocumentSidebar/folder/components/ShareDialog';
+import ShareDialog from '@/app/docs/_components/DocumentSidebar/folder/ShareDialog';
 import { useFileOperations } from '@/app/docs/_components/DocumentSidebar/folder/hooks/useFileOperations';
 
 interface DocStatItem {
@@ -126,6 +125,10 @@ const Page = () => {
   // 获取最新的文档
   const [recentDocs, setRecentDocs] = useState<LatestDocumentItem[]>([]);
 
+  // 分享对话框状态
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
+
   // 刷新文档列表的函数
   const refreshDocuments = async () => {
     try {
@@ -152,6 +155,20 @@ const Page = () => {
 
   // 文件操作功能
   const fileOperations = useFileOperations(refreshDocuments);
+
+  // 处理分享按钮点击
+  const handleShare = (latestDocumentItem: LatestDocumentItem) => {
+    if (latestDocumentItem.id) {
+      const fileItem: FileItem = {
+        id: latestDocumentItem.id.toString(),
+        name: latestDocumentItem.title, // 使用实际标题而不是documentName
+        type: 'file',
+        depth: 0,
+      };
+      setShareDialogFile(fileItem);
+      setShareDialogOpen(true);
+    }
+  };
 
   useEffect(() => {
     DocumentApi.GetLatestDocuments(5)
@@ -270,7 +287,7 @@ const Page = () => {
                       <Edit3 className="w-4 h-4 mr-2" />
                       编辑
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => console.log('分享文档:', doc.id)}>
+                    <DropdownMenuItem onClick={() => handleShare(doc)}>
                       <Share className="w-4 h-4 mr-2" />
                       分享
                     </DropdownMenuItem>
@@ -288,10 +305,10 @@ const Page = () => {
                       <Download className="w-4 h-4 mr-2" />
                       下载
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => console.log('打印文档:', doc.id)}>
+                    {/* <DropdownMenuItem onClick={() => console.log('打印文档:', doc.id)}>
                       <Printer className="w-4 h-4 mr-2" />
                       打印
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => {
@@ -372,11 +389,16 @@ const Page = () => {
       </Dialog>
 
       {/* 分享对话框 */}
-      <ShareDialog
-        open={fileOperations.showShareDialog}
-        onOpenChange={fileOperations.cancelShare}
-        file={fileOperations.fileToShare}
-      />
+      {shareDialogFile && (
+        <ShareDialog
+          file={shareDialogFile}
+          isOpen={shareDialogOpen}
+          onClose={() => {
+            setShareDialogOpen(false);
+            setShareDialogFile(null);
+          }}
+        />
+      )}
     </div>
   );
 };
