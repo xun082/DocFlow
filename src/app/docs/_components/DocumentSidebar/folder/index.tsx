@@ -16,6 +16,7 @@ import { useFileOperations } from './hooks/useFileOperations';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useContextMenu } from './hooks/useContextMenu';
 
+import { useSidebar } from '@/stores/sidebarStore';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -33,6 +34,7 @@ export const TRASH_ID = 'void';
 const Folder = ({ onFileSelect }: FileExplorerProps) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { refreshTrigger, lastOperationSource, triggerRefresh } = useSidebar();
 
   // 使用 Zustand stores
   const {
@@ -105,6 +107,15 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   useEffect(() => {
     loadFiles(true);
   }, [loadFiles]);
+
+  // 监听 refreshTrigger 变化，当从外部触发刷新时重新加载文件列表
+  useEffect(() => {
+    console.log('🚀 ~ file: index.tsx:114 ~ lastOperationSource:', lastOperationSource);
+
+    if (refreshTrigger > 0 && lastOperationSource !== 'side') {
+      loadFiles(true);
+    }
+  }, [refreshTrigger, lastOperationSource, loadFiles]);
 
   // URL选中逻辑
   useEffect(() => {
@@ -179,7 +190,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
       if (isRenaming) {
         finishRenaming((e.target as HTMLInputElement).value);
       } else if (newItemFolder) {
-        finishCreateNewItem();
+        finishCreateNewItem().then(() => triggerRefresh('side'));
       }
     } else if (e.key === 'Escape') {
       if (isRenaming) setIsRenaming(null);
@@ -333,7 +344,9 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
                 onContextMenu={handleContextMenu}
                 onStartCreateNewItem={startCreateNewItem}
                 onFinishRenaming={finishRenaming}
-                onFinishCreateNewItem={finishCreateNewItem}
+                onFinishCreateNewItem={() =>
+                  finishCreateNewItem().then(() => triggerRefresh('side'))
+                }
                 onCancelCreateNewItem={cancelCreateNewItem}
                 onKeyDown={handleKeyDown}
                 onSetNewItemName={setNewItemName}
@@ -417,7 +430,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
             </Button>
             <Button
               variant="destructive"
-              onClick={fileOperations.confirmDelete}
+              onClick={() => fileOperations.confirmDelete().then(() => triggerRefresh('side'))}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white transition-colors"
             >
               删除

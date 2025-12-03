@@ -271,7 +271,10 @@ export const RenderFile: React.FC<{
             )}
 
             {/* 三个点菜单 */}
-            <div className={cn('transition-all duration-300 transform hover:scale-110')}>
+            <div
+              className={cn('transition-all duration-300 transform hover:scale-110')}
+              onClick={(e) => e.stopPropagation()}
+            >
               <FileItemMenu
                 file={file}
                 onShare={onShare}

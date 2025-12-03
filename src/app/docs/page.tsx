@@ -39,6 +39,7 @@ import {
 import { Button } from '@/components/ui/button';
 import ShareDialog from '@/app/docs/_components/DocumentSidebar/folder/ShareDialog';
 import { useFileOperations } from '@/app/docs/_components/DocumentSidebar/folder/hooks/useFileOperations';
+import { useSidebar } from '@/stores/sidebarStore';
 
 interface DocStatItem {
   name: string;
@@ -129,6 +130,8 @@ const Page = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
+  const { triggerRefresh, refreshTrigger, lastOperationSource } = useSidebar();
+
   // 刷新文档列表的函数
   const refreshDocuments = async () => {
     try {
@@ -199,6 +202,14 @@ const Page = () => {
         setRecentDocs([]);
       });
   }, []);
+
+  // 监听 refreshTrigger 变化，当从侧边栏触发刷新时重新获取数据
+  useEffect(() => {
+    if (refreshTrigger > 0 && lastOperationSource !== 'latestDoc') {
+      // console.log('🚀 ~ file: page.tsx:209 ~ lastOperationSource:', lastOperationSource);
+      refreshDocuments();
+    }
+  }, [refreshTrigger, lastOperationSource]);
 
   return (
     <div className="container mx-auto px-4 py-6 overflow-auto max-h-[calc(100vh-40px)]">
@@ -379,7 +390,11 @@ const Page = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={fileOperations.confirmDelete}
+              onClick={() => {
+                fileOperations.confirmDelete().then(() => {
+                  triggerRefresh('latestDoc');
+                });
+              }}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white transition-colors"
             >
               删除
