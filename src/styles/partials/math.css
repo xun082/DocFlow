@@ -1,0 +1,107 @@
+@layer utilities {
+  /* ========================================
+     Tiptap Mathematics Extension 样式
+     参考: https://tiptap.dev/docs/editor/extensions/nodes/mathematics
+     ======================================== */
+
+  /* 数学公式渲染容器 */
+  .tiptap-mathematics-render {
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+  }
+
+  /* 可编辑的数学公式 */
+  .tiptap-mathematics-render--editable {
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .tiptap-mathematics-render--editable:hover {
+    background: #f3f4f6;
+  }
+
+  .dark .tiptap-mathematics-render--editable:hover {
+    background: #374151;
+  }
+
+  /* 行内数学公式 */
+  .tiptap-mathematics-render[data-type='inline-math'] {
+    display: inline-block;
+  }
+
+  /* 块级数学公式 */
+  .tiptap-mathematics-render[data-type='block-math'] {
+    display: block;
+    margin: 1rem 0;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+
+  .dark .tiptap-mathematics-render[data-type='block-math'] {
+    background: linear-gradient(to bottom right, #1f2937, #111827);
+    border-color: #374151;
+  }
+
+  /* 数学公式错误样式 */
+  .tiptap-mathematics-render.inline-math-error,
+  .tiptap-mathematics-render.block-math-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  .dark .tiptap-mathematics-render.inline-math-error,
+  .dark .tiptap-mathematics-render.block-math-error {
+    background: rgba(220, 38, 38, 0.1);
+    color: #f87171;
+    border-color: rgba(220, 38, 38, 0.3);
+  }
+
+  /* ========================================
+     KaTeX 全局样式调整
+     ======================================== */
+  .ProseMirror .katex {
+    @apply text-inherit;
+  }
+
+  .ProseMirror .katex-display {
+    @apply my-4;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .ProseMirror .katex-display > .katex {
+    @apply text-center;
+  }
+
+  /* 确保数学公式在深色模式下可见 */
+  .dark .katex {
+    color: inherit;
+  }
+
+  .dark .katex .mord,
+  .dark .katex .mop,
+  .dark .katex .mbin,
+  .dark .katex .mrel,
+  .dark .katex .mopen,
+  .dark .katex .mclose,
+  .dark .katex .mpunct,
+  .dark .katex .minner {
+    color: inherit;
+  }
+
+  /* 选中状态 */
+  .ProseMirror .tiptap-mathematics-render.ProseMirror-selectednode {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .dark .ProseMirror .tiptap-mathematics-render.ProseMirror-selectednode {
+    outline-color: #60a5fa;
+  }
+}
