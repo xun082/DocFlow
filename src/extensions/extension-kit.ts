@@ -2,7 +2,8 @@
 
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { isChangeOrigin } from '@tiptap/extension-collaboration';
-import { Mathematics } from '@tiptap/extension-mathematics';
+import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics';
+import { Extension } from '@tiptap/core';
 
 import {
   BlockquoteFigure,
@@ -384,12 +385,34 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   MarkdownPaste,
   SelectOnlyCode,
   Audio,
+  // 数学公式迁移扩展 - 自动将 $...$ 转换为数学节点
+  Extension.create({
+    name: 'mathMigration',
+    onCreate({ editor }) {
+      // 延迟执行，确保文档加载完成
+      setTimeout(() => {
+        migrateMathStrings(editor);
+      }, 100);
+    },
+    onUpdate({ editor }) {
+      // 每次更新时也检查（使用防抖）
+      clearTimeout((this as unknown as { migrateTimeout?: NodeJS.Timeout }).migrateTimeout);
+      (this as unknown as { migrateTimeout?: NodeJS.Timeout }).migrateTimeout = setTimeout(() => {
+        migrateMathStrings(editor);
+      }, 500);
+    },
+  }),
+  // Mathematics 扩展配置
   Mathematics.configure({
     katexOptions: {
       throwOnError: false,
-      displayMode: false,
-      output: 'html',
-      trust: false,
+      macros: {
+        '\\R': '\\mathbb{R}',
+        '\\N': '\\mathbb{N}',
+        '\\Z': '\\mathbb{Z}',
+        '\\Q': '\\mathbb{Q}',
+        '\\C': '\\mathbb{C}',
+      },
     },
   }),
   AI.configure({

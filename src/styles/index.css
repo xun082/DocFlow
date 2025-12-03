@@ -10,6 +10,7 @@
 @import './partials/syntax-highlight.css';
 @import './partials/table.css';
 @import './partials/typography.css';
+@import './partials/math.css';
 @import './partials/draggable.css';
 @import './partials/frappe-gantt.css';
 @import './partials/youtube.css';

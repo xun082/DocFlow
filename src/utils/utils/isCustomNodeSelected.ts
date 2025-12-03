@@ -59,6 +59,8 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     TableHeader.name,
     TableRow.name,
     Countdown.name,
+    'inlineMath', // 行内数学公式
+    'blockMath', // 块级数学公式
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);
