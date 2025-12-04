@@ -329,34 +329,6 @@ export const GROUPS: Group[] = [
           editor.chain().focus().setGantt().run();
         },
       },
-      {
-        name: 'inlineMath',
-        label: 'Inline Math',
-        iconName: 'Sigma',
-        description: 'Insert inline math formula',
-        aliases: ['math', 'formula', 'latex', '公式', '数学'],
-        action: (editor) => {
-          const latex = prompt('Enter LaTeX formula:', 'x^2 + y^2 = z^2');
-
-          if (latex) {
-            editor.chain().focus().insertInlineMath({ latex }).run();
-          }
-        },
-      },
-      {
-        name: 'blockMath',
-        label: 'Block Math',
-        iconName: 'Radical',
-        description: 'Insert block math formula',
-        aliases: ['blockmath', 'displaymath', '块公式'],
-        action: (editor) => {
-          const latex = prompt('Enter LaTeX formula:', '\\int_0^\\infty e^{-x^2} dx');
-
-          if (latex) {
-            editor.chain().focus().insertBlockMath({ latex }).run();
-          }
-        },
-      },
     ],
   },
 ];

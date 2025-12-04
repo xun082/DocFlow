@@ -23,13 +23,22 @@
 @layer utilities {
   .ProseMirror {
     @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-3xl;
+    overflow-x: hidden;
   }
 
   /* 新增：编辑器容器专用样式 */
+  .prose-container {
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
   .prose-container .ProseMirror {
     @apply caret-black outline-0 px-8 py-12 z-0 mx-auto max-w-4xl;
     min-height: 100%;
     height: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .dark .prose-container .ProseMirror {
@@ -236,6 +245,7 @@
     will-change: transform;
     backface-visibility: hidden;
     perspective: 1000px;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15)) drop-shadow(0 0 0 1px rgba(0, 0, 0, 0.05));
   }
 
   .tippy-box[data-plugin='textMenu'] .tippy-content {
@@ -314,6 +324,7 @@
   .text-menu-container {
     z-index: 10001 !important;
   }
+
 
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
@@ -464,6 +475,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+  html {
+    overflow-x: hidden;
   }
 }
 

@@ -21,13 +21,13 @@ export const Surface = forwardRef<HTMLDivElement, SurfaceProps>(
 
     const surfaceClass = cn(
       className,
-      'bg-white rounded-xl',
+      'bg-white rounded-xl max-w-full box-border',
       withShadow ? shadowClasses[elevation] : '',
       withBorder ? 'border border-neutral-100' : '',
     );
 
     return (
-      <div className={surfaceClass} {...props} ref={ref}>
+      <div className={surfaceClass} data-surface {...props} ref={ref}>
         {children}
       </div>
     );

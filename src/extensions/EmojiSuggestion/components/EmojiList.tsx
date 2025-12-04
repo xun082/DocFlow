@@ -14,7 +14,6 @@ import { SuggestionKeyDownProps } from '@tiptap/suggestion';
 
 import { EmojiListProps } from '../types';
 
-import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/Panel';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/utils/utils';
@@ -85,13 +84,28 @@ const EmojiList = forwardRef(
         }
       };
 
+      const itemsPerRow = 16;
+
       const upHandler = () => {
-        const newIndex = (selectedIndex + filteredItems.length - 1) % filteredItems.length;
+        const newIndex =
+          (selectedIndex - itemsPerRow + filteredItems.length) % filteredItems.length;
         setSelectedIndex(newIndex);
         scrollIntoView(newIndex);
       };
 
       const downHandler = () => {
+        const newIndex = (selectedIndex + itemsPerRow) % filteredItems.length;
+        setSelectedIndex(newIndex);
+        scrollIntoView(newIndex);
+      };
+
+      const leftHandler = () => {
+        const newIndex = (selectedIndex - 1 + filteredItems.length) % filteredItems.length;
+        setSelectedIndex(newIndex);
+        scrollIntoView(newIndex);
+      };
+
+      const rightHandler = () => {
         const newIndex = (selectedIndex + 1) % filteredItems.length;
         setSelectedIndex(newIndex);
         scrollIntoView(newIndex);
@@ -111,6 +125,18 @@ const EmojiList = forwardRef(
 
           if (event.key === 'ArrowDown') {
             downHandler();
+
+            return true;
+          }
+
+          if (event.key === 'ArrowLeft') {
+            leftHandler();
+
+            return true;
+          }
+
+          if (event.key === 'ArrowRight') {
+            rightHandler();
 
             return true;
           }
@@ -136,7 +162,7 @@ const EmojiList = forwardRef(
     }
 
     return (
-      <Panel className="max-w-[18rem] max-h-[20rem] flex flex-col min-w-[16rem]">
+      <Panel className="w-[520px] max-h-[360px] flex flex-col">
         {/* 搜索输入框 */}
         <div className="p-2 border-b">
           <Input
@@ -147,14 +173,31 @@ const EmojiList = forwardRef(
             autoFocus={true}
             onKeyDown={(e) => {
               // 处理键盘导航
+              const itemsPerRow = 16;
+
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
 
-                const newIndex = (selectedIndex + filteredItems.length - 1) % filteredItems.length;
+                const newIndex =
+                  (selectedIndex - itemsPerRow + filteredItems.length) % filteredItems.length;
 
                 setSelectedIndex(newIndex);
                 scrollToIndex(newIndex);
               } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+
+                const newIndex = (selectedIndex + itemsPerRow) % filteredItems.length;
+
+                setSelectedIndex(newIndex);
+                scrollToIndex(newIndex);
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+
+                const newIndex = (selectedIndex - 1 + filteredItems.length) % filteredItems.length;
+
+                setSelectedIndex(newIndex);
+                scrollToIndex(newIndex);
+              } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
 
                 const newIndex = (selectedIndex + 1) % filteredItems.length;
@@ -163,40 +206,45 @@ const EmojiList = forwardRef(
                 scrollToIndex(newIndex);
               } else if (e.key === 'Enter') {
                 e.preventDefault();
-
                 selectItem(selectedIndex);
               }
             }}
           />
         </div>
 
-        {/* 表情符号列表 */}
-        <div className="overflow-y-auto flex-1">
+        {/* 表情符号网格 */}
+        <div className="overflow-y-auto flex-1 p-2">
           {filteredItems.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               未找到匹配的表情符号
             </div>
           ) : (
-            filteredItems.map((item: EmojiItem, index: number) => (
-              <Button
-                ref={(el) => {
-                  itemRefs.current[index] = el;
-                }}
-                variant="ghost"
-                className={cn('justify-start w-full', index === selectedIndex && 'bg-accent')}
-                size="sm"
-                key={item.name}
-                onClick={createClickHandler(index)}
-                data-emoji-name={item.name}
-              >
-                {item.fallbackImage ? (
-                  <img src={item.fallbackImage} className="w-5 h-5" alt="emoji" />
-                ) : (
-                  item.emoji
-                )}{' '}
-                <span className="truncate text-ellipsis">:{item.name}:</span>
-              </Button>
-            ))
+            <div
+              className="grid gap-0.5"
+              style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+            >
+              {filteredItems.map((item: EmojiItem, index: number) => (
+                <button
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
+                  className={cn(
+                    'w-7 h-7 flex items-center justify-center rounded hover:bg-accent transition-colors text-lg',
+                    index === selectedIndex && 'bg-accent',
+                  )}
+                  key={item.name}
+                  onClick={createClickHandler(index)}
+                  data-emoji-name={item.name}
+                  title={`:${item.name}:`}
+                >
+                  {item.fallbackImage ? (
+                    <img src={item.fallbackImage} className="w-5 h-5" alt="emoji" />
+                  ) : (
+                    item.emoji
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </Panel>
