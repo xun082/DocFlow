@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { EditorContent, useEditor } from '@tiptap/react';
 import * as Y from 'yjs';
 import { Collaboration } from '@tiptap/extension-collaboration';
@@ -47,8 +47,12 @@ interface CollaborationUser {
 
 export default function DocumentPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const documentId = params?.room as string;
   const menuContainerRef = useRef<HTMLDivElement>(null);
+
+  // 获取URL参数中的只读模式设置
+  const forceReadOnly = searchParams?.get('readonly') === 'true';
 
   const { files } = useFileStore();
 
@@ -226,7 +230,7 @@ export default function DocumentPage() {
   }, [provider, currentUser]);
 
   // 判断是否为只读模式
-  const isReadOnly = permissionData?.permission === 'VIEW';
+  const isReadOnly = forceReadOnly || permissionData?.permission === 'VIEW';
 
   // 创建编辑器 - 只有在 IndexedDB 准备好之后才创建
   const editor = useEditor(
@@ -359,7 +363,11 @@ export default function DocumentPage() {
       {isReadOnly && (
         <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-center gap-2 text-amber-800 dark:text-amber-200">
           <Eye className="w-4 h-4" />
-          <span className="text-sm font-medium">只读模式 - 您只能查看此文档，无法编辑</span>
+          <span className="text-sm font-medium">
+            {forceReadOnly
+              ? '只读模式 - 当前以只读模式查看文档'
+              : '只读模式 - 您只能查看此文档，无法编辑'}
+          </span>
         </div>
       )}
 

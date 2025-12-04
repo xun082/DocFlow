@@ -294,7 +294,7 @@ const Page = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                      onClick={() => router.push(`/docs/${doc.id}`)}
+                      onClick={() => router.push(`/docs/${doc.id}?readonly=true`)}
                       className="cursor-pointer"
                     >
                       <Eye className="w-4 h-4 mr-2" />
