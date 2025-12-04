@@ -375,8 +375,11 @@ export default function DocumentPage() {
 
       {/* 主内容区域 */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 relative">
-          <div ref={editorContainRef} className="h-full overflow-y-auto relative w-full">
+        <div className="flex-1 relative overflow-hidden">
+          <div
+            ref={editorContainRef}
+            className="h-full overflow-y-auto overflow-x-hidden relative w-full"
+          >
             <EditorContent editor={editor} className="prose-container h-full pl-14" />
           </div>
         </div>

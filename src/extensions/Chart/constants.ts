@@ -9,14 +9,14 @@ export const CHART_CONSTANTS = {
   },
 
   // 图表高度
-  HEIGHT: 300,
+  HEIGHT: 250,
 
   // 图表边距
   MARGIN: {
-    top: 20,
-    right: 30,
-    left: 20,
-    bottom: 60,
+    top: 10,
+    right: 20,
+    left: 10,
+    bottom: 5,
   },
 
   // X轴配置

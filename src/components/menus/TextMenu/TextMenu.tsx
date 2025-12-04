@@ -60,14 +60,8 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
     <BubbleMenu
       className={selecting ? 'hidden' : ''}
       options={{
-        placement: 'top-start',
-        offset: 60,
-        shift: {
-          padding: 8,
-        },
-        flip: {
-          fallbackPlacements: ['bottom-start', 'top-end', 'bottom-end'],
-        },
+        placement: 'top',
+        offset: -60,
       }}
       editor={editor}
       pluginKey="textMenu"

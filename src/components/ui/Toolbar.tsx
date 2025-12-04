@@ -15,8 +15,8 @@ export type ToolbarWrapperProps = {
 const ToolbarWrapper = forwardRef<HTMLDivElement, ToolbarWrapperProps>(
   ({ shouldShowContent = true, children, isVertical = false, className, ...rest }, ref) => {
     const toolbarClassName = cn(
-      'text-black inline-flex h-full leading-none gap-0.5',
-      isVertical ? 'flex-col p-2' : 'flex-row p-1 items-center',
+      'text-black flex h-full leading-none gap-0.5 max-w-full',
+      isVertical ? 'flex-col p-2' : 'flex-row flex-wrap p-1 items-center',
       className,
     );
 

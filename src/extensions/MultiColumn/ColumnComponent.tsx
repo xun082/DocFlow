@@ -266,7 +266,7 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
   });
 
   return (
-    <NodeViewWrapper className="column-wrapper" style={{ width }}>
+    <NodeViewWrapper className="column-wrapper min-w-0 flex-shrink-0" style={{ width }}>
       <div
         ref={columnRef}
         data-type="column"
@@ -277,14 +277,14 @@ export default function ColumnComponent(props: ReactNodeViewProps<HTMLDivElement
         className={`p-3 rounded relative border-2 border-transparent transition-colors duration-200 ${
           isDraggable()
             ? 'hover:border-blue-400 hover:cursor-grab active:cursor-grabbing'
-            : 'hover:border-gray-300 cursor-not-allowed opacity-75'
+            : 'hover:border-gray-300'
         }`}
         style={{ backgroundColor }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDragStart={handleDragStart}
       >
-        <NodeViewContent className="column-content" />
+        <NodeViewContent className="column-content min-w-0 overflow-x-hidden" />
         {/* 右侧边框拖拽区域 */}
         <div
           className="absolute top-0 right-0 w-4 h-full cursor-ew-resize z-10"

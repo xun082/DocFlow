@@ -33,14 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Icon } from '@/components/ui/Icon';
 
 interface ChartComponentProps {
@@ -226,7 +219,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     }
 
     const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
-      <div className="h-full w-full min-h-[300px]">{children}</div>
+      <div className="h-full w-full">{children}</div>
     );
 
     try {
@@ -316,8 +309,10 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
+                size="icon"
                 className="m-4"
+                title="编辑图表"
                 onClick={() => {
                   // 每次打开对话框时都重置表单为最新数据
                   form.reset({
@@ -330,154 +325,130 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                   });
                 }}
               >
-                Edit Chart
+                <Icon name="Settings" className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl min-w-3xl overflow-scroll">
+            <DialogContent className="w-[640px] max-w-[90vw]">
               <DialogHeader>
-                <DialogTitle>Edit Chart Data</DialogTitle>
+                <DialogTitle>编辑图表数据</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSave)} className="grid gap-4 py-4">
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2"
-                    >
-                      <Icon name="Upload" />
-                      导入Excel
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls,.csv"
-                      onChange={handleExcelImport}
-                      className="hidden"
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-6 items-center gap-4">
-                        <FormLabel className="text-right">Title</FormLabel>
-                        <FormControl>
-                          <input
-                            {...field}
-                            className="col-span-5 border rounded px-3 py-2"
-                            placeholder="Chart title"
-                          />
-                        </FormControl>
-                        <FormMessage className="col-span-6 col-start-2" />
-                      </FormItem>
-                    )}
+                <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3 py-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleExcelImport}
+                    className="hidden"
                   />
-                  <FormField
-                    control={form.control}
-                    name="chartType"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-6 items-center gap-4">
-                        <FormLabel className="text-right">Chart Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="col-span-5">
-                              <SelectValue placeholder="Select chart type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.entries(CHART_CONSTANTS.CHART_TYPES).map(([key, value]) => (
-                              <SelectItem key={value} value={value}>
-                                {key.charAt(0) + key.slice(1).toLowerCase()}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="col-span-6 col-start-2" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="xKey"
-                    render={({ field }) => {
-                      // 从chartData中解析非数字键
-                      let nonNumericKeys: string[] = [];
 
-                      try {
-                        const chartData = JSON.parse(form.getValues('chartData'));
-                        nonNumericKeys = getNonNumericKeys(chartData);
-                      } catch (error) {
-                        console.error('Error parsing chart data for keys:', error);
-                      }
-
-                      return (
-                        <FormItem className="grid grid-cols-6 items-center gap-4">
-                          <FormLabel className="text-right">X Axis</FormLabel>
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem className="grid grid-cols-[80px_1fr] items-center gap-4">
+                          <FormLabel className="whitespace-nowrap">标题</FormLabel>
                           <FormControl>
-                            {nonNumericKeys.length > 0 ? (
-                              <RadioGroup
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                className="flex col-span-5 "
-                              >
-                                {nonNumericKeys.map((key) => (
-                                  <div key={key} className="flex items-center">
-                                    <FormItem className=" flex items-center gap-3 space-y-0">
-                                      <FormControl>
-                                        <RadioGroupItem
-                                          value={key}
-                                          id={key}
-                                          className="space-y-0"
-                                        />
-                                      </FormControl>
-                                      <FormLabel className="font-normal">{key}</FormLabel>
-                                    </FormItem>
-                                  </div>
-                                ))}
-                              </RadioGroup>
-                            ) : (
-                              <div className="col-span-5 text-sm text-muted-foreground">
-                                请先输入有效的图表数据或没有可用的非数字键
-                              </div>
-                            )}
+                            <input
+                              {...field}
+                              className="h-9 border rounded px-3"
+                              placeholder="图表标题"
+                            />
                           </FormControl>
-                          <FormMessage className="col-span-6 col-start-2" />
                         </FormItem>
-                      );
-                    }}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="yAxisKeys"
-                    render={({ field }) => {
-                      // 从chartData中解析可用的键
-                      let availableKeys: string[] = [];
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="chartType"
+                      render={({ field }) => (
+                        <FormItem className="grid grid-cols-[80px_1fr] items-center gap-4">
+                          <FormLabel className="whitespace-nowrap">图表类型</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="选择类型" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.entries(CHART_CONSTANTS.CHART_TYPES).map(([key, value]) => (
+                                <SelectItem key={value} value={value}>
+                                  {key.charAt(0) + key.slice(1).toLowerCase()}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="xKey"
+                      render={({ field }) => {
+                        let nonNumericKeys: string[] = [];
 
-                      try {
-                        const chartData = JSON.parse(form.getValues('chartData'));
+                        try {
+                          const chartData = JSON.parse(form.getValues('chartData'));
 
-                        if (chartData && chartData.length > 0) {
-                          // 获取第一个数据项的所有键，排除xKey
-                          const xKey = form.getValues('xKey');
-                          availableKeys = Object.keys(chartData[0]).filter((key) => key !== xKey);
+                          nonNumericKeys = getNonNumericKeys(chartData);
+                        } catch {
+                          // ignore
                         }
-                      } catch (error) {
-                        console.error('Error parsing chart data for keys:', error);
-                      }
 
-                      return (
-                        <FormItem className="grid grid-cols-6 items-center gap-4">
-                          <FormLabel className="text-right">Y Axis Keys</FormLabel>
-                          <div className="col-span-5 flex items-center gap-2">
-                            {availableKeys.length > 0 ? (
-                              availableKeys.map((key) => (
-                                <div key={key} className="flex items-center space-x-2">
-                                  <FormControl>
+                        return (
+                          <FormItem className="grid grid-cols-[80px_1fr] items-center gap-4">
+                            <FormLabel className="whitespace-nowrap">X 轴</FormLabel>
+                            <div className="flex flex-wrap gap-3">
+                              {nonNumericKeys.length > 0 ? (
+                                <RadioGroup
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                  className="flex flex-wrap gap-4"
+                                >
+                                  {nonNumericKeys.map((key) => (
+                                    <div key={key} className="flex items-center gap-1.5">
+                                      <RadioGroupItem value={key} id={key} />
+                                      <label htmlFor={key} className="text-sm cursor-pointer">
+                                        {key}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </RadioGroup>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">请先输入数据</span>
+                              )}
+                            </div>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="yAxisKeys"
+                      render={({ field }) => {
+                        let availableKeys: string[] = [];
+
+                        try {
+                          const chartData = JSON.parse(form.getValues('chartData'));
+
+                          if (chartData && chartData.length > 0) {
+                            const xKey = form.getValues('xKey');
+                            availableKeys = Object.keys(chartData[0]).filter((key) => key !== xKey);
+                          }
+                        } catch {
+                          // ignore
+                        }
+
+                        return (
+                          <FormItem className="grid grid-cols-[80px_1fr] items-center gap-4">
+                            <FormLabel className="whitespace-nowrap">Y 轴</FormLabel>
+                            <div className="flex flex-wrap gap-4">
+                              {availableKeys.length > 0 ? (
+                                availableKeys.map((key) => (
+                                  <div key={key} className="flex items-center gap-1.5">
                                     <Checkbox
+                                      id={`y-${key}`}
                                       checked={
                                         Array.isArray(field.value)
                                           ? field.value.includes(key)
@@ -493,65 +464,72 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                                             field.onChange([...currentValues, key]);
                                           }
                                         } else {
-                                          field.onChange(
-                                            currentValues.filter((value) => value !== key),
-                                          );
+                                          field.onChange(currentValues.filter((v) => v !== key));
                                         }
                                       }}
                                     />
-                                  </FormControl>
-                                  <span>{key}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="text-sm text-muted-foreground">
-                                请先输入有效的图表数据
-                              </div>
-                            )}
-                          </div>
-                          <FormMessage className="col-span-6 col-start-2" />
+                                    <label htmlFor={`y-${key}`} className="text-sm cursor-pointer">
+                                      {key}
+                                    </label>
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="text-sm text-muted-foreground">请先输入数据</span>
+                              )}
+                            </div>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="colorKey"
+                      render={({ field }) => (
+                        <FormItem className="grid grid-cols-[80px_1fr] items-center gap-4">
+                          <FormLabel className="whitespace-nowrap">颜色</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="选择颜色" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.keys(COLORS).map((colorKey) => (
+                                <SelectItem key={colorKey} value={colorKey}>
+                                  <div className="flex items-center">
+                                    <div
+                                      className="w-4 h-4 mr-2 rounded-full"
+                                      style={{ backgroundColor: COLORS[colorKey][5] }}
+                                    />
+                                    {colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormItem>
-                      );
-                    }}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="colorKey"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-6 items-center gap-4">
-                        <FormLabel className="text-right">Chart Color</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="col-span-5">
-                              <SelectValue placeholder="Select chart color" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.keys(COLORS).map((colorKey) => (
-                              <SelectItem key={colorKey} value={colorKey}>
-                                <div className="flex items-center">
-                                  <div
-                                    className="w-4 h-4 mr-2 rounded-full"
-                                    style={{ backgroundColor: COLORS[colorKey][5] }} // 使用索引5，而不是500
-                                  />
-                                  {colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="col-span-6 col-start-2" />
-                      </FormItem>
-                    )}
-                  />
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="chartData"
                     render={({ field }) => (
-                      <FormItem className="grid grid-cols-6 items-center gap-4">
-                        <FormLabel className="text-right">Data</FormLabel>
-                        <div className="col-span-5">
-                          <div className="flex justify-end mb-2">
+                      <FormItem className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <FormLabel>数据</FormLabel>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Icon name="Upload" className="w-4 h-4" />
+                              导入Excel
+                            </Button>
                             <Button
                               type="button"
                               variant="outline"
@@ -563,33 +541,32 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
                                     space_in_empty_paren: true,
                                   });
                                   field.onChange(beautified);
-                                } catch (error) {
-                                  console.error('Error formatting JSON:', error);
+                                } catch {
+                                  // ignore
                                 }
                               }}
                             >
                               格式化 JSON
                             </Button>
                           </div>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              className="h-64 font-mono text-sm"
-                              placeholder='[{"name": "Jan", "value": 100}, ...]'
-                            />
-                          </FormControl>
                         </div>
-                        <FormMessage className="col-span-6 col-start-2" />
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            className="h-[180px] w-full resize-none font-mono text-sm"
+                            placeholder='[{"name": "Jan", "value": 100}, ...]'
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
                 </form>
               </Form>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancel
+                  取消
                 </Button>
-                <Button onClick={() => form.handleSubmit(handleSave)()}>Save</Button>
+                <Button onClick={() => form.handleSubmit(handleSave)()}>保存</Button>
               </div>
             </DialogContent>
           </Dialog>

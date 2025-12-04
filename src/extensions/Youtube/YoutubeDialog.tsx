@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 
 interface YoutubeDialogProps {
   editor: Editor;
@@ -95,72 +94,42 @@ export const YoutubeDialog: React.FC<YoutubeDialogProps> = ({ editor, isOpen, on
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[580px] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-700/50 text-white shadow-2xl backdrop-blur-sm">
-        <DialogHeader className="space-y-4 pb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-            </div>
-            <div>
-              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-red-400 to-red-500 bg-clip-text text-transparent">
-                插入 YouTube 视频
-              </DialogTitle>
-              <DialogDescription className="text-slate-400 text-sm">
-                输入 YouTube 视频链接并选择合适的尺寸
-              </DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
+          <DialogTitle>插入 YouTube 视频</DialogTitle>
+          <DialogDescription>输入 YouTube 视频链接并选择合适的尺寸</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 pt-2">
+        <div className="space-y-4 py-4">
           {/* URL 输入 */}
-          <div className="space-y-3">
-            <Label htmlFor="youtube-url" className="text-sm font-medium text-slate-300">
-              YouTube 视频链接
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="youtube-url">YouTube 视频链接</Label>
             <Input
               id="youtube-url"
               type="url"
               placeholder="https://www.youtube.com/watch?v=..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-red-500 focus:ring-red-500/20"
             />
           </div>
 
-          {/* 预设尺寸 */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-slate-300">预设尺寸</Label>
-            <div className="grid grid-cols-2 gap-3">
+          {/* 尺寸设置 */}
+          <div className="space-y-2">
+            <Label>尺寸</Label>
+            <div className="flex gap-2">
               {PRESET_SIZES.map((size) => (
-                <button
+                <Button
                   key={size.label}
                   onClick={() => handlePresetSize(size.width, size.height)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-                    width === size.width && height === size.height
-                      ? 'border-red-500 bg-red-500/10 shadow-lg shadow-red-500/20'
-                      : 'border-slate-600 bg-slate-800/30 hover:border-slate-500'
-                  }`}
+                  variant={width === size.width && height === size.height ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1"
                 >
-                  <div className="text-center">
-                    <div className="font-medium text-white mb-1">{size.label}</div>
-                    <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs">
-                      {size.width} × {size.height}
-                    </Badge>
-                  </div>
-                </button>
+                  {size.label}
+                </Button>
               ))}
             </div>
-          </div>
-
-          {/* 自定义尺寸 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="width" className="text-sm font-medium text-slate-300">
-                宽度
-              </Label>
+            <div className="flex gap-2 items-center">
               <Input
                 id="width"
                 type="number"
@@ -168,13 +137,10 @@ export const YoutubeDialog: React.FC<YoutubeDialogProps> = ({ editor, isOpen, on
                 max="1920"
                 value={width}
                 onChange={(e) => setWidth(parseInt(e.target.value) || 560)}
-                className="bg-slate-800/50 border-slate-600 text-white focus:border-red-500 focus:ring-red-500/20"
+                className="flex-1"
+                placeholder="宽度"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="height" className="text-sm font-medium text-slate-300">
-                高度
-              </Label>
+              <span className="text-muted-foreground">×</span>
               <Input
                 id="height"
                 type="number"
@@ -182,35 +148,28 @@ export const YoutubeDialog: React.FC<YoutubeDialogProps> = ({ editor, isOpen, on
                 max="1080"
                 value={height}
                 onChange={(e) => setHeight(parseInt(e.target.value) || 315)}
-                className="bg-slate-800/50 border-slate-600 text-white focus:border-red-500 focus:ring-red-500/20"
+                className="flex-1"
+                placeholder="高度"
               />
             </div>
           </div>
 
           {/* 错误信息 */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
             </div>
           )}
+        </div>
 
-          {/* 操作按钮 */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              onClick={handleClose}
-              variant="outline"
-              className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading || !url.trim()}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-red-500/25 transition-all duration-200"
-            >
-              {isLoading ? '插入中...' : '插入视频'}
-            </Button>
-          </div>
+        {/* 操作按钮 */}
+        <div className="flex justify-end gap-2">
+          <Button onClick={handleClose} variant="outline">
+            取消
+          </Button>
+          <Button onClick={handleSubmit} disabled={isLoading || !url.trim()}>
+            {isLoading ? '插入中...' : '插入视频'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
