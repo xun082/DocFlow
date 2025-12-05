@@ -184,7 +184,10 @@ export default function CreateOrganizationDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
                 disabled={createMutation.isPending}
               >
                 取消
