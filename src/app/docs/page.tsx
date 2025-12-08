@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { JSX, useEffect, useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 import { FileItem } from './_components/DocumentSidebar/folder/type';
 
@@ -273,7 +275,12 @@ const Page = () => {
                     <div className="flex items-center mt-1 text-xs text-gray-500">
                       <span>{doc.author}</span>
                       <span className="mx-1">•</span>
-                      <span>{doc.updated_at}</span>
+                      <span>
+                        {formatDistanceToNow(new Date(doc.updated_at), {
+                          addSuffix: true,
+                          locale: zhCN,
+                        })}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -281,13 +288,13 @@ const Page = () => {
                 {/* 操作按钮 - DropdownMenu 下拉菜单 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                      onClick={() => router.push(`/docs/${doc.id}`)}
+                      onClick={() => router.push(`/docs/${doc.id}?readonly=true`)}
                       className="cursor-pointer"
                     >
                       <Eye className="w-4 h-4 mr-2" />
