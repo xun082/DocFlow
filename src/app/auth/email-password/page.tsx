@@ -2,7 +2,6 @@
 
 import React, { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { Lock, ArrowLeft, Star, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -152,90 +151,38 @@ export default function EmailPasswordLoginPage() {
         </div>
       }
     >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="min-h-screen relative overflow-hidden bg-black"
-      >
-        {/* 背景动效（与邮箱验证码页一致） */}
+      <div className="min-h-screen relative overflow-hidden bg-black">
+        {/* 背景效果（与邮箱验证码页一致） */}
         <div className="absolute inset-0">
           {/* 主色光晕 */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.2 }}
-            transition={{ duration: 2, delay: 0.2 }}
-            className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatType: 'reverse',
-              }}
-              className="w-full h-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full"
-            />
-          </motion.div>
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl">
+            <div className="w-full h-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full" />
+          </div>
 
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.15 }}
-            transition={{ duration: 2, delay: 0.6 }}
-            className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatType: 'reverse',
-                delay: 2,
-              }}
-              className="w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full"
-            />
-          </motion.div>
+          <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl">
+            <div className="w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full" />
+          </div>
 
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.1 }}
-            transition={{ duration: 2, delay: 1 }}
-            className="absolute top-1/2 right-1/3 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.25, 1], opacity: [0.1, 0.3, 0.1] }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatType: 'reverse',
-                delay: 1,
-              }}
-              className="w-full h-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full"
-            />
-          </motion.div>
+          <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl">
+            <div className="w-full h-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full" />
+          </div>
 
           {/* 网格背景 */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[length:60px_60px]" />
         </div>
 
         {/* 漂浮星星元素 */}
-        <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: [0, 1, 0], y: -100 }}
-              transition={{ duration: 8 + i * 2, repeat: Infinity, delay: i * 1.5, ease: 'linear' }}
-              className="absolute"
-              style={{ left: `${15 + i * 15}%`, top: '100%' }}
+              className="absolute opacity-50"
+              style={{ left: `${15 + i * 15}%`, top: `${20 + i * 10}%` }}
             >
               <Star className="w-3 h-3 text-white/20" />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* 顶部切换按钮 */}
         <div className="relative z-10 pt-10 flex items-center justify-center">
@@ -268,80 +215,23 @@ export default function EmailPasswordLoginPage() {
         </div>
 
         {/* 主卡片区域：根据 activeTab 切换显示 */}
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="relative z-10 min-h-screen flex items-center justify-center p-4"
-        >
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
           <div className="w-full max-w-lg">
             {/* 登录卡片 */}
             {activeTab === 'login' && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="relative group"
-              >
-                {/* 发光边框 */}
-                <motion.div
-                  animate={{
-                    background: [
-                      'linear-gradient(45deg, #8b5cf6, #a855f7, #d946ef)',
-                      'linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)',
-                      'linear-gradient(225deg, #ec4899, #a855f7, #06b6d4)',
-                      'linear-gradient(315deg, #8b5cf6, #ec4899, #3b82f6)',
-                    ],
-                  }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                  className="absolute -inset-1 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500"
-                />
-
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500"
-                >
+              <div className="relative group">
+                <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500">
                   {/* 头部 */}
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                    className="text-center mb-8"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.8 }}
-                      className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer"
-                    ></motion.div>
-
-                    <motion.h1
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 1 }}
-                      className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3"
-                    >
+                  <div className="text-center mb-8">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3">
                       邮箱密码登录
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 1.2 }}
-                      className="text-lg text-gray-300 font-light"
-                    >
-                      请输入您的邮箱和密码
-                    </motion.p>
-                  </motion.div>
+                    <p className="text-lg text-gray-300 font-light">请输入您的邮箱和密码</p>
+                  </div>
 
                   {/* 表单 */}
-                  <motion.form
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.4 }}
-                    onSubmit={handleLoginSubmit}
-                    className="space-y-6"
-                  >
+                  <form onSubmit={handleLoginSubmit} className="space-y-6">
                     <div className="space-y-3">
                       <Label htmlFor="email" className="text-gray-300 font-medium">
                         邮箱地址
@@ -390,12 +280,7 @@ export default function EmailPasswordLoginPage() {
                       </div>
                     </div>
 
-                    <motion.div
-                      whileHover={{ scale: isLoginSubmitting ? 1 : 1.02 }}
-                      whileTap={{ scale: isLoginSubmitting ? 1 : 0.98 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                      className="relative group"
-                    >
+                    <div className="relative group">
                       {/* 按钮发光效果 */}
                       <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
 
@@ -410,27 +295,17 @@ export default function EmailPasswordLoginPage() {
                           }
                         }}
                       >
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          initial={{ x: '-100%' }}
-                          whileHover={{ x: '100%' }}
-                          transition={{ duration: 0.6 }}
-                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                         <div className="relative flex items-center justify-center space-x-3">
                           <span>登录</span>
                         </div>
                       </Button>
-                    </motion.div>
-                  </motion.form>
+                    </div>
+                  </form>
 
                   {/* 返回按钮 */}
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.8 }}
-                    className="mt-6 text-center"
-                  >
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <div className="mt-6 text-center">
+                    <div>
                       <Button
                         variant="link"
                         className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
@@ -440,92 +315,36 @@ export default function EmailPasswordLoginPage() {
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         返回登录页
                       </Button>
-                    </motion.div>
-                  </motion.div>
+                    </div>
+                  </div>
 
                   {/* 安全提示 */}
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 2 }}
-                    className="mt-6 text-center"
-                  >
+                  <div className="mt-6 text-center">
                     <div className="inline-flex items-center justify-center space-x-2 text-gray-400">
                       <Lock className="w-4 h-4" />
                       <span>为了你的账户安全，请勿在不可信设备保存密码</span>
                     </div>
-                  </motion.div>
-                </motion.div>
-              </motion.div>
+                  </div>
+                </div>
+              </div>
             )}
 
-            {/* 注册卡片 */}
             {activeTab === 'register' && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="relative group"
-              >
-                {/* 发光边框 */}
-                <motion.div
-                  animate={{
-                    background: [
-                      'linear-gradient(45deg, #8b5cf6, #a855f7, #d946ef)',
-                      'linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)',
-                      'linear-gradient(225deg, #ec4899, #a855f7, #06b6d4)',
-                      'linear-gradient(315deg, #8b5cf6, #ec4899, #3b82f6)',
-                    ],
-                  }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                  className="absolute -inset-1 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500"
-                />
+              <div className="relative group">
+                <div className="absolute -inset-1 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500" />
 
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500"
-                >
+                <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500">
                   {/* 头部 */}
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                    className="text-center mb-8"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.8 }}
-                      className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer"
-                    ></motion.div>
-
-                    <motion.h1
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 1 }}
-                      className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3"
-                    >
+                  <div className="text-center mb-8">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3">
                       邮箱密码注册
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 1.2 }}
-                      className="text-lg text-gray-300 font-light"
-                    >
-                      请输入您的邮箱和密码完成注册
-                    </motion.p>
-                  </motion.div>
+                    <p className="text-lg text-gray-300 font-light">请输入您的邮箱和密码完成注册</p>
+                  </div>
 
                   {/* 表单 */}
-                  <motion.form
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.4 }}
-                    onSubmit={handleRegisterSubmit}
-                    className="space-y-6"
-                  >
+                  <form onSubmit={handleRegisterSubmit} className="space-y-6">
                     <div className="space-y-3">
                       <Label htmlFor="reg-email" className="text-gray-300 font-medium">
                         邮箱地址
@@ -604,12 +423,7 @@ export default function EmailPasswordLoginPage() {
                       </div>
                     </div>
 
-                    <motion.div
-                      whileHover={{ scale: isRegisterSubmitting ? 1 : 1.02 }}
-                      whileTap={{ scale: isRegisterSubmitting ? 1 : 0.98 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                      className="relative group"
-                    >
+                    <div className="relative group">
                       {/* 按钮发光效果 */}
                       <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
 
@@ -624,12 +438,7 @@ export default function EmailPasswordLoginPage() {
                           }
                         }}
                       >
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          initial={{ x: '-100%' }}
-                          whileHover={{ x: '100%' }}
-                          transition={{ duration: 0.6 }}
-                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                         <div className="relative flex items-center justify-center space-x-3">
                           {registerMutation.isPending || regSubmittingRef.current ? (
                             <>
@@ -643,17 +452,12 @@ export default function EmailPasswordLoginPage() {
                           )}
                         </div>
                       </Button>
-                    </motion.div>
-                  </motion.form>
+                    </div>
+                  </form>
 
                   {/* 返回按钮 */}
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.8 }}
-                    className="mt-6 text-center"
-                  >
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <div className="mt-6 text-center">
+                    <div>
                       <Button
                         variant="link"
                         className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
@@ -663,8 +467,8 @@ export default function EmailPasswordLoginPage() {
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         返回登录页
                       </Button>
-                    </motion.div>
-                  </motion.div>
+                    </div>
+                  </div>
 
                   {/* 加载遮罩（注册中） */}
                   {(registerMutation.isPending || regSubmittingRef.current) && (
@@ -673,12 +477,12 @@ export default function EmailPasswordLoginPage() {
                       <span className="ml-2 text-white/80">注册中...</span>
                     </div>
                   )}
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </Suspense>
   );
 }

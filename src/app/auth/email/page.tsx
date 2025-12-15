@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -219,97 +218,31 @@ function EmailLoginContent() {
   const isLoginDisabled = !isValid || emailLoginMutation.isPending || loggingInRef.current;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      className="min-h-screen relative overflow-hidden bg-black"
-    >
+    <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Background Effects - matching main login page */}
       <div className="absolute inset-0">
         {/* Main gradient orbs */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.2 }}
-          transition={{ duration: 2, delay: 0.2 }}
-          className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl"
-        >
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              repeatType: 'reverse',
-            }}
-            className="w-full h-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full"
-          />
-        </motion.div>
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl opacity-20">
+          <div className="w-full h-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full" />
+        </div>
 
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.15 }}
-          transition={{ duration: 2, delay: 0.6 }}
-          className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
-        >
-          <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.2, 0.5, 0.2],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              repeatType: 'reverse',
-              delay: 2,
-            }}
-            className="w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full"
-          />
-        </motion.div>
+        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl opacity-15">
+          <div className="w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full" />
+        </div>
 
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.1 }}
-          transition={{ duration: 2, delay: 1 }}
-          className="absolute top-1/2 right-1/3 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"
-        >
-          <motion.div
-            animate={{
-              scale: [1, 1.25, 1],
-              opacity: [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              repeatType: 'reverse',
-              delay: 1,
-            }}
-            className="w-full h-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full"
-          />
-        </motion.div>
+        <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl opacity-10">
+          <div className="w-full h-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full" />
+        </div>
 
         {/* Grid background */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[length:60px_60px]" />
       </div>
 
       {/* Floating star elements */}
-      <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: [0, 1, 0], y: -100 }}
-            transition={{
-              duration: 8 + i * 2,
-              repeat: Infinity,
-              delay: i * 1.5,
-              ease: 'linear',
-            }}
             className="absolute"
             style={{
               left: `${15 + i * 15}%`,
@@ -317,85 +250,33 @@ function EmailLoginContent() {
             }}
           >
             <Star className="w-3 h-3 text-white/20" />
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1, delay: 0.3 }}
-        className="relative z-10 min-h-screen flex items-center justify-center p-4"
-      >
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-lg">
           {/* Main login card */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="relative group"
-          >
+          <div className="relative group">
             {/* Glowing border effect */}
-            <motion.div
-              animate={{
-                background: [
-                  'linear-gradient(45deg, #8b5cf6, #a855f7, #d946ef)',
-                  'linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)',
-                  'linear-gradient(225deg, #ec4899, #a855f7, #06b6d4)',
-                  'linear-gradient(315deg, #8b5cf6, #ec4899, #3b82f6)',
-                ],
-              }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-              className="absolute -inset-1 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500"
-            />
+            <div className="absolute -inset-1 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500" />
 
-            <motion.div
-              whileHover={{ y: -3 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500"
-            >
+            <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 transition-all duration-500">
               {/* Header */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="text-center mb-8"
-              >
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.8 }}
-                  className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer"
-                >
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer">
                   <Mail className="w-8 h-8 text-white" />
-                </motion.div>
+                </div>
 
-                <motion.h1
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 1 }}
-                  className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3"
-                >
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3">
                   邮箱验证码登录
-                </motion.h1>
+                </h1>
 
-                <motion.p
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
-                  className="text-lg text-gray-300 font-light"
-                >
-                  请输入您的邮箱和验证码
-                </motion.p>
-              </motion.div>
+                <p className="text-lg text-gray-300 font-light">请输入您的邮箱和验证码</p>
+              </div>
 
               {/* Form */}
-              <motion.form
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.4 }}
-                onSubmit={handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-3">
                   <Label htmlFor="email" className="text-gray-300 font-medium">
                     邮箱地址
@@ -411,14 +292,10 @@ function EmailLoginContent() {
                     autoComplete="email"
                   />
                   {errors.email && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center space-x-2 text-red-400 text-sm"
-                    >
+                    <div className="flex items-center space-x-2 text-red-400 text-sm">
                       <AlertCircle className="h-4 w-4" />
                       <span>{errors.email.message}</span>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
 
@@ -439,10 +316,7 @@ function EmailLoginContent() {
                       maxLength={CODE_LENGTH}
                       autoComplete="one-time-code"
                     />
-                    <motion.div
-                      whileHover={{ scale: isSendCodeDisabled ? 1 : 1.02 }}
-                      whileTap={{ scale: isSendCodeDisabled ? 1 : 0.98 }}
-                    >
+                    <div>
                       <Button
                         type="button"
                         variant="outline"
@@ -460,36 +334,23 @@ function EmailLoginContent() {
                             ? '发送中...'
                             : '获取验证码'}
                       </Button>
-                    </motion.div>
+                    </div>
                   </div>
                   {errors.code && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center space-x-2 text-red-400 text-sm"
-                    >
+                    <div className="flex items-center space-x-2 text-red-400 text-sm">
                       <AlertCircle className="h-4 w-4" />
                       <span>{errors.code.message}</span>
-                    </motion.div>
+                    </div>
                   )}
                   {countdown > 0 && !errors.code && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center space-x-2 text-green-400 text-sm"
-                    >
+                    <div className="flex items-center space-x-2 text-green-400 text-sm">
                       <CheckCircle className="h-4 w-4" />
                       <span>验证码已发送，{countdown}秒后可重新发送</span>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
 
-                <motion.div
-                  whileHover={{ scale: isLoginDisabled ? 1 : 1.02 }}
-                  whileTap={{ scale: isLoginDisabled ? 1 : 0.98 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  className="relative group"
-                >
+                <div className="relative group">
                   {/* Enhanced glow effect for login button */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
 
@@ -504,12 +365,6 @@ function EmailLoginContent() {
                       }
                     }}
                   >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: '100%' }}
-                      transition={{ duration: 0.6 }}
-                    />
                     <div className="relative flex items-center justify-center space-x-3">
                       <Mail className="w-6 h-6" />
                       <span>
@@ -519,17 +374,12 @@ function EmailLoginContent() {
                       </span>
                     </div>
                   </Button>
-                </motion.div>
-              </motion.form>
+                </div>
+              </form>
 
               {/* Back button */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.8 }}
-                className="mt-6 text-center"
-              >
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <div className="mt-6 text-center">
+                <div>
                   <Button
                     variant="link"
                     className="text-gray-400 hover:text-white transition-colors duration-300 p-0 cursor-pointer disabled:cursor-not-allowed"
@@ -539,21 +389,12 @@ function EmailLoginContent() {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     返回登录页
                   </Button>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
 
               {/* Security tip */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 2 }}
-                className="mt-6 text-center"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.01, y: -1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className="relative group cursor-default"
-                >
+              <div className="mt-6 text-center">
+                <div className="relative group cursor-default">
                   {/* Subtle glow effect */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -568,13 +409,13 @@ function EmailLoginContent() {
                       验证码有效期为5分钟，请及时输入
                     </p>
                   </div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -583,16 +424,12 @@ export default function EmailLoginPage() {
   return (
     <Suspense
       fallback={
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="min-h-screen relative overflow-hidden bg-black flex items-center justify-center"
-        >
+        <div className="min-h-screen relative overflow-hidden bg-black flex items-center justify-center">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-12 w-12 text-violet-500 animate-spin" />
             <p className="text-lg font-medium text-gray-300">加载中...</p>
           </div>
-        </motion.div>
+        </div>
       }
     >
       <EmailLoginContent />
