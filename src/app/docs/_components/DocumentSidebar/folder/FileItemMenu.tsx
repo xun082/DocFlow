@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 
 import { FileItem } from './type';
 
+import { useToast } from '@/hooks/use-toast';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils/utils';
 
@@ -29,6 +30,72 @@ const FileItemMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { toast } = useToast();
+
+  // 简单的PDF导出功能
+  const handleExportPDF = async () => {
+    try {
+      // 获取编辑器内容 - 尝试多个可能的选择器
+      const editorSelectors = [
+        '.prose-container .ProseMirror',
+        '.ProseMirror',
+        '[contenteditable="true"]',
+        '.editor',
+        '#editor',
+      ];
+
+      let editorElement: HTMLElement | null = null;
+
+      for (const selector of editorSelectors) {
+        editorElement = document.querySelector(selector) as HTMLElement;
+        if (editorElement) break;
+      }
+
+      if (!editorElement) {
+        throw new Error('找不到编辑器内容，请确保页面有可编辑的文档内容');
+      }
+
+      const title = file.name || '文档';
+
+      try {
+        // 动态导入 html2pdf
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        // 简单的PDF配置
+        const options = {
+          filename: `${title}_${new Date().toISOString().split('T')[0]}.pdf`,
+          margin: 10,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+        };
+
+        // 生成并保存PDF
+        await html2pdf().set(options).from(editorElement).save();
+
+        toast({
+          title: '导出成功',
+          description: `PDF文档 "${title}.pdf" 已下载`,
+        });
+      } catch (pdfError) {
+        console.error('PDF生成失败:', pdfError);
+        toast({
+          title: '导出失败',
+          description: 'PDF生成失败，请重试',
+          variant: 'destructive',
+        });
+      } finally {
+        // 清理临时元素
+      }
+    } catch (error) {
+      console.error('导出PDF失败:', error);
+      toast({
+        title: '导出失败',
+        description: '无法获取文档内容',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -82,6 +149,13 @@ const FileItemMenu = ({
       icon: 'Copy',
       label: '复制',
       action: () => onDuplicate?.(file),
+      show: !!onDuplicate,
+      className: 'text-gray-600 hover:bg-gray-50',
+    },
+    {
+      icon: 'FileText',
+      label: '导出PDF',
+      action: () => handleExportPDF(),
       show: !!onDuplicate,
       className: 'text-gray-600 hover:bg-gray-50',
     },
