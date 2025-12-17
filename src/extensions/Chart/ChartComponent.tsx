@@ -296,7 +296,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
 
   return (
     <NodeViewWrapper
-      className="chart-extension"
+      className="chart-extension break-before-page"
       onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
     >
       <Card className="w-full">

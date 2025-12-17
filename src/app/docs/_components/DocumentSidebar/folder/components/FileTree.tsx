@@ -35,6 +35,7 @@ export interface FileTreeProps {
   onRename: (file: FileItem) => void;
   onDuplicate: (file: FileItem) => void;
   onDownload: (file: FileItem) => void;
+  onExportPDF: (file: FileItem) => void;
 }
 
 const FileTree: React.FC<FileTreeProps> = (props) => {

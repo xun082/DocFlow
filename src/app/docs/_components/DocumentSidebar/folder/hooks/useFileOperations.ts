@@ -17,6 +17,7 @@ interface UseFileOperationsReturn {
   fileToDelete: FileItem | null;
   confirmDelete: () => Promise<void>;
   cancelDelete: () => void;
+  handleExportPDF: (file: FileItem) => Promise<void>;
 }
 
 export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOperationsReturn => {
@@ -170,6 +171,59 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     }
   };
 
+  // 处理文件导出pdf
+  const handleExportPDF = async (file: FileItem) => {
+    try {
+      // 获取编辑器内容 - 尝试多个可能的选择器
+      const editorSelectors = [
+        '.prose-container .ProseMirror',
+        '.ProseMirror',
+        '[contenteditable="true"]',
+        '.editor',
+        '#editor',
+      ];
+
+      let editorElement: HTMLElement | null = null;
+
+      for (const selector of editorSelectors) {
+        editorElement = document.querySelector(selector) as HTMLElement;
+        if (editorElement) break;
+      }
+
+      if (!editorElement) {
+        throw new Error('找不到编辑器内容，请确保页面有可编辑的文档内容');
+      }
+
+      const title = file.name || '文档';
+
+      try {
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        // 简单的PDF配置
+        const options = {
+          filename: `${title}_${new Date().toISOString().split('T')[0]}.pdf`,
+          margin: 10,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 4 },
+          jsPDF: { unit: 'mm', format: 'a4' },
+          pagebreak: { mode: 'avoid-all' },
+        };
+
+        // 生成并保存PDF
+        await html2pdf().set(options).from(editorElement).save();
+
+        toast.success(`PDF文档 "${title}.pdf" 已下载`);
+      } catch (pdfError) {
+        console.error('PDF生成失败:', pdfError);
+        toast('PDF生成失败，请重试');
+      } finally {
+      }
+    } catch (error) {
+      console.error('导出PDF失败:', error);
+      toast('无法获取文档内容');
+    }
+  };
+
   return {
     handleShare,
     handleDownload,
@@ -188,5 +242,6 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     fileToDelete,
     confirmDelete,
     cancelDelete,
+    handleExportPDF,
   };
 };
