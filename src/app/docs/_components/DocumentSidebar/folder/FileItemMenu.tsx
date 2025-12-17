@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { FileItem } from './type';
 
@@ -31,6 +32,10 @@ const FileItemMenu = ({
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+
+  // 直接判断当前是否在文档详情页
+  const isInDocumentDetail = /^\/docs\/\d+/.test(pathname);
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -91,7 +96,7 @@ const FileItemMenu = ({
       icon: 'FileText',
       label: '导出PDF',
       action: () => onExportPDF?.(file),
-      show: !!onExportPDF,
+      show: !!onExportPDF && isInDocumentDetail,
       className: 'text-gray-600 hover:bg-gray-50',
     },
     {
