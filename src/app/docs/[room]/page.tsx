@@ -36,6 +36,7 @@ import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
 import { useCommentStore } from '@/stores/commentStore';
+import { useEditorStore } from '@/stores/editorStore';
 
 // 类型定义
 interface CollaborationUser {
@@ -71,6 +72,7 @@ export default function DocumentPage() {
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const { openPanel, setActiveCommentId, closePanel, isPanelOpen } = useCommentStore();
+  const { setEditor, clearEditor } = useEditorStore();
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
@@ -276,8 +278,18 @@ export default function DocumentPage() {
       },
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
+      onCreate: ({ editor }) => {
+        // 编辑器创建后，将实例存储到store中
+        if (editor && documentId) {
+          setEditor(editor, documentId);
+        }
+      },
+      onDestroy: () => {
+        // 编辑器销毁时，清除store中的实例
+        clearEditor();
+      },
     },
-    [doc, provider, currentUser, isReadOnly, isIndexedDBReady],
+    [doc, provider, currentUser, isReadOnly, isIndexedDBReady, documentId, setEditor, clearEditor],
   );
 
   // 点击编辑器内容时关闭评论面板（除非点击评论标记）
@@ -295,12 +307,26 @@ export default function DocumentPage() {
     };
 
     const editorElement = editor.view.dom;
-    editorElement.addEventListener('click', handleEditorClick);
 
-    return () => {
-      editorElement.removeEventListener('click', handleEditorClick);
-    };
+    // 确保元素仍然存在于DOM中
+    if (editorElement && document.body.contains(editorElement)) {
+      editorElement.addEventListener('click', handleEditorClick);
+
+      return () => {
+        // 再次检查元素是否仍然存在于DOM中
+        if (editorElement && document.body.contains(editorElement)) {
+          editorElement.removeEventListener('click', handleEditorClick);
+        }
+      };
+    }
   }, [editor, isPanelOpen, closePanel]);
+
+  // 组件卸载时清理编辑器实例
+  useEffect(() => {
+    return () => {
+      clearEditor();
+    };
+  }, [clearEditor]);
 
   // 加载中状态
   if (isLoadingPermission) {

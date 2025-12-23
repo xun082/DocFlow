@@ -14,6 +14,7 @@ interface FileItemMenuProps {
   onRename?: (file: FileItem) => void;
   onDuplicate?: (file: FileItem) => void;
   onDownload?: (file: FileItem) => void;
+  onExportDOCX?: (file: FileItem) => void;
   className?: string;
 }
 
@@ -24,6 +25,7 @@ const FileItemMenu = ({
   onRename,
   onDuplicate,
   onDownload,
+  onExportDOCX,
   className,
 }: FileItemMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,6 +79,13 @@ const FileItemMenu = ({
       action: () => onDownload?.(file),
       show: !!onDownload && file.type === 'file',
       className: 'text-green-600 hover:bg-green-50',
+    },
+    {
+      icon: 'FileText',
+      label: '导出DOCX',
+      action: () => onExportDOCX?.(file),
+      show: file.type === 'file',
+      className: 'text-purple-600 hover:bg-purple-50',
     },
     {
       icon: 'Copy',

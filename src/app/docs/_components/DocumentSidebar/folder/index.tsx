@@ -353,6 +353,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
                 onRename={handleRename}
                 onDuplicate={fileOperations.handleDuplicate}
                 onDownload={fileOperations.handleDownload}
+                onExportDOCX={fileOperations.handleExportDOCX}
               />
             </>
           )}
