@@ -19,7 +19,7 @@ interface UseFileOperationsReturn {
   fileToDelete: FileItem | null;
   confirmDelete: () => Promise<void>;
   cancelDelete: () => void;
-  handleExportDOCX: () => void;
+  handleExportDOCX: (file: FileItem) => void;
 }
 
 export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOperationsReturn => {
@@ -177,16 +177,26 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
   // 下载 docx
   const handleExportDOCX = async (file: FileItem) => {
     try {
-      if (!editor) {
-        toast.warning('请先打开文档后再导出DOCX');
+      // 如果当前文档不是要导出的文档，先导航到该文档
+      if (documentId !== file.id.toString()) {
+        toast.warning(`需要先打开文档，当前文档ID${documentId}`);
 
-        return;
+        // 使用路由导航到目标文档
+        const currentPath = window.location.pathname;
+        const targetPath = `/docs/${file.id}`;
+
+        if (currentPath !== targetPath) {
+          // 导航到目标文档
+          window.location.href = targetPath;
+          toast.info(`正在打开文档 "${file.name}"，请稍后重新点击导出`);
+
+          return;
+        }
       }
 
-      if (documentId !== file.id.toString()) {
-        alert('请先打开该文档后再导出DOCX');
-
-        toast.warning('请先打开该文档后再导出DOCX');
+      // 检查编辑器是否已准备好
+      if (!editor) {
+        toast.warning('编辑器尚未准备好，请稍后再试');
 
         return;
       }
@@ -215,8 +225,11 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 100);
+
+      toast.success(`文档 "${file.name}" 导出成功`);
     } catch (error: any) {
-      alert(`导出DOCX失败: ${error.message || '未知错误'}`);
+      console.error('导出DOCX失败:', error);
+      toast.error(`导出DOCX失败: ${error.message || '未知错误'}`);
     }
   };
 
@@ -238,6 +251,6 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     fileToDelete,
     confirmDelete,
     cancelDelete,
-    handleExportDOCX: () => handleExportDOCX,
+    handleExportDOCX,
   };
 };
