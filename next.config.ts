@@ -2,6 +2,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 import { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import path from 'path';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -104,6 +105,11 @@ const nextConfig: NextConfig = {
         },
       };
     }
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      html2canvas: path.resolve(__dirname, 'node_modules/html2canvas-pro'),
+    };
 
     return config;
   },

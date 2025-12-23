@@ -354,6 +354,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
                 onDuplicate={fileOperations.handleDuplicate}
                 onDownload={fileOperations.handleDownload}
                 onExportDOCX={fileOperations.handleExportDOCX}
+                onExportPDF={fileOperations.handleExportPDF}
               />
             </>
           )}

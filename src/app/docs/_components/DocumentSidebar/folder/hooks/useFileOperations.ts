@@ -19,6 +19,7 @@ interface UseFileOperationsReturn {
   fileToDelete: FileItem | null;
   confirmDelete: () => Promise<void>;
   cancelDelete: () => void;
+  handleExportPDF: (file: FileItem) => Promise<void>;
   handleExportDOCX: (file: FileItem) => void;
 }
 
@@ -26,6 +27,7 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
   const { editor, documentId } = useEditorStore();
+
   // 处理文件分享
   const handleShare = (file: FileItem) => {
     // 这个会在主组件中处理，因为涉及到状态管理
@@ -174,29 +176,72 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     }
   };
 
+  // 处理文件导出pdf
+  const handleExportPDF = async (file: FileItem) => {
+    try {
+      // 获取编辑器内容 - 尝试多个可能的选择器
+      const editorSelectors = [
+        '.prose-container .ProseMirror',
+        '.ProseMirror',
+        '[contenteditable="true"]',
+        '.editor',
+        '#editor',
+      ];
+
+      let editorElement: HTMLElement | null = null;
+
+      for (const selector of editorSelectors) {
+        editorElement = document.querySelector(selector) as HTMLElement;
+        if (editorElement) break;
+      }
+
+      if (!editorElement) {
+        throw new Error('找不到编辑器内容，请确保页面有可编辑的文档内容');
+      }
+
+      const title = file.name || '文档';
+
+      try {
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        // 简单的PDF配置
+        const options = {
+          filename: `${title}_${new Date().toISOString().split('T')[0]}.pdf`,
+          margin: 10,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 4 },
+          jsPDF: { unit: 'mm', format: 'a4' },
+          pagebreak: { mode: 'avoid-all' },
+        };
+
+        // 生成并保存PDF
+        await html2pdf().set(options).from(editorElement).save();
+
+        toast.success(`PDF文档 "${title}.pdf" 已下载`);
+      } catch (pdfError) {
+        console.error('PDF生成失败:', pdfError);
+        toast('PDF生成失败，请重试');
+      } finally {
+      }
+    } catch (error) {
+      console.error('导出PDF失败:', error);
+      toast('无法获取文档内容');
+    }
+  };
+
   // 下载 docx
   const handleExportDOCX = async (file: FileItem) => {
     try {
-      // 如果当前文档不是要导出的文档，先导航到该文档
-      if (documentId !== file.id.toString()) {
-        toast.warning(`需要先打开文档，当前文档ID${documentId}`);
+      if (!editor) {
+        toast.warning('请先打开文档后再导出DOCX');
 
-        // 使用路由导航到目标文档
-        const currentPath = window.location.pathname;
-        const targetPath = `/docs/${file.id}`;
-
-        if (currentPath !== targetPath) {
-          // 导航到目标文档
-          window.location.href = targetPath;
-          toast.info(`正在打开文档 "${file.name}"，请稍后重新点击导出`);
-
-          return;
-        }
+        return;
       }
 
-      // 检查编辑器是否已准备好
-      if (!editor) {
-        toast.warning('编辑器尚未准备好，请稍后再试');
+      if (documentId !== file.id.toString()) {
+        alert('请先打开该文档后再导出DOCX');
+
+        toast.warning('请先打开该文档后再导出DOCX');
 
         return;
       }
@@ -225,11 +270,8 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 100);
-
-      toast.success(`文档 "${file.name}" 导出成功`);
     } catch (error: any) {
-      console.error('导出DOCX失败:', error);
-      toast.error(`导出DOCX失败: ${error.message || '未知错误'}`);
+      alert(`导出DOCX失败: ${error.message || '未知错误'}`);
     }
   };
 
@@ -251,6 +293,7 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     fileToDelete,
     confirmDelete,
     cancelDelete,
+    handleExportPDF,
     handleExportDOCX,
   };
 };
