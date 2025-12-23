@@ -1,44 +1,46 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useEmailPasswordLogin } from '@/hooks/useAuth';
 
+const emailPasswordLoginSchema = z.object({
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(1, '请输入密码'),
+});
+
+type EmailPasswordLoginFormData = z.infer<typeof emailPasswordLoginSchema>;
+
 export default function EmailPasswordLoginForm() {
   const emailPasswordMutation = useEmailPasswordLogin();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const loggingInRef = useRef(false);
-  const isSubmitting = emailPasswordMutation.isPending || loggingInRef.current;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<EmailPasswordLoginFormData>({
+    resolver: zodResolver(emailPasswordLoginSchema),
+    mode: 'onChange',
+  });
 
-    if (!email || !password) {
-      toast.warning('请输入邮箱和密码');
-
+  const onSubmit = async (data: EmailPasswordLoginFormData) => {
+    if (emailPasswordMutation.isPending) {
       return;
     }
-
-    if (emailPasswordMutation.isPending || loggingInRef.current) {
-      return;
-    }
-
-    loggingInRef.current = true;
 
     emailPasswordMutation.mutate(
-      { email, password },
+      { email: data.email, password: data.password },
       {
         onSuccess: () => {},
-        onError: () => {
-          loggingInRef.current = false;
-        },
+        onError: () => {},
       },
     );
   };
@@ -47,7 +49,7 @@ export default function EmailPasswordLoginForm() {
     <div className="w-full">
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
         {/* 表单 */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-3">
             <Label htmlFor="email" className="text-gray-300 font-medium">
               邮箱地址
@@ -56,15 +58,14 @@ export default function EmailPasswordLoginForm() {
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="请输入邮箱地址"
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
+                className={`bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 ${errors.email ? 'border-red-500 focus:border-red-500' : 'focus:border-violet-400'}`}
                 autoComplete="email"
-                required
-                disabled={isSubmitting}
+                disabled={isSubmitting || emailPasswordMutation.isPending}
+                {...register('email')}
               />
             </div>
+            {errors.email && <p className="text-sm text-red-400">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-3">
@@ -75,13 +76,11 @@ export default function EmailPasswordLoginForm() {
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="请输入密码"
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-white/15 focus:border-violet-400"
+                className={`bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-white/15 ${errors.password ? 'border-red-500 focus:border-red-500' : 'focus:border-violet-400'}`}
                 autoComplete="current-password"
-                required
-                disabled={isSubmitting}
+                disabled={isSubmitting || emailPasswordMutation.isPending}
+                {...register('password')}
               />
               <button
                 type="button"
@@ -92,6 +91,7 @@ export default function EmailPasswordLoginForm() {
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+            {errors.password && <p className="text-sm text-red-400">{errors.password.message}</p>}
           </div>
 
           <div className="relative group">
