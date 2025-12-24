@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useEmailPasswordRegister } from '@/hooks/useAuth';
 
-// 注册表单验证 schema
 const emailPasswordRegisterSchema = z
   .object({
     email: z
@@ -52,13 +51,8 @@ export default function EmailPasswordRegisterForm() {
   const isSubmitting = registerMutation.isPending || submittingRef.current;
 
   const onSubmit = (data: EmailPasswordRegisterFormData) => {
-    // 双重检查防止重复提交
-    if (registerMutation.isPending || submittingRef.current) {
-      return;
-    }
-
+    if (registerMutation.isPending || submittingRef.current) return;
     submittingRef.current = true;
-
     registerMutation.mutate(
       { email: data.email, password: data.password, confirmPassword: data.confirmPassword },
       {
@@ -71,124 +65,112 @@ export default function EmailPasswordRegisterForm() {
   };
 
   return (
-    <div className="w-full">
-      <div className="bg-gray-100/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-300">
-        {/* 表单 */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-3">
-            <Label htmlFor="reg-email" className="text-gray-700 font-medium">
-              邮箱地址
-            </Label>
+    <div className="bg-gray-100/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-300">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-3">
+          <Label htmlFor="reg-email" className="text-gray-700 font-medium">
+            邮箱地址
+          </Label>
+          <Input
+            id="reg-email"
+            type="email"
+            placeholder="请输入邮箱地址"
+            {...register('email')}
+            className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
+              errors.email ? 'border-gray-600 focus:border-gray-600' : ''
+            }`}
+            autoComplete="email"
+            disabled={isSubmitting}
+          />
+          {errors.email && (
+            <div className="flex items-center space-x-2 text-gray-800 text-xs">
+              <AlertCircle className="h-3 w-3" />
+              <span>{errors.email.message}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="reg-password" className="text-gray-700 font-medium">
+            设置密码
+          </Label>
+          <div className="relative">
             <Input
-              id="reg-email"
-              type="email"
-              placeholder="请输入邮箱地址"
-              {...register('email')}
-              className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
-                errors.email ? 'border-gray-600 focus:border-gray-600' : ''
+              id="reg-password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="请输入密码（至少 6 位）"
+              {...register('password')}
+              className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
+                errors.password ? 'border-gray-600 focus:border-gray-600' : ''
               }`}
-              autoComplete="email"
+              autoComplete="new-password"
               disabled={isSubmitting}
             />
-            {errors.email && (
-              <div className="flex items-center space-x-2 text-gray-800 text-xs">
-                <AlertCircle className="h-3 w-3" />
-                <span>{errors.email.message}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="reg-password" className="text-gray-700 font-medium">
-              设置密码
-            </Label>
-            <div className="relative">
-              <Input
-                id="reg-password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="请输入密码（至少 6 位）"
-                {...register('password')}
-                className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
-                  errors.password ? 'border-gray-600 focus:border-gray-600' : ''
-                }`}
-                autoComplete="new-password"
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                aria-label={showPassword ? '隐藏密码' : '显示密码'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-              </button>
-            </div>
-            {errors.password && (
-              <div className="flex items-center space-x-2 text-gray-800 text-xs">
-                <AlertCircle className="h-3 w-3" />
-                <span>{errors.password.message}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="reg-confirm" className="text-gray-700 font-medium">
-              确认密码
-            </Label>
-            <div className="relative">
-              <Input
-                id="reg-confirm"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="请再次输入密码"
-                {...register('confirmPassword')}
-                className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
-                  errors.confirmPassword ? 'border-gray-600 focus:border-gray-600' : ''
-                }`}
-                autoComplete="new-password"
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                aria-label={showConfirmPassword ? '隐藏密码' : '显示密码'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                onClick={() => setShowConfirmPassword((v) => !v)}
-              >
-                {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <div className="flex items-center space-x-2 text-gray-800 text-xs">
-                <AlertCircle className="h-3 w-3" />
-                <span>{errors.confirmPassword.message}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="relative group">
-            <Button
-              type="submit"
-              className="relative w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer"
-              onClick={(e) => {
-                if (!isValid || isSubmitting) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}
+            <button
+              type="button"
+              aria-label={showPassword ? '隐藏密码' : '显示密码'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowPassword((v) => !v)}
             >
-              <div className="relative flex items-center justify-center space-x-3">
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <span>注册中...</span>
-                  </>
-                ) : (
-                  <span>注册</span>
-                )}
-              </div>
-            </Button>
+              {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </button>
           </div>
-        </form>
-      </div>
+          {errors.password && (
+            <div className="flex items-center space-x-2 text-gray-800 text-xs">
+              <AlertCircle className="h-3 w-3" />
+              <span>{errors.password.message}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="reg-confirm" className="text-gray-700 font-medium">
+            确认密码
+          </Label>
+          <div className="relative">
+            <Input
+              id="reg-confirm"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="请再次输入密码"
+              {...register('confirmPassword')}
+              className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
+                errors.confirmPassword ? 'border-gray-600 focus:border-gray-600' : ''
+              }`}
+              autoComplete="new-password"
+              disabled={isSubmitting}
+            />
+            <button
+              type="button"
+              aria-label={showConfirmPassword ? '隐藏密码' : '显示密码'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+            >
+              {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <div className="flex items-center space-x-2 text-gray-800 text-xs">
+              <AlertCircle className="h-3 w-3" />
+              <span>{errors.confirmPassword.message}</span>
+            </div>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isValid || isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span>注册中...</span>
+            </>
+          ) : (
+            <span>注册</span>
+          )}
+        </Button>
+      </form>
     </div>
   );
 }
