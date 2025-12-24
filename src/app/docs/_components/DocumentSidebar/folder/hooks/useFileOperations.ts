@@ -1,10 +1,12 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { generateDOCX } from 'tiptap-extension-export-docx';
 
 import { FileItem } from '../type';
 
 import DocumentApi from '@/services/document';
 import { CreateDocumentDto } from '@/services/document/type';
+import { useEditorStore } from '@/stores/editorStore';
 
 interface UseFileOperationsReturn {
   handleShare: (file: FileItem) => void;
@@ -18,11 +20,14 @@ interface UseFileOperationsReturn {
   confirmDelete: () => Promise<void>;
   cancelDelete: () => void;
   handleExportPDF: (file: FileItem) => Promise<void>;
+  handleExportDOCX: (file: FileItem) => void;
 }
 
 export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOperationsReturn => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<FileItem | null>(null);
+  const { editor, documentId } = useEditorStore();
+
   // 处理文件分享
   const handleShare = (file: FileItem) => {
     // 这个会在主组件中处理，因为涉及到状态管理
@@ -224,6 +229,50 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     }
   };
 
+  // 下载 docx
+  const handleExportDOCX = async (file: FileItem) => {
+    try {
+      if (!editor) {
+        toast.warning('请先打开文档后再导出DOCX');
+
+        return;
+      }
+
+      if (documentId !== file.id.toString()) {
+        toast.warning('请先打开该文档后再导出DOCX');
+
+        return;
+      }
+
+      const json = editor.getJSON();
+
+      const docx = await generateDOCX(json, { outputType: 'nodebuffer' });
+
+      // 将Node.js Buffer转换为浏览器兼容的Blob并下载
+      const blob = new Blob([new Uint8Array(docx)], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      const sanitizedName = file.name.trim().replace(/\s+/g, '_');
+      const fileName = `${sanitizedName}.docx`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error: any) {
+      toast.error(`导出DOCX失败: ${error.message || '未知错误'}`);
+    }
+  };
+
   return {
     handleShare,
     handleDownload,
@@ -243,5 +292,6 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
     confirmDelete,
     cancelDelete,
     handleExportPDF,
+    handleExportDOCX,
   };
 };

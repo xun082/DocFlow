@@ -26,6 +26,7 @@ export const RenderFile: React.FC<{
   onDelete: (file: FileItem) => void;
   onDuplicate: (file: FileItem) => void;
   onDownload: (file: FileItem) => void;
+  onExportDOCX?: (file: FileItem) => void;
   onExportPDF: (file: FileItem) => void;
 }> = ({
   file,
@@ -43,6 +44,7 @@ export const RenderFile: React.FC<{
   onDelete,
   onDuplicate,
   onDownload,
+  onExportDOCX,
   onExportPDF,
 }): React.ReactElement => {
   // Use store state directly
@@ -284,6 +286,7 @@ export const RenderFile: React.FC<{
                 onRename={onRename}
                 onDuplicate={onDuplicate}
                 onDownload={onDownload}
+                onExportDOCX={onExportDOCX}
                 onExportPDF={onExportPDF}
                 className={cn(
                   'p-1.5 rounded-lg',
