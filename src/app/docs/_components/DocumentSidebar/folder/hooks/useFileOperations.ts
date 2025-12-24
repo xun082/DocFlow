@@ -239,8 +239,6 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
       }
 
       if (documentId !== file.id.toString()) {
-        alert('请先打开该文档后再导出DOCX');
-
         toast.warning('请先打开该文档后再导出DOCX');
 
         return;
@@ -271,7 +269,7 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
         URL.revokeObjectURL(url);
       }, 100);
     } catch (error: any) {
-      alert(`导出DOCX失败: ${error.message || '未知错误'}`);
+      toast.error(`导出DOCX失败: ${error.message || '未知错误'}`);
     }
   };
 
