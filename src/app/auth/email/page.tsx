@@ -195,11 +195,11 @@ export default function EmailCodeForm() {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+    <div className="bg-gray-100/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-300">
       {/* 邮箱输入框 */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-3">
-          <Label htmlFor="tab-email" className="text-gray-300 font-medium">
+          <Label htmlFor="tab-email" className="text-gray-700 font-medium">
             邮箱地址
           </Label>
           <Input
@@ -207,13 +207,13 @@ export default function EmailCodeForm() {
             type="email"
             placeholder="请输入邮箱地址"
             {...register('email')}
-            className={`bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400 ${
-              errors.email ? 'border-red-400 focus:border-red-400' : ''
+            className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
+              errors.email ? 'border-gray-600 focus:border-gray-600' : ''
             }`}
             autoComplete="email"
           />
           {errors.email && (
-            <div className="flex items-center space-x-2 text-red-400 text-xs">
+            <div className="flex items-center space-x-2 text-gray-800 text-xs">
               <AlertCircle className="h-3 w-3" />
               <span>{errors.email.message}</span>
             </div>
@@ -222,7 +222,7 @@ export default function EmailCodeForm() {
 
         {/* 验证码输入框 */}
         <div className="space-y-3">
-          <Label htmlFor="tab-code" className="text-gray-300 font-medium">
+          <Label htmlFor="tab-code" className="text-gray-700 font-medium">
             验证码
           </Label>
           <div className="flex items-center gap-3">
@@ -232,8 +232,8 @@ export default function EmailCodeForm() {
               placeholder={`${CODE_LENGTH}位数字`}
               {...register('code')}
               onChange={handleCodeChange}
-              className={`bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-white/15 focus:border-violet-400 ${
-                errors.code ? 'border-red-400 focus:border-red-400' : ''
+              className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${
+                errors.code ? 'border-gray-600 focus:border-gray-600' : ''
               }`}
               maxLength={CODE_LENGTH}
               autoComplete="one-time-code"
@@ -241,7 +241,7 @@ export default function EmailCodeForm() {
             <Button
               type="button"
               variant="outline"
-              className="whitespace-nowrap min-w-[100px] bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
+              className="whitespace-nowrap min-w-[100px] bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-600 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -253,43 +253,34 @@ export default function EmailCodeForm() {
             </Button>
           </div>
           {errors.code && (
-            <div className="flex items-center space-x-2 text-red-400 text-xs">
+            <div className="flex items-center space-x-2 text-gray-800 text-xs">
               <AlertCircle className="h-3 w-3" />
               <span>{errors.code.message}</span>
             </div>
           )}
           {countdown > 0 && !errors.code && (
-            <div className="flex items-center space-x-2 text-green-400 text-xs">
+            <div className="flex items-center space-x-2 text-gray-600 text-xs">
               <CheckCircle className="h-3 w-3" />
               <span>验证码已发送，{countdown}秒后可重新发送</span>
             </div>
           )}
         </div>
 
-        <div className="relative group">
-          {/* 按钮发光效果 */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
-
-          <Button
-            type="submit"
-            className="relative w-full group overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-            disabled={isLoginDisabled}
-            onClick={(e) => {
-              if (isLoginDisabled) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <div className="relative flex items-center justify-center space-x-3">
-              <span>登录</span>
-            </div>
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={(e) => {
+            if (isLoginDisabled) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+        >
+          <span>登录</span>
+        </Button>
         {/* 安全提示 */}
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 bg-white/5 rounded-lg py-2 px-3">
-          <Shield className="w-3.5 h-3.5 text-green-400" />
+        <div className="flex items-center justify-center space-x-2 text-xs text-gray-600 bg-gray-100 rounded-lg py-2 px-3">
+          <Shield className="w-3.5 h-3.5 text-gray-600" />
           <span>验证码有效期为5分钟</span>
         </div>
       </form>

@@ -71,16 +71,16 @@ function LoginContent() {
       {/* Background Effects - matching homepage */}
       <div className="absolute inset-0">
         {/* Main gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl opacity-20">
-          <div className="w-full h-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl opacity-20">
+          <div className="w-full h-full bg-white/10 rounded-full" />
         </div>
 
-        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl opacity-15">
-          <div className="w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full" />
+        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-15">
+          <div className="w-full h-full bg-white/5 rounded-full" />
         </div>
 
-        <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl opacity-10">
-          <div className="w-full h-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full" />
+        <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-white/5 rounded-full blur-3xl opacity-10">
+          <div className="w-full h-full bg-white/5 rounded-full" />
         </div>
 
         {/* Grid background */}
@@ -103,35 +103,29 @@ function LoginContent() {
         ))}
       </div>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 bg-black">
         <div className="w-full max-w-xl">
           {/* Main login card */}
           <div className="relative group">
             {/* Glowing border effect */}
-            <div className="absolute -inset-1 rounded-3xl blur opacity-20 bg-gradient-to-r from-violet-500 to-purple-500" />
+            <div className="absolute -inset-1 rounded-3xl blur opacity-20 bg-white" />
 
-            <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 hover:shadow-3xl hover:border-white/15 hover:-translate-y-1 transition-all duration-500">
+            <div className="relative bg-white backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-black hover:shadow-3xl hover:border-black hover:-translate-y-1 transition-all duration-500">
               {/* Header */}
               <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg cursor-pointer">
-                  <Sparkles className="w-8 h-8 text-white" />
-                </div>
+                <h1 className="text-4xl font-bold text-black mb-3">欢迎回来</h1>
 
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3">
-                  欢迎回来
-                </h1>
-
-                <p className="text-lg text-gray-300 font-light">请登录以继续使用文档系统</p>
+                <p className="text-lg text-gray-600 font-light">请登录以继续使用文档系统</p>
               </div>
 
               {/* Tab Navigation */}
-              <div className="flex rounded-2xl bg-white/5 p-1 mb-6 border border-white/10">
+              <div className="flex rounded-2xl bg-gray-100 p-1 mb-6 border border-black">
                 <button
                   onClick={() => setActiveTab('github')}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                     activeTab === 'github'
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-black text-white shadow-lg'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200'
                   }`}
                 >
                   <Github className="w-4 h-4" />
@@ -141,8 +135,8 @@ function LoginContent() {
                   onClick={() => setActiveTab('email')}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                     activeTab === 'email'
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-black text-white shadow-lg'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200'
                   }`}
                 >
                   <Mail className="w-4 h-4" />
@@ -152,8 +146,8 @@ function LoginContent() {
                   onClick={() => setActiveTab('email-password')}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                     activeTab === 'email-password'
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-black text-white shadow-lg'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200'
                   }`}
                 >
                   <Lock className="w-4 h-4" />
@@ -164,8 +158,8 @@ function LoginContent() {
                   onClick={() => setActiveTab('email-register')}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                     activeTab === 'email-register'
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-black text-white shadow-lg'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-200'
                   }`}
                 >
                   <CircleUser className="w-4 h-4" />
@@ -178,20 +172,19 @@ function LoginContent() {
                 {activeTab === 'github' && (
                   <div className="space-y-4">
                     <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 rounded-2xl blur opacity-30"></div>
+                      <div className="absolute -inset-1 bg-black rounded-2xl blur opacity-30"></div>
                       <Button
                         variant="default"
-                        className="relative w-full bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 hover:from-violet-500 hover:via-purple-500 hover:to-violet-500 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer"
+                        className="relative w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer"
                         onClick={handleGitHubLogin}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                         <div className="relative flex items-center justify-center space-x-3">
                           <Github className="w-6 h-6" />
                           <span>使用 GitHub 登录</span>
                         </div>
                       </Button>
                     </div>
-                    <p className="text-xs text-center text-gray-400">
+                    <p className="text-xs text-center text-gray-600">
                       GitHub 登录可能受网络环境影响
                     </p>
                   </div>
@@ -206,14 +199,14 @@ function LoginContent() {
 
               {/* Login tips */}
               <div className="mt-6 text-center">
-                <div className="relative flex flex-col items-center space-y-3 text-sm bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 shadow-lg">
+                <div className="relative flex flex-col items-center space-y-3 text-sm bg-gray-100 backdrop-blur-sm rounded-xl p-5 border border-black shadow-lg">
                   <div className="flex items-center space-x-2">
-                    <div className="p-1.5 bg-blue-500/20 rounded-lg">
-                      <Shield className="w-4 h-4 text-blue-400" />
+                    <div className="p-1.5 bg-black/10 rounded-lg">
+                      <Shield className="w-4 h-4 text-gray-600" />
                     </div>
-                    <span className="font-medium text-gray-300">安全提示</span>
+                    <span className="font-medium text-black">安全提示</span>
                   </div>
-                  <p className="text-xs text-center leading-relaxed text-gray-400 max-w-xs">
+                  <p className="text-xs text-center leading-relaxed text-gray-600 max-w-xs">
                     我们支持多种登录方式，请选择最适合您的方式。如有问题，请联系管理员。
                   </p>
                 </div>
@@ -233,24 +226,22 @@ export default function LoginPage() {
         <div className="min-h-screen relative overflow-hidden bg-black">
           {/* Background Effects - matching homepage */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl opacity-60" />
-            <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl opacity-50" />
+            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl opacity-60" />
+            <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-50" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[length:60px_60px]" />
           </div>
 
           <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
             <div className="w-full max-w-lg">
               <div className="relative group">
-                <div className="absolute -inset-1 rounded-3xl blur opacity-20 bg-gradient-to-r from-violet-500 to-purple-500" />
-                <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10">
+                <div className="absolute -inset-1 rounded-3xl blur opacity-20 bg-white" />
+                <div className="relative bg-white backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-black">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-6 shadow-lg">
                       <Sparkles className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent mb-3">
-                      欢迎回来
-                    </h1>
-                    <p className="text-lg text-gray-300 font-light">加载中...</p>
+                    <h1 className="text-4xl font-bold text-black mb-3">欢迎回来</h1>
+                    <p className="text-lg text-gray-600 font-light">加载中...</p>
                   </div>
                 </div>
               </div>
