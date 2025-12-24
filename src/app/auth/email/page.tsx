@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { CheckCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,7 +39,7 @@ export default function EmailCodeForm() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
     trigger,
     setValue,
   } = useForm<EmailLoginFormData>({
@@ -114,7 +114,6 @@ export default function EmailCodeForm() {
 
   const isSendCodeDisabled =
     !watchedEmail || !!errors.email || isSendingCode || countdown > 0 || sendingCodeRef.current;
-  const isLoginDisabled = !isValid || emailLoginMutation.isPending || loggingInRef.current;
 
   const onSubmit = (data: EmailLoginFormData) => {
     if (emailLoginMutation.isPending || loggingInRef.current) return;
@@ -147,8 +146,7 @@ export default function EmailCodeForm() {
             autoComplete="email"
           />
           {errors.email && (
-            <div className="flex items-center space-x-2 text-gray-800 text-xs">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-red-500 text-xs">
               <span>{errors.email.message}</span>
             </div>
           )}
@@ -184,8 +182,7 @@ export default function EmailCodeForm() {
             </Button>
           </div>
           {errors.code && (
-            <div className="flex items-center space-x-2 text-gray-800 text-xs">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-red-500 text-xs">
               <span>{errors.code.message}</span>
             </div>
           )}
@@ -200,7 +197,6 @@ export default function EmailCodeForm() {
         <Button
           type="submit"
           className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isLoginDisabled}
         >
           登录
         </Button>

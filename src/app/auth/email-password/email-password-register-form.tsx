@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,7 +37,7 @@ export default function EmailPasswordRegisterForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<EmailPasswordRegisterFormData>({
     resolver: zodResolver(emailPasswordRegisterSchema),
     mode: 'onChange',
@@ -83,8 +83,7 @@ export default function EmailPasswordRegisterForm() {
             disabled={isSubmitting}
           />
           {errors.email && (
-            <div className="flex items-center space-x-2 text-gray-800 text-xs">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-red-500 text-xs">
               <span>{errors.email.message}</span>
             </div>
           )}
@@ -116,8 +115,7 @@ export default function EmailPasswordRegisterForm() {
             </button>
           </div>
           {errors.password && (
-            <div className="flex items-center space-x-2 text-gray-800 text-xs">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-red-500 text-xs">
               <span>{errors.password.message}</span>
             </div>
           )}
@@ -149,8 +147,7 @@ export default function EmailPasswordRegisterForm() {
             </button>
           </div>
           {errors.confirmPassword && (
-            <div className="flex items-center space-x-2 text-gray-800 text-xs">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-red-500 text-xs">
               <span>{errors.confirmPassword.message}</span>
             </div>
           )}
@@ -159,7 +156,6 @@ export default function EmailPasswordRegisterForm() {
         <Button
           type="submit"
           className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!isValid || isSubmitting}
         >
           {isSubmitting ? (
             <>

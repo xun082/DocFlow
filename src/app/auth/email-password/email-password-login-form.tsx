@@ -52,7 +52,7 @@ export default function EmailPasswordLoginForm() {
             disabled={isSubmitting || emailPasswordMutation.isPending}
             {...register('email')}
           />
-          {errors.email && <p className="text-sm text-gray-800">{errors.email.message}</p>}
+          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-3">
@@ -78,13 +78,12 @@ export default function EmailPasswordLoginForm() {
               {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
             </button>
           </div>
-          {errors.password && <p className="text-sm text-gray-800">{errors.password.message}</p>}
+          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
         </div>
 
         <Button
           type="submit"
           className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting || emailPasswordMutation.isPending}
         >
           登录
         </Button>
