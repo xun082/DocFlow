@@ -5,9 +5,9 @@ import { Github, Mail, Sparkles, Shield, CircleUser, Lock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 // 邮箱验证码登录
-import EmailCodeForm from './email/page';
-import EmailPasswordRegisterForm from './email-password/email-password-register-form';
-import EmailPasswordLoginForm from './email-password/email-password-login-form';
+import EmailCodeForm from './_components/EmailCodeForm';
+import EmailRegisterForm from './_components/EmailRegisterForm';
+import EmailLoginForm from './_components/EmailLoginForm';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -208,11 +208,11 @@ function LoginContent() {
                     </TabsContent>
 
                     <TabsContent value="email-password" className="mt-0">
-                      <EmailPasswordLoginForm />
+                      <EmailLoginForm />
                     </TabsContent>
 
                     <TabsContent value="email-register" className="mt-0">
-                      <EmailPasswordRegisterForm />
+                      <EmailRegisterForm />
                     </TabsContent>
                   </Tabs>
 

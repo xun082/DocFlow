@@ -11,29 +11,29 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useEmailPasswordLogin } from '@/hooks/useAuth';
 
-const emailPasswordLoginSchema = z.object({
+const emailLoginFormSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),
   password: z.string().min(1, '请输入密码'),
 });
 
-type EmailPasswordLoginFormData = z.infer<typeof emailPasswordLoginSchema>;
+type EmailLoginFormData = z.infer<typeof emailLoginFormSchema>;
 
-export default function EmailPasswordLoginForm() {
-  const emailPasswordMutation = useEmailPasswordLogin();
+export default function EmailLoginForm() {
+  const emailLoginMutation = useEmailPasswordLogin();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<EmailPasswordLoginFormData>({
-    resolver: zodResolver(emailPasswordLoginSchema),
+  } = useForm<EmailLoginFormData>({
+    resolver: zodResolver(emailLoginFormSchema),
     mode: 'onChange',
   });
 
-  const onSubmit = (data: EmailPasswordLoginFormData) => {
-    if (emailPasswordMutation.isPending) return;
-    emailPasswordMutation.mutate({ email: data.email, password: data.password });
+  const onSubmit = (data: EmailLoginFormData) => {
+    if (emailLoginMutation.isPending) return;
+    emailLoginMutation.mutate({ email: data.email, password: data.password });
   };
 
   return (
@@ -49,7 +49,7 @@ export default function EmailPasswordLoginForm() {
             placeholder="请输入邮箱地址"
             className={`bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 ${errors.email ? 'border-gray-800 focus:border-gray-800' : 'focus:border-gray-600'}`}
             autoComplete="email"
-            disabled={isSubmitting || emailPasswordMutation.isPending}
+            disabled={isSubmitting || emailLoginMutation.isPending}
             {...register('email')}
           />
           {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
@@ -66,7 +66,7 @@ export default function EmailPasswordLoginForm() {
               placeholder="请输入密码"
               className={`bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl py-3 pr-10 transition-all duration-300 focus:bg-gray-50 ${errors.password ? 'border-gray-800 focus:border-gray-800' : 'focus:border-gray-600'}`}
               autoComplete="current-password"
-              disabled={isSubmitting || emailPasswordMutation.isPending}
+              disabled={isSubmitting || emailLoginMutation.isPending}
               {...register('password')}
             />
             <button

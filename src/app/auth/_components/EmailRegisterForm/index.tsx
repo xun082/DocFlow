@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useEmailPasswordRegister } from '@/hooks/useAuth';
 
-const emailPasswordRegisterSchema = z
+const emailRegisterFormSchema = z
   .object({
     email: z
       .string()
@@ -26,10 +26,10 @@ const emailPasswordRegisterSchema = z
     path: ['confirmPassword'],
   });
 
-type EmailPasswordRegisterFormData = z.infer<typeof emailPasswordRegisterSchema>;
+type EmailRegisterFormData = z.infer<typeof emailRegisterFormSchema>;
 
-export default function EmailPasswordRegisterForm() {
-  const registerMutation = useEmailPasswordRegister();
+export default function EmailRegisterForm() {
+  const emailRegisterMutation = useEmailPasswordRegister();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const submittingRef = useRef(false);
@@ -38,8 +38,8 @@ export default function EmailPasswordRegisterForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<EmailPasswordRegisterFormData>({
-    resolver: zodResolver(emailPasswordRegisterSchema),
+  } = useForm<EmailRegisterFormData>({
+    resolver: zodResolver(emailRegisterFormSchema),
     mode: 'onChange',
     defaultValues: {
       email: '',
@@ -48,12 +48,12 @@ export default function EmailPasswordRegisterForm() {
     },
   });
 
-  const isSubmitting = registerMutation.isPending || submittingRef.current;
+  const isSubmitting = emailRegisterMutation.isPending || submittingRef.current;
 
-  const onSubmit = (data: EmailPasswordRegisterFormData) => {
-    if (registerMutation.isPending || submittingRef.current) return;
+  const onSubmit = (data: EmailRegisterFormData) => {
+    if (emailRegisterMutation.isPending || submittingRef.current) return;
     submittingRef.current = true;
-    registerMutation.mutate(
+    emailRegisterMutation.mutate(
       { email: data.email, password: data.password, confirmPassword: data.confirmPassword },
       {
         onSuccess: () => {},
