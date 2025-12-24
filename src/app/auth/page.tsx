@@ -163,7 +163,7 @@ function LoginContent() {
                   }`}
                 >
                   <CircleUser className="w-4 h-4" />
-                  <span>邮箱注册</span>
+                  <span>用户注册</span>
                 </button>
               </div>
 
