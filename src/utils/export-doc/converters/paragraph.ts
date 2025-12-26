@@ -1,6 +1,7 @@
-import { Paragraph, IParagraphOptions } from "docx";
-import { convertText, convertHardBreak } from "./text";
-import { ParagraphNode } from "../types";
+import { Paragraph, IParagraphOptions } from 'docx';
+
+import { convertText, convertHardBreak } from './text';
+import { ParagraphNode } from '../types';
 
 /**
  * Convert TipTap paragraph node to DOCX Paragraph
@@ -9,18 +10,16 @@ import { ParagraphNode } from "../types";
  * @param options - Optional paragraph options (e.g., numbering)
  * @returns DOCX Paragraph object
  */
-export function convertParagraph(
-  node: ParagraphNode,
-  options?: IParagraphOptions,
-): Paragraph {
+export function convertParagraph(node: ParagraphNode, options?: IParagraphOptions): Paragraph {
   // Convert content to text runs
   const children =
     node.content?.flatMap((contentNode) => {
-      if (contentNode.type === "text") {
+      if (contentNode.type === 'text') {
         return convertText(contentNode);
-      } else if (contentNode.type === "hardBreak") {
+      } else if (contentNode.type === 'hardBreak') {
         return convertHardBreak();
       }
+
       return [];
     }) || [];
 

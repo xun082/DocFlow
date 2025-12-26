@@ -1,1 +1,1 @@
-export * from "docx";
+export * from 'docx';

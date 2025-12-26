@@ -1,6 +1,7 @@
-import { Paragraph } from "docx";
-import { convertText, convertHardBreak } from "./text";
-import { BlockquoteNode } from "../types";
+import { Paragraph } from 'docx';
+
+import { convertText, convertHardBreak } from './text';
+import { BlockquoteNode } from '../types';
 
 /**
  * Convert TipTap blockquote node to array of DOCX Paragraphs
@@ -13,15 +14,16 @@ export function convertBlockquote(node: BlockquoteNode): Paragraph[] {
   if (!node.content) return [];
 
   return node.content.map((contentNode) => {
-    if (contentNode.type === "paragraph") {
+    if (contentNode.type === 'paragraph') {
       // Convert paragraph content
       const children =
         contentNode.content?.flatMap((node) => {
-          if (node.type === "text") {
+          if (node.type === 'text') {
             return convertText(node);
-          } else if (node.type === "hardBreak") {
+          } else if (node.type === 'hardBreak') {
             return convertHardBreak();
           }
+
           return [];
         }) || [];
 
@@ -33,7 +35,7 @@ export function convertBlockquote(node: BlockquoteNode): Paragraph[] {
         },
         border: {
           left: {
-            style: "single",
+            style: 'single',
           },
         },
       });

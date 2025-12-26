@@ -1,6 +1,7 @@
-import { Paragraph } from "docx";
-import { TaskListNode, TaskItemNode } from "../types";
-import { convertTaskItem } from "./task-item";
+import { Paragraph } from 'docx';
+
+import { TaskListNode, TaskItemNode } from '../types';
+import { convertTaskItem } from './task-item';
 
 /**
  * Convert TipTap task list node to DOCX paragraphs
@@ -15,6 +16,6 @@ export function convertTaskList(node: TaskListNode): Paragraph[] {
 
   // Convert each task item in the list
   return node.content
-    .filter((item) => item.type === "taskItem")
+    .filter((item) => item.type === 'taskItem')
     .map((item) => convertTaskItem(item as TaskItemNode));
 }

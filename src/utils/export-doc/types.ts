@@ -1,33 +1,33 @@
-import { JSONContent } from "@tiptap/core";
+import { JSONContent } from '@tiptap/core';
 
 // Re-export JSONContent for convenience
 export type { JSONContent };
 
 // Text and content node types
 export interface TextNode {
-  type: "text";
+  type: 'text';
   text: string;
   marks?: Array<Mark>;
 }
 
 export interface HardBreakNode {
-  type: "hardBreak";
+  type: 'hardBreak';
   marks?: Array<Mark>;
 }
 
 // Mark types
 export interface Mark {
   type:
-    | "bold"
-    | "italic"
-    | "underline"
-    | "strike"
-    | "code"
-    | "textStyle"
-    | "link"
-    | "highlight"
-    | "subscript"
-    | "superscript";
+    | 'bold'
+    | 'italic'
+    | 'underline'
+    | 'strike'
+    | 'code'
+    | 'textStyle'
+    | 'link'
+    | 'highlight'
+    | 'subscript'
+    | 'superscript';
   attrs?: {
     color?: string;
     href?: string;
@@ -40,17 +40,17 @@ export interface Mark {
 
 // Block node types
 export interface DocumentNode extends JSONContent {
-  type: "doc";
+  type: 'doc';
   content?: Array<BlockNode>;
 }
 
 export interface ParagraphNode extends JSONContent {
-  type: "paragraph";
+  type: 'paragraph';
   content?: Array<TextNode | HardBreakNode>;
 }
 
 export interface HeadingNode extends JSONContent {
-  type: "heading";
+  type: 'heading';
   attrs: {
     level: 1 | 2 | 3 | 4 | 5 | 6;
   };
@@ -58,12 +58,12 @@ export interface HeadingNode extends JSONContent {
 }
 
 export interface BlockquoteNode extends JSONContent {
-  type: "blockquote";
+  type: 'blockquote';
   content?: Array<ParagraphNode>;
 }
 
 export interface CodeBlockNode extends JSONContent {
-  type: "codeBlock";
+  type: 'codeBlock';
   attrs?: {
     language?: string;
   };
@@ -71,17 +71,17 @@ export interface CodeBlockNode extends JSONContent {
 }
 
 export interface HorizontalRuleNode extends JSONContent {
-  type: "horizontalRule";
+  type: 'horizontalRule';
 }
 
 // List node types
 export interface BulletListNode extends JSONContent {
-  type: "bulletList";
+  type: 'bulletList';
   content?: Array<ListItemNode>;
 }
 
 export interface OrderedListNode extends JSONContent {
-  type: "orderedList";
+  type: 'orderedList';
   attrs?: {
     start?: number;
     order?: number;
@@ -91,17 +91,17 @@ export interface OrderedListNode extends JSONContent {
 }
 
 export interface TaskListNode extends JSONContent {
-  type: "taskList";
+  type: 'taskList';
   content?: Array<TaskItemNode>;
 }
 
 export interface ListItemNode extends JSONContent {
-  type: "listItem";
+  type: 'listItem';
   content?: Array<ParagraphNode>;
 }
 
 export interface TaskItemNode extends JSONContent {
-  type: "taskItem";
+  type: 'taskItem';
   attrs?: {
     checked?: boolean;
   };
@@ -110,17 +110,17 @@ export interface TaskItemNode extends JSONContent {
 
 // Table node types
 export interface TableNode extends JSONContent {
-  type: "table";
+  type: 'table';
   content?: Array<TableRowNode>;
 }
 
 export interface TableRowNode extends JSONContent {
-  type: "tableRow";
+  type: 'tableRow';
   content?: Array<TableCellNode | TableHeaderNode>;
 }
 
 export interface TableCellNode extends JSONContent {
-  type: "tableCell";
+  type: 'tableCell';
   attrs?: {
     colspan?: number;
     rowspan?: number;
@@ -130,7 +130,7 @@ export interface TableCellNode extends JSONContent {
 }
 
 export interface TableHeaderNode extends JSONContent {
-  type: "tableHeader";
+  type: 'tableHeader';
   attrs?: {
     colspan?: number;
     rowspan?: number;
@@ -141,7 +141,7 @@ export interface TableHeaderNode extends JSONContent {
 
 // Image node type
 export interface ImageNode extends JSONContent {
-  type: "image";
+  type: 'image';
   attrs?: {
     src: string;
     alt?: string | null;
@@ -153,17 +153,17 @@ export interface ImageNode extends JSONContent {
 
 // Details node types
 export interface DetailsNode extends JSONContent {
-  type: "details";
+  type: 'details';
   content?: Array<DetailsSummaryNode | DetailsContentNode>;
 }
 
 export interface DetailsSummaryNode extends JSONContent {
-  type: "detailsSummary";
+  type: 'detailsSummary';
   content?: Array<TextNode | HardBreakNode>;
 }
 
 export interface DetailsContentNode extends JSONContent {
-  type: "detailsContent";
+  type: 'detailsContent';
   content?: Array<BlockNode>;
 }
 

@@ -1,7 +1,8 @@
-import { TableCell } from "docx";
-import { TableHeaderNode } from "../types";
-import { convertParagraph } from "./paragraph";
-import { DocxOptions } from "../option";
+import { TableCell } from 'docx';
+
+import { TableHeaderNode } from '../types';
+import { convertParagraph } from './paragraph';
+import { DocxOptions } from '../option';
 
 /**
  * Convert TipTap table header node to DOCX TableCell
@@ -12,7 +13,7 @@ import { DocxOptions } from "../option";
  */
 export function convertTableHeader(
   node: TableHeaderNode,
-  options: DocxOptions["table"],
+  options: DocxOptions['table'],
 ): TableCell {
   // Convert paragraphs in the header
   const paragraphs =
@@ -47,7 +48,7 @@ export function convertTableHeader(
     Object.assign(headerCell.options, {
       width: {
         size: node.attrs.colwidth,
-        type: "dxa" as const,
+        type: 'dxa' as const,
       },
     });
   }

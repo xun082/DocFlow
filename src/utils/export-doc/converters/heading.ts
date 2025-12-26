@@ -1,6 +1,7 @@
-import { Paragraph, HeadingLevel } from "docx";
-import { HeadingNode } from "../types";
-import { convertText, convertHardBreak } from "./text";
+import { Paragraph, HeadingLevel } from 'docx';
+
+import { HeadingNode } from '../types';
+import { convertText, convertHardBreak } from './text';
 
 /**
  * Convert TipTap heading node to DOCX paragraph
@@ -10,22 +11,23 @@ import { convertText, convertHardBreak } from "./text";
  */
 export function convertHeading(node: HeadingNode): Paragraph {
   // Get heading level
-  const level: HeadingNode["attrs"]["level"] = node?.attrs?.level;
+  const level: HeadingNode['attrs']['level'] = node?.attrs?.level;
 
   // Convert content using shared text converter
   const children =
     node.content?.flatMap((contentNode) => {
-      if (contentNode.type === "text") {
+      if (contentNode.type === 'text') {
         return convertText(contentNode);
-      } else if (contentNode.type === "hardBreak") {
+      } else if (contentNode.type === 'hardBreak') {
         return convertHardBreak();
       }
+
       return [];
     }) || [];
 
   // Map to DOCX heading levels
   const headingMap: Record<
-    HeadingNode["attrs"]["level"],
+    HeadingNode['attrs']['level'],
     (typeof HeadingLevel)[keyof typeof HeadingLevel]
   > = {
     1: HeadingLevel.HEADING_1,

@@ -1,4 +1,4 @@
-import { JSONContent } from "@tiptap/core";
+import { JSONContent } from '@tiptap/core';
 import {
   Document,
   Paragraph,
@@ -14,21 +14,22 @@ import {
   AlignmentType,
   convertInchesToTwip,
   TableOfContents,
-} from "docx";
-import { type DocxOptions } from "./option";
-import { convertParagraph } from "./converters/paragraph";
-import { convertHeading } from "./converters/heading";
-import { convertBlockquote } from "./converters/blockquote";
-import { convertImage } from "./converters/image";
-import { convertTable } from "./converters/table";
-import { convertCodeBlock } from "./converters/code-block";
-import { convertList } from "./converters/list";
-import { convertListItem } from "./converters/list-item";
-import { convertTaskList } from "./converters/task-list";
-import { convertTaskItem } from "./converters/task-item";
-import { convertHorizontalRule } from "./converters/horizontal-rule";
-import { convertDetails } from "./converters/details";
-import { convertHardBreak } from "./converters/text";
+} from 'docx';
+
+import { type DocxOptions } from './option';
+import { convertParagraph } from './converters/paragraph';
+import { convertHeading } from './converters/heading';
+import { convertBlockquote } from './converters/blockquote';
+import { convertImage } from './converters/image';
+import { convertTable } from './converters/table';
+import { convertCodeBlock } from './converters/code-block';
+import { convertList } from './converters/list';
+import { convertListItem } from './converters/list-item';
+import { convertTaskList } from './converters/task-list';
+import { convertTaskItem } from './converters/task-item';
+import { convertHorizontalRule } from './converters/horizontal-rule';
+import { convertDetails } from './converters/details';
+import { convertHardBreak } from './converters/text';
 import type {
   ParagraphNode,
   HeadingNode,
@@ -43,7 +44,7 @@ import type {
   BulletListNode,
   HorizontalRuleNode,
   DetailsNode,
-} from "./types";
+} from './types';
 
 /**
  * Convert TipTap JSONContent to DOCX format
@@ -130,12 +131,12 @@ export async function generateDOCX<T extends OutputType>(
     sections: documentSections,
 
     // Metadata
-    title: title || "Document",
-    subject: subject || "",
-    creator: creator || "",
-    keywords: keywords || "",
-    description: description || "",
-    lastModifiedBy: lastModifiedBy || "",
+    title: title || 'Document',
+    subject: subject || '',
+    creator: creator || '',
+    keywords: keywords || '',
+    description: description || '',
+    lastModifiedBy: lastModifiedBy || '',
     revision: revision || 1,
 
     // Styling
@@ -170,9 +171,7 @@ export async function generateDOCX<T extends OutputType>(
 
   const doc = new Document(docOptions);
 
-  return Packer.pack(doc, outputType || "arraybuffer") as Promise<
-    OutputByType[T]
-  >;
+  return Packer.pack(doc, outputType || 'arraybuffer') as Promise<OutputByType[T]>;
 }
 
 /**
@@ -190,6 +189,7 @@ export async function convertDocumentContent(
 
   for (const childNode of node.content) {
     const element = await convertNode(childNode, options);
+
     if (Array.isArray(element)) {
       elements.push(...element);
     } else if (element) {
@@ -212,50 +212,47 @@ export async function convertNode(
   }
 
   switch (node.type) {
-    case "paragraph":
+    case 'paragraph':
       return convertParagraph(node as ParagraphNode);
 
-    case "heading":
+    case 'heading':
       return convertHeading(node as HeadingNode);
 
-    case "blockquote":
+    case 'blockquote':
       return convertBlockquote(node as BlockquoteNode);
 
-    case "codeBlock":
+    case 'codeBlock':
       return convertCodeBlock(node as CodeBlockNode);
 
-    case "image":
+    case 'image':
       return await convertImage(node as ImageNode, options.image);
 
-    case "table":
+    case 'table':
       return convertTable(node as TableNode, options.table);
 
-    case "bulletList":
-      return convertList(node as BulletListNode, "bullet");
+    case 'bulletList':
+      return convertList(node as BulletListNode, 'bullet');
 
-    case "orderedList":
-      return convertList(node as OrderedListNode, "ordered");
+    case 'orderedList':
+      return convertList(node as OrderedListNode, 'ordered');
 
-    case "taskList":
+    case 'taskList':
       return convertTaskList(node as TaskListNode);
 
-    case "listItem":
+    case 'listItem':
       return convertListItem(node as ListItemNode);
 
-    case "taskItem":
+    case 'taskItem':
       return convertTaskItem(node as TaskItemNode);
 
-    case "hardBreak":
+    case 'hardBreak':
       // Wrap hardBreak in a paragraph
       return new Paragraph({ children: [convertHardBreak()] });
 
-    case "horizontalRule":
-      return convertHorizontalRule(
-        node as HorizontalRuleNode,
-        options.horizontalRule,
-      );
+    case 'horizontalRule':
+      return convertHorizontalRule(node as HorizontalRuleNode, options.horizontalRule);
 
-    case "details":
+    case 'details':
       return await convertDetails(node as DetailsNode, options);
 
     default:
@@ -274,9 +271,10 @@ function createNumberingOptions(docJson: JSONContent): INumberingOptions {
   const orderedListStarts = new Set<number>();
 
   function collectListStarts(node: JSONContent) {
-    if (node.type === "orderedList" && node.attrs?.start) {
+    if (node.type === 'orderedList' && node.attrs?.start) {
       orderedListStarts.add(node.attrs.start);
     }
+
     if (node.content) {
       for (const child of node.content) {
         collectListStarts(child);
@@ -292,7 +290,7 @@ function createNumberingOptions(docJson: JSONContent): INumberingOptions {
     {
       level: 0,
       format: LevelFormat.BULLET,
-      text: "•",
+      text: '•',
       alignment: AlignmentType.START,
       style: {
         paragraph: {
@@ -307,7 +305,7 @@ function createNumberingOptions(docJson: JSONContent): INumberingOptions {
     {
       level: 0,
       format: LevelFormat.DECIMAL,
-      text: "%1.",
+      text: '%1.',
       alignment: AlignmentType.START,
       style: {
         paragraph: {
@@ -326,11 +324,11 @@ function createNumberingOptions(docJson: JSONContent): INumberingOptions {
     levels: ILevelsOptions[];
   }> = [
     {
-      reference: "bullet-list",
+      reference: 'bullet-list',
       levels: [options[0]],
     },
     {
-      reference: "ordered-list",
+      reference: 'ordered-list',
       levels: [options[1]], // Use the decimal options
     },
   ];
@@ -344,7 +342,7 @@ function createNumberingOptions(docJson: JSONContent): INumberingOptions {
           {
             level: 0,
             format: LevelFormat.DECIMAL,
-            text: "%1.",
+            text: '%1.',
             alignment: AlignmentType.START,
             start,
             style: {

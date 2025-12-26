@@ -1,6 +1,7 @@
-import { Paragraph, BorderStyle } from "docx";
-import { HorizontalRuleNode } from "../types";
-import type { DocxOptions } from "../option";
+import { Paragraph, BorderStyle } from 'docx';
+
+import { HorizontalRuleNode } from '../types';
+import type { DocxOptions } from '../option';
 
 /**
  * Convert TipTap horizontalRule node to DOCX Paragraph
@@ -12,7 +13,7 @@ import type { DocxOptions } from "../option";
  */
 export function convertHorizontalRule(
   node: HorizontalRuleNode,
-  options: DocxOptions["horizontalRule"],
+  options: DocxOptions['horizontalRule'],
 ): Paragraph {
   return new Paragraph({
     children: [], // Empty content
@@ -20,7 +21,7 @@ export function convertHorizontalRule(
       bottom: {
         style: BorderStyle.SINGLE,
         size: 1,
-        color: "auto",
+        color: 'auto',
       },
     },
     ...options?.paragraph,

@@ -1,6 +1,7 @@
-import { Paragraph, TextRun } from "docx";
-import { TaskItemNode } from "../types";
-import { convertText, convertHardBreak } from "./text";
+import { Paragraph, TextRun } from 'docx';
+
+import { TaskItemNode } from '../types';
+import { convertText, convertHardBreak } from './text';
 
 /**
  * Convert TipTap task item node to DOCX Paragraph with checkbox
@@ -15,19 +16,21 @@ export function convertTaskItem(node: TaskItemNode): Paragraph {
 
   // Convert the first paragraph in the task item
   const firstParagraph = node.content[0];
-  if (firstParagraph.type === "paragraph") {
+
+  if (firstParagraph.type === 'paragraph') {
     // Add checkbox based on checked state
     const isChecked = node.attrs?.checked || false;
-    const checkboxText = isChecked ? "☑ " : "☐ ";
+    const checkboxText = isChecked ? '☑ ' : '☐ ';
 
     // Convert paragraph content to text runs
     const children =
       firstParagraph.content?.flatMap((contentNode) => {
-        if (contentNode.type === "text") {
+        if (contentNode.type === 'text') {
           return convertText(contentNode);
-        } else if (contentNode.type === "hardBreak") {
+        } else if (contentNode.type === 'hardBreak') {
           return convertHardBreak();
         }
+
         return [];
       }) || [];
 

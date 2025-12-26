@@ -1,6 +1,7 @@
-import { BulletListNode, OrderedListNode, ListItemNode } from "../types";
-import { Paragraph } from "docx";
-import { convertListItem } from "./list-item";
+import { Paragraph } from 'docx';
+
+import { BulletListNode, OrderedListNode, ListItemNode } from '../types';
+import { convertListItem } from './list-item';
 
 export interface ListOptions {
   numbering: {
@@ -13,7 +14,7 @@ export interface ListOptions {
 export function convertBulletList(): ListOptions {
   return {
     numbering: {
-      reference: "bullet-list",
+      reference: 'bullet-list',
       level: 0,
     },
   };
@@ -27,7 +28,7 @@ export function convertOrderedList(node: OrderedListNode): ListOptions {
 
   return {
     numbering: {
-      reference: "ordered-list",
+      reference: 'ordered-list',
       level: 0,
     },
     start,
@@ -39,7 +40,7 @@ export function convertOrderedList(node: OrderedListNode): ListOptions {
  */
 export function convertList(
   node: BulletListNode | OrderedListNode,
-  listType: "bullet" | "ordered",
+  listType: 'bullet' | 'ordered',
 ): Paragraph[] {
   if (!node.content) {
     return [];
@@ -49,19 +50,18 @@ export function convertList(
 
   // Get list options
   const listOptions =
-    listType === "bullet"
-      ? convertBulletList()
-      : convertOrderedList(node as OrderedListNode);
+    listType === 'bullet' ? convertBulletList() : convertOrderedList(node as OrderedListNode);
 
   // Determine numbering reference based on start value
   let numberingReference = listOptions.numbering.reference;
-  if (listType === "ordered" && listOptions.start && listOptions.start !== 1) {
+
+  if (listType === 'ordered' && listOptions.start && listOptions.start !== 1) {
     numberingReference = `ordered-list-start-${listOptions.start}`;
   }
 
   // Convert list items
   for (const item of node.content) {
-    if (item.type === "listItem") {
+    if (item.type === 'listItem') {
       const paragraph = convertListItem(item as ListItemNode, {
         numbering: {
           reference: numberingReference,

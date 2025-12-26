@@ -1,8 +1,9 @@
-import { TableRow } from "docx";
-import { TableRowNode } from "../types";
-import { convertTableCell } from "./table-cell";
-import { convertTableHeader } from "./table-header";
-import { DocxOptions } from "../option";
+import { TableRow } from 'docx';
+
+import { TableRowNode } from '../types';
+import { convertTableCell } from './table-cell';
+import { convertTableHeader } from './table-header';
+import { DocxOptions } from '../option';
 
 /**
  * Convert TipTap table row node to DOCX TableRow
@@ -11,21 +12,19 @@ import { DocxOptions } from "../option";
  * @param options - Table options from PropertiesOptions
  * @returns DOCX TableRow object
  */
-export function convertTableRow(
-  node: TableRowNode,
-  options: DocxOptions["table"],
-): TableRow {
+export function convertTableRow(node: TableRowNode, options: DocxOptions['table']): TableRow {
   // Choose row options
   const rowOptions = options?.row;
 
   // Convert table cells and headers
   const cells =
     node.content?.flatMap((cellNode) => {
-      if (cellNode.type === "tableCell") {
+      if (cellNode.type === 'tableCell') {
         return convertTableCell(cellNode, options);
-      } else if (cellNode.type === "tableHeader") {
+      } else if (cellNode.type === 'tableHeader') {
         return convertTableHeader(cellNode, options);
       }
+
       return [];
     }) || [];
 
