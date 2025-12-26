@@ -1,9 +1,9 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { generateDOCX } from 'tiptap-extension-export-docx';
 
 import { FileItem } from '../type';
 
+import { generateDOCX } from '@/utils/export-doc/generator';
 import DocumentApi from '@/services/document';
 import { CreateDocumentDto } from '@/services/document/type';
 import { useEditorStore } from '@/stores/editorStore';
@@ -246,7 +246,25 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
 
       const json = editor.getJSON();
 
-      const docx = await generateDOCX(json, { outputType: 'nodebuffer' });
+      const docx = await generateDOCX(
+        {
+          type: 'doc',
+          content: json.content.map((item) => {
+            if (['textToImage', 'imageBlock'].includes(item.type)) {
+              return {
+                attrs: {
+                  ...item.attrs,
+                  src: item.attrs?.src ? item.attrs?.src : item.attrs?.imageUrl,
+                },
+                type: 'image',
+              };
+            }
+
+            return item;
+          }),
+        },
+        { outputType: 'nodebuffer' },
+      );
 
       // 将Node.js Buffer转换为浏览器兼容的Blob并下载
       const blob = new Blob([new Uint8Array(docx)], {
