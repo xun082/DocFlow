@@ -21,6 +21,14 @@ export function convertTable(
   // Build table options with options
   const tableOptions: ITableOptions = {
     rows,
+    // Set default table width if not specified
+    width: {
+      size: options?.run?.width?.size || 100,
+      type: options?.run?.width?.type || 'pct',
+    },
+    // Use fixed layout to ensure cell widths are respected
+    // This is important when we set specific widths on cells
+    layout: options?.run?.layout || 'fixed',
     ...options?.run, // Apply table options
   };
 

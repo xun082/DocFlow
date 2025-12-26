@@ -53,5 +53,14 @@ export function convertTableHeader(
     });
   }
 
+  if (!headerCell.options.width) {
+    Object.assign(headerCell.options, {
+      width: {
+        size: 2000, // Default width of about 1.4 inches (2000/1440)
+        type: 'dxa' as const,
+      },
+    });
+  }
+
   return headerCell;
 }

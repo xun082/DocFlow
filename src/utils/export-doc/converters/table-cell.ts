@@ -47,5 +47,14 @@ export function convertTableCell(node: TableCellNode, options: DocxOptions['tabl
     });
   }
 
+  if (!cell.options.width) {
+    Object.assign(cell.options, {
+      width: {
+        size: 2000, // Default width of about 1.4 inches (2000/1440)
+        type: 'dxa' as const,
+      },
+    });
+  }
+
   return cell;
 }

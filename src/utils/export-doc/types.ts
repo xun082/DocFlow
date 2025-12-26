@@ -151,6 +151,14 @@ export interface ImageNode extends JSONContent {
   };
 }
 
+// Mathematics node types
+export interface MathNode extends JSONContent {
+  type: 'inlineMath' | 'blockMath';
+  attrs?: {
+    text?: string | null;
+  };
+}
+
 // Details node types
 export interface DetailsNode extends JSONContent {
   type: 'details';
@@ -180,4 +188,5 @@ export type BlockNode =
   | TaskListNode
   | TableNode
   | ImageNode
-  | DetailsNode;
+  | DetailsNode
+  | MathNode;

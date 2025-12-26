@@ -30,6 +30,7 @@ import { convertTaskItem } from './converters/task-item';
 import { convertHorizontalRule } from './converters/horizontal-rule';
 import { convertDetails } from './converters/details';
 import { convertHardBreak } from './converters/text';
+import { convertMath } from './converters/math';
 import type {
   ParagraphNode,
   HeadingNode,
@@ -44,6 +45,7 @@ import type {
   BulletListNode,
   HorizontalRuleNode,
   DetailsNode,
+  MathNode,
 } from './types';
 
 /**
@@ -254,6 +256,10 @@ export async function convertNode(
 
     case 'details':
       return await convertDetails(node as DetailsNode, options);
+
+    case 'inlineMath':
+    case 'blockMath':
+      return convertMath(node as MathNode);
 
     default:
       // Unknown node type, return a paragraph with text
