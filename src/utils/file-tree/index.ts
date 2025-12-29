@@ -155,7 +155,6 @@ export function buildTree(flattenedItems: FileItem[]): FileItem[] {
   const root: FileItem = { id: 'root', children: [], name: 'root', type: 'folder', depth: 0 };
   const nodes: Record<string, FileItem> = { [root.id]: root };
   const items = flattenedItems.map((item) => ({ ...item, children: [] }));
-  console.log(items);
 
   for (const item of items) {
     const { id, children, type, name, depth } = item;
