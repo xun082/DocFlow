@@ -16,8 +16,6 @@ export async function convertImage(
   node: ImageNode,
   options: DocxOptions['image'],
 ): Promise<Paragraph> {
-  console.log('🚀 ~ file: image.ts:17 ~ ImageNode:', node);
-
   // Get image type from metadata or URL
   const getImageType = (metaType?: string): 'jpg' | 'png' | 'gif' | 'bmp' => {
     // Try metadata type first

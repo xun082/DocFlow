@@ -228,7 +228,7 @@ export async function convertNode(
       return await convertImage(node as ImageNode, options.image);
 
     case 'table':
-      return convertTable(node as TableNode, options.table);
+      return await convertTable(node as TableNode, options.table);
 
     case 'bulletList':
       return convertList(node as BulletListNode, 'bullet');

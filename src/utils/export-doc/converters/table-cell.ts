@@ -1,7 +1,8 @@
 import { TableCell } from 'docx';
 
-import { TableCellNode } from '../types';
+import { ImageNode, ParagraphNode, TableCellNode } from '../types';
 import { convertParagraph } from './paragraph';
+import { convertImage } from './image';
 import { DocxOptions } from '../option';
 
 /**
@@ -11,21 +12,34 @@ import { DocxOptions } from '../option';
  * @param options - Table options from PropertiesOptions
  * @returns DOCX TableCell object
  */
-export function convertTableCell(node: TableCellNode, options: DocxOptions['table']): TableCell {
+export async function convertTableCell(
+  node: TableCellNode,
+  options: DocxOptions['table'],
+): Promise<TableCell> {
   // Convert paragraphs in the cell
   const paragraphs =
-    node.content?.map((p) =>
-      convertParagraph(
-        p,
-        options?.cell?.paragraph ?? options?.row?.paragraph ?? options?.paragraph,
-      ),
-    ) || [];
+    (await Promise.all(
+      node.content?.map(async (p) => {
+        // Handle image nodes
+        if (['image', 'tableImage'].includes(p.type)) {
+          return convertImage(p as ImageNode, undefined);
+        } else {
+          // Handle paragraph nodes
+          return convertParagraph(
+            p as ParagraphNode,
+            options?.cell?.paragraph ?? options?.row?.paragraph ?? options?.paragraph,
+          );
+        }
+      }) || [],
+    )) || [];
 
   // Create table cell with options
   const cell = new TableCell({
     children: paragraphs,
     ...options?.cell?.run,
   });
+
+  // console.log('🚀 ~ file: table-cell.ts:39 ~ paragraphs:', paragraphs);
 
   // Add column span if present
   if (node.attrs?.colspan && node.attrs.colspan > 1) {

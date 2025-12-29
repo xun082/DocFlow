@@ -12,25 +12,30 @@ import { DocxOptions } from '../option';
  * @param options - Table options from PropertiesOptions
  * @returns DOCX TableRow object
  */
-export function convertTableRow(node: TableRowNode, options: DocxOptions['table']): TableRow {
+export async function convertTableRow(
+  node: TableRowNode,
+  options: DocxOptions['table'],
+): Promise<TableRow> {
   // Choose row options
   const rowOptions = options?.row;
 
   // Convert table cells and headers
   const cells =
-    node.content?.flatMap((cellNode) => {
-      if (cellNode.type === 'tableCell') {
-        return convertTableCell(cellNode, options);
-      } else if (cellNode.type === 'tableHeader') {
-        return convertTableHeader(cellNode, options);
-      }
+    (await Promise.all(
+      node.content?.flatMap(async (cellNode) => {
+        if (cellNode.type === 'tableCell') {
+          return convertTableCell(cellNode, options);
+        } else if (cellNode.type === 'tableHeader') {
+          return convertTableHeader(cellNode, options);
+        }
 
-      return [];
-    }) || [];
+        return [];
+      }) || [],
+    )) || [];
 
   // Create table row with options
   const row = new TableRow({
-    children: cells,
+    children: cells.flat(),
     ...rowOptions,
   });
 

@@ -11,12 +11,13 @@ import { DocxOptions } from '../option';
  * @param options - Table options from PropertiesOptions
  * @returns Array containing Table and a following Paragraph to prevent merging
  */
-export function convertTable(
+export async function convertTable(
   node: TableNode,
   options: DocxOptions['table'],
-): Array<Table | Paragraph> {
+): Promise<Array<Table | Paragraph>> {
   // Convert table rows
-  const rows = node.content?.map((row) => convertTableRow(row, options)) || [];
+  const rows =
+    (await Promise.all(node.content?.map((row) => convertTableRow(row, options)) || [])) || [];
 
   // Build table options with options
   const tableOptions: ITableOptions = {

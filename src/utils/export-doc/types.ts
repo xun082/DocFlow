@@ -126,7 +126,7 @@ export interface TableCellNode extends JSONContent {
     rowspan?: number;
     colwidth?: number[] | null;
   };
-  content?: Array<ParagraphNode>;
+  content?: Array<ParagraphNode | ImageNode>;
 }
 
 export interface TableHeaderNode extends JSONContent {
@@ -141,7 +141,7 @@ export interface TableHeaderNode extends JSONContent {
 
 // Image node type
 export interface ImageNode extends JSONContent {
-  type: 'image';
+  type: 'image' | 'tableImage';
   attrs?: {
     src: string;
     alt?: string | null;
