@@ -245,7 +245,6 @@ export const useFileOperations = (refreshFiles: () => Promise<void>): UseFileOpe
       }
 
       const json = editor.getJSON();
-      console.log('🚀 ~ file: useFileOperations.ts:248 ~ json:', json);
 
       const docx = await generateDOCX(
         {
