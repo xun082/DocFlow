@@ -148,6 +148,7 @@ export interface ImageNode extends JSONContent {
     title?: string | null;
     width?: number | null;
     height?: number | null;
+    size?: string | null;
   };
 }
 

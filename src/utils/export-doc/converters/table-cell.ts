@@ -22,7 +22,20 @@ export async function convertTableCell(
       node.content?.map(async (p) => {
         // Handle image nodes
         if (['image', 'tableImage'].includes(p.type)) {
-          return convertImage(p as ImageNode, undefined);
+          const [width, height] = p.attrs?.size?.split('x') || [100, 100];
+
+          //  防止图片过大
+          return convertImage(
+            {
+              ...p,
+              attrs: {
+                ...p.attrs,
+                width: width > 1000 ? width * 0.4 : 100,
+                height: height > 1000 ? height * 0.4 : 100,
+              },
+            } as ImageNode,
+            undefined,
+          );
         } else {
           // Handle paragraph nodes
           return convertParagraph(
