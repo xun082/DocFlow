@@ -1,4 +1,4 @@
-import { Paragraph, ImageRun, IImageOptions } from 'docx';
+import { Paragraph, ImageRun, IImageOptions, TextRun } from 'docx';
 import { imageMeta as getImageMetadata, type ImageMeta } from 'image-meta';
 
 import { ImageNode } from '../types';
@@ -95,14 +95,7 @@ export async function convertImage(
 
     // Create placeholder paragraph
     return new Paragraph({
-      children: [
-        new ImageRun({
-          type: 'png',
-          data: new Uint8Array(0), // Empty Uint8Array as placeholder
-          transformation: { width: 100, height: 100 },
-          altText: { name: node.attrs?.alt || 'Failed to load image' },
-        }),
-      ],
+      children: [new TextRun({ text: '图片加载失败', color: 'FF0000' })],
     });
   }
 
