@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { MessageSquare, FileText } from 'lucide-react';
+import { MessageSquare, FileText, Copy, Check } from 'lucide-react';
+import juice from 'juice';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
 import { FileItem } from '../DocumentSidebar/folder/type';
 
 import { Icon } from '@/components/ui/Icon';
 import { useCommentStore } from '@/stores/commentStore';
+import { useEditorStore } from '@/stores/editorStore';
+import { cleanElementAttributes, extraCss, processImages, processLinks } from '@/utils/wx';
 
 // 类型定义
 interface CollaborationUser {
@@ -115,8 +118,14 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
+  // 复制状态
+  const [copied, setCopied] = useState(false);
+
   // 评论面板状态
   const { isPanelOpen, togglePanel, comments } = useCommentStore();
+
+  // 获取编辑器实例
+  const { editor } = useEditorStore();
 
   // 获取实际显示的标题 - 优先使用documentTitle（真实文档名），其次是documentName，最后是默认值
   const displayTitle = documentTitle || documentName || '未命名文档';
@@ -132,6 +141,64 @@ export default function DocumentHeader({
       };
       setShareDialogFile(fileItem);
       setShareDialogOpen(true);
+    }
+  };
+
+  // 处理复制按钮点击
+  const handleCopy = async () => {
+    if (!editor) return;
+
+    try {
+      const htmlContent = editor.getHTML();
+
+      // 创建一个临时div来处理HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+
+      // 移除微信公众号不支持的元素
+      const unsupportedElements = tempDiv.querySelectorAll(
+        'script, style, iframe, object, embed, video, audio, canvas, svg, noscript',
+      );
+      unsupportedElements.forEach((el) => el.remove());
+
+      // 清理元素属性
+      cleanElementAttributes(tempDiv);
+
+      // 处理图片URL，确保使用绝对URL
+      // 处理图片和链接URL
+      processImages(tempDiv);
+      processLinks(tempDiv);
+
+      // 获取处理后的HTML
+      const processedHTML = tempDiv.innerHTML;
+
+      // 使用 juice 将 CSS 转换为内联样式
+      const inlinedHTML = juice(processedHTML, {
+        removeStyleTags: true,
+        preserveImportant: true,
+        applyWidthAttributes: true,
+        applyHeightAttributes: true,
+        applyAttributesTableElements: true,
+        extraCss: extraCss,
+      });
+
+      // 创建完整的HTML文档
+      const fullHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body>${inlinedHTML}</body></html>`;
+
+      // 提取纯文本作为备选
+      const textContent = tempDiv.innerText || tempDiv.textContent || '';
+
+      // 使用 ClipboardItem 复制富文本格式
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([fullHTML], { type: 'text/html' }),
+        'text/plain': new Blob([textContent], { type: 'text/plain' }),
+      });
+
+      await navigator.clipboard.write([clipboardItem]);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('复制失败:', error);
     }
   };
 
@@ -223,6 +290,25 @@ export default function DocumentHeader({
           >
             <Icon name="Share" className="w-4 h-4" />
             <span className="hidden sm:inline text-sm font-medium">分享</span>
+          </button>
+        )}
+
+        {/* 复制按钮 */}
+        {editor && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 border ${
+              copied
+                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
+            }`}
+            aria-label="复制文档内容（内联样式）"
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            <span className="hidden sm:inline text-sm font-medium">
+              {copied ? '已复制' : '复制'}
+            </span>
           </button>
         )}
 
