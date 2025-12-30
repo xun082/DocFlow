@@ -47,6 +47,7 @@ export const Chart = Node.create({
       colorKey: {
         default: 'red',
       },
+      png: { default: null }, // 保存 base64
     };
   },
 
@@ -58,8 +59,23 @@ export const Chart = Node.create({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['div', { 'data-chart': '', ...HTMLAttributes }];
+  renderHTML({ node }) {
+    if (node.attrs.png) {
+      return [
+        'img',
+        {
+          src: node.attrs.png,
+          alt: node.attrs.title || '图表',
+          style: 'max-width: 100%; height: auto; display: block; margin: 10px 0;',
+        },
+      ];
+    }
+
+    // fallback
+    return [
+      'div',
+      { style: 'padding: 40px; background: #f8f8f8; text-align: center; border: 2px dashed #ddd;' },
+    ];
   },
 
   addNodeView() {
