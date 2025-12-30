@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { MessageSquare, FileText, Copy, Check } from 'lucide-react';
+import { MessageSquare, FileText, Copy } from 'lucide-react';
 import juice from 'juice';
+import { toast } from 'sonner';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
 import { FileItem } from '../DocumentSidebar/folder/type';
@@ -8,7 +9,23 @@ import { FileItem } from '../DocumentSidebar/folder/type';
 import { Icon } from '@/components/ui/Icon';
 import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
-import { cleanElementAttributes, extraCss, processImages, processLinks } from '@/utils/wx';
+import {
+  cleanElementAttributes,
+  extraCss,
+  processImages,
+  processLinks,
+  handleExportPDF,
+  handleExportDOCX,
+} from '@/utils/wx';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // 类型定义
 interface CollaborationUser {
@@ -118,8 +135,15 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
-  // 复制状态
-  const [copied, setCopied] = useState(false);
+  const handleSelectAction = (value: string) => {
+    if (value === 'copy') {
+      handleCopy();
+    } else if (value === 'pdf') {
+      handleExportPDF(displayTitle);
+    } else if (value === 'docx') {
+      handleExportDOCX(displayTitle, editor);
+    }
+  };
 
   // 评论面板状态
   const { isPanelOpen, togglePanel, comments } = useCommentStore();
@@ -191,8 +215,7 @@ export default function DocumentHeader({
       });
 
       await navigator.clipboard.write([clipboardItem]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      toast.success('文档已复制到剪贴板');
     } catch (error) {
       console.error('复制失败:', error);
     }
@@ -291,21 +314,24 @@ export default function DocumentHeader({
 
         {/* 复制按钮 */}
         {editor && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 border ${
-              copied
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
-            }`}
-            aria-label="复制文档内容（内联样式）"
-          >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span className="hidden sm:inline text-sm font-medium">
-              {copied ? '已复制' : '复制到公众号'}
-            </span>
-          </button>
+          <Select onValueChange={handleSelectAction} defaultValue="copy">
+            <SelectTrigger>
+              <SelectValue placeholder="Select a fruit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>操作</SelectLabel>
+                <SelectItem value="copy">
+                  <div className="flex items-center space-x-2 gap-1">
+                    <Copy className="w-4 h-4" />
+                    复制到公众号
+                  </div>
+                </SelectItem>
+                <SelectItem value="pdf">导出PDF</SelectItem>
+                <SelectItem value="docx">导出Word</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         )}
 
         {/* GitHub 链接 */}
