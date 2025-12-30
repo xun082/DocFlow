@@ -87,6 +87,12 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const updateAttributesRef = useRef(updateAttributes);
+
+  // 保持 updateAttributesRef.current 始终指向最新的 updateAttributes 函数
+  useEffect(() => {
+    updateAttributesRef.current = updateAttributes;
+  }, [updateAttributes]);
 
   // 当节点属性变化时，重置表单默认值
   const form = useForm<ChartFormValues>({
@@ -241,14 +247,14 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
         });
 
         const dataUrl = canvas.toDataURL('image/png');
-        updateAttributes({ png: dataUrl });
+        updateAttributesRef.current({ png: dataUrl });
       } catch (err) {
         console.warn('生成图表 PNG 失败（可能在编辑中正常）:', err);
       }
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey, updateAttributes]); // 延迟 800ms 确保 Recharts 完全渲染
+  }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey]); // 延迟 800ms 确保 Recharts 完全渲染
 
   const renderChart = () => {
     // 只在客户端和有有效数据时渲染图表
