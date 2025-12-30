@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import js_beautify from 'js-beautify';
 import * as XLSX from 'xlsx';
+import { snapdom } from '@zumer/snapdom';
 
 import BarChartComponent from './components/BarChartComponent';
 import LineChartComponent from './components/LineChartComponent';
@@ -85,6 +86,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // 当节点属性变化时，重置表单默认值
   const form = useForm<ChartFormValues>({
@@ -208,6 +210,46 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     });
   };
 
+  // 检查图表是否已完全渲染（检查容器内是否有SVG元素）
+  const isChartRendered = () => {
+    if (!chartContainerRef.current) return false;
+
+    const svgElement = chartContainerRef.current.querySelector('svg');
+
+    return svgElement !== null;
+  };
+
+  useEffect(() => {
+    if (!isClient || !isValidData || !chartContainerRef.current) return;
+
+    const timer = setTimeout(async () => {
+      // 检查图表是否已渲染完成
+      if (!isChartRendered()) {
+        console.warn('图表尚未渲染完成，跳过 PNG 生成');
+
+        return;
+      }
+
+      try {
+        const width = chartContainerRef?.current?.clientWidth || 800;
+        const height = chartContainerRef?.current?.clientHeight || 600;
+        const canvas = await snapdom.toCanvas(chartContainerRef.current!, {
+          scale: 2,
+          width: width,
+          height: height,
+          backgroundColor: '#ffffff',
+        });
+
+        const dataUrl = canvas.toDataURL('image/png');
+        updateAttributes({ png: dataUrl });
+      } catch (err) {
+        console.warn('生成图表 PNG 失败（可能在编辑中正常）:', err);
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey, updateAttributes]); // 延迟 800ms 确保 Recharts 完全渲染
+
   const renderChart = () => {
     // 只在客户端和有有效数据时渲染图表
     if (!isClient || !isValidData) {
@@ -219,7 +261,9 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     }
 
     const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
-      <div className="h-full w-full">{children}</div>
+      <div className="h-full w-full" ref={chartContainerRef}>
+        {children}
+      </div>
     );
 
     try {

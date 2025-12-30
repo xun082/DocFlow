@@ -154,20 +154,16 @@ export default function DocumentHeader({
       // 创建一个临时div来处理HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = htmlContent;
+      // 清理元素属性
+      cleanElementAttributes(tempDiv);
+      processImages(tempDiv);
+      processLinks(tempDiv);
 
       // 移除微信公众号不支持的元素
       const unsupportedElements = tempDiv.querySelectorAll(
         'script, style, iframe, object, embed, video, audio, canvas, svg, noscript',
       );
       unsupportedElements.forEach((el) => el.remove());
-
-      // 清理元素属性
-      cleanElementAttributes(tempDiv);
-
-      // 处理图片URL，确保使用绝对URL
-      // 处理图片和链接URL
-      processImages(tempDiv);
-      processLinks(tempDiv);
 
       // 获取处理后的HTML
       const processedHTML = tempDiv.innerHTML;
