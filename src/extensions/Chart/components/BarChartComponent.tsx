@@ -62,6 +62,7 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
             dataKey={key}
             fill={COLORS[colorKey][index % COLORS[colorKey].length]}
             radius={CHART_CONSTANTS.BAR.radius}
+            isAnimationActive={false}
           />
         ))}
       </BarChart>

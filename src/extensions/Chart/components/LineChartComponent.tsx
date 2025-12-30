@@ -66,6 +66,7 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
               r: CHART_CONSTANTS.LINE.activeDotRadius,
               fill: COLORS[colorKey][index % COLORS[colorKey].length],
             }}
+            isAnimationActive={false}
           />
         ))}
       </LineChart>
