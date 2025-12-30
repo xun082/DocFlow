@@ -303,7 +303,7 @@ export default function DocumentHeader({
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span className="hidden sm:inline text-sm font-medium">
-              {copied ? '已复制' : '复制'}
+              {copied ? '已复制' : '复制到公众号'}
             </span>
           </button>
         )}
