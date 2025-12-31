@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { Editor } from '@tiptap/core';
 
 import { generateDOCX } from '@/utils/export-doc/generator';
 
@@ -297,7 +298,7 @@ export const handleExportPDF = async (name: string) => {
 };
 
 // 下载 docx
-export const handleExportDOCX = async (name: string, editor: any) => {
+export const handleExportDOCX = async (name: string, editor: Editor) => {
   try {
     if (!editor) {
       toast.warning('请先打开文档后再导出DOCX');

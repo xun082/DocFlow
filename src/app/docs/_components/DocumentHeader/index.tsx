@@ -139,7 +139,7 @@ export default function DocumentHeader({
     } else if (value === 'pdf') {
       handleExportPDF(displayTitle);
     } else if (value === 'docx') {
-      handleExportDOCX(displayTitle, editor);
+      handleExportDOCX(displayTitle, editor!);
     }
   };
 

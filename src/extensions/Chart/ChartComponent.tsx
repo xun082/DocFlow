@@ -216,6 +216,11 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     });
   };
 
+  // 重试状态管理
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRY_COUNT = 5; // 最多重试 5 次
+  const BASE_RETRY_DELAY = 200; // 基础重试延迟（ms）
+
   // 生成图表 PNG
   const generateChartPng = () => {
     if (!chartContainerRef.current) return;
@@ -224,10 +229,26 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     const svgElement = chartContainerRef.current.querySelector('svg');
 
     if (!svgElement) {
-      console.warn('图表尚未渲染完成，100ms 后重试');
+      // 如果超过最大重试次数，停止重试
+      if (retryCount >= MAX_RETRY_COUNT) {
+        console.warn(`图表渲染失败，已达到最大重试次数（${MAX_RETRY_COUNT}次）`);
+
+        return;
+      }
+
+      // 计算重试延迟（递增延迟：200ms, 400ms, 800ms, 1600ms, 3200ms）
+      const retryDelay = BASE_RETRY_DELAY * Math.pow(2, retryCount);
+      console.warn(`图表尚未渲染完成，${retryDelay}ms 后进行第 ${retryCount + 1} 次重试`);
+
+      // 增加重试计数并设置下一个定时器
+      setRetryCount((prev) => prev + 1);
+      setTimeout(generateChartPng, retryDelay);
 
       return;
     }
+
+    // 重置重试计数
+    setRetryCount(0);
 
     try {
       const width = chartContainerRef.current.clientWidth || 800;
@@ -253,12 +274,8 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     if (!isClient || !isValidData || !chartContainerRef.current) return;
 
     // 首次尝试生成 PNG
+    setRetryCount(0);
     generateChartPng();
-
-    // 如果还没渲染完成，200ms 后重试，保证可以生成
-    const retryTimer = setTimeout(generateChartPng, 200);
-
-    return () => clearTimeout(retryTimer);
   }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey]);
 
   const renderChart = () => {
