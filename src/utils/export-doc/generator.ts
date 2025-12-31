@@ -30,6 +30,7 @@ import { convertTaskItem } from './converters/task-item';
 import { convertHorizontalRule } from './converters/horizontal-rule';
 import { convertDetails } from './converters/details';
 import { convertHardBreak } from './converters/text';
+import { convertColumns } from './converters/multiple-columns';
 import type {
   ParagraphNode,
   HeadingNode,
@@ -44,6 +45,7 @@ import type {
   BulletListNode,
   HorizontalRuleNode,
   DetailsNode,
+  ColumnsNode,
 } from './types';
 
 /**
@@ -88,6 +90,7 @@ export async function generateDOCX<T extends OutputType>(
 
   // Convert document content
   const children = await convertDocumentContent(docJson, options);
+  console.log('🚀 ~ file: generator.ts:93 ~ children:', children);
 
   // Create table of contents if configured
   const tocElement = tableOfContents
@@ -254,6 +257,9 @@ export async function convertNode(
 
     case 'details':
       return await convertDetails(node as DetailsNode, options);
+
+    case 'columns':
+      return convertColumns(node as ColumnsNode, options.columns);
 
     default:
       // Unknown node type, return a paragraph with text

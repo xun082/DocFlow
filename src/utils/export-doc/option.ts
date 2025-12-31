@@ -10,6 +10,8 @@ import {
   ITableOfContentsOptions,
 } from 'docx';
 
+import { ColumnOptions } from './converters';
+
 /**
  * Options for generating DOCX documents
  */
@@ -78,6 +80,7 @@ export interface DocxOptions<T extends OutputType = OutputType> {
   horizontalRule?: {
     paragraph?: Partial<IParagraphOptions>;
   };
+  columns?: ColumnOptions;
 
   // Export options
   outputType: T;
