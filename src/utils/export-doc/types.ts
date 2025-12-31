@@ -168,6 +168,25 @@ export interface DetailsContentNode extends JSONContent {
   content?: Array<BlockNode>;
 }
 
+// Multi-column node types
+export interface ColumnsNode extends JSONContent {
+  type: 'columns';
+  attrs?: {
+    layout?: string;
+    rows?: number;
+  };
+  content?: Array<ColumnNode>;
+}
+
+export interface ColumnNode extends JSONContent {
+  type: 'column';
+  attrs?: {
+    position?: string;
+    backgroundColor?: string;
+  };
+  content?: Array<BlockNode>;
+}
+
 // Generic converter types
 export type TextContent = TextNode | HardBreakNode;
 export type BlockNode =
@@ -181,4 +200,5 @@ export type BlockNode =
   | TaskListNode
   | TableNode
   | ImageNode
-  | DetailsNode;
+  | DetailsNode
+  | ColumnsNode;

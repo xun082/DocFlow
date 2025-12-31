@@ -62,6 +62,7 @@ export const AreaChartComponent: React.FC<AreaChartComponentProps> = ({
             stroke={COLORS[colorKey][index % COLORS[colorKey].length]}
             strokeWidth={CHART_CONSTANTS.LINE.strokeWidth}
             stackId={key === yAxisKeys[0] ? '1' : undefined} // 只有第一条曲线参与堆叠
+            isAnimationActive={false}
           />
         ))}
       </AreaChart>
