@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, FileText } from 'lucide-react';
+import { MessageSquare, FileText, MoreHorizontal } from 'lucide-react';
 import juice from 'juice';
 import { toast } from 'sonner';
 
@@ -318,6 +318,7 @@ export default function DocumentHeader({
                 type="button"
                 className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
               >
+                <MoreHorizontal className="w-4 h-4" />
                 <span className="hidden sm:inline text-sm font-medium">操作</span>
               </button>
             }
