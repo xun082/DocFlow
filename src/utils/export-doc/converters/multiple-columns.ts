@@ -1,4 +1,4 @@
-import { Paragraph } from 'docx';
+import { Paragraph, TextRun } from 'docx';
 
 import { ColumnsNode } from '../types';
 import { DocxOptions } from '../option';
@@ -38,7 +38,16 @@ export async function convertColumns(
   node.content.forEach((col, columnIndex) => {
     columnParagraphs.push(
       new Paragraph({
-        text: `gjsdgjlsjglajgajlajglagjlagjal${columnIndex.toString()}` || '',
+        children: [
+          new TextRun({
+            text: `gjsdgjlsjglajgajlajglagjlagjal${columnIndex.toString()}` || '',
+            shading: {
+              type: 'solid',
+              color: '00FFFF',
+              fill: '000000',
+            },
+          }),
+        ],
       }),
     );
   });
@@ -48,7 +57,7 @@ export async function convertColumns(
       column: {
         space,
         count: count,
-        equalWidth: true,
+        // equalWidth: true,
       },
     },
     children: columnParagraphs,

@@ -88,9 +88,8 @@ export async function generateDOCX<T extends OutputType>(
     outputType,
   } = options;
 
-  // Convert document content
-  const children = await convertDocumentContent(docJson, options);
-  console.log('🚀 ~ file: generator.ts:93 ~ children:', children);
+  // Convert document content to sections
+  const { sections: contentSections } = await convertDocumentContent(docJson, options);
 
   // Create table of contents if configured
   const tocElement = tableOfContents
@@ -103,30 +102,54 @@ export async function generateDOCX<T extends OutputType>(
   const numberingOptions = createNumberingOptions(docJson);
 
   // Build document sections - merge user config with generated content
-  const documentSections = sections
-    ? sections.map((section, index) => {
-        const sectionChildren: FileChild[] = [];
+  let documentSections: Array<{ children: FileChild[] } | any>;
 
-        // Add table of contents to first section if configured
-        if (index === 0 && tocElement) {
-          sectionChildren.push(tocElement);
-        }
+  if (sections) {
+    // User provided custom sections - merge with content
+    documentSections = sections.map((section, index) => {
+      const sectionChildren: FileChild[] = [];
 
-        // Add main content to first section
-        if (index === 0) {
-          sectionChildren.push(...children);
-        }
+      // Add table of contents to first section if configured
+      if (index === 0 && tocElement) {
+        sectionChildren.push(tocElement);
+      }
 
-        return {
-          ...section,
-          ...(sectionChildren.length > 0 ? { children: sectionChildren } : {}),
-        };
-      })
-    : [
-        {
-          children: tocElement ? [tocElement, ...children] : children,
-        },
-      ];
+      // Add content sections to first user section
+      if (index === 0) {
+        contentSections.forEach((contentSection) => {
+          if ('properties' in contentSection) {
+            // This is a column section - add as separate section
+            documentSections.push(contentSection);
+          } else {
+            // Regular section - merge children
+            sectionChildren.push(...contentSection.children);
+          }
+        });
+      }
+
+      return {
+        ...section,
+        ...(sectionChildren.length > 0 ? { children: sectionChildren } : {}),
+      };
+    });
+  } else {
+    // No custom sections - use content sections directly
+    documentSections = [...contentSections];
+
+    // Add table of contents to first section if configured
+    if (tocElement && documentSections.length > 0) {
+      const firstSection = documentSections[0];
+
+      if ('children' in firstSection) {
+        firstSection.children.unshift(tocElement);
+      } else {
+        // First section is a column section, insert TOC before it
+        documentSections.unshift({ children: [tocElement] });
+      }
+    }
+  }
+
+  console.log('🚀 ~ file: generator.ts:148 ~ documentSections:', documentSections);
 
   // Build document options
   const docOptions: IPropertiesOptions = {
@@ -178,29 +201,75 @@ export async function generateDOCX<T extends OutputType>(
 }
 
 /**
+ * Column section configuration
+ */
+interface ColumnSection {
+  properties: { column: { space: number; count: number; equalWidth: boolean } };
+  children: FileChild[];
+}
+
+/**
+ * Result of document content conversion
+ */
+interface ConversionResult {
+  sections: Array<{ children: FileChild[] } | ColumnSection>;
+}
+
+/**
  * Convert document content to DOCX elements
+ * Returns an array of sections, where columns nodes create separate sections with column properties
  */
 export async function convertDocumentContent(
   node: JSONContent,
   options: DocxOptions,
-): Promise<FileChild[]> {
-  const elements: FileChild[] = [];
+): Promise<ConversionResult> {
+  const sections: Array<{ children: FileChild[] } | ColumnSection> = [];
 
   if (!node || !Array.isArray(node.content)) {
-    return elements;
+    return { sections: [{ children: [] }] };
   }
 
-  for (const childNode of node.content) {
-    const element = await convertNode(childNode, options);
+  let currentSectionChildren: FileChild[] = [];
 
-    if (Array.isArray(element)) {
-      elements.push(...element);
-    } else if (element) {
-      elements.push(element);
+  for (const childNode of node.content) {
+    // Check if this is a columns node
+    if (childNode.type === 'columns') {
+      // Flush current section if it has content
+      if (currentSectionChildren.length > 0) {
+        sections.push({ children: currentSectionChildren });
+        currentSectionChildren = [];
+      }
+
+      // Process columns node
+      const columnsNode = childNode as ColumnsNode;
+      // Convert column content
+      const columnContent = await convertColumns(columnsNode, options.columns);
+
+      // Create a separate section for columns
+      sections.push(columnContent);
+    } else {
+      // Regular node - add to current section
+      const element = await convertNode(childNode, options);
+
+      if (Array.isArray(element)) {
+        currentSectionChildren.push(...element);
+      } else if (element) {
+        currentSectionChildren.push(element);
+      }
     }
   }
 
-  return elements;
+  // Flush remaining content
+  if (currentSectionChildren.length > 0) {
+    sections.push({ children: currentSectionChildren });
+  }
+
+  // If no sections were created, return an empty section
+  if (sections.length === 0) {
+    sections.push({ children: [] });
+  }
+
+  return { sections };
 }
 
 /**
@@ -257,9 +326,6 @@ export async function convertNode(
 
     case 'details':
       return await convertDetails(node as DetailsNode, options);
-
-    case 'columns':
-      return convertColumns(node as ColumnsNode, options.columns);
 
     default:
       // Unknown node type, return a paragraph with text
