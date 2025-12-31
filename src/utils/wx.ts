@@ -307,6 +307,12 @@ export const handleExportDOCX = async (name: string, editor: any) => {
 
     const json = editor.getJSON();
 
+    if (!json?.content?.length) {
+      toast.warning('文档内容为空');
+
+      return;
+    }
+
     const docx = await generateDOCX(
       {
         type: 'doc',

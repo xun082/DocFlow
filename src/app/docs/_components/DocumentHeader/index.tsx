@@ -31,6 +31,8 @@ interface CollaborationUser {
   avatar: string;
 }
 
+type ExportAction = 'copy' | 'pdf' | 'docx';
+
 // 协作用户头像组件
 function UserAvatar({
   user,
@@ -131,7 +133,7 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
-  const handleSelectAction = (value: string) => {
+  const handleSelectAction = (value: ExportAction) => {
     if (value === 'copy') {
       handleCopy();
     } else if (value === 'pdf') {
