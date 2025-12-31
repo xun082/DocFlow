@@ -306,6 +306,7 @@ export const handleExportDOCX = async (name: string, editor: any) => {
     }
 
     const json = editor.getJSON();
+    console.log('🚀 ~ file: wx.ts:309 ~ json:', json);
 
     if (!json?.content?.length) {
       toast.warning('文档内容为空');
@@ -322,6 +323,17 @@ export const handleExportDOCX = async (name: string, editor: any) => {
               attrs: {
                 ...item.attrs,
                 src: item.attrs?.src ? item.attrs?.src : item.attrs?.imageUrl,
+              },
+              type: 'image',
+            };
+          }
+
+          if (item.type === 'chart') {
+            return {
+              ...item,
+              attrs: {
+                ...item.attrs,
+                src: item.attrs?.png,
               },
               type: 'image',
             };
