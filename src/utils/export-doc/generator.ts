@@ -30,7 +30,6 @@ import { convertTaskItem } from './converters/task-item';
 import { convertHorizontalRule } from './converters/horizontal-rule';
 import { convertDetails } from './converters/details';
 import { convertHardBreak } from './converters/text';
-import { convertColumns } from './converters/multiple-columns';
 import type {
   ParagraphNode,
   HeadingNode,
@@ -45,7 +44,6 @@ import type {
   BulletListNode,
   HorizontalRuleNode,
   DetailsNode,
-  ColumnsNode,
 } from './types';
 
 /**
@@ -117,13 +115,7 @@ export async function generateDOCX<T extends OutputType>(
       // Add content sections to first user section
       if (index === 0) {
         contentSections.forEach((contentSection) => {
-          if ('properties' in contentSection) {
-            // This is a column section - add as separate section
-            documentSections.push(contentSection);
-          } else {
-            // Regular section - merge children
-            sectionChildren.push(...contentSection.children);
-          }
+          sectionChildren.push(...contentSection.children);
         });
       }
 
@@ -138,18 +130,9 @@ export async function generateDOCX<T extends OutputType>(
 
     // Add table of contents to first section if configured
     if (tocElement && documentSections.length > 0) {
-      const firstSection = documentSections[0];
-
-      if ('children' in firstSection) {
-        firstSection.children.unshift(tocElement);
-      } else {
-        // First section is a column section, insert TOC before it
-        documentSections.unshift({ children: [tocElement] });
-      }
+      documentSections[0].children.unshift(tocElement);
     }
   }
-
-  console.log('🚀 ~ file: generator.ts:148 ~ documentSections:', documentSections);
 
   // Build document options
   const docOptions: IPropertiesOptions = {
@@ -201,75 +184,29 @@ export async function generateDOCX<T extends OutputType>(
 }
 
 /**
- * Column section configuration
- */
-interface ColumnSection {
-  properties: { column: { space: number; count: number; equalWidth: boolean } };
-  children: FileChild[];
-}
-
-/**
- * Result of document content conversion
- */
-interface ConversionResult {
-  sections: Array<{ children: FileChild[] } | ColumnSection>;
-}
-
-/**
  * Convert document content to DOCX elements
- * Returns an array of sections, where columns nodes create separate sections with column properties
  */
 export async function convertDocumentContent(
   node: JSONContent,
   options: DocxOptions,
-): Promise<ConversionResult> {
-  const sections: Array<{ children: FileChild[] } | ColumnSection> = [];
+): Promise<{ sections: Array<{ children: FileChild[] }> }> {
+  const children: FileChild[] = [];
 
   if (!node || !Array.isArray(node.content)) {
     return { sections: [{ children: [] }] };
   }
 
-  let currentSectionChildren: FileChild[] = [];
-
   for (const childNode of node.content) {
-    // Check if this is a columns node
-    if (childNode.type === 'columns') {
-      // Flush current section if it has content
-      if (currentSectionChildren.length > 0) {
-        sections.push({ children: currentSectionChildren });
-        currentSectionChildren = [];
-      }
+    const element = await convertNode(childNode, options);
 
-      // Process columns node
-      const columnsNode = childNode as ColumnsNode;
-      // Convert column content
-      const columnContent = await convertColumns(columnsNode, options.columns);
-
-      // Create a separate section for columns
-      sections.push(columnContent);
-    } else {
-      // Regular node - add to current section
-      const element = await convertNode(childNode, options);
-
-      if (Array.isArray(element)) {
-        currentSectionChildren.push(...element);
-      } else if (element) {
-        currentSectionChildren.push(element);
-      }
+    if (Array.isArray(element)) {
+      children.push(...element);
+    } else if (element) {
+      children.push(element);
     }
   }
 
-  // Flush remaining content
-  if (currentSectionChildren.length > 0) {
-    sections.push({ children: currentSectionChildren });
-  }
-
-  // If no sections were created, return an empty section
-  if (sections.length === 0) {
-    sections.push({ children: [] });
-  }
-
-  return { sections };
+  return { sections: [{ children }] };
 }
 
 /**

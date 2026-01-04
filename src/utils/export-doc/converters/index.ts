@@ -14,4 +14,3 @@ export * from './task-list';
 export * from './task-item';
 export * from './horizontal-rule';
 export * from './details';
-export * from './multiple-columns';
