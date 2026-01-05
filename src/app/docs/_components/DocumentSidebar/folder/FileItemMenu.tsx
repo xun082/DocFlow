@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 
 import { FileItem } from './type';
 
@@ -15,8 +14,6 @@ interface FileItemMenuProps {
   onRename?: (file: FileItem) => void;
   onDuplicate?: (file: FileItem) => void;
   onDownload?: (file: FileItem) => void;
-  onExportDOCX?: (file: FileItem) => void;
-  onExportPDF?: (file: FileItem) => void;
   className?: string;
 }
 
@@ -27,17 +24,11 @@ const FileItemMenu = ({
   onRename,
   onDuplicate,
   onDownload,
-  onExportDOCX,
-  onExportPDF,
   className,
 }: FileItemMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const pathname = usePathname();
-
-  // 直接判断当前是否在文档详情页
-  const isInDocumentDetail = /^\/docs\/\d+/.test(pathname);
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -88,24 +79,10 @@ const FileItemMenu = ({
       className: 'text-green-600 hover:bg-green-50',
     },
     {
-      icon: 'FileText',
-      label: '导出DOCX',
-      action: () => onExportDOCX?.(file),
-      show: !!onExportDOCX && isInDocumentDetail,
-      className: 'text-purple-600 hover:bg-purple-50',
-    },
-    {
       icon: 'Copy',
       label: '复制',
       action: () => onDuplicate?.(file),
       show: !!onDuplicate,
-      className: 'text-gray-600 hover:bg-gray-50',
-    },
-    {
-      icon: 'FileText',
-      label: '导出PDF',
-      action: () => onExportPDF?.(file),
-      show: !!onExportPDF && isInDocumentDetail,
       className: 'text-gray-600 hover:bg-gray-50',
     },
     {

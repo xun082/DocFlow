@@ -43,7 +43,7 @@ export const PieChartComponent: React.FC<PieChartComponentProps> = ({
       <PieChart accessibilityLayer data={data} margin={CHART_CONSTANTS.MARGIN}>
         <ChartTooltip content={<ChartTooltipContent />} />
         {/* <ChartLegend content={<ChartLegendContent />} /> */}
-        <Pie data={data} dataKey={yAxisKeys[0]} nameKey={xAxisKey} label>
+        <Pie data={data} dataKey={yAxisKeys[0]} nameKey={xAxisKey} label isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell
               key={`cell-${entry[xAxisKey]}`}

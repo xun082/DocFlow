@@ -86,8 +86,8 @@ export async function generateDOCX<T extends OutputType>(
     outputType,
   } = options;
 
-  // Convert document content
-  const children = await convertDocumentContent(docJson, options);
+  // Convert document content to sections
+  const { sections: contentSections } = await convertDocumentContent(docJson, options);
 
   // Create table of contents if configured
   const tocElement = tableOfContents
@@ -100,30 +100,39 @@ export async function generateDOCX<T extends OutputType>(
   const numberingOptions = createNumberingOptions(docJson);
 
   // Build document sections - merge user config with generated content
-  const documentSections = sections
-    ? sections.map((section, index) => {
-        const sectionChildren: FileChild[] = [];
+  let documentSections: Array<{ children: FileChild[] } | any>;
 
-        // Add table of contents to first section if configured
-        if (index === 0 && tocElement) {
-          sectionChildren.push(tocElement);
-        }
+  if (sections) {
+    // User provided custom sections - merge with content
+    documentSections = sections.map((section, index) => {
+      const sectionChildren: FileChild[] = [];
 
-        // Add main content to first section
-        if (index === 0) {
-          sectionChildren.push(...children);
-        }
+      // Add table of contents to first section if configured
+      if (index === 0 && tocElement) {
+        sectionChildren.push(tocElement);
+      }
 
-        return {
-          ...section,
-          ...(sectionChildren.length > 0 ? { children: sectionChildren } : {}),
-        };
-      })
-    : [
-        {
-          children: tocElement ? [tocElement, ...children] : children,
-        },
-      ];
+      // Add content sections to first user section
+      if (index === 0) {
+        contentSections.forEach((contentSection) => {
+          sectionChildren.push(...contentSection.children);
+        });
+      }
+
+      return {
+        ...section,
+        ...(sectionChildren.length > 0 ? { children: sectionChildren } : {}),
+      };
+    });
+  } else {
+    // No custom sections - use content sections directly
+    documentSections = [...contentSections];
+
+    // Add table of contents to first section if configured
+    if (tocElement && documentSections.length > 0) {
+      documentSections[0].children.unshift(tocElement);
+    }
+  }
 
   // Build document options
   const docOptions: IPropertiesOptions = {
@@ -180,24 +189,24 @@ export async function generateDOCX<T extends OutputType>(
 export async function convertDocumentContent(
   node: JSONContent,
   options: DocxOptions,
-): Promise<FileChild[]> {
-  const elements: FileChild[] = [];
+): Promise<{ sections: Array<{ children: FileChild[] }> }> {
+  const children: FileChild[] = [];
 
   if (!node || !Array.isArray(node.content)) {
-    return elements;
+    return { sections: [{ children: [] }] };
   }
 
   for (const childNode of node.content) {
     const element = await convertNode(childNode, options);
 
     if (Array.isArray(element)) {
-      elements.push(...element);
+      children.push(...element);
     } else if (element) {
-      elements.push(element);
+      children.push(element);
     }
   }
 
-  return elements;
+  return { sections: [{ children }] };
 }
 
 /**

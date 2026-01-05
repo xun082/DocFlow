@@ -216,45 +216,50 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ node, updateAttributes 
     });
   };
 
-  // 检查图表是否已完全渲染（检查容器内是否有SVG元素）
-  const isChartRendered = () => {
-    if (!chartContainerRef.current) return false;
+  // 生成图表 PNG
+  const generateChartPng = () => {
+    if (!chartContainerRef.current) return;
 
+    // 检查容器内是否有 SVG 元素（图表是否已渲染）
     const svgElement = chartContainerRef.current.querySelector('svg');
 
-    return svgElement !== null;
+    if (!svgElement) {
+      console.warn('图表尚未渲染完成，400ms 后重试');
+
+      return;
+    }
+
+    try {
+      const width = chartContainerRef.current.clientWidth || 800;
+      const height = chartContainerRef.current.clientHeight || 600;
+      snapdom
+        .toCanvas(chartContainerRef.current, {
+          scale: 2,
+          width: width,
+          height: height,
+          backgroundColor: '#ffffff',
+        })
+        .then((canvas) => {
+          const dataUrl = canvas.toDataURL('image/png');
+          console.log('生成的图表 PNG:');
+          updateAttributesRef.current({ png: dataUrl });
+        });
+    } catch (err) {
+      console.warn('生成图表 PNG 失败（可能在编辑中正常）:', err);
+    }
   };
 
   useEffect(() => {
     if (!isClient || !isValidData || !chartContainerRef.current) return;
 
-    const timer = setTimeout(async () => {
-      // 检查图表是否已渲染完成
-      if (!isChartRendered()) {
-        console.warn('图表尚未渲染完成，跳过 PNG 生成');
+    // 首次尝试生成 PNG
+    generateChartPng();
 
-        return;
-      }
+    // 如果还没渲染完成，200ms 后重试，保证可以生成
+    const retryTimer = setTimeout(generateChartPng, 400);
 
-      try {
-        const width = chartContainerRef?.current?.clientWidth || 800;
-        const height = chartContainerRef?.current?.clientHeight || 600;
-        const canvas = await snapdom.toCanvas(chartContainerRef.current!, {
-          scale: 2,
-          width: width,
-          height: height,
-          backgroundColor: '#ffffff',
-        });
-
-        const dataUrl = canvas.toDataURL('image/png');
-        updateAttributesRef.current({ png: dataUrl });
-      } catch (err) {
-        console.warn('生成图表 PNG 失败（可能在编辑中正常）:', err);
-      }
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey]); // 延迟 800ms 确保 Recharts 完全渲染
+    return () => clearTimeout(retryTimer);
+  }, [isClient, isValidData, data, type, title, xAxisKey, yAxisKeys, colorKey]);
 
   const renderChart = () => {
     // 只在客户端和有有效数据时渲染图表
