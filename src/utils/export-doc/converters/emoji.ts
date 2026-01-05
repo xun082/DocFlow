@@ -8,6 +8,54 @@ import { EmojiNode } from '../types';
 // 内存缓存，避免重复下载
 const emojiCache = new Map<string, Uint8Array>();
 
+// 配置常量
+const FETCH_TIMEOUT = 5000; // 5秒超时
+const MAX_RETRIES = 2; // 最多重试2次
+const RETRY_DELAY = 1000; // 重试延迟1秒
+
+/**
+ * 带超时的fetch
+ */
+async function fetchWithTimeout(url: string, timeout: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * 带重试机制的fetch
+ */
+async function fetchWithRetry(url: string, maxRetries: number, delay: number): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetchWithTimeout(url, FETCH_TIMEOUT);
+
+      return response;
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`Emoji CDN 下载失败 (尝试 ${attempt + 1}/${maxRetries + 1}):`, error);
+
+      // 如果不是最后一次尝试，等待后重试
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Emoji CDN 下载失败');
+}
+
 /**
  * 将 Tiptap 的 Emoji 节点转换为 Word 图片
  * @param name Tiptap 传出的 emoji name (如 "face_with_peeking_eye")
@@ -47,9 +95,9 @@ export async function convertEmoji(node: EmojiNode): Promise<Run> {
     // 注意：如果是较新的 Emoji (如 peeking eye)，确保 CDN 源是最新的
     const imageUrl = `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/512/emoji_u${hex}.png`;
 
-    // 5. 下载图片
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error('CDN 下载失败');
+    // 5. 下载图片（带超时和重试机制）
+    const response = await fetchWithRetry(imageUrl, MAX_RETRIES, RETRY_DELAY);
+    if (!response.ok) throw new Error(`CDN 下载失败: ${response.status}`);
 
     const arrayBuffer = await response.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
