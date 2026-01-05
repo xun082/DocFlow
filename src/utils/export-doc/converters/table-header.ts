@@ -11,12 +11,12 @@ import { DocxOptions } from '../option';
  * @param options - Table options from PropertiesOptions
  * @returns DOCX TableCell object for header
  */
-export function convertTableHeader(
+export async function convertTableHeader(
   node: TableHeaderNode,
   options: DocxOptions['table'],
-): TableCell {
+): Promise<TableCell> {
   // Convert paragraphs in the header
-  const paragraphs =
+  const paragraphs = await Promise.all(
     node.content?.map((p) =>
       convertParagraph(
         p,
@@ -25,7 +25,8 @@ export function convertTableHeader(
           options?.row?.paragraph ??
           options?.paragraph,
       ),
-    ) || [];
+    ) || [],
+  );
 
   // Create table header cell with header options
   const headerCell = new TableCell({

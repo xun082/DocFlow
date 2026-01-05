@@ -46,7 +46,7 @@ export interface DocumentNode extends JSONContent {
 
 export interface ParagraphNode extends JSONContent {
   type: 'paragraph';
-  content?: Array<TextNode | HardBreakNode>;
+  content?: Array<TextNode | HardBreakNode | EmojiNode>;
 }
 
 export interface HeadingNode extends JSONContent {
@@ -152,6 +152,17 @@ export interface ImageNode extends JSONContent {
   };
 }
 
+// Emoji node type
+export interface EmojiNode extends JSONContent {
+  type: 'emoji';
+  attrs?: {
+    id: string;
+    name: string;
+    emoji: string;
+    fallbackImage?: string | null;
+  };
+}
+
 // Details node types
 export interface DetailsNode extends JSONContent {
   type: 'details';
@@ -181,4 +192,5 @@ export type BlockNode =
   | TaskListNode
   | TableNode
   | ImageNode
+  | EmojiNode
   | DetailsNode;

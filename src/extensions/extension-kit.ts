@@ -332,6 +332,7 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
 
   Emoji.configure({
     enableEmoticons: true,
+    forceFallbackImages: true,
     suggestion: emojiSuggestion,
   }),
   TextAlign.extend({

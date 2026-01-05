@@ -26,7 +26,7 @@ export async function convertTableRow(
         if (cellNode.type === 'tableCell') {
           return convertTableCell(cellNode, options);
         } else if (cellNode.type === 'tableHeader') {
-          return convertTableHeader(cellNode, options);
+          return await convertTableHeader(cellNode, options);
         }
 
         return [];

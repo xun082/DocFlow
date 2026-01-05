@@ -290,6 +290,9 @@ importers:
       docx:
         specifier: ^9.5.1
         version: 9.5.1
+      emojibase-data:
+        specifier: ^17.0.0
+        version: 17.0.0(emojibase@16.0.0)
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
@@ -5141,6 +5144,11 @@ packages:
 
   emojibase-data@15.3.2:
     resolution: {integrity: sha512-TpDyTDDTdqWIJixV5sTA6OQ0P0JfIIeK2tFRR3q56G9LK65ylAZ7z3KyBXokpvTTJ+mLUXQXbLNyVkjvnTLE+A==}
+    peerDependencies:
+      emojibase: '*'
+
+  emojibase-data@17.0.0:
+    resolution: {integrity: sha512-Yvgb5AWoHViHV/gq1qr5ZAarcBip+B27/ZLRsUJkbgAEaLlZ/fof9g882LTpmEpyhBNEC0m2SEmItljHsTygjA==}
     peerDependencies:
       emojibase: '*'
 
@@ -13377,6 +13385,10 @@ snapshots:
   emoji-regex@9.2.2: {}
 
   emojibase-data@15.3.2(emojibase@16.0.0):
+    dependencies:
+      emojibase: 16.0.0
+
+  emojibase-data@17.0.0(emojibase@16.0.0):
     dependencies:
       emojibase: 16.0.0
 

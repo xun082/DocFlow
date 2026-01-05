@@ -14,7 +14,10 @@ import { convertParagraph } from './paragraph';
  * @param options - Optional paragraph options (e.g., numbering)
  * @returns DOCX Paragraph object
  */
-export function convertListItem(node: ListItemNode, options?: IParagraphOptions): Paragraph {
+export async function convertListItem(
+  node: ListItemNode,
+  options?: IParagraphOptions,
+): Promise<Paragraph> {
   if (!node.content || node.content.length === 0) {
     return new Paragraph({});
   }
@@ -23,7 +26,7 @@ export function convertListItem(node: ListItemNode, options?: IParagraphOptions)
   const firstParagraph = node.content[0];
 
   if (firstParagraph.type === 'paragraph') {
-    return convertParagraph(firstParagraph, options);
+    return await convertParagraph(firstParagraph, options);
   }
 
   // Fallback to empty paragraph
