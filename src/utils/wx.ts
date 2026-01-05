@@ -1,5 +1,7 @@
 import { toast } from 'sonner';
 import { Editor } from '@tiptap/core';
+import { jsPDF } from 'jspdf';
+import { snapdom } from '@zumer/snapdom'; // 请确保已安装 snapdom
 
 import { generateDOCX } from '@/utils/export-doc/generator';
 
@@ -246,54 +248,99 @@ export function processLinks(container: HTMLElement): void {
 
 // 导出文档为PDF
 export const handleExportPDF = async (name: string) => {
+  let toastId: string | number | null = null;
+  let timeoutId: NodeJS.Timeout | null = null;
+
   try {
-    // 获取编辑器内容 - 尝试多个可能的选择器
+    // 1. 获取编辑器元素
     const editorSelectors = [
       '.prose-container .ProseMirror',
       '.ProseMirror',
-      '[contenteditable="true"]',
-      '.editor',
       '#editor',
+      '[contenteditable="true"]',
     ];
 
-    let editorElement: HTMLElement | null = null;
+    let element: HTMLElement | null = null;
 
     for (const selector of editorSelectors) {
-      editorElement = document.querySelector(selector) as HTMLElement;
-      if (editorElement) break;
+      element = document.querySelector(selector) as HTMLElement;
+      if (element) break;
     }
 
-    if (!editorElement) {
-      throw new Error('找不到编辑器内容，请确保页面有可编辑的文档内容');
+    if (!element) throw new Error('找不到可导出的文档内容');
+
+    // 2. 开启 Loading
+    toastId = toast.loading('正在利用 snapdom 生成高清文档...');
+
+    // 3. 超时处理 (60秒)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('PDF 生成超时')), 60000);
+    });
+
+    // 4. 核心生成逻辑
+    const pdfPromise = (async () => {
+      // 预留 UI 渲染时间
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // 使用 snapdom 将 DOM 转为 Canvas
+      // snapdom 在处理现代 CSS (如 Gap, Flex) 时表现通常优于 html2canvas
+      const canvas = await snapdom.toCanvas(element, {
+        filter: (node) => {
+          // 可以在这里过滤不需要导出的 DOM 节点（如悬浮按钮）
+          return (node as HTMLElement).tagName !== 'BUTTON';
+        },
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      // 创建 jsPDF 实例: A4 纸张, 单位 mm
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      // 计算图片在 PDF 中的宽高
+      // 宽度撑满 A4 (考虑到 margin 10mm，宽度设为 pdfWidth - 20)
+      const margin = 10;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+      let heightLeft = contentHeight;
+      let position = margin; // 初始 Y 轴位置
+
+      // --- 分页算法 ---
+      // 第一页
+      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
+      heightLeft -= pdfHeight;
+
+      // 如果高度超过一页，循环切片
+      while (heightLeft > 0) {
+        position = heightLeft - contentHeight + margin; // 向上偏移图片
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      const fileName = `${name || 'document'}_${new Date().getTime()}.pdf`;
+      pdf.save(fileName);
+    })();
+
+    // 5. 竞速
+    await Promise.race([pdfPromise, timeoutPromise]);
+
+    if (timeoutId) clearTimeout(timeoutId);
+    toast.success('PDF 导出成功', { id: toastId });
+  } catch (error: any) {
+    if (timeoutId) clearTimeout(timeoutId);
+    console.error('PDF Export Error:', error);
+
+    const msg = error.message || '导出失败';
+
+    if (toastId) {
+      toast.error(msg, { id: toastId });
+    } else {
+      toast.error(msg);
     }
-
-    const title = name || '文档';
-
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-
-      // 简单的PDF配置
-      const options = {
-        filename: `${title}_${new Date().toISOString().split('T')[0]}.pdf`,
-        margin: 10,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 4 },
-        jsPDF: { unit: 'mm', format: 'a4' },
-        pagebreak: { mode: 'avoid-all' },
-      };
-
-      // 生成并保存PDF
-      await html2pdf().set(options).from(editorElement).save();
-
-      toast.success(`PDF文档 "${title}.pdf" 已下载`);
-    } catch (pdfError) {
-      console.error('PDF生成失败:', pdfError);
-      toast('PDF生成失败，请重试');
-    } finally {
-    }
-  } catch (error) {
-    console.error('导出PDF失败:', error);
-    toast('无法获取文档内容');
   }
 };
 
