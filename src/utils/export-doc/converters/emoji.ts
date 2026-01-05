@@ -1,7 +1,7 @@
 import { ImageRun, TextRun } from 'docx';
 import type { Run } from 'docx';
-// 导入 emojibase 完整数据
-import emojiData from 'emojibase-data/en/data.json';
+// 使用 tiptap 的 emoji 数据，确保与编辑器中的 emoji 数据一致
+import { emojis as emojiData } from '@tiptap/extension-emoji';
 
 import { EmojiNode } from '../types';
 
@@ -63,10 +63,11 @@ async function fetchWithRetry(url: string, maxRetries: number, delay: number): P
  */
 export async function convertEmoji(node: EmojiNode): Promise<Run> {
   try {
-    // 1. 在 emojibase 中寻找匹配项
-    // 匹配短代码名或标签
+    // 1. 在 tiptap emoji 数据中寻找匹配项
+    // 匹配 name、shortcodes 或 tags
     let entry = emojiData.find(
       (item) =>
+        item.name?.toLowerCase() === node?.attrs?.name?.toLowerCase() ||
         item.shortcodes?.some((code) => code.toLowerCase() === node?.attrs?.name?.toLowerCase()) ||
         item.tags?.some(
           (tag) => tag.toLowerCase().replace(/\s+/g, '_') === node?.attrs?.name?.toLowerCase(),
@@ -83,16 +84,53 @@ export async function convertEmoji(node: EmojiNode): Promise<Run> {
       });
     }
 
-    // 2. 格式化 Hexcode (Google Noto 规则：下划线连接)
-    const hex = entry.hexcode.toLowerCase().replace(/-/g, '_');
+    // 2. 优先使用 tiptap 提供的 fallbackImage
+    if (entry.fallbackImage) {
+      // 检查缓存
+      if (emojiCache.has(entry.fallbackImage)) {
+        return createImgRun(emojiCache.get(entry.fallbackImage)!);
+      }
 
-    // 3. 检查缓存
+      // 下载图片（带超时和重试机制）
+      const response = await fetchWithRetry(entry.fallbackImage, MAX_RETRIES, RETRY_DELAY);
+      if (!response.ok) throw new Error(`CDN 下载失败: ${response.status}`);
+
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      // 存入缓存并返回
+      emojiCache.set(entry.fallbackImage, uint8Array);
+
+      return createImgRun(uint8Array);
+    }
+
+    // 3. 如果没有 fallbackImage，尝试使用 Google Noto CDN
+    // 从 emoji 字符转换为 hexcode
+    const emojiChar = entry.emoji || node?.attrs?.emoji;
+
+    if (!emojiChar) {
+      console.warn(`Emoji ${node?.attrs?.name} 缺少 emoji 字符`);
+
+      return new TextRun({
+        text: `[emoji]: ${node?.attrs?.name || ''}`,
+        size: 20,
+        color: '999999',
+      });
+    }
+
+    // 将 emoji 字符转换为 hexcode
+    const hex = Array.from(emojiChar)
+      .map((char) => char.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0'))
+      .join('-')
+      .toLowerCase()
+      .replace(/-/g, '_');
+
+    // 检查缓存
     if (emojiCache.has(hex)) {
       return createImgRun(emojiCache.get(hex)!);
     }
 
-    // 4. 构造图片链接 (使用 Google Noto CDN)
-    // 注意：如果是较新的 Emoji (如 peeking eye)，确保 CDN 源是最新的
+    // 构造图片链接 (使用 Google Noto CDN)
     const imageUrl = `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/512/emoji_u${hex}.png`;
 
     // 5. 下载图片（带超时和重试机制）
