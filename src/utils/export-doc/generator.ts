@@ -21,7 +21,6 @@ import { convertParagraph } from './converters/paragraph';
 import { convertHeading } from './converters/heading';
 import { convertBlockquote } from './converters/blockquote';
 import { convertImage } from './converters/image';
-import { convertEmoji } from './converters/emoji';
 import { convertTable } from './converters/table';
 import { convertCodeBlock } from './converters/code-block';
 import { convertList } from './converters/list';
@@ -37,7 +36,6 @@ import type {
   BlockquoteNode,
   CodeBlockNode,
   ImageNode,
-  EmojiNode,
   TableNode,
   TaskListNode,
   ListItemNode,
@@ -239,9 +237,6 @@ export async function convertNode(
 
     case 'image':
       return await convertImage(node as ImageNode, options.image);
-
-    case 'emoji':
-      return await convertEmoji(node as EmojiNode);
 
     case 'table':
       return await convertTable(node as TableNode, options.table);

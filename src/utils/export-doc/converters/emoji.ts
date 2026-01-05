@@ -1,4 +1,5 @@
-import { ImageRun, TextRun, Paragraph } from 'docx';
+import { ImageRun, TextRun } from 'docx';
+import type { Run } from 'docx';
 // 导入 emojibase 完整数据
 import emojiData from 'emojibase-data/en/data.json';
 
@@ -12,7 +13,7 @@ const emojiCache = new Map<string, Uint8Array>();
  * @param name Tiptap 传出的 emoji name (如 "face_with_peeking_eye")
  * @param char 可选的原始字符 (如 "🫣")
  */
-export async function convertEmoji(node: EmojiNode): Promise<Paragraph> {
+export async function convertEmoji(node: EmojiNode): Promise<Run> {
   try {
     // 1. 在 emojibase 中寻找匹配项
     // 匹配短代码名或标签
@@ -24,12 +25,14 @@ export async function convertEmoji(node: EmojiNode): Promise<Paragraph> {
         ),
     );
 
-    console.log('🚀 ~ file: emoji.ts:18 ~ entry:', entry);
-
     if (!entry) {
       console.warn(`未找到名为 ${node?.attrs?.name} 的 Emoji 数据`);
 
-      return new Paragraph({ children: [new TextRun(node?.attrs?.name || '')] });
+      return new TextRun({
+        text: `[emoji]: ${node?.attrs?.name || ''}`,
+        size: 20,
+        color: '999999',
+      });
     }
 
     // 2. 格式化 Hexcode (Google Noto 规则：下划线连接)
@@ -37,7 +40,7 @@ export async function convertEmoji(node: EmojiNode): Promise<Paragraph> {
 
     // 3. 检查缓存
     if (emojiCache.has(hex)) {
-      return new Paragraph({ children: [createImgRun(emojiCache.get(hex)!)] });
+      return createImgRun(emojiCache.get(hex)!);
     }
 
     // 4. 构造图片链接 (使用 Google Noto CDN)
@@ -54,11 +57,15 @@ export async function convertEmoji(node: EmojiNode): Promise<Paragraph> {
     // 6. 存入缓存并返回
     emojiCache.set(hex, uint8Array);
 
-    return new Paragraph({ children: [createImgRun(uint8Array)] });
+    return createImgRun(uint8Array);
   } catch (error) {
     console.error(`Emoji [${node?.attrs?.name}] 转换失败:`, error);
 
-    return new Paragraph({ children: [new TextRun(node?.attrs?.name || '')] });
+    return new TextRun({
+      text: `[emoji]: ${node?.attrs?.name || ''}`,
+      size: 20,
+      color: '999999',
+    });
   }
 }
 
