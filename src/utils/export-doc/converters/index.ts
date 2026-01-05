@@ -3,6 +3,7 @@ export * from './paragraph';
 export * from './heading';
 export * from './blockquote';
 export * from './image';
+export * from './emoji';
 export * from './table';
 export * from './table-row';
 export * from './table-cell';
