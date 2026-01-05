@@ -134,8 +134,6 @@ export async function generateDOCX<T extends OutputType>(
     }
   }
 
-  console.log('🚀 ~ file: generator.ts:110 ~ documentSections:', documentSections);
-
   // Build document options
   const docOptions: IPropertiesOptions = {
     // Sections - required
