@@ -14,7 +14,7 @@ export type ColorPickerProps = {
 };
 
 export function ColorPicker({ color, onChange, onClear }: ColorPickerProps) {
-  const [colorInputValue, setColorInputValue] = useState(color || '');
+  const [colorInputValue, setColorInputValue] = useState(color || '#FF0000');
 
   const handleColorUpdate = (event: React.ChangeEvent<HTMLInputElement>) => {
     setColorInputValue(event.target.value);
@@ -38,7 +38,7 @@ export function ColorPicker({ color, onChange, onClear }: ColorPickerProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <HexColorPicker className="w-full" color={color || ''} onChange={onChange} />
+      <HexColorPicker className="w-full" color={color || '#FF0000'} onChange={onChange} />
       <input
         type="text"
         className="w-full p-2 text-black bg-white border rounded dark:bg-black dark:text-white border-neutral-200 dark:border-neutral-800 focus:outline-1 focus:ring-0 focus:outline-neutral-300 dark:focus:outline-neutral-700"
