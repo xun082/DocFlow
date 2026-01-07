@@ -1,11 +1,11 @@
 import { withSentryConfig } from '@sentry/nextjs';
-/** @type {import('next').NextConfig} */
-import { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
-import path from 'path';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+
+  serverExternalPackages: ['import-in-the-middle', 'require-in-the-middle'],
 
   // 启用编译器优化
   compiler: {
@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
 
   // 优化图片处理
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ['image/avif', 'image/webp'] as const,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
@@ -43,69 +43,6 @@ const nextConfig: NextConfig = {
     'lodash-es': {
       transform: 'lodash-es/{{member}}',
     },
-  },
-
-  webpack(config, { isServer, dev }) {
-    // SVG 支持
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: [
-        {
-          loader: '@svgr/webpack',
-          options: {
-            dimensions: false,
-          },
-        },
-      ],
-    });
-
-    // 忽略来自 Sentry/OpenTelemetry 的依赖警告
-    config.ignoreWarnings = [
-      {
-        module: /node_modules\/@opentelemetry\/instrumentation/,
-        message: /Critical dependency: the request of a dependency is an expression/,
-      },
-      {
-        module: /node_modules\/require-in-the-middle/,
-        message:
-          /Critical dependency: require function is used in a way in which dependencies cannot be statically extracted/,
-      },
-    ];
-
-    // 开发模式下减少预加载
-    if (dev && !isServer) {
-      // 禁用某些自动优化以减少预加载警告
-      config.optimization = {
-        ...config.optimization,
-        runtimeChunk: false, // 禁用运行时 chunk
-      };
-    }
-
-    // 生产环境优化（仅客户端） - 使用 Next.js 默认策略
-    if (!dev && !isServer) {
-      // 保留 Next.js 的默认代码分割，只做细微调整
-      if (
-        config.optimization?.splitChunks &&
-        typeof config.optimization.splitChunks !== 'boolean'
-      ) {
-        config.optimization.splitChunks = {
-          ...config.optimization.splitChunks,
-          chunks: 'all',
-        };
-      }
-    }
-
-    // 缓存优化（仅客户端）
-    if (!isServer && !dev) {
-      config.cache = {
-        type: 'filesystem',
-        compression: 'gzip',
-        buildDependencies: {
-          config: [__filename],
-        },
-      };
-    }
-    return config;
   },
 };
 
