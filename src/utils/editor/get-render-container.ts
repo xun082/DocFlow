@@ -1,6 +1,16 @@
+/**
+ * Get render container for editor nodes
+ */
+
 import { Editor } from '@tiptap/react';
 
-export const getRenderContainer = (editor: Editor, nodeType: string) => {
+/**
+ * Get the DOM container element for a specific node type
+ * @param editor - TipTap editor instance
+ * @param nodeType - Node type to find
+ * @returns DOM element or null
+ */
+export function getRenderContainer(editor: Editor, nodeType: string): HTMLElement | null {
   const {
     view,
     state: {
@@ -19,7 +29,7 @@ export const getRenderContainer = (editor: Editor, nodeType: string) => {
       element.getAttribute('data-type') === nodeType) ||
     (element && element.classList && element.classList.contains(nodeType))
   ) {
-    return element;
+    return element as HTMLElement;
   }
 
   const node = view.domAtPos(from).node as HTMLElement;
@@ -38,6 +48,4 @@ export const getRenderContainer = (editor: Editor, nodeType: string) => {
   }
 
   return container;
-};
-
-export default getRenderContainer;
+}

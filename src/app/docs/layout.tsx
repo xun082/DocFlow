@@ -2,8 +2,8 @@
 
 import { Suspense } from 'react';
 
-import DocumentSidebar from '@/app/docs/_components/DocumentSidebar';
-import { DocumentSidebarSkeleton } from '@/app/docs/_components/DocumentSidebarSkeleton';
+import { DocumentSidebarSkeleton } from './_components/DocumentSidebarSkeleton';
+import DocumentSidebar from './_components/DocumentSidebar';
 
 interface DocsLayoutProps {
   children: React.ReactNode;

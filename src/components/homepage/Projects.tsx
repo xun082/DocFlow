@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, GitFork, Github, ExternalLink } from 'lucide-react';
 
-import { projects, techColors, container, item } from '@/utils/constants/homepage';
+import { projects, techColors, container, item } from '@/utils';
 
 interface ProjectsProps {
   isMounted: boolean;

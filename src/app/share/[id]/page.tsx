@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, FileText, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import DocumentApi from '@/services/document';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface SharePageState {
   loading: boolean;

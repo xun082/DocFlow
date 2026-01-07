@@ -6,7 +6,7 @@ import { Link } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import 'plyr/dist/plyr.css';
 
 export const AudioComponent: React.FC<ReactNodeViewProps> = ({

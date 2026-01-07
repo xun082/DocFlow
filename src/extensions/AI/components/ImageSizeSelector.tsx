@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, ChevronDown } from 'lucide-react';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface ImageSizeSelectorProps {
   selectedSize: string;

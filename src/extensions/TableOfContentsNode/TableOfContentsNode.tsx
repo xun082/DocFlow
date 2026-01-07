@@ -3,7 +3,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer, useEditorState } from '@tiptap/
 import { TableOfContentsStorage } from '@tiptap/extension-table-of-contents';
 import { Editor as CoreEditor } from '@tiptap/core';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 export type TableOfContentsProps = {
   editor: CoreEditor;

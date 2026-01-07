@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-import { FileItem } from '../type';
 import { RenderFile } from './RenderFile';
 import PortalOverlay from './PortalOverlay';
 
+import type { FileItem } from '@/types/file-system';
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 export interface FileTreeProps {
   files: FileItem[];

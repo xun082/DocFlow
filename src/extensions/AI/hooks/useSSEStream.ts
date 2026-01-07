@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { Editor } from '@tiptap/core';
 
 import { AiApi } from '@/services/ai';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
+import { storage, STORAGE_KEYS } from '@/utils';
 
 enum AIState {
   INPUT = 'input',

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
+import type { FileItem } from '@/types/file-system';
 import DocumentApi from '@/services/document';
 import { DocumentItem } from '@/services/document/type';
 

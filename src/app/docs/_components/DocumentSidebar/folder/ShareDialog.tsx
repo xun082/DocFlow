@@ -8,11 +8,11 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { FileItem } from './type';
 import UserSelector from './components/UserSelector';
 
+import type { FileItem } from '@/types/file-system';
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import {
   Dialog,
   DialogContent,

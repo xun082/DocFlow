@@ -1,6 +1,6 @@
 import * as LucideIcons from 'lucide-react';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 // 创建图标映射，包含所有图标组件（排除 Lucide 前缀的别名和 icons 对象本身）
 const icons: Record<string, React.ComponentType<any>> = {};

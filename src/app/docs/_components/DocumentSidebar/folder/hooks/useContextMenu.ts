@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { FileItem } from '../type';
+import type { FileItem } from '@/types/file-system';
 
 export const useContextMenu = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(

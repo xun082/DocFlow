@@ -4,8 +4,8 @@ import juice from 'juice';
 import { toast } from 'sonner';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
-import { FileItem } from '../DocumentSidebar/folder/type';
 
+import type { FileItem } from '@/types/file-system';
 import { Icon } from '@/components/ui/Icon';
 import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
@@ -16,7 +16,7 @@ import {
   processLinks,
   handleExportPDF,
   handleExportDOCX,
-} from '@/utils/wx';
+} from '@/utils';
 import {
   Menu as PopoverMenu,
   Item as PopoverItem,

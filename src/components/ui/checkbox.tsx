@@ -3,7 +3,7 @@
 import * as React from 'react';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 
-import { cn } from '@/utils/utils/index';
+import { cn } from '@/utils';
 
 // 简单的 Check 图标组件
 const CheckIcon = ({ className }: { className?: string }) => (

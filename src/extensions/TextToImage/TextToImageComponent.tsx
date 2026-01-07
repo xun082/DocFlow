@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import ImageSizeButtons from './components/ImageSizeButtons';
 
 import { AiApi } from '@/services/ai';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 // 文生图状态枚举
 enum TextToImageState {

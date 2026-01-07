@@ -1,3 +1,7 @@
+/**
+ * Check if custom node is selected in editor
+ */
+
 import { Editor } from '@tiptap/react';
 
 import {
@@ -20,7 +24,12 @@ import {
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
-export const isTableGripSelected = (node: HTMLElement) => {
+/**
+ * Check if table grip is selected
+ * @param node - DOM element to check
+ * @returns True if table grip is selected
+ */
+export function isTableGripSelected(node: HTMLElement): boolean {
   let container = node;
 
   while (container && !['TD', 'TH'].includes(container.tagName)) {
@@ -32,20 +41,21 @@ export const isTableGripSelected = (node: HTMLElement) => {
   const gripRow =
     container && container.querySelector && container.querySelector('a.grip-row.selected');
 
-  if (gripColumn || gripRow) {
-    return true;
-  }
+  return !!(gripColumn || gripRow);
+}
 
-  return false;
-};
-
-export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
+/**
+ * Check if a custom node type is currently selected
+ * @param editor - TipTap editor instance
+ * @param node - DOM node to check
+ * @returns True if custom node is selected
+ */
+export function isCustomNodeSelected(editor: Editor, node: HTMLElement): boolean {
   const customNodes = [
     HorizontalRule.name,
     ImageBlock.name,
     ImageUpload.name,
     CodeBlock.name,
-    ImageBlock.name,
     Link.name,
     Figcaption.name,
     TableOfContentsNode.name,
@@ -59,11 +69,9 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     TableHeader.name,
     TableRow.name,
     Countdown.name,
-    'inlineMath', // 行内数学公式
-    'blockMath', // 块级数学公式
+    'inlineMath',
+    'blockMath',
   ];
 
   return customNodes.some((type) => editor.isActive(type)) || isTableGripSelected(node);
-};
-
-export default isCustomNodeSelected;
+}

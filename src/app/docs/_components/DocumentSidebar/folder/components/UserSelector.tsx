@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import UserApi from '@/services/users';
 import { User } from '@/services/users/type';
 

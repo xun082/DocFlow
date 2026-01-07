@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 
 import { AiApi } from '@/services/ai';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
+import { storage, STORAGE_KEYS } from '@/utils';
 
 enum AIState {
   INPUT = 'input',

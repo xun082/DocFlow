@@ -22,7 +22,7 @@ const CheckIcon = ({ className }: { className?: string }) => (
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
+import { storage, STORAGE_KEYS } from '@/utils';
 
 export default function ApiKeySettings() {
   const [apiKeys, setApiKeys] = useState<{ [key: string]: string }>({});

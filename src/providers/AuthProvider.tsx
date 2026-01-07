@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '@/services/auth';
 import { userQueryKeys } from '@/hooks/useUserQuery';
-import { hasValidAuthToken, clearAuthData } from '@/utils/cookie';
+import { hasValidAuthToken, clearAuthData } from '@/utils';
 
 interface AuthProviderProps {
   children: React.ReactNode;

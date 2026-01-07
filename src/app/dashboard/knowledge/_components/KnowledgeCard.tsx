@@ -18,7 +18,7 @@ import {
 import { ApiKnowledgeItem } from '@/services/knowledge/types';
 import { KnowledgeApi } from '@/services/knowledge';
 import { Badge } from '@/components/ui/badge';
-import { formatDateTime } from '@/utils/format';
+import { formatDateTime } from '@/utils';
 
 interface KnowledgeCardProps {
   knowledge: ApiKnowledgeItem;

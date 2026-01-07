@@ -1,24 +1,27 @@
 /**
- * 设置cookie
- * @param name cookie名称
- * @param value cookie值
- * @param days 过期天数
+ * Cookie management utilities for authentication and general storage
  */
-export function setCookie(name: string, value: string, days: number = 7) {
+
+/**
+ * Set a cookie with specified name, value, and expiration
+ * @param name - Cookie name
+ * @param value - Cookie value
+ * @param days - Expiration in days (default: 7)
+ */
+export function setCookie(name: string, value: string, days: number = 7): void {
   if (typeof document === 'undefined') return;
 
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  // 添加 SameSite=Lax 确保 cookie 在刷新时不会丢失
-  // Secure 在 HTTPS 环境下启用
   const isSecure = window.location.protocol === 'https:';
   const secureFlag = isSecure ? '; Secure' : '';
+
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${secureFlag}`;
 }
 
 /**
- * 获取cookie值
- * @param name cookie名称
- * @returns cookie值
+ * Get a cookie value by name
+ * @param name - Cookie name
+ * @returns Cookie value or null if not found
  */
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -36,29 +39,32 @@ export function getCookie(name: string): string | null {
 }
 
 /**
- * 删除cookie
- * @param name cookie名称
+ * Remove a cookie by name
+ * @param name - Cookie name
  */
-export function removeCookie(name: string) {
+export function removeCookie(name: string): void {
   setCookie(name, '', -1);
 }
 
 /**
- * 保存认证信息到cookie（仅使用cookie，不使用localStorage）
- * @param authData 认证数据
+ * Authentication data interface
  */
-export function saveAuthData(authData: {
+export interface AuthData {
   token: string;
   refresh_token?: string;
   expires_in?: number;
   refresh_expires_in?: number;
-}) {
+}
+
+/**
+ * Save authentication data to cookies
+ * @param authData - Authentication data object
+ */
+export function saveAuthData(authData: AuthData): void {
   if (typeof window === 'undefined') return;
 
-  // 计算过期天数，默认7天
   const expiryDays = authData.expires_in ? Math.ceil(authData.expires_in / 86400) : 7;
 
-  // 只保存到cookie
   if (authData.token) {
     setCookie('auth_token', authData.token, expiryDays);
   }
@@ -78,22 +84,20 @@ export function saveAuthData(authData: {
     setCookie('refresh_expires_in', authData.refresh_expires_in.toString(), expiryDays);
   }
 
-  // 保存一个时间戳，用于验证token是否过期
-  const timestamp = Date.now().toString();
-  setCookie('auth_timestamp', timestamp, expiryDays);
+  setCookie('auth_timestamp', Date.now().toString(), expiryDays);
 }
 
 /**
- * 获取认证token（仅从cookie获取）
- * @returns token字符串或null
+ * Get authentication token from cookies
+ * @returns Token string or null if not found
  */
 export function getAuthToken(): string | null {
   return getCookie('auth_token');
 }
 
 /**
- * 验证token是否存在且有效
- * @returns boolean
+ * Check if a valid authentication token exists
+ * @returns True if valid token exists
  */
 export function hasValidAuthToken(): boolean {
   const token = getAuthToken();
@@ -102,9 +106,9 @@ export function hasValidAuthToken(): boolean {
 }
 
 /**
- * 清除认证数据（仅清除cookies）
+ * Clear all authentication data from cookies
  */
-export function clearAuthData() {
+export function clearAuthData(): void {
   removeCookie('auth_token');
   removeCookie('refresh_token');
   removeCookie('expires_in');

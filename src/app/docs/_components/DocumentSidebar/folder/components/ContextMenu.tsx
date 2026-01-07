@@ -1,8 +1,7 @@
 import React from 'react';
 
-import { FileItem } from '../type';
-
-import { cn } from '@/utils/utils';
+import type { FileItem } from '@/types/file-system';
+import { cn } from '@/utils';
 import { Icon } from '@/components/ui/Icon';
 
 interface ContextMenuProps {

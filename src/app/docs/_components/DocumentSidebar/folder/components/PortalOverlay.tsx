@@ -5,8 +5,9 @@ import { DragOverlay, Modifier } from '@dnd-kit/core';
 import { defaultDropAnimation } from '@dnd-kit/core';
 
 import { RenderFile } from './RenderFile';
-import { FileItem } from '../type';
 import { FileTreeProps } from './FileTree';
+
+import type { FileItem } from '@/types/file-system';
 
 export default function PortalOverlay({
   activeFile,

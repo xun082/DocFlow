@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PodcastApi, { PODCAST_CONSTANTS } from '@/services/podcast';
-import { storage, STORAGE_KEYS } from '@/utils/localstorage';
+import { storage, STORAGE_KEYS } from '@/utils';
 
 interface UploadResumeCardProps {
   onUploadSuccess?: () => void;

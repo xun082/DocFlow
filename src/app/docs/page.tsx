@@ -19,8 +19,7 @@ import React, { JSX, useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
-import { FileItem } from './_components/DocumentSidebar/folder/type';
-
+import type { FileItem } from '@/types/file-system';
 import DocumentApi from '@/services/document';
 import { LatestDocumentItem } from '@/services/document/type';
 import {

@@ -1,6 +1,6 @@
 import { HTMLProps, forwardRef } from 'react';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface SpinnerProps extends Omit<HTMLProps<HTMLDivElement>, 'size'> {
   size?: 'sm' | 'md' | 'lg';

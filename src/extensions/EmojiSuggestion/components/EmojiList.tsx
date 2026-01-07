@@ -16,7 +16,7 @@ import { EmojiListProps } from '../types';
 
 import { Panel } from '@/components/ui/Panel';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 const EmojiList = forwardRef(
   (

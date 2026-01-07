@@ -3,7 +3,7 @@ import { Slot } from '@radix-ui/react-slot';
 
 import { Surface } from '../Surface';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 export type PanelProps = {
   spacing?: 'medium' | 'small';

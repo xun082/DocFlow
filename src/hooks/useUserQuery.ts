@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import authApi from '@/services/auth';
 import UserApi from '@/services/users';
 import type { User } from '@/types/auth';
-import { clearAuthData } from '@/utils/cookie';
+import { clearAuthData } from '@/utils';
 
 // Query Keys
 export const userQueryKeys = {
