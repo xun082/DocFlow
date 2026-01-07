@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { ROUTES } from '@/utils';
+import { ROUTES } from '@/utils/constants/routes';
 
 /**
  * 检查token是否有效（非空且非无效值）
