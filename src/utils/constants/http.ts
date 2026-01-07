@@ -1,5 +1,9 @@
 /**
- * HTTP 状态码对应的错误消息
+ * HTTP-related constants
+ */
+
+/**
+ * HTTP status code messages (Chinese)
  */
 export const HTTP_STATUS_MESSAGES: Record<number, string> = {
   200: '请求成功',
@@ -43,10 +47,10 @@ export const HTTP_STATUS_MESSAGES: Record<number, string> = {
   508: '检测到循环',
   510: '服务器配置错误',
   511: '需要网络认证',
-};
+} as const;
 
 /**
- * HTTP 请求方法
+ * HTTP request methods
  */
 export const HTTP_METHODS = {
   GET: 'GET',
@@ -57,7 +61,7 @@ export const HTTP_METHODS = {
 } as const;
 
 /**
- * HTTP 请求模式
+ * HTTP request modes
  */
 export const HTTP_MODES = {
   CORS: 'cors',
@@ -66,10 +70,17 @@ export const HTTP_MODES = {
 } as const;
 
 /**
- * HTTP 请求凭证模式
+ * HTTP request credentials modes
  */
 export const HTTP_CREDENTIALS = {
   INCLUDE: 'include',
   SAME_ORIGIN: 'same-origin',
   OMIT: 'omit',
 } as const;
+
+/**
+ * Type definitions
+ */
+export type HttpMethod = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
+export type HttpMode = (typeof HTTP_MODES)[keyof typeof HTTP_MODES];
+export type HttpCredentials = (typeof HTTP_CREDENTIALS)[keyof typeof HTTP_CREDENTIALS];

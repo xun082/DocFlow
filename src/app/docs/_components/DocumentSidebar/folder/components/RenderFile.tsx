@@ -2,12 +2,12 @@ import React, { Ref } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import { FileItem } from '../type';
 import FileItemMenu from '../FileItemMenu';
 import { useFileActions } from '../hooks/useFileActions';
 
+import type { FileItem } from '@/types/file-system';
 import { useFileStore } from '@/stores/fileStore';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import { Icon } from '@/components/ui/Icon';
 
 export const RenderFile: React.FC<{

@@ -10,7 +10,7 @@ import ModelSelector from './ModelSelector';
 import KnowledgeBaseSelector from './KnowledgeBaseSelector';
 import type { ActionButtonConfig } from '../actionButtons';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 type ActionButton = ActionButtonConfig;
 

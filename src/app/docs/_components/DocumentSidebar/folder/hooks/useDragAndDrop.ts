@@ -1,6 +1,6 @@
 import { DragEndEvent, DragOverEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 
-import { getProjection } from '@/utils/file-tree';
+import { getProjection } from '@/utils';
 import { useDragDropStore } from '@/stores/dragDropStore';
 
 export const useDragAndDrop = (

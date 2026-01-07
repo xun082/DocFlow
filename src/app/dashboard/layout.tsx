@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { getPageTitle, NAV_ITEMS } from '@/utils/constants/navigation';
+import { getPageTitle, NAV_ITEMS } from '@/utils';
 import { NotificationSocketProvider } from '@/providers/NotificationSocketProvider';
 
 interface DashboardLayoutProps {

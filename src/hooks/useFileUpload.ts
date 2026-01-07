@@ -11,7 +11,7 @@ import {
   validateFile,
   handleUploadError,
   DEFAULT_UPLOAD_CONFIG,
-} from '@/utils/upload';
+} from '@/utils/file-system/upload';
 
 // Worker 消息类型
 interface HashWorkerMessage {

@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { closestCenter, DndContext, MeasuringStrategy, PointerSensor } from '@dnd-kit/core';
 import { useSensor, useSensors } from '@dnd-kit/core';
 
-import { FileExplorerProps, FileItem } from './type';
 import ShareDialog from './ShareDialog';
 import SharedDocuments from './components/SharedDocuments';
 import FileTree from './components/FileTree';
@@ -16,6 +15,7 @@ import { useFileOperations } from './hooks/useFileOperations';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useContextMenu } from './hooks/useContextMenu';
 
+import { FileExplorerProps, FileItem } from '@/types/file-system';
 import { useSidebar } from '@/stores/sidebarStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +27,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useFileStore } from '@/stores/fileStore';
-import { flattenTreeFile, getProjection, removeChildrenOf } from '@/utils/file-tree';
+import { flattenTreeFile, getProjection, removeChildrenOf } from '@/utils';
 
 export const TRASH_ID = 'void';
 

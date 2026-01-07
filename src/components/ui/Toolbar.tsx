@@ -5,7 +5,7 @@ import { Surface } from './Surface';
 import { Button, buttonVariants } from './button';
 import Tooltip from './Tooltip';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 export type ToolbarWrapperProps = {
   shouldShowContent?: boolean;

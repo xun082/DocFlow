@@ -2,10 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-import { FileItem } from './type';
-
+import type { FileItem } from '@/types/file-system';
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface FileItemMenuProps {
   file: FileItem;

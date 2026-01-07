@@ -3,7 +3,7 @@ import { Editor, NodeViewWrapper, ReactNodeViewProps } from '@tiptap/react';
 import { useCallback } from 'react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 import 'react-photo-view/dist/react-photo-view.css';
 

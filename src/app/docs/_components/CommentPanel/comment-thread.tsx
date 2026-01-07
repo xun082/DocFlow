@@ -8,7 +8,7 @@ import { CommentItem } from './comment-item';
 
 import { Button } from '@/components/ui/button';
 import Textarea from '@/components/ui/Textarea';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import CommentApi from '@/services/comment';
 import { useCommentStore } from '@/stores/commentStore';
 import type { CommentThread as CommentThreadType } from '@/services/comment/type';

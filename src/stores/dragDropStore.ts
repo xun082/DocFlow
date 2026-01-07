@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 
-import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
-import { flattenTreeFile, buildTree } from '@/utils/file-tree';
+import type { FileItem } from '@/types/file-system';
+import { flattenTreeFile, buildTree } from '@/utils';
 import DocumentApi from '@/services/document';
 
 interface DragDropState {

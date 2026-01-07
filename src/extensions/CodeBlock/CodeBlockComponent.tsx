@@ -16,7 +16,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface CodeBlockComponentProps extends Omit<ReactNodeViewProps, 'getPos'> {
   editor: any;

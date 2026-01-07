@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { User, Settings, LogOut, HelpCircle, Menu, ChevronDown } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { getPageDescription, PAGE_TITLE_MAP } from '@/utils/constants/navigation';
+import { getPageDescription, PAGE_TITLE_MAP } from '@/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,

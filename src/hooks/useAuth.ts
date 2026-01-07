@@ -6,7 +6,7 @@ import { userQueryKeys } from './useUserQuery';
 
 import authApi from '@/services/auth';
 import type { User, AuthResponse, EmailPasswordRegisterParams } from '@/types/auth';
-import { saveAuthData } from '@/utils/cookie';
+import { saveAuthData } from '@/utils';
 
 // 邮箱验证码登录参数（扩展）
 interface EmailLoginParams {

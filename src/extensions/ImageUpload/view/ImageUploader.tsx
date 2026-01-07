@@ -6,7 +6,7 @@ import { useDropZone, useFileUpload, useImgUpload } from './hooks';
 import Spinner from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/Icon';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 export const ImageUploader = ({
   getPos,

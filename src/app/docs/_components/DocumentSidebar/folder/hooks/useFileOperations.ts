@@ -1,8 +1,7 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-import { FileItem } from '../type';
-
+import type { FileItem } from '@/types/file-system';
 import DocumentApi from '@/services/document';
 import { CreateDocumentDto } from '@/services/document/type';
 

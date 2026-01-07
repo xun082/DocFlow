@@ -21,12 +21,11 @@ const CommentPanel = dynamic(
   },
 );
 import { ExtensionKit } from '@/extensions/extension-kit';
-import { getCursorColorByUserId } from '@/utils/cursor_color';
-import { getAuthToken } from '@/utils/cookie';
+import { getCursorColorByUserId, getAuthToken } from '@/utils';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
 import { FloatingToc } from '@/app/docs/_components/FloatingToc';
 import { useFileStore } from '@/stores/fileStore';
-import { FileItem } from '@/app/docs/_components/DocumentSidebar/folder/type';
+import type { FileItem } from '@/types/file-system';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';

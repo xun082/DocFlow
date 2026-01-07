@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-import { FileItem, SearchResultItem } from '../type';
+import type { FileItem, SearchResultItem } from '@/types/file-system';
 
 interface UseFileSearchReturn {
   searchQuery: string;

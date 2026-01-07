@@ -1,19 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useMotionValue, useSpring } from 'framer-motion';
 
 import useAnalytics from '@/hooks/useAnalysis';
-import { getCookie } from '@/utils/cookie';
-import { springConfig } from '@/utils/constants/homepage';
+import { getCookie, springConfig } from '@/utils';
 import Header from '@/components/homepage/Header';
 import Hero from '@/components/homepage/Hero';
-import Features from '@/components/homepage/Features';
-import Contact from '@/components/homepage/Contact';
-import Projects from '@/components/homepage/Projects';
-import Footer from '@/components/homepage/Footer';
-import BackgroundEffects from '@/components/homepage/BackgroundEffects';
+
+const Features = dynamic(() => import('@/components/homepage/Features'), {
+  loading: () => <div className="min-h-screen" />,
+  ssr: true,
+});
+
+const Contact = dynamic(() => import('@/components/homepage/Contact'), {
+  loading: () => <div className="min-h-[400px]" />,
+  ssr: true,
+});
+
+const Projects = dynamic(() => import('@/components/homepage/Projects'), {
+  loading: () => <div className="min-h-screen" />,
+  ssr: true,
+});
+
+const Footer = dynamic(() => import('@/components/homepage/Footer'), {
+  loading: () => <div className="min-h-[200px]" />,
+  ssr: true,
+});
+
+const BackgroundEffects = dynamic(() => import('@/components/homepage/BackgroundEffects'), {
+  loading: () => null,
+  ssr: false, // 背景效果不需要SSR
+});
 
 const Page = () => {
   useAnalytics();
@@ -28,6 +48,7 @@ const Page = () => {
   const springX = useSpring(mouseX, springConfig);
   const springY = useSpring(mouseY, springConfig);
 
+  // 分离认证检查和OAuth回调处理
   useEffect(() => {
     setIsMounted(true);
 
@@ -35,30 +56,29 @@ const Page = () => {
     setIsLoggedIn(!!token);
 
     // 检查是否是GitHub OAuth回调（如果callback URL配置错误指向了根目录）
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
 
-      if (code) {
-        // 构建完整的callback URL，保留所有参数
-        const callbackUrl = `/auth/callback${window.location.search}`;
-        // 使用replace避免在浏览器历史中留下痕迹
-        window.location.replace(callbackUrl);
-
-        return; // 早期返回，避免设置其他监听器
-      }
-
-      const handleMouseMove = (e: MouseEvent) => {
-        mouseX.set(e.clientX - 192);
-        mouseY.set(e.clientY - 192);
-      };
-
-      window.addEventListener('mousemove', handleMouseMove);
-
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-      };
+    if (code) {
+      // 构建完整的callback URL，保留所有参数
+      const callbackUrl = `/auth/callback${window.location.search}`;
+      // 使用replace避免在浏览器历史中留下痕迹
+      window.location.replace(callbackUrl);
     }
+  }, []);
+
+  // 鼠标移动效果 - 独立effect，避免不必要的重渲染
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - 192);
+      mouseY.set(e.clientY - 192);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, [mouseX, mouseY]);
 
   const handleGetStarted = () => {

@@ -1,10 +1,16 @@
 import * as Sentry from '@sentry/nextjs';
 import { createSseStream } from '@azure/core-sse';
 
-import { getCookie, saveAuthData, clearAuthData } from '@/utils/cookie';
-import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/http';
+import {
+  getCookie,
+  saveAuthData,
+  clearAuthData,
+  HTTP_METHODS,
+  HTTP_CREDENTIALS,
+  HTTP_STATUS_MESSAGES,
+  ROUTES,
+} from '@/utils';
 import type { TokenRefreshResponse } from '@/types/auth';
-import { ROUTES } from '@/utils/constants/navigation';
 
 type Method = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
 

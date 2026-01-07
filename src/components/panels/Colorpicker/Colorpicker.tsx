@@ -5,7 +5,7 @@ import { ColorButton } from './ColorButton';
 import { Toolbar } from '../../ui/Toolbar';
 import { Icon } from '../../ui/Icon';
 
-import { themeColors } from '@/utils/constants';
+import { themeColors } from '@/utils';
 
 export type ColorPickerProps = {
   color?: string;

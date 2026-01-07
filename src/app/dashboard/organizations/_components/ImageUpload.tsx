@@ -6,7 +6,7 @@ import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import uploadService from '@/services/upload';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface ImageUploadProps {
   value?: string;

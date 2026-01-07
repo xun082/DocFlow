@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Button as ShadcnButton } from '@/components/ui/button';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost';

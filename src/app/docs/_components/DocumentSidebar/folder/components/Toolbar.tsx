@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 import { Icon } from '@/components/ui/Icon';
 
 interface ToolbarProps {

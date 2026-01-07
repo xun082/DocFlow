@@ -11,7 +11,7 @@ import {
   PodcastEventResponse,
   PodcastEvent,
 } from '@/types/ws';
-import { getAuthToken } from '@/utils/cookie';
+import { getAuthToken } from '@/utils';
 
 // 从cookie中获取token的工具函数
 const getTokenFromStorage = (): string | null => {

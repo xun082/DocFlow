@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { AiApi } from '@/services/ai';
 import { KnowledgeOption } from '@/services/ai/type';
-import { cn } from '@/utils/utils';
+import { cn } from '@/utils';
 
 interface KnowledgeBaseSelectorProps {
   selectedKnowledgeIds: number[];

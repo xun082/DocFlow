@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-import { formatSpeed, formatTime } from '@/utils/upload';
+import { formatSpeed, formatTime } from '@/utils';
 
 interface UseUploadProgressReturn {
   updateProgress: (bytesUploaded: number, totalBytes: number) => void;

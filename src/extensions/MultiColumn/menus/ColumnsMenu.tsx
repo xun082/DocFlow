@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ColumnLayout } from '../Columns';
 
 import { MenuProps } from '@/components/menus/types';
-import { getRenderContainer } from '@/utils/utils/getRenderContainer';
+import { getRenderContainer } from '@/utils';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { BubbleMenu } from '@/components/ui/BubbleMenu';
