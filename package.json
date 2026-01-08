@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:analyze": "ANALYZE=true next build",
+    "build:analyze": "next experimental-analyze",
     "analyze": "ANALYZE=true pnpm build",
     "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --fix",
