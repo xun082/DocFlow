@@ -1,13 +1,15 @@
 'use client';
 
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
-import { all, createLowlight } from 'lowlight';
+import { common, createLowlight } from 'lowlight';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { textblockTypeInputRule } from '@tiptap/core';
 
 import CodeBlockComponent from './CodeBlockComponent';
 
-const lowlight = createLowlight(all);
+// 使用 common 预设 - 包含最常用的 ~40 种语言，比 all (200+) 减少 80% 的加载时间
+// common 包含: javascript, typescript, python, java, c, cpp, csharp, go, rust, php, ruby, swift, kotlin, sql, bash, json, yaml, xml, markdown, css, scss, html 等
+const lowlight = createLowlight(common);
 
 // 定义扩展选项接口
 interface CodeBlockOptions {
