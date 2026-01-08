@@ -320,6 +320,36 @@ export default function DocumentPage() {
     }
   }, [editor, isPanelOpen, closePanel]);
 
+  // Ctrl+C 复制选中文本为 JSON 格式
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleCopy = (e: ClipboardEvent) => {
+      // 1. 检查是否有选区
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) return;
+
+      try {
+        // 2. 获取数据
+        const json = editor.getJSON();
+        const jsonString = JSON.stringify(json);
+
+        // 3. 关键修复：使用 e.clipboardData 而不是 navigator.clipboard
+        // 这样可以避免异步权限问题和 'clipboard is not defined' 错误
+        if (e.clipboardData) {
+          e.clipboardData.setData('text/json', jsonString);
+          e.preventDefault(); // 只有成功设置数据后才阻止默认行为
+        }
+      } catch (error) {
+        console.error('复制失败:', error);
+      }
+    };
+
+    document.addEventListener('copy', handleCopy);
+
+    return () => document.removeEventListener('copy', handleCopy);
+  }, [editor]);
+
   // 组件卸载时清理编辑器实例
   useEffect(() => {
     return () => {

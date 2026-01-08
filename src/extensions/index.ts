@@ -52,6 +52,7 @@ export { emojiSuggestion } from './EmojiSuggestion';
 export { DraggableBlock } from './DraggableBlock';
 export { DragHandler } from './DragHandler';
 export { MarkdownPaste } from './MarkdownPaste';
+export { JsonPaste } from './JsonPaste';
 
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Audio } from './Audio';
