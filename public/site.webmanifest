@@ -1,0 +1,20 @@
+{
+  "name": "DocFlow - 智能文档协作平台",
+  "short_name": "DocFlow",
+  "description": "基于 Tiptap 构建的现代化文档编辑器，支持实时协作、智能AI助手和丰富的内容格式",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "zh-CN",
+  "dir": "ltr"
+}

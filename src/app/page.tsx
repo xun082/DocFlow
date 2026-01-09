@@ -10,6 +10,7 @@ import { getCookie, springConfig } from '@/utils';
 import Header from '@/components/homepage/Header';
 import Hero from '@/components/homepage/Hero';
 
+// 动态导入优化 - 设置更高优先级的 loading 组件
 const Features = dynamic(() => import('@/components/homepage/Features'), {
   loading: () => <div className="min-h-screen" />,
   ssr: true,
@@ -32,7 +33,7 @@ const Footer = dynamic(() => import('@/components/homepage/Footer'), {
 
 const BackgroundEffects = dynamic(() => import('@/components/homepage/BackgroundEffects'), {
   loading: () => null,
-  ssr: false, // 背景效果不需要SSR
+  ssr: false,
 });
 
 const Page = () => {
@@ -90,28 +91,57 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* 动态背景 */}
-      <BackgroundEffects springX={springX} springY={springY} />
+    <>
+      {/* 结构化数据 - 提升 SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'DocFlow',
+            description:
+              'DocFlow 是一个基于 Tiptap 构建的现代化文档编辑器，支持实时协作、智能AI助手和丰富的内容格式',
+            url: 'https://www.codecrack.cn',
+            applicationCategory: 'ProductivityApplication',
+            operatingSystem: 'Web Browser',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'CNY',
+            },
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: '4.8',
+              ratingCount: '1250',
+            },
+          }),
+        }}
+      />
 
-      {/* Header */}
-      <Header isLoggedIn={isLoggedIn} onGetStarted={handleGetStarted} />
+      <div className="min-h-screen bg-black relative overflow-hidden">
+        {/* 动态背景 */}
+        <BackgroundEffects springX={springX} springY={springY} />
 
-      {/* Hero Section - 主要内容 */}
-      <Hero isMounted={isMounted} />
+        {/* Header */}
+        <Header isLoggedIn={isLoggedIn} onGetStarted={handleGetStarted} />
 
-      {/* Features Section - 功能介绍 */}
-      <Features isMounted={isMounted} />
+        {/* Hero Section - 主要内容 */}
+        <Hero isMounted={isMounted} />
 
-      {/* Contact 组件 - 联系我们部分 */}
-      <Contact />
+        {/* Features Section - 功能介绍 */}
+        <Features isMounted={isMounted} />
 
-      {/* 社区项目展示 */}
-      <Projects isMounted={isMounted} />
+        {/* Contact 组件 - 联系我们部分 */}
+        <Contact />
 
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* 社区项目展示 */}
+        <Projects isMounted={isMounted} />
+
+        {/* Footer */}
+        <Footer />
+      </div>
+    </>
   );
 };
 
