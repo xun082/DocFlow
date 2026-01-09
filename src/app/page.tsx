@@ -100,11 +100,27 @@ const Page = () => {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
             name: 'DocFlow',
+            alternateName: [
+              'DocFlow 富文本编辑器',
+              'DocFlow 在线文本编辑器',
+              'DocFlow 协作文档编辑器',
+            ],
             description:
-              'DocFlow 是一个基于 Tiptap 构建的现代化文档编辑器，支持实时协作、智能AI助手和丰富的内容格式',
+              'DocFlow 是一个基于 Tiptap 构建的现代化富文本编辑器，支持实时协作、智能AI助手和丰富的内容格式。好用的在线文本编辑器，支持多人协同编辑、Markdown、RTF文件等多种格式。',
             url: 'https://www.codecrack.cn',
             applicationCategory: 'ProductivityApplication',
             operatingSystem: 'Web Browser',
+            browserRequirements: 'Requires JavaScript. Requires HTML5.',
+            softwareVersion: '1.0',
+            featureList: [
+              '富文本编辑',
+              '实时协作',
+              'AI助手',
+              'Markdown支持',
+              '多人协同编辑',
+              '在线文档编辑',
+              '文本编辑器',
+            ],
             offers: {
               '@type': 'Offer',
               price: '0',
@@ -115,9 +131,35 @@ const Page = () => {
               ratingValue: '4.8',
               ratingCount: '1250',
             },
+            keywords: [
+              '富文本编辑器',
+              '在线文本编辑器',
+              '文本编辑器',
+              '协作文档编辑器',
+              '富文本',
+              '文本编辑',
+              '好用的文本编辑器',
+              '富文本编辑器在线',
+              '在线编辑器',
+            ],
           }),
         }}
       />
+
+      {/* SEO 友好的隐藏文本 - 帮助搜索引擎理解页面内容 */}
+      <div className="sr-only" aria-hidden="true">
+        <h1>DocFlow - 好用的富文本编辑器</h1>
+        <p>
+          DocFlow 是一个功能强大的富文本编辑器，支持在线文本编辑、多人协同编辑和实时协作。
+          作为一款好用的文本编辑器，DocFlow 提供了丰富的富文本编辑功能，支持
+          Markdown、RTF文件等多种格式。 无论是个人使用还是团队协作，DocFlow
+          都是您理想的在线文本编辑器和协作文档编辑器选择。
+        </p>
+        <p>
+          富文本编辑器在线使用，无需安装即可开始编辑。支持富文本编辑、文本编辑、在线编辑器等多种编辑模式。
+          DocFlow 富文本编辑器基于 Tiptap 构建，提供流畅的编辑体验和强大的协作功能。
+        </p>
+      </div>
 
       <div className="min-h-screen bg-black relative overflow-hidden">
         {/* 动态背景 */}

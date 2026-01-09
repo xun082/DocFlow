@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   description:
     'DocFlow 是一个基于 Tiptap 构建的现代化文档编辑器，支持实时协作、智能AI助手和丰富的内容格式，为团队提供高效的文档创作体验。',
   keywords: [
+    // 核心功能关键词
     '协同',
     '协同编辑',
     '文档编辑器',
@@ -31,6 +32,29 @@ export const metadata: Metadata = {
     'Markdown',
     'Tiptap',
     '在线编辑',
+    // 高搜索量关键词（来自关键词研究）
+    '富文本',
+    '文本编辑',
+    '好用的文本编辑器',
+    '富文本编辑器',
+    '富文本编辑器在线',
+    '在线文本编辑器',
+    '富文本框',
+    'editor',
+    '文本编辑器',
+    '在线编辑器',
+    'RTF文件',
+    '富文本是什么意思',
+    // 技术相关
+    'React富文本编辑器',
+    'Next.js编辑器',
+    'Yjs协作',
+    'CRDT同步',
+    // 应用场景
+    '在线文档编辑器',
+    '协作文档编辑器',
+    '团队文档编辑器',
+    '企业文档编辑器',
   ],
   authors: [{ name: 'DocFlow Team' }],
   creator: 'DocFlow Team',
