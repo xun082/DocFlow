@@ -404,6 +404,7 @@ export default function DocumentPage() {
         documentId={documentId}
         documentTitle={permissionData?.documentTitle ?? getCurrentDocumentName() ?? undefined}
         documentName={`文档 ${documentId}`}
+        doc={doc}
       />
 
       {/* 主内容区域 */}

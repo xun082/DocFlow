@@ -4,6 +4,7 @@ import juice from 'juice';
 import { toast } from 'sonner';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
+import HistoryPanel from '../HistoryPanel';
 
 import type { FileItem } from '@/types/file-system';
 import { Icon } from '@/components/ui/Icon';
@@ -110,6 +111,7 @@ interface DocumentHeaderProps {
   documentId?: string;
   documentName?: string;
   documentTitle?: string; // 添加实际的文档标题字段
+  doc?: any; // Yjs 文档实例
 }
 
 export default function DocumentHeader({
@@ -119,6 +121,7 @@ export default function DocumentHeader({
   documentId,
   documentName = '未命名文档',
   documentTitle,
+  doc,
 }: DocumentHeaderProps) {
   // 判断是否为协作模式
   const isCollaborationMode = provider && Array.isArray(connectedUsers);
@@ -296,6 +299,9 @@ export default function DocumentHeader({
             </span>
           )}
         </button>
+
+        {/* 历史面板按钮 */}
+        {documentId && doc && <HistoryPanel documentId={documentId} doc={doc} />}
 
         {/* 分享按钮 */}
         {documentId && (
