@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { History, Clock, Trash2, RotateCcw, Plus, X } from 'lucide-react';
+import { History, Clock, Trash2, RotateCcw, Plus, X, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -15,19 +15,48 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/utils';
+
+interface CollaborationUser {
+  id: string;
+  name: string;
+  color: string;
+  avatar: string;
+}
 
 interface HistoryPanelProps {
   documentId: string;
   doc: any;
+  connectedUsers?: CollaborationUser[];
+  currentUser?: CollaborationUser | null;
 }
 
-export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
+export default function HistoryPanel({
+  documentId,
+  doc,
+  connectedUsers = [],
+  currentUser,
+}: HistoryPanelProps) {
+  const otherUsers = connectedUsers.filter((user) => user.id !== currentUser?.id);
+  const hasOtherUsers = otherUsers.length > 0;
   const [isOpen, setIsOpen] = useState(false);
   const [isRestoring, setIsRestoring] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [description, setDescription] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   const { snapshots, isLoading, createSnapshot, restoreSnapshot, deleteSnapshot, clearSnapshots } =
     useEditorHistory({
@@ -54,9 +83,15 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
   };
 
   const handleRestoreSnapshot = async (snapshotId: string) => {
-    setIsRestoring(snapshotId);
+    setShowRestoreConfirm(snapshotId);
+  };
 
-    const success = await restoreSnapshot(snapshotId);
+  const confirmRestoreSnapshot = async () => {
+    if (!showRestoreConfirm) return;
+
+    setIsRestoring(showRestoreConfirm);
+
+    const success = await restoreSnapshot(showRestoreConfirm);
     setIsRestoring(null);
 
     if (success) {
@@ -65,12 +100,20 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
     } else {
       toast.error('快照恢复失败');
     }
+
+    setShowRestoreConfirm(null);
   };
 
   const handleDeleteSnapshot = async (snapshotId: string) => {
-    setIsDeleting(snapshotId);
+    setShowDeleteConfirm(snapshotId);
+  };
 
-    const success = await deleteSnapshot(snapshotId);
+  const confirmDeleteSnapshot = async () => {
+    if (!showDeleteConfirm) return;
+
+    setIsDeleting(showDeleteConfirm);
+
+    const success = await deleteSnapshot(showDeleteConfirm);
     setIsDeleting(null);
 
     if (success) {
@@ -78,22 +121,26 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
     } else {
       toast.error('快照删除失败');
     }
+
+    setShowDeleteConfirm(null);
   };
 
   const handleClearAll = async () => {
     if (snapshots.length === 0) return;
 
-    const confirmed = window.confirm('确定要删除所有快照吗？此操作不可恢复。');
+    setShowClearConfirm(true);
+  };
 
-    if (confirmed) {
-      const success = await clearSnapshots();
+  const confirmClearAll = async () => {
+    const success = await clearSnapshots();
 
-      if (success) {
-        toast.success('所有快照已删除');
-      } else {
-        toast.error('删除快照失败');
-      }
+    if (success) {
+      toast.success('所有快照已删除');
+    } else {
+      toast.error('删除快照失败');
     }
+
+    setShowClearConfirm(false);
   };
 
   return (
@@ -207,7 +254,7 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleRestoreSnapshot(snapshot.id)}
-                          disabled={isRestoring === snapshot.id}
+                          disabled={isRestoring === snapshot.id || showRestoreConfirm !== null}
                           title="恢复此快照"
                         >
                           <RotateCcw
@@ -219,7 +266,7 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
                           size="icon"
                           className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                           onClick={() => handleDeleteSnapshot(snapshot.id)}
-                          disabled={isDeleting === snapshot.id}
+                          disabled={isDeleting === snapshot.id || showDeleteConfirm !== null}
                           title="删除此快照"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -290,6 +337,85 @@ export default function HistoryPanel({ documentId, doc }: HistoryPanelProps) {
               </div>
             </div>
           )}
+
+          <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认清空所有快照？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  此操作不可恢复！清空后，所有历史快照都将被永久删除。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmClearAll}>确认清空</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog
+            open={showRestoreConfirm !== null}
+            onOpenChange={() => setShowRestoreConfirm(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认恢复快照？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {hasOtherUsers ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                        <Users className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-red-700 dark:text-red-300">
+                            当前有 {otherUsers.length} 位用户正在编辑此文档
+                          </div>
+                          <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                            {otherUsers.map((user, index) => (
+                              <span key={user.id}>
+                                {index > 0 && '、'}
+                                {user.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        恢复快照后，当前文档内容将被快照内容覆盖，其他用户的更改可能会丢失。
+                        此操作不可撤销。
+                      </div>
+                    </>
+                  ) : (
+                    <>恢复后，当前文档内容将被快照内容覆盖，此操作不可撤销。</>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmRestoreSnapshot}
+                  className={hasOtherUsers ? 'bg-red-600 hover:bg-red-700' : ''}
+                >
+                  确认恢复
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog
+            open={showDeleteConfirm !== null}
+            onOpenChange={() => setShowDeleteConfirm(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认删除快照？</AlertDialogTitle>
+                <AlertDialogDescription>删除后，此快照将无法恢复。</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDeleteSnapshot}>确认删除</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </DrawerContent>
     </Drawer>

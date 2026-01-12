@@ -301,7 +301,14 @@ export default function DocumentHeader({
         </button>
 
         {/* 历史面板按钮 */}
-        {documentId && doc && <HistoryPanel documentId={documentId} doc={doc} />}
+        {documentId && doc && (
+          <HistoryPanel
+            documentId={documentId}
+            doc={doc}
+            connectedUsers={connectedUsers}
+            currentUser={currentUser}
+          />
+        )}
 
         {/* 分享按钮 */}
         {documentId && (
