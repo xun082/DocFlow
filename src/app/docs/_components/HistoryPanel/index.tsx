@@ -146,19 +146,18 @@ export default function HistoryPanel({
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button
-          variant="outline"
-          className="relative gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+        <div
+          className="flex items-center gap-2 p-1.5 text-sm font-medium text-neutral-500 text-left bg-transparent w-full rounded hover:bg-neutral-100 hover:text-neutral-800 dark:hover:bg-neutral-900 dark:hover:text-neutral-200"
           aria-label="查看历史记录"
         >
-          <History className="h-4 w-4" />
+          <History className="w-4 h-4" />
           <span>历史记录</span>
           {snapshots.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-blue-500 text-[10px] text-white flex items-center justify-center">
+            <span className="ml-auto px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-500 text-white min-w-[20px] text-center">
               {snapshots.length}
             </span>
           )}
-        </Button>
+        </div>
       </DrawerTrigger>
       <DrawerContent className="h-[80vh] w-full max-w-2xl mx-auto">
         <div className="flex flex-col h-full">

@@ -300,16 +300,6 @@ export default function DocumentHeader({
           )}
         </button>
 
-        {/* 历史面板按钮 */}
-        {documentId && doc && (
-          <HistoryPanel
-            documentId={documentId}
-            doc={doc}
-            connectedUsers={connectedUsers}
-            currentUser={currentUser}
-          />
-        )}
-
         {/* 分享按钮 */}
         {documentId && (
           <button
@@ -338,6 +328,14 @@ export default function DocumentHeader({
             customTrigger
           >
             <PopoverCategoryTitle>文档操作</PopoverCategoryTitle>
+            {documentId && doc && (
+              <HistoryPanel
+                documentId={documentId}
+                doc={doc}
+                connectedUsers={connectedUsers}
+                currentUser={currentUser}
+              />
+            )}
             <PopoverItem
               label="复制到公众号"
               icon="Copy"
