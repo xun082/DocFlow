@@ -2,12 +2,21 @@ import { create } from 'zustand';
 
 import type { FileItem } from '@/types/file-system';
 import DocumentApi from '@/services/document';
-import { DocumentItem } from '@/services/document/type';
+import { DocumentItem, OrganizationDocumentGroup } from '@/services/document/type';
+
+export interface DocumentGroup {
+  id: string;
+  name: string;
+  type: 'personal' | 'organization' | 'shared';
+  files: FileItem[];
+  organizationId?: number;
+}
 
 interface FileState {
-  // 文件状态
-  files: FileItem[];
+  // 文件状态 - 分组数据
+  documentGroups: DocumentGroup[];
   expandedFolders: Record<string, boolean>;
+  expandedGroups: Record<string, boolean>; // 分组折叠状态
   selectedFileId: string | null;
   isLoading: boolean;
 
@@ -16,18 +25,20 @@ interface FileState {
   newItemFolder: string | null;
   newItemType: 'file' | 'folder' | null;
   newItemName: string;
+  newItemGroupId: string | null; // 新建项目所属的分组
 
   // 分享状态
   shareDialogOpen: boolean;
   shareDialogFile: FileItem | null;
-  sharedDocsExpanded: boolean;
 
   // Actions
-  setFiles: (files: FileItem[]) => void;
+  setDocumentGroups: (groups: DocumentGroup[]) => void;
   setExpandedFolders: (folders: Record<string, boolean>) => void;
+  setExpandedGroups: (groups: Record<string, boolean>) => void;
   setSelectedFileId: (id: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   toggleFolder: (folderId: string) => void;
+  toggleGroup: (groupId: string) => void;
   collapseAll: () => void;
 
   // UI Actions
@@ -35,24 +46,33 @@ interface FileState {
   setNewItemFolder: (id: string | null) => void;
   setNewItemType: (type: 'file' | 'folder' | null) => void;
   setNewItemName: (name: string) => void;
+  setNewItemGroupId: (groupId: string | null) => void;
 
   // 分享 Actions
   setShareDialogOpen: (open: boolean) => void;
   setShareDialogFile: (file: FileItem | null) => void;
-  setSharedDocsExpanded: (expanded: boolean) => void;
 
   // 文件操作
   loadFiles: (isInitialLoad?: boolean) => Promise<void>;
   processApiDocuments: (documents: DocumentItem[]) => FileItem[];
-  createNewItem: (name: string, type: 'file' | 'folder', parentId?: string) => Promise<boolean>;
+  createNewItem: (
+    name: string,
+    type: 'file' | 'folder',
+    parentId?: string,
+    groupId?: string,
+  ) => Promise<boolean>;
   finishCreateNewItem: () => Promise<void>;
   cancelCreateNewItem: () => void;
 }
 
 export const useFileStore = create<FileState>((set, get) => ({
   // 初始状态
-  files: [],
+  documentGroups: [],
   expandedFolders: {},
+  expandedGroups: {
+    personal: true,
+    shared: true,
+  },
   selectedFileId: null,
   isLoading: true,
 
@@ -61,15 +81,16 @@ export const useFileStore = create<FileState>((set, get) => ({
   newItemFolder: null,
   newItemType: null,
   newItemName: '',
+  newItemGroupId: null,
 
   // 分享状态
   shareDialogOpen: false,
   shareDialogFile: null,
-  sharedDocsExpanded: false,
 
   // 基础 Actions
-  setFiles: (files) => set({ files }),
+  setDocumentGroups: (groups) => set({ documentGroups: groups }),
   setExpandedFolders: (folders) => set({ expandedFolders: folders }),
+  setExpandedGroups: (groups) => set({ expandedGroups: groups }),
   setSelectedFileId: (id) => set({ selectedFileId: id }),
   setIsLoading: (loading) => set({ isLoading: loading }),
   toggleFolder: (folderId) =>
@@ -79,26 +100,31 @@ export const useFileStore = create<FileState>((set, get) => ({
         [folderId]: !state.expandedFolders[folderId],
       },
     })),
-  collapseAll: () => set({ expandedFolders: {} }),
+  toggleGroup: (groupId) =>
+    set((state) => ({
+      expandedGroups: {
+        ...state.expandedGroups,
+        [groupId]: !state.expandedGroups[groupId],
+      },
+    })),
+  collapseAll: () => set({ expandedFolders: {}, expandedGroups: {} }),
 
   // UI Actions
   setIsRenaming: (id) => set({ isRenaming: id }),
   setNewItemFolder: (id) => set({ newItemFolder: id }),
   setNewItemType: (type) => set({ newItemType: type }),
   setNewItemName: (name) => set({ newItemName: name }),
+  setNewItemGroupId: (groupId) => set({ newItemGroupId: groupId }),
 
   // 分享 Actions
   setShareDialogOpen: (open) => set({ shareDialogOpen: open }),
   setShareDialogFile: (file) => set({ shareDialogFile: file }),
-  setSharedDocsExpanded: (expanded) => set({ sharedDocsExpanded: expanded }),
 
   // 处理API返回的文档数据
   processApiDocuments: (documents) => {
     const docMap = new Map<number, DocumentItem>();
     documents.forEach((doc) => {
-      if (!doc.is_deleted) {
-        docMap.set(doc.id, doc);
-      }
+      docMap.set(doc.id, doc);
     });
 
     const result: FileItem[] = [];
@@ -154,8 +180,9 @@ export const useFileStore = create<FileState>((set, get) => ({
     const {
       selectedFileId,
       processApiDocuments,
-      setFiles,
+      setDocumentGroups,
       setExpandedFolders,
+      setExpandedGroups,
       setSelectedFileId,
       setIsLoading,
     } = get();
@@ -164,11 +191,51 @@ export const useFileStore = create<FileState>((set, get) => ({
 
     const res = await DocumentApi.GetDocument();
 
-    if (res?.data?.code === 200 && res?.data?.data?.documents) {
-      const apiDocuments = res.data.data.documents;
-      const convertedFiles = processApiDocuments(apiDocuments);
-      setFiles(convertedFiles);
+    if (res?.data?.code === 200 && res?.data?.data) {
+      const { personal, organizations, shared } = res.data.data;
+      const groups: DocumentGroup[] = [];
 
+      // 处理个人文档
+      if (personal && personal.length > 0) {
+        const personalFiles = processApiDocuments(personal);
+        groups.push({
+          id: 'personal',
+          name: '个人文档',
+          type: 'personal',
+          files: personalFiles,
+        });
+      }
+
+      // 处理组织文档
+      if (organizations && organizations.length > 0) {
+        organizations.forEach((org: OrganizationDocumentGroup) => {
+          if (org.documents && org.documents.length > 0) {
+            const orgFiles = processApiDocuments(org.documents);
+            groups.push({
+              id: `org-${org.id}`,
+              name: org.name,
+              type: 'organization',
+              files: orgFiles,
+              organizationId: org.id,
+            });
+          }
+        });
+      }
+
+      // 处理分享文档
+      if (shared && shared.length > 0) {
+        const sharedFiles = processApiDocuments(shared);
+        groups.push({
+          id: 'shared',
+          name: '分享给我',
+          type: 'shared',
+          files: sharedFiles,
+        });
+      }
+
+      setDocumentGroups(groups);
+
+      // 检查选中的文件是否仍然存在
       if (!isInitialLoad && selectedFileId) {
         const findFileById = (items: FileItem[], id: string): boolean => {
           for (const item of items) {
@@ -179,22 +246,44 @@ export const useFileStore = create<FileState>((set, get) => ({
           return false;
         };
 
-        if (!findFileById(convertedFiles, selectedFileId)) {
+        let fileExists = false;
+
+        for (const group of groups) {
+          if (findFileById(group.files, selectedFileId)) {
+            fileExists = true;
+            break;
+          }
+        }
+
+        if (!fileExists) {
           setSelectedFileId(null);
         }
       }
 
-      if (isInitialLoad && convertedFiles.length > 0) {
-        const rootFolders = convertedFiles
-          .filter((file) => file.type === 'folder')
-          .map((folder) => folder.id);
+      // 初始化展开状态
+      if (isInitialLoad) {
+        const initialExpandedFolders: Record<string, boolean> = {};
+        const initialExpandedGroups: Record<string, boolean> = {
+          personal: true,
+          shared: true,
+        };
 
-        const initialExpanded: Record<string, boolean> = {};
-        rootFolders.forEach((id) => {
-          initialExpanded[id] = true;
+        groups.forEach((group) => {
+          // 默认展开所有组
+          initialExpandedGroups[group.id] = true;
+
+          // 展开根级文件夹
+          const rootFolders = group.files
+            .filter((file) => file.type === 'folder')
+            .map((folder) => folder.id);
+
+          rootFolders.forEach((id) => {
+            initialExpandedFolders[id] = true;
+          });
         });
 
-        setExpandedFolders(initialExpanded);
+        setExpandedFolders(initialExpandedFolders);
+        setExpandedGroups(initialExpandedGroups);
       }
     }
 
@@ -202,12 +291,22 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   // 创建新文件/文件夹
-  createNewItem: async (name, type, parentId) => {
-    const res = await DocumentApi.CreateDocument({
+  createNewItem: async (name, type, parentId, groupId) => {
+    const { documentGroups } = get();
+    const group = documentGroups.find((g) => g.id === groupId);
+
+    const payload: any = {
       title: name,
       type: type === 'folder' ? 'FOLDER' : 'FILE',
       parent_id: parentId ? Number(parentId) : undefined,
-    });
+    };
+
+    // 如果是组织文档，添加组织ID
+    if (group?.type === 'organization' && group.organizationId) {
+      payload.organization_id = group.organizationId;
+    }
+
+    const res = await DocumentApi.CreateDocument(payload);
 
     if (res?.data?.code === 200) {
       // 创建成功后自动刷新文件列表
@@ -225,14 +324,17 @@ export const useFileStore = create<FileState>((set, get) => ({
       newItemName,
       newItemType,
       newItemFolder,
+      newItemGroupId,
       createNewItem,
       setNewItemFolder,
       setNewItemType,
+      setNewItemGroupId,
     } = get();
 
-    if (!newItemFolder || !newItemType || !newItemName.trim()) {
+    if (!newItemFolder || !newItemType || !newItemName.trim() || !newItemGroupId) {
       setNewItemFolder(null);
       setNewItemType(null);
+      setNewItemGroupId(null);
 
       return;
     }
@@ -241,16 +343,18 @@ export const useFileStore = create<FileState>((set, get) => ({
       newItemName,
       newItemType,
       newItemFolder === 'root' ? undefined : newItemFolder,
+      newItemGroupId,
     );
 
     if (success) {
       setNewItemFolder(null);
       setNewItemType(null);
+      setNewItemGroupId(null);
     }
   },
 
   // 取消创建新项目
   cancelCreateNewItem: () => {
-    set({ newItemFolder: null, newItemType: null });
+    set({ newItemFolder: null, newItemType: null, newItemGroupId: null });
   },
 }));

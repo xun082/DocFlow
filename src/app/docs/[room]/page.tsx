@@ -54,7 +54,7 @@ export default function DocumentPage() {
   // 获取URL参数中的只读模式设置
   const forceReadOnly = searchParams?.get('readonly') === 'true';
 
-  const { files } = useFileStore();
+  const { documentGroups } = useFileStore();
 
   // 防止水合不匹配的强制客户端渲染
   const [isMounted, setIsMounted] = useState(false);
@@ -78,7 +78,7 @@ export default function DocumentPage() {
 
   // 获取当前文档的名称
   const getCurrentDocumentName = () => {
-    if (!documentId || !files.length) return null;
+    if (!documentId || documentGroups.length === 0) return null;
 
     // 递归查找文件的函数，支持嵌套文件夹
     const findFileById = (items: FileItem[], id: string): FileItem | null => {
@@ -94,9 +94,16 @@ export default function DocumentPage() {
       return null;
     };
 
-    const currentFile = findFileById(files, documentId);
+    // 在所有分组中查找
+    for (const group of documentGroups) {
+      const currentFile = findFileById(group.files, documentId);
 
-    return currentFile?.name || null;
+      if (currentFile) {
+        return currentFile.name;
+      }
+    }
+
+    return null;
   };
 
   // 获取权限并初始化

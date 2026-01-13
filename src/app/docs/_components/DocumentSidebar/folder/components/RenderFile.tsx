@@ -16,6 +16,7 @@ export const RenderFile: React.FC<{
   depth?: number;
   inputRef?: Ref<HTMLInputElement>;
   id: string;
+  groupId?: string;
   onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
@@ -31,6 +32,7 @@ export const RenderFile: React.FC<{
   inputRef,
   depth = 0,
   id,
+  groupId,
   isOverlay,
   onFileSelect,
   onToggleFolder,
@@ -49,6 +51,7 @@ export const RenderFile: React.FC<{
     selectedFileId,
     isRenaming,
     newItemFolder,
+    newItemGroupId,
     newItemType,
     newItemName,
     setNewItemName,
@@ -61,7 +64,7 @@ export const RenderFile: React.FC<{
   const isExpanded = isFolder && expandedFolders[file.id];
   const isSelected = selectedFileId === file.id;
   const isItemRenaming = isRenaming === file.id;
-  const isAddingNewItem = newItemFolder === file.id;
+  const isAddingNewItem = newItemFolder === file.id && newItemGroupId === groupId;
 
   const FileItemHeight = 46;
 
@@ -233,7 +236,7 @@ export const RenderFile: React.FC<{
             )}
           >
             {/* 文件夹快捷操作按钮 */}
-            {isFolder && (
+            {isFolder && groupId && (
               <>
                 <button
                   title="新建文件"
@@ -246,7 +249,7 @@ export const RenderFile: React.FC<{
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
-                    startCreateNewItem(file.id, 'file');
+                    startCreateNewItem(file.id, 'file', groupId);
                   }}
                 >
                   <Icon name="FilePlus" className="h-3.5 w-3.5" />
@@ -262,7 +265,7 @@ export const RenderFile: React.FC<{
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
-                    startCreateNewItem(file.id, 'folder');
+                    startCreateNewItem(file.id, 'folder', groupId);
                   }}
                 >
                   <Icon name="FolderPlus" className="h-3.5 w-3.5" />

@@ -156,44 +156,49 @@ const SharedDocuments: React.FC<SharedDocumentsProps> = ({ isExpanded, onToggle 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium text-gray-900 truncate">
-                          {doc.shareInfo.custom_title || doc.title}
+                          {doc.shareInfo?.custom_title || doc.customTitle || doc.title}
                         </h5>
                         <span className="text-xs text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">
-                          {getPermissionText(doc.shareInfo.permission)}
+                          {getPermissionText(doc.shareInfo?.permission || doc.permission)}
                         </span>
                       </div>
 
                       {/* 所有者信息 */}
                       <div className="flex items-center mt-1 text-xs text-gray-500">
                         <img
-                          src={doc.owner.avatar_url}
-                          alt={doc.owner.name}
+                          src={doc.owner.avatar_url || doc.owner.avatar || ''}
+                          alt={doc.owner.name || doc.owner.username}
                           className="h-4 w-4 rounded-full mr-1"
                         />
-                        <span className="truncate">{doc.owner.name}</span>
+                        <span className="truncate">{doc.owner.name || doc.owner.username}</span>
                       </div>
 
                       {/* 访问信息 */}
                       <div className="flex items-center justify-between mt-1 text-xs text-gray-400">
-                        <span>最后访问：{formatTime(doc.shareInfo.last_accessed_at)}</span>
-                        <span>访问 {doc.shareInfo.access_count} 次</span>
+                        <span>
+                          最后访问：
+                          {formatTime(
+                            doc.shareInfo?.last_accessed_at || doc.lastAccessedAt || doc.updated_at,
+                          )}
+                        </span>
+                        <span>访问 {doc.shareInfo?.access_count || doc.accessCount || 0} 次</span>
                       </div>
 
                       {/* 分享链接信息 */}
                       <div className="flex items-center mt-1 text-xs text-gray-400 space-x-2">
-                        {doc.shareInfo.share_link.has_password && (
+                        {doc.shareInfo?.share_link.has_password && (
                           <span className="flex items-center">
                             <Icon name="Lock" className="h-3 w-3 mr-1" />
                             有密码
                           </span>
                         )}
-                        {doc.shareInfo.share_link.expires_at && (
+                        {doc.shareInfo?.share_link.expires_at && (
                           <span className="flex items-center">
                             <Icon name="Clock" className="h-3 w-3 mr-1" />
                             {formatTime(doc.shareInfo.share_link.expires_at)} 过期
                           </span>
                         )}
-                        {doc.shareInfo.is_favorited && (
+                        {(doc.shareInfo?.is_favorited || doc.isFavorite) && (
                           <span className="flex items-center">
                             <Icon name="Star" className="h-3 w-3 mr-1 text-yellow-400" />
                             已收藏

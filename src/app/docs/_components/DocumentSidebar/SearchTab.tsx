@@ -56,9 +56,7 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   const processDocumentsToFileStructure = (docs: DocumentItem[]): FileStructure[] => {
     const docMap = new Map<number, DocumentItem>();
     docs.forEach((doc) => {
-      if (!doc.is_deleted) {
-        docMap.set(doc.id, doc);
-      }
+      docMap.set(doc.id, doc);
     });
 
     const result: FileStructure[] = [];
@@ -149,12 +147,18 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
   const loadDocuments = async () => {
     const res = await DocumentApi.GetDocument();
 
-    if (res?.data?.code === 200 && res?.data?.data?.documents) {
-      const docs = res.data.data.documents;
-      setDocuments(docs);
+    if (res?.data?.code === 200 && res?.data?.data) {
+      const { personal, organizations, shared } = res.data.data;
+      // 合并所有文档
+      const allDocs = [
+        ...(personal || []),
+        ...(organizations?.flatMap((org) => org.documents || []) || []),
+        ...(shared || []),
+      ];
+      setDocuments(allDocs);
 
       // 转换为文件结构
-      const structure = processDocumentsToFileStructure(docs);
+      const structure = processDocumentsToFileStructure(allDocs);
       setFileStructure(structure);
     }
   };
@@ -186,7 +190,6 @@ const SearchTab = ({ isActive }: SearchTabProps) => {
     if (searchMode === 'all' || searchMode === 'content') {
       // 搜索文档内容（标题）
       const contentResults = documents
-        .filter((doc) => !doc.is_deleted)
         .filter((doc) => {
           const titleMatch = doc.title.toLowerCase().includes(query.toLowerCase());
 

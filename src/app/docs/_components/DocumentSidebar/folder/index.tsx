@@ -6,8 +6,7 @@ import { closestCenter, DndContext, MeasuringStrategy, PointerSensor } from '@dn
 import { useSensor, useSensors } from '@dnd-kit/core';
 
 import ShareDialog from './ShareDialog';
-import SharedDocuments from './components/SharedDocuments';
-import FileTree from './components/FileTree';
+import GroupedFileTree from './components/GroupedFileTree';
 import Toolbar from './components/Toolbar';
 import ContextMenu from './components/ContextMenu';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -38,26 +37,28 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
 
   // 使用 Zustand stores
   const {
-    files,
+    documentGroups,
     expandedFolders,
+    expandedGroups,
     selectedFileId,
     isRenaming,
     newItemFolder,
+    newItemGroupId,
     newItemType,
     newItemName,
     shareDialogOpen,
     shareDialogFile,
-    sharedDocsExpanded,
     isLoading,
     setSelectedFileId,
     setIsRenaming,
     setNewItemFolder,
     setNewItemType,
     setNewItemName,
+    setNewItemGroupId,
     setShareDialogOpen,
     setShareDialogFile,
-    setSharedDocsExpanded,
     toggleFolder: storeToggleFolder,
+    toggleGroup,
     collapseAll,
     loadFiles,
     finishCreateNewItem,
@@ -82,7 +83,13 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   } = useContextMenu();
 
   const memoFileList = (() => {
-    const flattenFile = flattenTreeFile(files);
+    // 将所有分组的文件合并到一个列表中以支持拖放
+    const allFiles: FileItem[] = [];
+    documentGroups.forEach((group) => {
+      allFiles.push(...group.files);
+    });
+
+    const flattenFile = flattenTreeFile(allFiles);
     const expandedFiles = flattenFile.reduce<string[]>((acc, item) => {
       if (!expandedFolders[item.id] && item.children && item.children.length > 0) {
         return [...acc, item.id];
@@ -117,7 +124,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
 
   // URL选中逻辑
   useEffect(() => {
-    if (files.length === 0) return;
+    if (documentGroups.length === 0) return;
 
     const match = pathname.match(/^\/docs\/(\d+)$/);
 
@@ -132,13 +139,23 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
         return false;
       };
 
-      if (findFileById(files, fileId)) {
-        setSelectedFileId(fileId);
+      let found = false;
+
+      for (const group of documentGroups) {
+        if (findFileById(group.files, fileId)) {
+          found = true;
+          setSelectedFileId(fileId);
+          break;
+        }
+      }
+
+      if (!found) {
+        setSelectedFileId(null);
       }
     } else {
       setSelectedFileId(null);
     }
-  }, [pathname, files, setSelectedFileId]);
+  }, [pathname, documentGroups, setSelectedFileId]);
 
   // 文件选择
   const handleFileSelect = (file: FileItem, e: React.MouseEvent) => {
@@ -175,10 +192,11 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   };
 
   // 新建文件/文件夹
-  const startCreateNewItem = (folderId: string, type: 'file' | 'folder') => {
+  const startCreateNewItem = (folderId: string, type: 'file' | 'folder', groupId: string) => {
     setNewItemFolder(folderId);
     setNewItemType(type);
     setNewItemName('');
+    setNewItemGroupId(groupId);
     closeContextMenu();
   };
 
@@ -195,9 +213,6 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
       if (newItemFolder) cancelCreateNewItem();
     }
   };
-
-  // root下面创建新文件
-  const createNewRootItem = (type: 'file' | 'folder') => startCreateNewItem('root', type);
 
   const handleShare = (file: FileItem) => {
     setShareDialogFile(file);
@@ -228,14 +243,38 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
         )
       : null;
 
-  const targetFile = contextMenuTargetId ? findTargetFile(files) : null;
+  // 在所有分组中查找目标文件
+  const targetFile = contextMenuTargetId
+    ? (() => {
+        for (const group of documentGroups) {
+          const found = findTargetFile(group.files);
+          if (found) return found;
+        }
+
+        return null;
+      })()
+    : null;
 
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* 头部工具栏 - 始终显示 */}
       <Toolbar
-        onCreateFile={() => createNewRootItem('file')}
-        onCreateFolder={() => createNewRootItem('folder')}
+        onCreateFile={() => {
+          // 默认在个人文档分组创建
+          const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+          if (personalGroup) {
+            startCreateNewItem('root', 'file', personalGroup.id);
+          }
+        }}
+        onCreateFolder={() => {
+          // 默认在个人文档分组创建
+          const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+          if (personalGroup) {
+            startCreateNewItem('root', 'folder', personalGroup.id);
+          }
+        }}
         onRefresh={refreshFiles}
         onCollapseAll={collapseAll}
         isLoading={isLoading}
@@ -277,7 +316,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
           {/* 根据加载状态和文件数量显示不同内容 */}
           {isLoading ? (
             <LoadingSkeleton />
-          ) : files.length === 0 && !newItemFolder && !isLoading ? (
+          ) : documentGroups.length === 0 && !newItemFolder && !isLoading ? (
             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center mb-4">
                 <svg
@@ -302,13 +341,25 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
               </p>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => createNewRootItem('file')}
+                  onClick={() => {
+                    const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+                    if (personalGroup) {
+                      startCreateNewItem('root', 'file', personalGroup.id);
+                    }
+                  }}
                   className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
                 >
                   新建文档
                 </button>
                 <button
-                  onClick={() => createNewRootItem('folder')}
+                  onClick={() => {
+                    const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+                    if (personalGroup) {
+                      startCreateNewItem('root', 'folder', personalGroup.id);
+                    }
+                  }}
                   className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
                 >
                   新建文件夹
@@ -327,18 +378,21 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
                 </div>
               )}
 
-              <FileTree
-                files={memoFileList}
+              <GroupedFileTree
+                groups={documentGroups}
                 projected={projected}
                 expandedFolders={expandedFolders}
+                expandedGroups={expandedGroups}
                 selectedFileId={selectedFileId}
                 dndState={dndState}
                 isRenaming={isRenaming}
                 newItemFolder={newItemFolder}
+                newItemGroupId={newItemGroupId}
                 newItemType={newItemType}
                 newItemName={newItemName}
                 onFileSelect={handleFileSelect}
                 onToggleFolder={toggleFolder}
+                onToggleGroup={toggleGroup}
                 onContextMenu={handleContextMenu}
                 onStartCreateNewItem={startCreateNewItem}
                 onFinishRenaming={finishRenaming}
@@ -359,19 +413,41 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
         </div>
       </DndContext>
 
-      {/* 分享文档栏目 */}
-      <SharedDocuments
-        isExpanded={sharedDocsExpanded}
-        onToggle={() => setSharedDocsExpanded(!sharedDocsExpanded)}
-      />
-
       {/* 右键菜单 */}
       <ContextMenu
         position={contextMenuPosition}
         targetFile={targetFile}
         onClose={closeContextMenu}
-        onCreateFile={(folderId) => startCreateNewItem(folderId, 'file')}
-        onCreateFolder={(folderId) => startCreateNewItem(folderId, 'folder')}
+        onCreateFile={(folderId) => {
+          // 找到文件所属的分组
+          let groupId = 'personal';
+
+          for (const group of documentGroups) {
+            const found = findTargetFile(group.files);
+
+            if (found) {
+              groupId = group.id;
+              break;
+            }
+          }
+
+          startCreateNewItem(folderId, 'file', groupId);
+        }}
+        onCreateFolder={(folderId) => {
+          // 找到文件所属的分组
+          let groupId = 'personal';
+
+          for (const group of documentGroups) {
+            const found = findTargetFile(group.files);
+
+            if (found) {
+              groupId = group.id;
+              break;
+            }
+          }
+
+          startCreateNewItem(folderId, 'folder', groupId);
+        }}
         onRename={(fileId) => startRenaming(fileId)}
       />
 
