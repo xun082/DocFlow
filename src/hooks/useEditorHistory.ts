@@ -8,6 +8,7 @@ interface UseEditorHistoryOptions {
   doc: Y.Doc | null;
   autoSnapshot?: boolean;
   autoSnapshotInterval?: number;
+  snapshotOnUnmount?: boolean;
 }
 
 interface UseEditorHistoryReturn {
@@ -26,6 +27,7 @@ export function useEditorHistory({
   doc,
   autoSnapshot = false,
   autoSnapshotInterval = 300000,
+  snapshotOnUnmount = false,
 }: UseEditorHistoryOptions): UseEditorHistoryReturn {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -149,6 +151,14 @@ export function useEditorHistory({
 
     return () => clearInterval(interval);
   }, [autoSnapshot, autoSnapshotInterval, doc, documentId, createSnapshot]);
+
+  useEffect(() => {
+    if (!snapshotOnUnmount || !doc || !documentId) return;
+
+    return () => {
+      createSnapshot('组件卸载自动保存');
+    };
+  }, [snapshotOnUnmount, doc, documentId, createSnapshot]);
 
   return {
     snapshots,
