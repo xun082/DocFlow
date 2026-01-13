@@ -1,55 +1,30 @@
-name: "\U0001F4A5 Regression"
-description: 'Report an unexpected behavior while upgrading your application!'
-labels: ['needs triage']
+name: '💥 回归问题'
+description: '之前能用的功能现在不能用了？请告诉我们！'
+labels: ['needs triage', 'regression']
 body:
   - type: checkboxes
     attributes:
-      label: 'Is there an existing issue that is already proposing this?'
-      description: 'Please search [here](./?q=is%3Aissue) to see if an issue already exists for the feature you are requesting'
+      label: '是否已搜索过相关问题？'
+      description: '请先搜索 [已有问题](./?q=is%3Aissue) 确认是否已有人报告'
       options:
-        - label: 'I have searched the existing issues'
+        - label: '我已搜索过相关问题'
           required: true
 
   - type: input
     attributes:
-      label: 'Potential Commit/PR that introduced the regression'
-      description: 'If you have time to investigate, what PR/date/version introduced this issue'
-      placeholder: 'PR #123 or commit 5b3c4a4'
-
-  - type: input
-    attributes:
-      label: 'Versions'
-      description: 'From which version of `create-neat` to which version you are upgrading'
-      placeholder: '1.0.0 -> 1.1.0'
+      label: '可能引入问题的 PR/Commit'
+      description: '如果你知道是哪个 PR 或 commit 引入的（可选）'
+      placeholder: 'PR #123 或 commit hash'
 
   - type: textarea
     validations:
       required: true
     attributes:
-      label: 'Describe the regression'
-      description: 'A clear and concise description of what the regression is'
-
-  - type: textarea
-    attributes:
-      label: 'Minimum reproduction code'
-      description: |
-        Please share a git repo, a gist, or step-by-step instructions. [Wtf is a minimum reproduction?](https://jmcdo29.github.io/wtf-is-a-minimum-reproduction)
-        **Tip:** If you leave a minimum repository, we will understand your issue faster!
-      value: |
-        ```ts
-
-        ```
-
-  - type: textarea
-    validations:
-      required: true
-    attributes:
-      label: 'Expected behavior'
-      description: 'A clear and concise description of what you expected to happend (or code)'
-
-  - type: textarea
-    attributes:
-      label: 'Other'
-      description: |
-        Anything else relevant? eg: Logs, OS version, IDE, package manager, etc.
-        **Tip:** You can attach images, recordings or log files by clicking this area to highlight it and then dragging files in
+      label: '问题描述'
+      description: '请描述回归问题、重现步骤、之前的行为等（可直接拖拽文件附加截图或日志）'
+      placeholder: |
+        问题：之前...能正常工作，现在...不能用了
+        重现步骤：...
+        之前的行为：...
+        现在的行为：...
+        截图/日志：...
