@@ -272,8 +272,12 @@ const Page = () => {
                     )} */}
                     </div>
                     <div className="flex items-center mt-1 text-xs text-gray-500">
-                      <span>{doc.author}</span>
-                      <span className="mx-1">•</span>
+                      {doc.author && (
+                        <>
+                          <span>{doc.author}</span>
+                          <span className="mx-1">•</span>
+                        </>
+                      )}
                       <span>
                         {formatDistanceToNow(new Date(doc.updated_at), {
                           addSuffix: true,

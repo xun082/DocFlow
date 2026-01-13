@@ -6,31 +6,40 @@ export interface DocumentItem {
   type: 'FILE' | 'FOLDER';
   sort_order: number;
   is_starred: boolean;
-  is_deleted: boolean;
-  created_at: string; // ISO 日期字符串，可根据需要改为 Date 类型
+  created_at: string;
   updated_at: string;
-  last_viewed: string | null;
-  version: number;
   parent_id: number | null;
   owner_id: number;
+  organization_id: number | null;
+  owner: DocumentOwner;
+  organization?: DocumentOrganization | null;
+  permission: 'VIEW' | 'COMMENT' | 'EDIT' | 'MANAGE' | 'FULL';
+  is_deleted?: boolean;
 }
 
-// 文档所有者信息
 export interface DocumentOwner {
   id: number;
-  name: string;
-  email: string | null;
-  avatar_url: string;
+  name: string | null;
+  avatar_url: string | null;
 }
 
-// 分享链接信息
+export interface DocumentOrganization {
+  id: number;
+  name: string;
+}
+
+export interface OrganizationDocumentGroup {
+  id: number;
+  name: string;
+  documents: DocumentItem[];
+}
+
 export interface ShareLinkInfo {
   id: string;
   expires_at: string | null;
   has_password: boolean;
 }
 
-// 分享信息
 export interface ShareInfo {
   permission: 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
   first_accessed_at: string;
@@ -41,35 +50,65 @@ export interface ShareInfo {
   share_link: ShareLinkInfo;
 }
 
-// 通过分享链接访问的文档项
-export interface SharedDocumentItem extends DocumentItem {
-  owner: DocumentOwner;
-  shareInfo: ShareInfo;
+export interface SharedDocumentItem {
+  id: number;
+  title: string;
+  type: 'FILE' | 'FOLDER';
+  content?: any;
+  owner: {
+    id: number;
+    username: string;
+    name?: string;
+    avatar: string | null;
+    avatar_url?: string;
+  };
+  permission: 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
+  customTitle: string | null;
+  isFavorite: boolean;
+  accessCount: number;
+  firstAccessedAt: string;
+  lastAccessedAt: string;
+  created_at: string;
+  updated_at: string;
+  shareInfo?: {
+    custom_title: string | null;
+    permission: 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
+    is_favorited: boolean;
+    access_count: number;
+    first_accessed_at: string;
+    last_accessed_at: string;
+    share_link: {
+      has_password: boolean;
+      expires_at: string | null;
+    };
+  };
 }
 
-// 获取文档列表响应
 export interface GetDocumentsResponse {
-  documents: DocumentItem[];
-  total: number;
-}
-
-// 返回结构类型（保留用于其他 API）
-export interface DocumentResponse {
-  owned: DocumentItem[];
+  personal: DocumentItem[];
+  organizations: OrganizationDocumentGroup[];
   shared: DocumentItem[];
+  total: number;
+  documents?: DocumentItem[]; // 向后兼容
 }
 
-export interface LatestDocumentItem extends DocumentItem {
-  author: string;
+export interface DocumentResponse {
+  id: number;
+  title: string;
+  type: 'FILE' | 'FOLDER';
+  content?: JSONContent;
+  created_at: string;
+  updated_at: string;
 }
 
-// 通过分享链接访问的文档响应
-// export interface SharedDocumentsResponse {
-//   data: SharedDocumentItem[];
-//   code: number;
-//   message: string;
-//   timestamp: number;
-// }
+export interface LatestDocumentItem {
+  id: number;
+  title: string;
+  type: 'FILE' | 'FOLDER';
+  updated_at: string;
+  last_viewed: string | null;
+  author?: string;
+}
 
 export interface CreateDocumentDto {
   title: string;
@@ -77,19 +116,18 @@ export interface CreateDocumentDto {
   parent_id?: number;
   sort_order?: number;
   is_starred?: boolean;
-  space_id?: number;
+  organization_id?: number;
 }
 
-// 分享链接相关类型
 export interface CreateShareLinkDto {
   permission: 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
   password?: string;
-  expires_at?: string; // ISO 日期字符串
-  shareWithUserIds?: number[]; // 分享给特定用户ID列表
+  expires_at?: string;
+  shareWithUserIds?: number[];
 }
 
 export interface ShareLinkResponse {
-  id: string; // 从返回数据看是字符串格式的ID
+  id: string;
   document_id: number;
   permission: 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
   has_password: boolean;
@@ -99,32 +137,27 @@ export interface ShareLinkResponse {
   creator_id: number;
 }
 
-// 删除文档的请求类型
 export interface DeleteDocumentDto {
   document_id: number;
-  permanent?: boolean; // 是否永久删除
+  permanent?: boolean;
 }
 
-// 重命名文档的请求类型
 export interface RenameDocumentDto {
   document_id: number;
   title: string;
 }
 
-// 复制文档的请求类型
 export interface DuplicateDocumentDto {
   document_id: number;
-  title?: string; // 新文档的标题，如果不提供则自动生成
-  parent_id?: number; // 复制到的目标文件夹
+  title?: string;
+  parent_id?: number;
 }
 
-// 通过分享链接访问文档的请求类型
 export interface AccessSharedDocumentDto {
-  linkId: string; // 分享链接ID
-  password?: string; // 密码（如果需要）
+  linkId: string;
+  password?: string;
 }
 
-// 通过分享链接访问文档的响应类型
 export interface AccessSharedDocumentResponse {
   id: number;
   title: string;
@@ -176,7 +209,6 @@ export interface GetDocumentPermissionResponse {
   permission: 'NONE' | 'VIEW' | 'EDIT' | 'COMMENT' | 'MANAGE' | 'FULL';
 }
 
-// 获取文档内容的响应类型
 export interface DocumentPermissionsResponse {
   code: number;
   message: string;
@@ -191,8 +223,56 @@ export interface DocumentPermissionsResponse {
   timestamp: number;
 }
 
-// 移动文档的请求类型
 export interface MoveDocumentsDto {
   document_ids: number[];
   target_folder_id: number;
+}
+
+export interface DocumentSearchItem {
+  id: number;
+  title: string;
+  type: 'FILE' | 'FOLDER';
+  is_starred: boolean;
+  created_at: string;
+  updated_at: string;
+  last_viewed: string | null;
+  parent: { id: number; title: string } | null;
+  childrenCount: number;
+  isOwner: boolean;
+}
+
+export interface SearchResultResponse {
+  documents: DocumentSearchItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface ContentSearchResultItem {
+  id: number;
+  title: string;
+  type: 'FILE' | 'FOLDER';
+  owner_id: number;
+  owner_name: string;
+  content_snippet: string;
+  updated_at: string;
+  last_viewed: string | null;
+  permission: 'VIEW' | 'COMMENT' | 'EDIT' | 'MANAGE' | 'FULL' | null;
+  custom_title: string | null;
+}
+
+export interface ContentSearchResultResponse {
+  documents: ContentSearchResultItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface SharedDocumentsResponse {
+  documents: SharedDocumentItem[];
+  total: number;
 }

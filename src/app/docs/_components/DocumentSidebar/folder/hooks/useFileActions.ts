@@ -5,14 +5,19 @@ export const useFileActions = () => {
     setNewItemFolder,
     setNewItemType,
     setNewItemName,
+    setNewItemGroupId,
     finishCreateNewItem,
     cancelCreateNewItem,
   } = useFileStore();
 
-  const startCreateNewItem = (folderId: string, type: 'file' | 'folder') => {
+  const startCreateNewItem = (folderId: string, type: 'file' | 'folder', groupId?: string) => {
     setNewItemFolder(folderId);
     setNewItemType(type);
     setNewItemName('');
+
+    if (groupId) {
+      setNewItemGroupId(groupId);
+    }
   };
 
   return {
