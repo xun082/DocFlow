@@ -2,6 +2,26 @@
   "name": "DocFlow",
   "version": "0.1.0",
   "private": true,
+  "description": "AI-powered docs ✍️ Built with Tiptap & Next.js — real-time collab ⚡, smart writing 🤖, and a flexible plugin system 🔌",
+  "author": "Moment",
+  "license": "MIT",
+  "homepage": "https://github.com/xun082/DocFlow#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xun082/DocFlow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xun082/DocFlow/issues"
+  },
+  "keywords": [
+    "tiptap",
+    "nextjs",
+    "collaborative-editor",
+    "yjs",
+    "real-time",
+    "document-editor",
+    "react"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
