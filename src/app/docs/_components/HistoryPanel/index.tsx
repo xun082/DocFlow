@@ -5,12 +5,14 @@ import { History, Clock, Trash2, RotateCcw, Plus, X, Users } from 'lucide-react'
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import * as Y from 'yjs';
 
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -36,7 +38,7 @@ interface CollaborationUser {
 
 interface HistoryPanelProps {
   documentId: string;
-  doc: any;
+  doc: Y.Doc;
   connectedUsers?: CollaborationUser[];
   currentUser?: CollaborationUser | null;
 }
@@ -143,6 +145,21 @@ export default function HistoryPanel({
     setShowClearConfirm(false);
   };
 
+  const handleClearConfirmAction = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await confirmClearAll();
+  };
+
+  const handleRestoreConfirmAction = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await confirmRestoreSnapshot();
+  };
+
+  const handleDeleteConfirmAction = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await confirmDeleteSnapshot();
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -161,6 +178,9 @@ export default function HistoryPanel({
           </div>
         </DialogTrigger>
         <DialogContent className="h-[80vh] w-full max-w-2xl overflow-y-auto">
+          <DialogDescription className="sr-only">
+            查看和管理文档的历史快照，可以创建、恢复或删除快照
+          </DialogDescription>
           <div className="flex flex-col h-full">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
               <div className="flex items-center gap-2">
@@ -354,7 +374,7 @@ export default function HistoryPanel({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClearAll}>确认清空</AlertDialogAction>
+            <AlertDialogAction onClick={handleClearConfirmAction}>确认清空</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -405,7 +425,7 @@ export default function HistoryPanel({
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmRestoreSnapshot}
+              onClick={handleRestoreConfirmAction}
               className={hasOtherUsers ? 'bg-red-600 hover:bg-red-700' : ''}
             >
               确认恢复
@@ -425,7 +445,7 @@ export default function HistoryPanel({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteSnapshot}>确认删除</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteConfirmAction}>确认删除</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
