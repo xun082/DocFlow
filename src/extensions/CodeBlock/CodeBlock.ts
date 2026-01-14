@@ -3,7 +3,7 @@
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { textblockTypeInputRule } from '@tiptap/core';
+import { CommandProps, textblockTypeInputRule } from '@tiptap/core';
 
 import CodeBlockComponent from './CodeBlockComponent';
 
@@ -25,6 +25,8 @@ interface CodeBlockOptions {
 }
 
 export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
+  priority: 300,
+
   addOptions() {
     return {
       ...this.parent?.(),
@@ -47,9 +49,7 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
       ...this.parent?.(),
       createCodeBlock:
         () =>
-        ({ commands }: any) => {
-          console.log('createCodeBlock', commands);
-
+        ({ commands }: CommandProps) => {
           return commands.insertContent({
             type: this.name,
             attrs: { language: 'javascript' },
@@ -124,6 +124,109 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
 
             return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
           }
+        }
+
+        return false;
+      },
+      'Mod-/': () => {
+        // 检查是否在代码块中
+        const { state } = this.editor;
+        const { $from } = state.selection;
+
+        if ($from.parent.type.name === 'codeBlock') {
+          // 获取代码块的语言
+          const language = $from.parent.attrs.language || 'plaintext';
+
+          // 定义不同语言的注释符号
+          const commentSymbols: Record<string, string> = {
+            javascript: '//',
+            typescript: '//',
+            java: '//',
+            c: '//',
+            cpp: '//',
+            csharp: '//',
+            go: '//',
+            rust: '//',
+            swift: '//',
+            kotlin: '//',
+            php: '//',
+            ruby: '#',
+            python: '#',
+            shell: '#',
+            bash: '#',
+            sql: '--',
+            css: '/*',
+            scss: '//',
+            less: '//',
+            json: '//',
+            yaml: '#',
+            xml: '<!--',
+            html: '<!--',
+            markdown: '<!--',
+          };
+
+          const commentSymbol = commentSymbols[language] || '//';
+
+          // 获取选区范围
+          const { from, to } = state.selection;
+
+          // 获取代码块内容
+          const codeBlockContent = $from.parent.textContent;
+          const codeBlockStart = $from.start();
+          const codeBlockEnd = $from.end();
+
+          // 计算选区在代码块中的相对位置
+          const relativeFrom = from - codeBlockStart;
+          const relativeTo = to - codeBlockStart;
+
+          // 找到选区涉及的所有行
+          const lines = codeBlockContent.split('\n');
+          const startLineIndex = codeBlockContent.substring(0, relativeFrom).split('\n').length - 1;
+          const endLineIndex = codeBlockContent.substring(0, relativeTo).split('\n').length - 1;
+
+          // 检查选中的行是否都已经注释
+          let allCommented = true;
+
+          for (let i = startLineIndex; i <= endLineIndex; i++) {
+            const trimmedLine = lines[i].trimStart();
+
+            if (!trimmedLine.startsWith(commentSymbol)) {
+              allCommented = false;
+              break;
+            }
+          }
+
+          // 构建新的代码块内容
+          const newLines = lines.map((line, index) => {
+            if (index < startLineIndex || index > endLineIndex) {
+              return line;
+            }
+
+            const trimmedLine = line.trimStart();
+            const leadingWhitespace = line.substring(0, line.length - trimmedLine.length);
+
+            if (allCommented) {
+              // 取消注释
+              if (trimmedLine.startsWith(commentSymbol)) {
+                return leadingWhitespace + trimmedLine.substring(commentSymbol.length).trimStart();
+              }
+
+              return line;
+            } else {
+              // 添加注释
+              return leadingWhitespace + commentSymbol + ' ' + trimmedLine;
+            }
+          });
+
+          // 更新代码块内容 - 先删除原有内容，再插入新内容
+          const newContent = newLines.join('\n');
+
+          return this.editor
+            .chain()
+            .focus()
+            .deleteRange({ from: codeBlockStart, to: codeBlockEnd })
+            .insertContent(newContent)
+            .run();
         }
 
         return false;

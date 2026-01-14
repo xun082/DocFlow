@@ -36,6 +36,7 @@ import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
 import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
+import { useEditorHistory } from '@/hooks/useEditorHistory';
 
 // 类型定义
 interface CollaborationUser {
@@ -72,6 +73,14 @@ export default function DocumentPage() {
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const { openPanel, setActiveCommentId, closePanel, isPanelOpen } = useCommentStore();
   const { setEditor, clearEditor } = useEditorStore();
+
+  useEditorHistory({
+    documentId,
+    doc,
+    autoSnapshot: true,
+    autoSnapshotInterval: 300000,
+    snapshotOnUnmount: true,
+  });
 
   // Editor编辑器的容器元素
   const editorContainRef = useRef<HTMLDivElement>(null);
