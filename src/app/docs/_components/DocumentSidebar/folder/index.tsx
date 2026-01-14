@@ -316,99 +316,160 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
           {/* 根据加载状态和文件数量显示不同内容 */}
           {isLoading ? (
             <LoadingSkeleton />
-          ) : documentGroups.length === 0 && !newItemFolder && !isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full py-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center mb-4">
-                <svg
-                  className="w-8 h-8 text-slate-400 dark:text-slate-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
-                暂无文档
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-48">
-                点击上方的新建按钮创建您的第一个文档
-              </p>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    const personalGroup = documentGroups.find((g) => g.type === 'personal');
-
-                    if (personalGroup) {
-                      startCreateNewItem('root', 'file', personalGroup.id);
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
-                >
-                  新建文档
-                </button>
-                <button
-                  onClick={() => {
-                    const personalGroup = documentGroups.find((g) => g.type === 'personal');
-
-                    if (personalGroup) {
-                      startCreateNewItem('root', 'folder', personalGroup.id);
-                    }
-                  }}
-                  className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
-                >
-                  新建文件夹
-                </button>
-              </div>
-            </div>
           ) : (
-            <>
-              {/* 加载指示器 */}
-              {isLoading && (
-                <div className="absolute top-2 right-2 z-10">
-                  <div className="flex items-center space-x-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
-                    <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">刷新中...</span>
+            (() => {
+              // 检查是否所有分组都没有文件
+              const hasAnyFiles = documentGroups.some((group) => group.files.length > 0);
+              const isCompletelyEmpty = documentGroups.length === 0 || !hasAnyFiles;
+
+              return isCompletelyEmpty && !newItemFolder ? (
+                <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
+                  {/* 图标 */}
+                  <div className="relative mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
+                      <svg
+                        className="w-10 h-10 text-blue-500 dark:text-blue-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    {/* 装饰性光效 */}
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-80 blur-sm"></div>
+                  </div>
+
+                  {/* 标题和描述 */}
+                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                    开始创建文档
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-xs leading-relaxed">
+                    这里还没有任何文档。点击下方按钮创建您的第一个文档，开启高效协作之旅！
+                  </p>
+
+                  {/* 操作按钮 */}
+                  <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                    <button
+                      onClick={() => {
+                        const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+                        if (personalGroup) {
+                          startCreateNewItem('root', 'file', personalGroup.id);
+                        }
+                      }}
+                      className="flex-1 group relative px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        新建文档
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const personalGroup = documentGroups.find((g) => g.type === 'personal');
+
+                        if (personalGroup) {
+                          startCreateNewItem('root', 'folder', personalGroup.id);
+                        }
+                      }}
+                      className="flex-1 group px-5 py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-xl transition-all duration-300 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 hover:shadow-slate-300/50 dark:hover:shadow-slate-800/50 hover:scale-105 border border-slate-200 dark:border-slate-600"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                          />
+                        </svg>
+                        新建文件夹
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* 提示文字 */}
+                  <div className="mt-8 flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>也可以点击上方工具栏的按钮创建</span>
                   </div>
                 </div>
-              )}
+              ) : (
+                <>
+                  {/* 加载指示器 */}
+                  {isLoading && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className="flex items-center space-x-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-slate-200/50 dark:border-slate-600/50">
+                        <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          刷新中...
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-              <GroupedFileTree
-                groups={documentGroups}
-                projected={projected}
-                expandedFolders={expandedFolders}
-                expandedGroups={expandedGroups}
-                selectedFileId={selectedFileId}
-                dndState={dndState}
-                isRenaming={isRenaming}
-                newItemFolder={newItemFolder}
-                newItemGroupId={newItemGroupId}
-                newItemType={newItemType}
-                newItemName={newItemName}
-                onFileSelect={handleFileSelect}
-                onToggleFolder={toggleFolder}
-                onToggleGroup={toggleGroup}
-                onContextMenu={handleContextMenu}
-                onStartCreateNewItem={startCreateNewItem}
-                onFinishRenaming={finishRenaming}
-                onFinishCreateNewItem={() =>
-                  finishCreateNewItem().then(() => triggerRefresh('side'))
-                }
-                onCancelCreateNewItem={cancelCreateNewItem}
-                onKeyDown={handleKeyDown}
-                onSetNewItemName={setNewItemName}
-                onShare={handleShare}
-                onDelete={fileOperations.handleDelete}
-                onRename={handleRename}
-                onDuplicate={fileOperations.handleDuplicate}
-                onDownload={fileOperations.handleDownload}
-              />
-            </>
+                  <GroupedFileTree
+                    groups={documentGroups}
+                    projected={projected}
+                    expandedFolders={expandedFolders}
+                    expandedGroups={expandedGroups}
+                    selectedFileId={selectedFileId}
+                    dndState={dndState}
+                    isRenaming={isRenaming}
+                    newItemFolder={newItemFolder}
+                    newItemGroupId={newItemGroupId}
+                    newItemType={newItemType}
+                    newItemName={newItemName}
+                    onFileSelect={handleFileSelect}
+                    onToggleFolder={toggleFolder}
+                    onToggleGroup={toggleGroup}
+                    onContextMenu={handleContextMenu}
+                    onStartCreateNewItem={startCreateNewItem}
+                    onFinishRenaming={finishRenaming}
+                    onFinishCreateNewItem={() =>
+                      finishCreateNewItem().then(() => triggerRefresh('side'))
+                    }
+                    onCancelCreateNewItem={cancelCreateNewItem}
+                    onKeyDown={handleKeyDown}
+                    onSetNewItemName={setNewItemName}
+                    onShare={handleShare}
+                    onDelete={fileOperations.handleDelete}
+                    onRename={handleRename}
+                    onDuplicate={fileOperations.handleDuplicate}
+                    onDownload={fileOperations.handleDownload}
+                  />
+                </>
+              );
+            })()
           )}
         </div>
       </DndContext>
