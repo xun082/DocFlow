@@ -3,7 +3,7 @@
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { textblockTypeInputRule } from '@tiptap/core';
+import { CommandProps, textblockTypeInputRule } from '@tiptap/core';
 
 import CodeBlockComponent from './CodeBlockComponent';
 
@@ -49,7 +49,7 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
       ...this.parent?.(),
       createCodeBlock:
         () =>
-        ({ commands }: any) => {
+        ({ commands }: CommandProps) => {
           return commands.insertContent({
             type: this.name,
             attrs: { language: 'javascript' },
