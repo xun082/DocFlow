@@ -32,7 +32,7 @@ interface CollaborationUser {
   avatar: string;
 }
 
-type ExportAction = 'copy' | 'pdf' | 'docx';
+type ExportAction = 'copy' | 'pdf' | 'docx' | 'blog';
 
 // 协作用户头像组件
 function UserAvatar({
@@ -143,6 +143,9 @@ export default function DocumentHeader({
       handleExportPDF(displayTitle);
     } else if (value === 'docx') {
       handleExportDOCX(displayTitle, editor!);
+    } else if (value === 'blog') {
+      console.log('发布到博客');
+      // handlePublishToBlog();
     }
   };
 
@@ -370,6 +373,11 @@ export default function DocumentHeader({
               label="导出Word"
               icon="FileText"
               onClick={() => handleSelectAction('docx')}
+            />
+            <PopoverItem
+              label="发布到博客"
+              icon="Globe"
+              onClick={() => handleSelectAction('blog')}
             />
           </PopoverMenu>
         )}
