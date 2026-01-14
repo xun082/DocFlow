@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, Clock, ArrowRight, FileText, Search, Tag } from 'lucide-react';
 
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface BlogPost {
   id: string;
@@ -92,8 +100,28 @@ const blogPosts: BlogPost[] = [
 const categories = ['全部', '产品介绍', '技术教程', '技术深度', 'AI 技术', '性能优化', '开发经验'];
 
 const BlogPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('全部');
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '全部');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (searchQuery) {
+      params.set('search', searchQuery);
+    }
+
+    if (selectedCategory && selectedCategory !== '全部') {
+      params.set('category', selectedCategory);
+    }
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    router.replace(newUrl, { scroll: false });
+  }, [searchQuery, selectedCategory, pathname, router]);
 
   const filteredPosts = blogPosts.filter((post) => {
     const matchesCategory = selectedCategory === '全部' || post.category === selectedCategory;
@@ -128,32 +156,34 @@ const BlogPage = () => {
             </p>
           </motion.div>
 
-          <div className="mb-12 flex flex-col md:flex-row gap-6 items-center justify-between">
-            <div className="flex flex-wrap gap-2 justify-center">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    selectedCategory === category
-                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/25'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative w-full md:w-80">
+          <div className="mb-12 flex flex-col md:flex-row gap-30 items-center">
+            <div className="relative w-2/2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="搜索文章..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300"
+                className="w-full pl-10 pr-4 py-1.5 bg-white/10 border border-white/20 rounded-[8px] text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300"
               />
+            </div>
+            <div className="w-1/3">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full px-4 py-5  bg-white/10 border-white/20 text-white focus:border-violet-500 focus:ring-violet-500/20">
+                  <SelectValue placeholder="分类" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-white/20 text-white">
+                  {categories.map((category) => (
+                    <SelectItem
+                      key={category}
+                      value={category}
+                      className="focus:bg-violet-600/20 focus:text-white"
+                    >
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
