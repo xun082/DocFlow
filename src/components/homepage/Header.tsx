@@ -4,24 +4,33 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Github, Menu, X } from 'lucide-react';
+import router from 'next/router';
 
 import { Button } from '@/components/ui/button';
+import { getCookie } from '@/utils';
 
-interface HeaderProps {
-  isLoggedIn: boolean;
-  onGetStarted: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ isLoggedIn, onGetStarted }) => {
+const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+
+    const token = getCookie('auth_token');
+    setIsLoggedIn(!!token);
   }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const onGetStarted = () => {
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth');
+    }
   };
 
   return (
