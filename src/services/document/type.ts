@@ -14,7 +14,6 @@ export interface DocumentItem {
   owner: DocumentOwner;
   organization?: DocumentOrganization | null;
   permission: 'VIEW' | 'COMMENT' | 'EDIT' | 'MANAGE' | 'FULL';
-  is_deleted?: boolean;
 }
 
 export interface DocumentOwner {
@@ -89,7 +88,6 @@ export interface GetDocumentsResponse {
   organizations: OrganizationDocumentGroup[];
   shared: DocumentItem[];
   total: number;
-  documents?: DocumentItem[]; // 向后兼容
 }
 
 export interface DocumentResponse {

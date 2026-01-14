@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { FileItem } from '@/types/file-system';
 import DocumentApi from '@/services/document';
 import { DocumentItem, OrganizationDocumentGroup } from '@/services/document/type';
+import { organizationService } from '@/services/organization';
 
 export interface DocumentGroup {
   id: string;
@@ -189,28 +190,42 @@ export const useFileStore = create<FileState>((set, get) => ({
 
     setIsLoading(true);
 
-    const res = await DocumentApi.GetDocument();
+    try {
+      // 并行获取组织列表和文档列表
+      const [orgListResult, docsResult] = await Promise.all([
+        organizationService.getMyOrganizations({ page: 1, limit: 100 }),
+        DocumentApi.GetDocument(),
+      ]);
 
-    if (res?.data?.code === 200 && res?.data?.data) {
-      const { personal, organizations, shared } = res.data.data;
-      const groups: DocumentGroup[] = [];
+      if (docsResult?.data?.code === 200 && docsResult?.data?.data) {
+        const { personal, organizations: orgDocs, shared } = docsResult.data.data;
+        const groups: DocumentGroup[] = [];
 
-      // 处理个人文档
-      if (personal && personal.length > 0) {
-        const personalFiles = processApiDocuments(personal);
+        // 处理个人文档 - 始终创建个人文档分组（即使为空）
+        const personalFiles = personal && personal.length > 0 ? processApiDocuments(personal) : [];
         groups.push({
           id: 'personal',
           name: '个人文档',
           type: 'personal',
           files: personalFiles,
         });
-      }
 
-      // 处理组织文档
-      if (organizations && organizations.length > 0) {
-        organizations.forEach((org: OrganizationDocumentGroup) => {
-          if (org.documents && org.documents.length > 0) {
-            const orgFiles = processApiDocuments(org.documents);
+        // 处理组织文档 - 先获取所有组织，然后匹配文档
+        if (orgListResult && orgListResult.list) {
+          // 创建一个映射，便于快速查找组织的文档
+          const orgDocsMap = new Map<number, DocumentItem[]>();
+
+          if (orgDocs && orgDocs.length > 0) {
+            orgDocs.forEach((org: OrganizationDocumentGroup) => {
+              orgDocsMap.set(org.id, org.documents || []);
+            });
+          }
+
+          // 为每个组织创建一个分组（即使没有文档）
+          orgListResult.list.forEach((org) => {
+            const documents = orgDocsMap.get(org.id) || [];
+            const orgFiles = documents.length > 0 ? processApiDocuments(documents) : [];
+
             groups.push({
               id: `org-${org.id}`,
               name: org.name,
@@ -218,76 +233,78 @@ export const useFileStore = create<FileState>((set, get) => ({
               files: orgFiles,
               organizationId: org.id,
             });
-          }
-        });
-      }
-
-      // 处理分享文档
-      if (shared && shared.length > 0) {
-        const sharedFiles = processApiDocuments(shared);
-        groups.push({
-          id: 'shared',
-          name: '分享给我',
-          type: 'shared',
-          files: sharedFiles,
-        });
-      }
-
-      setDocumentGroups(groups);
-
-      // 检查选中的文件是否仍然存在
-      if (!isInitialLoad && selectedFileId) {
-        const findFileById = (items: FileItem[], id: string): boolean => {
-          for (const item of items) {
-            if (item.id === id) return true;
-            if (item.children && findFileById(item.children, id)) return true;
-          }
-
-          return false;
-        };
-
-        let fileExists = false;
-
-        for (const group of groups) {
-          if (findFileById(group.files, selectedFileId)) {
-            fileExists = true;
-            break;
-          }
-        }
-
-        if (!fileExists) {
-          setSelectedFileId(null);
-        }
-      }
-
-      // 初始化展开状态
-      if (isInitialLoad) {
-        const initialExpandedFolders: Record<string, boolean> = {};
-        const initialExpandedGroups: Record<string, boolean> = {
-          personal: true,
-          shared: true,
-        };
-
-        groups.forEach((group) => {
-          // 默认展开所有组
-          initialExpandedGroups[group.id] = true;
-
-          // 展开根级文件夹
-          const rootFolders = group.files
-            .filter((file) => file.type === 'folder')
-            .map((folder) => folder.id);
-
-          rootFolders.forEach((id) => {
-            initialExpandedFolders[id] = true;
           });
-        });
+        }
 
-        setExpandedFolders(initialExpandedFolders);
-        setExpandedGroups(initialExpandedGroups);
+        // 处理分享文档
+        if (shared && shared.length > 0) {
+          const sharedFiles = processApiDocuments(shared);
+          groups.push({
+            id: 'shared',
+            name: '分享给我',
+            type: 'shared',
+            files: sharedFiles,
+          });
+        }
+
+        setDocumentGroups(groups);
+
+        // 检查选中的文件是否仍然存在
+        if (!isInitialLoad && selectedFileId) {
+          const findFileById = (items: FileItem[], id: string): boolean => {
+            for (const item of items) {
+              if (item.id === id) return true;
+              if (item.children && findFileById(item.children, id)) return true;
+            }
+
+            return false;
+          };
+
+          let fileExists = false;
+
+          for (const group of groups) {
+            if (findFileById(group.files, selectedFileId)) {
+              fileExists = true;
+              break;
+            }
+          }
+
+          if (!fileExists) {
+            setSelectedFileId(null);
+          }
+        }
+
+        // 初始化展开状态
+        if (isInitialLoad) {
+          const initialExpandedFolders: Record<string, boolean> = {};
+          const initialExpandedGroups: Record<string, boolean> = {
+            personal: true,
+            shared: true,
+          };
+
+          groups.forEach((group) => {
+            // 默认展开所有组
+            initialExpandedGroups[group.id] = true;
+
+            // 展开根级文件夹
+            const rootFolders = group.files
+              .filter((file) => file.type === 'folder')
+              .map((folder) => folder.id);
+
+            rootFolders.forEach((id) => {
+              initialExpandedFolders[id] = true;
+            });
+          });
+
+          setExpandedFolders(initialExpandedFolders);
+          setExpandedGroups(initialExpandedGroups);
+        }
       }
+    } catch (error) {
+      console.error('加载文档列表失败:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   },
 
   // 创建新文件/文件夹

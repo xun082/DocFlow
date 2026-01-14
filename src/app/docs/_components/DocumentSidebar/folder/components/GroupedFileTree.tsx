@@ -215,8 +215,52 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
 
                   {/* 渲染文件列表 */}
                   {group.files.length === 0 && newItemGroupId !== group.id ? (
-                    <div className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 text-center">
-                      {group.type === 'shared' ? '暂无分享文档' : '暂无文档'}
+                    <div className="px-6 py-8 text-center">
+                      <div className="flex flex-col items-center space-y-3">
+                        <div className="relative">
+                          <div
+                            className={cn(
+                              'w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg',
+                              group.type === 'shared'
+                                ? 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/30'
+                                : group.type === 'organization'
+                                  ? 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/30'
+                                  : 'bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/20 dark:to-cyan-900/30',
+                            )}
+                          >
+                            <Icon
+                              name={group.type === 'shared' ? 'Share2' : 'FolderOpen'}
+                              className={cn(
+                                'w-8 h-8',
+                                group.type === 'shared'
+                                  ? 'text-green-500 dark:text-green-400'
+                                  : group.type === 'organization'
+                                    ? 'text-purple-500 dark:text-purple-400'
+                                    : 'text-blue-500 dark:text-blue-400',
+                              )}
+                            />
+                          </div>
+                          {/* 装饰性光点 */}
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-70 blur-sm"></div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                            {group.type === 'shared'
+                              ? '暂无分享文档'
+                              : group.type === 'organization'
+                                ? '该组织暂无文档'
+                                : '暂无个人文档'}
+                          </p>
+                          {group.type !== 'shared' && (
+                            <p className="text-xs text-slate-400 dark:text-slate-500">
+                              点击上方的 <Icon name="FilePlus" className="inline w-3 h-3 mx-0.5" />{' '}
+                              或 <Icon name="FolderPlus" className="inline w-3 h-3 mx-0.5" />{' '}
+                              按钮创建
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     group.files.map((file) => (
