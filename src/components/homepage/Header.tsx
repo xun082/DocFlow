@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Github, Menu, X } from 'lucide-react';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { getCookie } from '@/utils';
 
 const Header: React.FC = () => {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,6 +27,8 @@ const Header: React.FC = () => {
   };
 
   const onGetStarted = () => {
+    console.log('isLoggedIn', isLoggedIn);
+
     if (isLoggedIn) {
       router.push('/dashboard');
     } else {
