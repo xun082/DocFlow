@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { getCookie } from '@/utils';
 
 interface BlogPost {
   id: string;
@@ -103,12 +104,24 @@ const BlogPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '全部');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
+  const handleGetStarted = () => {
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth');
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams();
+
+    const token = getCookie('auth_token');
+    setIsLoggedIn(!!token);
 
     if (searchQuery) {
       params.set('search', searchQuery);
@@ -136,7 +149,7 @@ const BlogPage = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <Header isLoggedIn={false} onGetStarted={() => {}} />
+      <Header isLoggedIn={false} onGetStarted={handleGetStarted} />
 
       <main className="relative z-10 pt-32 pb-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
