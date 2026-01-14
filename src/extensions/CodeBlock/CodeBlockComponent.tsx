@@ -7,6 +7,7 @@ import { ChevronsUpDown, Code2, Check } from 'lucide-react';
 import { js as jsBeautify, html as htmlBeautify, css as cssBeautify } from 'js-beautify';
 
 import { Button } from '@/components/ui/button';
+import CodeBlockTheme from './CodeBlockTheme';
 import {
   Command,
   CommandEmpty,
@@ -234,7 +235,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
   return (
     <NodeViewWrapper
       ref={codeBlockRef}
-      className={`code-block ${isCollapsed ? 'collapsed' : ''} ${isWordWrap ? 'word-wrap' : ''} theme-${theme}`}
+      className={`code-block ${isCollapsed ? 'collapsed' : ''} ${isWordWrap ? 'word-wrap' : ''} theme-${node.attrs.theme}`}
       style={{ maxHeight: maxHeight ? `${maxHeight}px` : undefined }}
     >
       <div className="code-block-header">
@@ -281,6 +282,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
             </PopoverContent>
           </Popover>
         </div>
+        <CodeBlockTheme {...props} />
 
         <div className="code-block-controls">
           <button

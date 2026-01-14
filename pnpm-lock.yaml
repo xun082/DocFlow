@@ -308,6 +308,9 @@ importers:
       hast-util-to-html:
         specifier: ^9.0.5
         version: 9.0.5
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
       image-meta:
         specifier: ^0.2.2
         version: 0.2.2
