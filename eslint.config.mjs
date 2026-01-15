@@ -99,7 +99,9 @@ export default [
       prettier,
     },
     rules: {
-      ...prettier.configs.recommended.rules,
+      ...prettier.configs.recommended.rules,  
+      ...eslintNextPlugin.configs.recommended.rules,
+      ...eslintNextPlugin.configs['core-web-vitals'].rules,
       'prettier/prettier': [
         'error',
         {
