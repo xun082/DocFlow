@@ -6,8 +6,9 @@ import type { ReactNodeViewProps } from '@tiptap/react';
 import { ChevronsUpDown, Code2, Check } from 'lucide-react';
 import { js as jsBeautify, html as htmlBeautify, css as cssBeautify } from 'js-beautify';
 
-import { Button } from '@/components/ui/button';
 import CodeBlockTheme from './CodeBlockTheme';
+
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -29,7 +30,7 @@ function CodeBlockComponent(props: CodeBlockComponentProps) {
   const defaultLanguage = node.attrs.language || 'null';
 
   const {
-    theme = 'auto',
+    // theme = 'auto',
     showLineNumbers = false,
     maxHeight,
     customLanguages = [],
