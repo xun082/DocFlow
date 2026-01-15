@@ -144,6 +144,9 @@ export default function DocumentHeader({
     } else if (value === 'docx') {
       handleExportDOCX(displayTitle, editor!);
     } else if (value === 'blog') {
+      const htmlContent = editor?.getHTML();
+      console.log('🚀 ~ file: index.tsx:148 ~ htmlContent:', htmlContent);
+      if (!htmlContent) return;
       console.log('发布到博客');
       // handlePublishToBlog();
     }
