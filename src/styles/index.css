@@ -16,6 +16,7 @@
 @import './partials/frappe-gantt.css';
 @import './partials/youtube.css';
 @import './partials/mention.css';
+@import '../extensions/Alert/alert.css';
 
 @custom-variant dark (&:is(.dark *));
 

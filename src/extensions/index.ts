@@ -71,3 +71,5 @@ export { Gantt } from './Gantt';
 export { Comment } from './Comment';
 export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache } from './Mention';
 export type { MentionUser } from './Mention';
+export { Alert } from './Alert';
+export type { AlertType } from './Alert';

@@ -69,6 +69,7 @@ import {
   Comment,
   Mention,
   mentionSuggestion,
+  Alert,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -379,6 +380,7 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   Focus,
   Figcaption,
   BlockquoteFigure,
+  Alert,
   Dropcursor.configure({
     width: 2,
     class: 'ProseMirror-dropcursor border-black',
