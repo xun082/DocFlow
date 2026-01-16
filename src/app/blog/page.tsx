@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -35,7 +35,7 @@ const BLOG_CATEGORIES = [
   { key: 'OTHER', label: '其他' },
 ] as const;
 
-const BlogPage = () => {
+function BlogContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -139,6 +139,8 @@ const BlogPage = () => {
                       {post.title}
                     </h2>
 
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{post.summary}</p>
+
                     <div className="flex flex-wrap gap-2 mb-4">
                       {post.tags &&
                         post.tags?.split(',').map((tag) => (
@@ -157,10 +159,6 @@ const BlogPage = () => {
                           <Calendar className="h-4 w-4" />
                           <span>{formatDateTime(post.updated_at)}</span>
                         </div>
-                        {/* <div className="flex items-center space-x-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{post.readTime}</span>
-                        </div> */}
                       </div>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 group-hover:text-violet-400 transition-all" />
                     </div>
@@ -185,6 +183,20 @@ const BlogPage = () => {
 
       <Footer />
     </div>
+  );
+}
+
+const BlogPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center text-white">
+          加载中...
+        </div>
+      }
+    >
+      <BlogContent />
+    </Suspense>
   );
 };
 

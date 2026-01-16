@@ -4,6 +4,7 @@ import juice from 'juice';
 import { toast } from 'sonner';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
+import BlogDialog from '../DocumentSidebar/folder/BlogDialog';
 import HistoryPanel from '../HistoryPanel';
 
 import type { FileItem } from '@/types/file-system';
@@ -137,6 +138,36 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
+  // 博客发布对话框状态
+  const [blogDialogOpen, setBlogDialogOpen] = useState(false);
+
+  // 处理博客提交
+  const handleBlogSubmit = (data: any) => {
+    const htmlContent = editor?.getHTML();
+    if (!htmlContent) return;
+
+    const user = JSON.parse(localStorage.getItem('user_profile') || '{}');
+
+    blogsApi
+      .createBlog({
+        title: data.title || displayTitle,
+        summary: data.summary || '',
+        content: htmlContent,
+        category: data.category || 'OTHER',
+        tags: data.tags.join(','),
+        user_id: user.id,
+        user_name: user.name,
+        cover_image: data.coverImage || 'https://example.com/cover.jpg',
+      })
+      .then(() => {
+        toast.success('博客发布成功');
+      })
+      .catch((error) => {
+        toast.error('博客发布失败');
+        console.error('发布博客失败:', error);
+      });
+  };
+
   const handleSelectAction = (value: ExportAction) => {
     if (value === 'copy') {
       handleCopy();
@@ -145,25 +176,8 @@ export default function DocumentHeader({
     } else if (value === 'docx') {
       handleExportDOCX(displayTitle, editor!);
     } else if (value === 'blog') {
-      const htmlContent = editor?.getHTML();
-      console.log('🚀 ~ file: index.tsx:149 ~ htmlContent:', htmlContent);
-      if (!htmlContent) return;
-
-      const user = JSON.parse(localStorage.getItem('user_profile') || '{}');
-
-      blogsApi
-        .createBlog({
-          title: displayTitle,
-          content: htmlContent,
-          category: 'OTHER',
-          tags: '文档,分享',
-          user_id: user.id,
-          user_name: user.name,
-          cover_image: 'https://example.com/cover.jpg',
-        })
-        .then(() => {
-          toast.success('博客发布成功');
-        });
+      // 打开博客发布对话框
+      setBlogDialogOpen(true);
     }
   };
 
@@ -425,6 +439,14 @@ export default function DocumentHeader({
           }}
         />
       )}
+
+      {/* 博客发布对话框 */}
+      <BlogDialog
+        isOpen={blogDialogOpen}
+        onClose={() => setBlogDialogOpen(false)}
+        onSubmit={handleBlogSubmit}
+        initialTitle={displayTitle}
+      />
     </div>
   );
 }

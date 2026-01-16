@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Calendar, ArrowLeft } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
@@ -91,9 +92,9 @@ export default function BlogPostPage() {
               </div>
             )}
           </header>
-
+          <p>{post.content}</p>
           <div className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800">
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
           </div>
         </article>
       </main>
