@@ -23,6 +23,7 @@ import {
   Item as PopoverItem,
   CategoryTitle as PopoverCategoryTitle,
 } from '@/components/ui/PopoverMenu';
+import { blogsApi } from '@/services/blogs';
 
 // 类型定义
 interface CollaborationUser {
@@ -145,10 +146,24 @@ export default function DocumentHeader({
       handleExportDOCX(displayTitle, editor!);
     } else if (value === 'blog') {
       const htmlContent = editor?.getHTML();
-      console.log('🚀 ~ file: index.tsx:148 ~ htmlContent:', htmlContent);
+      console.log('🚀 ~ file: index.tsx:149 ~ htmlContent:', htmlContent);
       if (!htmlContent) return;
-      console.log('发布到博客');
-      // handlePublishToBlog();
+
+      const user = JSON.parse(localStorage.getItem('user_profile') || '{}');
+
+      blogsApi
+        .createBlog({
+          title: displayTitle,
+          content: htmlContent,
+          category: 'OTHER',
+          tags: '文档,分享',
+          user_id: user.id,
+          user_name: user.name,
+          cover_image: 'https://example.com/cover.jpg',
+        })
+        .then(() => {
+          toast.success('博客发布成功');
+        });
     }
   };
 
@@ -379,23 +394,7 @@ export default function DocumentHeader({
             />
             <PopoverItem
               label="发布到博客"
-              iconComponent={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
-              }
+              icon="GlobeLock"
               onClick={() => handleSelectAction('blog')}
             />
           </PopoverMenu>

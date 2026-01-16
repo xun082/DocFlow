@@ -1,12 +1,19 @@
-import request, { ErrorHandler } from '../request';
-import { BlogPost } from './type';
+import request from '../request';
+import { BlogPost, GetAllBlogsParams, CreateBlogParams } from './type';
 
 export const blogsApi = {
   /**
    * 获取所有博客
-   * @param errorHandler 自定义错误处理函数
+   *
    * @returns 博客列表
    */
-  getAll: (errorHandler?: ErrorHandler) =>
-    request.get<BlogPost[]>('/api/v1/blog/all', { errorHandler }),
+  getAll: (params: GetAllBlogsParams) =>
+    request.post<BlogPost[]>('/api/v1/blog/all', {
+      params: params,
+    }),
+
+  getBlogInfo: (id: number) => request.get<BlogPost>(`/api/v1/blog/info/${id}`),
+
+  createBlog: (data: CreateBlogParams) =>
+    request.post<BlogPost>('/api/v1/blog/create', { params: data }),
 };
