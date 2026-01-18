@@ -6,6 +6,9 @@ import { createContext, useContext, useState, useCallback, useMemo, type ReactNo
 export interface StepType {
   selector: string;
   content: ReactNode;
+  placement?: 'top' | 'bottom' | 'left' | 'right';
+  maxWidth?: number; // 提示框最大宽度（px），默认 320
+  minWidth?: number; // 提示框最小宽度（px），默认 200
 }
 
 // Tour Context 类型

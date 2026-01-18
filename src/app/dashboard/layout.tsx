@@ -2,74 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { Tour } from '@/components/tour';
-import { TourProvider, useTour, type StepType } from '@/components/tour';
+import { Tour, TourProvider, tourSteps, useDashboardTour } from '@/components/tour';
 import { NotificationSocketProvider } from '@/providers/NotificationSocketProvider';
 import { getPageTitle, NAV_ITEMS } from '@/utils';
-
-// 本地存储 key（用于记录引导是否完成）
-const DASHBOARD_TOUR_KEY = 'dashboard_tour_completed';
-
-// 侧边栏导航项名称 -> 引导 step id 映射
-const tourStepIdMap: Record<string, string> = {
-  仪表盘: 'dashboard',
-  聊天助手: 'messages',
-  工作流: 'workflow',
-  文档: 'docs',
-  知识库: 'knowledge',
-  通讯录: 'contacts',
-  组织管理: 'organizations',
-  个人资料: 'user',
-  播客: 'podcast',
-  设置: 'settings',
-};
-
-// Tour 步骤配置（针对每个侧边栏导航项）
-const tourSteps: StepType[] = [
-  {
-    selector: '[data-tour-step-id="dashboard"]',
-    content: '仪表盘用于展示系统概览和关键指标，帮助你快速了解当前工作状态。',
-  },
-  {
-    selector: '[data-tour-step-id="messages"]',
-    content: '聊天助手提供 AI 对话能力，支持智能问答、写作辅助等功能。',
-  },
-  {
-    selector: '[data-tour-step-id="workflow"]',
-    content: '工作流模块用于配置和管理自动化流程，让重复性工作自动执行。',
-  },
-  {
-    selector: '[data-tour-step-id="docs"]',
-    content: '文档模块用于文档的编辑和管理，是协作文档的核心入口。',
-  },
-  {
-    selector: '[data-tour-step-id="knowledge"]',
-    content: '知识库用于沉淀和管理结构化知识，支持检索和复用知识内容。',
-  },
-  {
-    selector: '[data-tour-step-id="contacts"]',
-    content: '通讯录用于管理联系人、同事及外部联系人，方便快速协作与沟通。',
-  },
-  {
-    selector: '[data-tour-step-id="organizations"]',
-    content: '组织管理用于管理组织架构、成员与权限，是企业级协作的基础配置。',
-  },
-  {
-    selector: '[data-tour-step-id="user"]',
-    content: '个人资料页面用于设置个人信息、账号与偏好。',
-  },
-  {
-    selector: '[data-tour-step-id="podcast"]',
-    content: '播客模块提供播客相关能力，用于创建和管理播客内容。',
-  },
-  {
-    selector: '[data-tour-step-id="settings"]',
-    content: '设置模块用于配置系统级参数，例如语言、主题和高级选项。',
-  },
-];
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -79,9 +17,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false); // 移动端默认关闭
 
-  const { isOpen, setIsOpen } = useTour();
-  const [autoStarted, setAutoStarted] = useState(false);
-
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev);
   };
@@ -90,37 +25,8 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
     setSidebarOpen(false);
   };
 
-  // 首次访问自动触发引导
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const hasCompleted = window.localStorage.getItem(DASHBOARD_TOUR_KEY);
-    console.error(hasCompleted);
-
-    if (!hasCompleted) {
-      setIsOpen(true);
-      setAutoStarted(true);
-    }
-  }, [setIsOpen]);
-
-  // 自动启动的引导关闭后，记录已完成状态
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!isOpen && autoStarted) {
-      window.localStorage.setItem(DASHBOARD_TOUR_KEY, 'true');
-    }
-  }, [isOpen, autoStarted]);
-
-  // 手动重新开始引导：清除完成状态并打开
-  const handleStartTour = () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(DASHBOARD_TOUR_KEY);
-    }
-
-    setAutoStarted(false);
-    setIsOpen(true);
-  };
+  // 处理 Dashboard Tour 的自动启动和完成状态
+  useDashboardTour();
 
   return (
     <>
@@ -168,15 +74,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                 </svg>
               </button>
             </div>
-
-            {/* 开始引导 */}
-            <button
-              type="button"
-              onClick={handleStartTour}
-              className="mt-3 inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-            >
-              开始引导
-            </button>
           </div>
 
           {/* 导航菜单 */}
@@ -214,8 +111,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                   </>
                 );
 
-                const tourStepId = tourStepIdMap[item.name] ?? undefined;
-
                 return (
                   <li key={item.name}>
                     {item.external ? (
@@ -229,7 +124,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                         className={linkClasses}
                         target="_blank"
                         rel="noopener noreferrer"
-                        data-tour-step-id={tourStepId}
                       >
                         {linkContent}
                       </a>
@@ -243,7 +137,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                           }
                         }}
                         className={linkClasses}
-                        data-tour-step-id={tourStepId}
                       >
                         {linkContent}
                       </Link>

@@ -49,12 +49,10 @@ export default function DashboardHeader({
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
   const [localUserData, setLocalUserData] = useState<any>(undefined);
-  console.log(123123);
 
   // 加载本地用户数据作为fallback
   useEffect(() => {
     const cachedData = getLocalUserData(queryClient);
-    console.log(2342342);
 
     if (cachedData) {
       setLocalUserData(cachedData);
