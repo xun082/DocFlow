@@ -2,30 +2,34 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { getPageTitle, NAV_ITEMS } from '@/utils';
+import { Tour, TourProvider, tourSteps, useDashboardTour } from '@/components/tour';
 import { NotificationSocketProvider } from '@/providers/NotificationSocketProvider';
+import { getPageTitle, NAV_ITEMS } from '@/utils';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false); // 移动端默认关闭
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen((prev) => !prev);
   };
 
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
 
+  // 处理 Dashboard Tour 的自动启动和完成状态
+  useDashboardTour();
+
   return (
-    <NotificationSocketProvider>
+    <>
       <div className="flex h-screen bg-gray-50">
         {/* 移动端遮罩层 */}
         {sidebarOpen && (
@@ -38,11 +42,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* 侧边栏 */}
         <div
           className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg lg:shadow-sm 
-          border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          lg:w-64
-        `}
+            fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg lg:shadow-sm 
+            border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            lg:w-64
+          `}
         >
           {/* Logo/Header */}
           <div className="p-4 border-b border-gray-200">
@@ -53,10 +57,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
                 <span className="font-semibold text-gray-900">DocFlow</span>
               </div>
+
               {/* 移动端关闭按钮 */}
               <button
                 onClick={closeSidebar}
                 className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                type="button"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -82,22 +88,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     (item.href === '/dashboard' && pathname === '/dashboard'));
 
                 const linkClasses = `
-                group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
-                transition-all duration-200 ease-in-out
-                ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }
-              `;
+                  group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
+                  transition-all duration-200 ease-in-out
+                  ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }
+                `;
 
                 const linkContent = (
                   <>
                     <span
                       className={`
-                      mr-3 transition-colors duration-200
-                      ${isActive ? 'text-blue-700' : 'text-gray-500 group-hover:text-gray-700'}
-                    `}
+                        mr-3 transition-colors duration-200
+                        ${isActive ? 'text-blue-700' : 'text-gray-500 group-hover:text-gray-700'}
+                      `}
                     >
                       {item.icon}
                     </span>
@@ -156,6 +162,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <main className="flex-1 overflow-y-auto bg-white p-4 sm:p-6">{children}</main>
         </div>
       </div>
+
+      {/* Tour 覆盖层/提示框 */}
+      <Tour />
+    </>
+  );
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  return (
+    <NotificationSocketProvider>
+      <TourProvider steps={tourSteps}>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      </TourProvider>
     </NotificationSocketProvider>
   );
 }

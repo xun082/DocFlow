@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   APP_LANGUAGE: 'app_language',
   APP_THEME: 'app_theme',
   SIDEBAR_COLLAPSED: 'sidebar_collapsed',
+  DASHBOARD_TOUR_COMPLETED: 'dashboard_tour_completed',
 
   // Temporary data
   TEMP_DATA: 'temp_data',
@@ -68,6 +69,7 @@ export interface StorageValueMap {
   [STORAGE_KEYS.APP_LANGUAGE]: 'zh-CN' | 'en-US';
   [STORAGE_KEYS.APP_THEME]: 'light' | 'dark' | 'system';
   [STORAGE_KEYS.SIDEBAR_COLLAPSED]: boolean;
+  [STORAGE_KEYS.DASHBOARD_TOUR_COMPLETED]: boolean;
   [STORAGE_KEYS.TEMP_DATA]: any;
   [STORAGE_KEYS.CACHE_TIMESTAMP]: number;
   [STORAGE_KEYS.API_KEYS]: {
