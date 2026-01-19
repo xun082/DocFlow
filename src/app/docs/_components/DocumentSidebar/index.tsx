@@ -104,10 +104,11 @@ function DocumentSidebar() {
                     toggle();
                   }
                 }}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 backdrop-blur-md border flex-shrink-0 ${activeTab === tab.id && isOpen
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 backdrop-blur-md border flex-shrink-0 ${
+                  activeTab === tab.id && isOpen
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/20 border-blue-200/50 dark:border-blue-600/30 scale-105'
                     : 'bg-white/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-slate-200 border-slate-200/50 dark:border-slate-600/50 hover:scale-105'
-                  }`}
+                }`}
               >
                 <Icon name={tab.icon as any} className="w-5 h-5" />
               </button>
