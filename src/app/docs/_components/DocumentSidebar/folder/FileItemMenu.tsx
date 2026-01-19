@@ -28,8 +28,31 @@ const FileItemMenu = ({
   className,
 }: FileItemMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 清除关闭定时器
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  // 鼠标移出时延迟关闭菜单
+  const handleMouseLeave = () => {
+    clearCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150); // 150ms 延迟,避免鼠标快速移动时误关闭
+  };
+
+  // 鼠标移入时取消关闭
+  const handleMouseEnter = () => {
+    clearCloseTimer();
+  };
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -52,6 +75,13 @@ const FileItemMenu = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // 组件卸载时清除定时器
+  useEffect(() => {
+    return () => {
+      clearCloseTimer();
+    };
+  }, []);
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -110,7 +140,12 @@ const FileItemMenu = ({
   ].filter((item) => item.show);
 
   return (
-    <div className={cn('relative', className)}>
+    <div
+      ref={containerRef}
+      className={cn('relative', className)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         ref={buttonRef}
         className="p-1 rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors opacity-0 group-hover:opacity-100"
