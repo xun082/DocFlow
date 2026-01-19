@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, ArrowRight, FileText, Search, Tag } from 'lucide-react';
 
@@ -49,12 +48,7 @@ async function BlogContent({
 
       <main className="relative z-10 pt-32 pb-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               <span className="bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent">
                 博客
@@ -63,10 +57,10 @@ async function BlogContent({
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               探索 DocFlow 的技术实现、产品理念以及开发经验分享
             </p>
-          </motion.div>
+          </div>
 
           <div className="mb-12 flex flex-col md:flex-row gap-8 items-center">
-            <div className="relative flex-1">
+            <div className="relative flex-3">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
@@ -96,14 +90,8 @@ async function BlogContent({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post, index) => (
-              <motion.article
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group"
-              >
+            {blogPosts.map((post) => (
+              <article key={post.id} className="group">
                 <Link href={`/blog/${post.id}`}>
                   <div className="h-full bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/10 transition-all duration-300 hover:-translate-y-1">
                     <div className="flex items-center space-x-2 text-sm text-violet-400 mb-4">
@@ -140,19 +128,15 @@ async function BlogContent({
                     </div>
                   </div>
                 </Link>
-              </motion.article>
+              </article>
             ))}
           </div>
 
           {blogPosts.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
+            <div className="text-center py-20">
               <FileText className="h-16 w-16 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400 text-lg">没有找到相关文章</p>
-            </motion.div>
+            </div>
           )}
         </div>
       </main>

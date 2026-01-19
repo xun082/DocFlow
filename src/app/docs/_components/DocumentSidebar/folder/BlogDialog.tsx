@@ -77,6 +77,7 @@ export function BlogDialog({ isOpen, onClose, onSubmit, initialTitle = '' }: Blo
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -130,6 +131,8 @@ export function BlogDialog({ isOpen, onClose, onSubmit, initialTitle = '' }: Blo
         return;
       }
 
+      setIsUploading(true);
+
       // 读取文件并显示预览
       const reader = new FileReader();
 
@@ -152,6 +155,8 @@ export function BlogDialog({ isOpen, onClose, onSubmit, initialTitle = '' }: Blo
         toast.error('图片上传失败，请重试');
         setImagePreview(null);
         form.setValue('coverImage', undefined);
+      } finally {
+        setIsUploading(false);
       }
     }
   };
@@ -349,7 +354,9 @@ export function BlogDialog({ isOpen, onClose, onSubmit, initialTitle = '' }: Blo
               <Button type="button" variant="outline" onClick={onClose}>
                 取消
               </Button>
-              <Button type="submit">创建</Button>
+              <Button type="submit" disabled={isUploading}>
+                {isUploading ? '上传中...' : '创建'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

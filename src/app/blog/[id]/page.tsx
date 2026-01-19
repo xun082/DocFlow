@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import { Calendar, ArrowLeft } from 'lucide-react';
-import DOMPurify from 'dompurify';
+// import DOMPurify from 'dompurify';
 
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
 import { blogsApi } from '@/services/blogs';
 import { formatDateTime } from '@/utils/format/date';
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
-  const postId = Number(params.id);
+export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const postId = Number(id);
 
   // 服务端获取博客数据
   const response = await blogsApi.getBlogInfo(postId);
   const post = response.data?.data;
+  console.log('🚀 ~ file: page.tsx:17 ~ post:', post);
 
   if (!post) {
     return (
@@ -73,10 +75,7 @@ export default async function BlogPostPage({ params }: { params: { id: string } 
           </header>
 
           <div className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800">
-            <div
-              className="text-white"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
-            />
+            <div className="text-white" dangerouslySetInnerHTML={{ __html: post.content }} />
           </div>
         </article>
       </main>
