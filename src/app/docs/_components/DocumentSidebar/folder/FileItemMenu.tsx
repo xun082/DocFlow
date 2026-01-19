@@ -13,6 +13,7 @@ interface FileItemMenuProps {
   onRename?: (file: FileItem) => void;
   onDuplicate?: (file: FileItem) => void;
   onDownload?: (file: FileItem) => void;
+  onMenuOpen?: () => void;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ const FileItemMenu = ({
   onRename,
   onDuplicate,
   onDownload,
+  onMenuOpen,
   className,
 }: FileItemMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +56,12 @@ const FileItemMenu = ({
   const handleMenuClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 打开菜单时触发回调（用于关闭右键菜单等）
+    if (!isOpen) {
+      onMenuOpen?.();
+    }
+
     setIsOpen(!isOpen);
   };
 
