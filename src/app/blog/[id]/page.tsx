@@ -1,34 +1,18 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
 import { blogsApi } from '@/services/blogs';
-import { BlogPost } from '@/services/blogs/type';
 import { formatDateTime } from '@/utils/format/date';
 
-export default function BlogPostPage() {
-  const params = useParams();
-  const [isMounted, setIsMounted] = useState(false);
-  const [post, setPost] = useState<BlogPost | null>(null);
+export default async function BlogPostPage({ params }: { params: { id: string } }) {
+  const postId = Number(params.id);
 
-  useEffect(() => {
-    setIsMounted(true);
-    blogsApi.getBlogInfo(Number(params.id)).then((res) => {
-      if (res.data) {
-        setPost(res.data.data);
-      }
-    });
-  }, [params.id]);
-
-  if (!isMounted) {
-    return null;
-  }
+  // 服务端获取博客数据
+  const response = await blogsApi.getBlogInfo(postId);
+  const post = response.data?.data;
 
   if (!post) {
     return (
@@ -65,10 +49,6 @@ export default function BlogPostPage() {
                 <Calendar className="w-4 h-4" />
                 {formatDateTime(post.updated_at)}
               </span>
-              {/* <span className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {post.readTime}
-              </span> */}
               <span className="px-2 py-1 bg-violet-600/20 text-violet-400 rounded-full text-xs">
                 {post.category}
               </span>
@@ -80,19 +60,18 @@ export default function BlogPostPage() {
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-6">
-                {post.tags &&
-                  post.tags.split(',').map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                {post.tags.split(',').map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
           </header>
-          {/* <p className="text-white mb-12">{post.content}</p> */}
+
           <div className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800">
             <div
               className="text-white"
