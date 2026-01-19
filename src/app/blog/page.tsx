@@ -1,7 +1,4 @@
-'use client';
-
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, ArrowRight, FileText, Search, Tag } from 'lucide-react';
@@ -17,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { blogsApi } from '@/services/blogs';
-import { BlogPost } from '@/services/blogs/type';
 
 const BLOG_CATEGORIES = [
   { key: 'ALL', label: '' },
@@ -35,36 +31,17 @@ const BLOG_CATEGORIES = [
   { key: 'OTHER', label: '其他' },
 ] as const;
 
-function BlogContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+async function BlogContent({
+  searchParams,
+}: {
+  searchParams: { category?: string; search?: string };
+}) {
+  const category = searchParams.category || '';
+  const searchQuery = searchParams.search || '';
 
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-
-    if (searchQuery) {
-      params.set('search', searchQuery);
-    }
-
-    if (selectedCategory && selectedCategory !== '全部') {
-      params.set('category', selectedCategory);
-    }
-
-    const queryString = params.toString();
-    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-
-    blogsApi.getAll({ category: selectedCategory, title: searchQuery }).then((res) => {
-      if (res.data) {
-        setBlogPosts(res.data.data || []);
-      }
-    });
-    router.replace(newUrl, { scroll: false });
-  }, [searchQuery, selectedCategory, pathname, router]);
+  // 服务端获取博客数据
+  const response = await blogsApi.getAll({ category, title: searchQuery });
+  const blogPosts = response.data?.data || [];
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -88,20 +65,19 @@ function BlogContent() {
             </p>
           </motion.div>
 
-          <div className="mb-12 flex flex-col md:flex-row gap-30 items-center">
-            <div className="relative w-2/2">
+          <div className="mb-12 flex flex-col md:flex-row gap-8 items-center">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="搜索文章..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                defaultValue={searchQuery}
                 className="w-full pl-10 pr-4 py-1.5 bg-white/10 border border-white/20 rounded-[8px] text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300"
               />
             </div>
-            <div className="w-1/3">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full px-4 py-5  bg-white/10 border-white/20 text-white focus:border-violet-500 focus:ring-violet-500/20">
+            <div className="flex-1">
+              <Select defaultValue={category} name="category">
+                <SelectTrigger className="w-full px-4 py-5 bg-white/10 border-white/20 text-white focus:border-violet-500 focus:ring-violet-500/20">
                   <SelectValue placeholder="分类" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-white/20 text-white">
@@ -186,7 +162,7 @@ function BlogContent() {
   );
 }
 
-const BlogPage = () => {
+const BlogPage = ({ searchParams }: { searchParams: { category?: string; search?: string } }) => {
   return (
     <Suspense
       fallback={
@@ -195,7 +171,7 @@ const BlogPage = () => {
         </div>
       }
     >
-      <BlogContent />
+      <BlogContent searchParams={searchParams} />
     </Suspense>
   );
 };
