@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { Calendar, ArrowLeft } from 'lucide-react';
-// import DOMPurify from 'dompurify';
+import { Calendar } from 'lucide-react';
 
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
@@ -11,10 +10,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const postId = Number(id);
 
-  // 服务端获取博客数据
   const response = await blogsApi.getBlogInfo(postId);
   const post = response.data?.data;
-  console.log('🚀 ~ file: page.tsx:17 ~ post:', post);
 
   if (!post) {
     return (
@@ -34,38 +31,39 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   return (
     <div className="min-h-screen bg-black">
       <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          返回博客
-        </Link>
-
+      <main className="max-w-[80vw] mx-auto">
         <article className="prose prose-invert prose-lg max-w-none">
-          <header className="mb-12">
-            <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                {formatDateTime(post.updated_at)}
+          <header className="mb-16 flex flex-col items-center">
+            {post.cover_image && (
+              <div className="mb-8 rounded-sm overflow-hidden shadow-2xl">
+                <img
+                  src={post.cover_image}
+                  alt={post.title}
+                  className="w-full h-auto object-cover"
+                  style={{ aspectRatio: '3/1' }}
+                />
+              </div>
+            )}
+            <h1 className="text-4xl md:text-5xl font-bold  text-white leading-tight">
+              {post.title}
+            </h1>
+
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-md">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{formatDateTime(post.updated_at)}</span>
               </span>
-              <span className="px-2 py-1 bg-violet-600/20 text-violet-400 rounded-full text-xs">
+              <span className="px-2.5 py-1 bg-violet-500/10 text-violet-300 rounded-md">
                 {post.category}
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text text-transparent">
-              {post.title}
-            </h1>
-
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6">
+              <div className="flex flex-wrap gap-2">
                 {post.tags.split(',').map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 bg-white/10 text-gray-300 rounded-full text-sm"
+                    className="px-3 py-1.5 bg-white/5 text-gray-400 rounded-md text-sm border border-white/10 hover:bg-white/10 transition-colors"
                   >
                     {tag}
                   </span>
@@ -74,9 +72,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             )}
           </header>
 
-          <div className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800">
-            <div className="text-white" dangerouslySetInnerHTML={{ __html: post.content }} />
-          </div>
+          <div
+            className="tiptap-content prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </article>
       </main>
 
