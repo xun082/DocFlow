@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
-# 执行代码检查，任何一个失败都会阻止提交
+# Exit immediately if any command fails
+set -e
+
 echo "🔍 Running lint check..."
 pnpm lint:ci
 
@@ -11,4 +12,4 @@ pnpm format:ci
 echo "🔧 Running type check..."
 pnpm type-check
 
-echo "✅ All checks passed!"
+echo "✅ All checks passed! Proceeding with commit..."

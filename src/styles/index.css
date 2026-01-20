@@ -4,6 +4,7 @@
 @import './partials/blocks.css';
 @import './partials/code.css';
 @import './partials/code-block.css';
+@import './partials/code-block-themes.css';
 @import './partials/collab.css';
 @import './partials/lists.css';
 @import './partials/placeholder.css';
@@ -16,11 +17,14 @@
 @import './partials/youtube.css';
 @import './partials/mention.css';
 @import './partials/blog.css';
+@import '../extensions/Alert/alert.css';
 
 @custom-variant dark (&:is(.dark *));
+
 .bg-\[--color-bg\] {
   background-color: var(--color-bg);
 }
+
 @layer utilities {
   .ProseMirror {
     @apply caret-black outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 mx-auto max-w-3xl;
@@ -33,7 +37,7 @@
     width: 100%;
     box-sizing: border-box;
   }
-  
+
   .prose-container .ProseMirror {
     @apply caret-black outline-0 px-8 py-12 z-0 mx-auto max-w-4xl;
     min-height: 100%;
@@ -123,15 +127,15 @@
     text-decoration: line-through !important;
   }
 
-  .ProseMirror > .react-renderer {
+  .ProseMirror>.react-renderer {
     @apply my-12;
   }
 
-  .ProseMirror > .react-renderer:first-child {
+  .ProseMirror>.react-renderer:first-child {
     @apply mt-0;
   }
 
-  .ProseMirror > .react-renderer:last-child {
+  .ProseMirror>.react-renderer:last-child {
     @apply mb-0;
   }
 
@@ -148,7 +152,8 @@
     display: block;
     border-top: 1px solid rgb(0 0 0 / 0.4);
     width: 100%;
-    max-width: 80rem; /* match max-w-5xl */
+    max-width: 80rem;
+    /* match max-w-5xl */
     position: relative;
     top: -1.5em;
     left: 0;
@@ -329,6 +334,7 @@
 
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
+
     .tippy-box[data-plugin='textMenu'],
     .tippy-box[data-theme~='text-menu'] {
       max-width: calc(100vw - 16px) !important;
@@ -474,10 +480,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
   }
+
   html {
     overflow-x: hidden;
   }
@@ -564,6 +572,7 @@
 }
 
 @media (max-width: 640px) {
+
   .ProseMirror td img[data-table-image='true'],
   .ProseMirror th img[data-table-image='true'] {
     max-width: 80px !important;

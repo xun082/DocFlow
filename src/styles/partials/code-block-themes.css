@@ -1,0 +1,319 @@
+.theme-light-1c {
+    @import "highlight.js/styles/1c-light.min.css";
+}
+
+.theme-a11y-dark {
+    @import "highlight.js/styles/a11y-dark.min.css";
+}
+
+.theme-a11y-light {
+    @import "highlight.js/styles/a11y-light.min.css";
+}
+
+.theme-agate {
+    @import "highlight.js/styles/agate.min.css";
+}
+
+.theme-an-old-hope {
+    @import "highlight.js/styles/an-old-hope.min.css";
+}
+
+.theme-androidstudio {
+    @import "highlight.js/styles/androidstudio.min.css";
+}
+
+.theme-arduino-light {
+    @import "highlight.js/styles/arduino-light.min.css";
+}
+
+.theme-arta {
+    @import "highlight.js/styles/arta.min.css";
+}
+
+.theme-ascetic {
+    @import "highlight.js/styles/ascetic.min.css";
+}
+
+.theme-atom-one-dark-reasonable {
+    @import "highlight.js/styles/atom-one-dark-reasonable.min.css";
+}
+
+.theme-atom-one-dark {
+    @import "highlight.js/styles/atom-one-dark.min.css";
+}
+
+.theme-atom-one-light {
+    @import "highlight.js/styles/atom-one-light.min.css";
+}
+
+.theme-brown-paper {
+    @import "highlight.js/styles/brown-paper.min.css";
+}
+
+.theme-codepen-embed {
+    @import "highlight.js/styles/codepen-embed.min.css";
+}
+
+.theme-color-brewer {
+    @import "highlight.js/styles/color-brewer.min.css";
+}
+
+.theme-cybertopia-cherry {
+    @import "highlight.js/styles/cybertopia-cherry.min.css";
+}
+
+.theme-cybertopia-dimmer {
+    @import "highlight.js/styles/cybertopia-dimmer.min.css";
+}
+
+.theme-cybertopia-icecap {
+    @import "highlight.js/styles/cybertopia-icecap.min.css";
+}
+
+.theme-cybertopia-saturated {
+    @import "highlight.js/styles/cybertopia-saturated.min.css";
+}
+
+.theme-dark {
+    @import "highlight.js/styles/dark.min.css";
+}
+
+.theme-default {
+    @import "highlight.js/styles/default.min.css";
+}
+
+.theme-devibeans {
+    @import "highlight.js/styles/devibeans.min.css";
+}
+
+.theme-docco {
+    @import "highlight.js/styles/docco.min.css";
+}
+
+.theme-far {
+    @import "highlight.js/styles/far.min.css";
+}
+
+.theme-felipec {
+    @import "highlight.js/styles/felipec.min.css";
+}
+
+.theme-foundation {
+    @import 'highlight.js/styles/foundation.min.css'
+}
+
+.theme-github-dark-dimmed {
+    @import 'highlight.js/styles/github-dark-dimmed.min.css'
+}
+
+.theme-github-dark {
+    @import 'highlight.js/styles/github-dark.min.css'
+}
+
+.theme-github {
+    @import 'highlight.js/styles/github.min.css'
+}
+
+.theme-gml {
+    @import 'highlight.js/styles/gml.min.css'
+}
+
+.theme-googlecode {
+    @import 'highlight.js/styles/googlecode.min.css'
+}
+
+.theme-gradient-dark {
+    @import 'highlight.js/styles/gradient-dark.min.css'
+}
+
+.theme-gradient-light {
+    @import 'highlight.js/styles/gradient-light.min.css'
+}
+
+.theme-grayscale {
+    @import 'highlight.js/styles/grayscale.min.css'
+}
+
+.theme-hybrid {
+    @import 'highlight.js/styles/hybrid.min.css'
+}
+
+.theme-idea {
+    @import 'highlight.js/styles/idea.min.css'
+}
+
+.theme-intellij-light {
+    @import 'highlight.js/styles/intellij-light.min.css'
+}
+
+.theme-ir-black {
+    @import 'highlight.js/styles/ir-black.min.css'
+}
+
+.theme-isbl-editor-dark {
+    @import 'highlight.js/styles/isbl-editor-dark.min.css'
+}
+
+.theme-isbl-editor-light {
+    @import 'highlight.js/styles/isbl-editor-light.min.css'
+}
+
+.theme-kimbie-dark {
+    @import 'highlight.js/styles/kimbie-dark.min.css'
+}
+
+.theme-kimbie-light {
+    @import 'highlight.js/styles/kimbie-light.min.css'
+}
+
+.theme-lightfair {
+    @import 'highlight.js/styles/lightfair.min.css'
+}
+
+.theme-lioshi {
+    @import 'highlight.js/styles/lioshi.min.css'
+}
+
+.theme-magula {
+    @import 'highlight.js/styles/magula.min.css'
+}
+
+.theme-mono-blue {
+    @import 'highlight.js/styles/mono-blue.min.css'
+}
+
+.theme-monokai-sublime {
+    @import 'highlight.js/styles/monokai-sublime.min.css'
+}
+
+.theme-monokai {
+    @import 'highlight.js/styles/monokai.min.css'
+}
+
+.theme-night-owl {
+    @import 'highlight.js/styles/night-owl.min.css'
+}
+
+.theme-nnfx-dark {
+    @import 'highlight.js/styles/nnfx-dark.min.css'
+}
+
+.theme-nnfx-light {
+    @import 'highlight.js/styles/nnfx-light.min.css'
+}
+
+.theme-nord {
+    @import 'highlight.js/styles/nord.min.css'
+}
+
+.theme-obsidian {
+    @import 'highlight.js/styles/obsidian.min.css'
+}
+
+.theme-panda-syntax-dark {
+    @import 'highlight.js/styles/panda-syntax-dark.min.css'
+}
+
+.theme-panda-syntax-light {
+    @import 'highlight.js/styles/panda-syntax-light.min.css'
+}
+
+.theme-paraiso-dark {
+    @import 'highlight.js/styles/paraiso-dark.min.css'
+}
+
+.theme-paraiso-light {
+    @import 'highlight.js/styles/paraiso-light.min.css'
+}
+
+.theme-pojoaque {
+    @import 'highlight.js/styles/pojoaque.min.css'
+}
+
+.theme-purebasic {
+    @import 'highlight.js/styles/purebasic.min.css'
+}
+
+.theme-qtcreator-dark {
+    @import 'highlight.js/styles/qtcreator-dark.min.css'
+}
+
+.theme-qtcreator-light {
+    @import 'highlight.js/styles/qtcreator-light.min.css'
+}
+
+.theme-rainbow {
+    @import 'highlight.js/styles/rainbow.min.css'
+}
+
+.theme-rose-pine-dawn {
+    @import 'highlight.js/styles/rose-pine-dawn.min.css'
+}
+
+.theme-rose-pine-moon {
+    @import 'highlight.js/styles/rose-pine-moon.min.css'
+}
+
+.theme-rose-pine {
+    @import 'highlight.js/styles/rose-pine.min.css'
+}
+
+.theme-routeros {
+    @import 'highlight.js/styles/routeros.min.css'
+}
+
+.theme-school-book {
+    @import 'highlight.js/styles/school-book.min.css'
+}
+
+.theme-shades-of-purple {
+    @import 'highlight.js/styles/shades-of-purple.min.css'
+}
+
+.theme-srcery {
+    @import 'highlight.js/styles/srcery.min.css'
+}
+
+.theme-stackoverflow-dark {
+    @import 'highlight.js/styles/stackoverflow-dark.min.css'
+}
+
+.theme-stackoverflow-light {
+    @import 'highlight.js/styles/stackoverflow-light.min.css'
+}
+
+.theme-sunburst {
+    @import 'highlight.js/styles/sunburst.min.css'
+}
+
+.theme-tokyo-night-dark {
+    @import 'highlight.js/styles/tokyo-night-dark.min.css'
+}
+
+.theme-tokyo-night-light {
+    @import 'highlight.js/styles/tokyo-night-light.min.css'
+}
+
+.theme-tomorrow-night-blue {
+    @import 'highlight.js/styles/tomorrow-night-blue.min.css'
+}
+
+.theme-tomorrow-night-bright {
+    @import 'highlight.js/styles/tomorrow-night-bright.min.css'
+}
+
+.theme-vs {
+    @import 'highlight.js/styles/vs.min.css'
+}
+
+.theme-vs2015 {
+    @import 'highlight.js/styles/vs2015.min.css'
+}
+
+.theme-xcode {
+    @import 'highlight.js/styles/xcode.min.css'
+}
+
+.theme-xt256 {
+    @import 'highlight.js/styles/xt256.min.css'
+}

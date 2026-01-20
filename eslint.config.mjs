@@ -6,6 +6,7 @@ import prettier from 'eslint-plugin-prettier';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { resolve } from 'path';
+import eslintNextPlugin from '@next/eslint-plugin-next';
 
 export default [
   {
@@ -40,6 +41,7 @@ export default [
       'jsx-a11y': jsxA11y,
       import: importPlugin,
       prettier,
+      next: eslintNextPlugin,
     },
     rules: {
       ...typescriptEslintPlugin.configs.recommended.rules,
@@ -98,6 +100,8 @@ export default [
     },
     rules: {
       ...prettier.configs.recommended.rules,
+      ...eslintNextPlugin.configs.recommended.rules,
+      ...eslintNextPlugin.configs['core-web-vitals'].rules,
       'prettier/prettier': [
         'error',
         {

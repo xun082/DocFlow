@@ -1,7 +1,7 @@
 .ProseMirror .tiptap .code-block,
 .tiptap .code-block {
   position: relative;
-  background: #0d1117;
+  /* background: #0d1117; */
   border: 1px solid #21262d;
   border-radius: 12px;
   overflow: hidden;
@@ -35,7 +35,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(99, 110, 123, 0.1);
+  /* background: rgba(99, 110, 123, 0.1); */
   border: 1px solid rgba(99, 110, 123, 0.2);
   border-radius: 6px;
   color: #8b949e;
@@ -54,15 +54,15 @@
 
 .ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn.active,
 .tiptap .code-block .code-block-header .code-block-controls .control-btn.active {
-  background: rgba(56, 139, 253, 0.15);
-  color: #58a6ff;
+  /* background: rgba(56, 139, 253, 0.15); */
+  /* color: #58a6ff; */
   border-color: rgba(56, 139, 253, 0.3);
 }
 
 .ProseMirror .tiptap .code-block .code-block-header .code-block-controls .control-btn.copied,
 .tiptap .code-block .code-block-header .code-block-controls .control-btn.copied {
-  background: rgba(46, 160, 67, 0.15);
-  color: #3fb950;
+  /* background: rgba(46, 160, 67, 0.15); */
+  /* color: #3fb950; */
   border-color: rgba(46, 160, 67, 0.3);
 }
 
@@ -93,8 +93,8 @@
 .tiptap .code-block .code-block-content pre {
   margin: 0;
   padding: 20px;
-  background: #0d1117;
-  color: #e6edf3;
+  /* background: #0d1117;
+  color: #e6edf3; */
   font-size: 14px;
   line-height: 1.6;
   overflow-x: auto;
@@ -327,4 +327,3 @@
 .tiptap .code-block .code-block-content pre::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 110, 123, 0.5);
 }
-

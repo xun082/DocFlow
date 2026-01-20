@@ -1,0 +1,52 @@
+/* Alert 样式 */
+.alert-wrapper {
+  position: relative;
+}
+
+/* 内容区域样式 */
+.alert-content {
+  outline: none;
+}
+
+.alert-content:focus {
+  outline: none;
+}
+
+/* 段落间距优化 */
+.alert-content p {
+  margin: 0.25rem 0;
+}
+
+.alert-content p:first-child {
+  margin-top: 0;
+}
+
+.alert-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 列表样式 */
+.alert-content ul,
+.alert-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+/* 代码样式 */
+.alert-content code {
+  font-size: 0.875em;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .alert-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 打印样式 */
+@media print {
+  .alert-wrapper {
+    break-inside: avoid;
+  }
+}

@@ -21,6 +21,7 @@ interface CodeBlockOptions {
   maxHeight?: number;
   customLanguages?: Array<{ value: string; label: string }>;
   onLanguageChange?: (language: string) => void;
+  onThemeChange?: (theme: string) => void;
   onCopy?: (code: string) => void;
 }
 
@@ -85,6 +86,14 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
         },
       }),
     ];
+  },
+  addAttributes() {
+    return {
+      ...(this.parent?.() || {}),
+      theme: {
+        default: 'default',
+      },
+    };
   },
 
   addKeyboardShortcuts() {
@@ -272,6 +281,9 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
   ],
   onLanguageChange: (language: string) => {
     console.log('语言已切换到:', language);
+  },
+  onThemeChange: (theme: string) => {
+    console.log('主题已切换到:', theme);
   },
   onCopy: (code: string) => {
     console.log('代码已复制:', code.slice(0, 50) + '...');
