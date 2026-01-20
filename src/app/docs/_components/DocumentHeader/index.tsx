@@ -146,8 +146,6 @@ export default function DocumentHeader({
     const htmlContent = editor?.getHTML();
     if (!htmlContent) return;
 
-    const user = JSON.parse(localStorage.getItem('user_profile') || '{}');
-
     blogsApi
       .createBlog({
         title: data.title || displayTitle,
@@ -155,8 +153,6 @@ export default function DocumentHeader({
         content: htmlContent,
         category: data.category || 'OTHER',
         tags: data.tags.join(','),
-        user_id: user.id,
-        user_name: user.name,
         cover_image: data.coverImage || 'https://example.com/cover.jpg',
       })
       .then(() => {

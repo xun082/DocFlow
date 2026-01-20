@@ -23,7 +23,5 @@ export interface CreateBlogParams {
   content: string;
   category?: string;
   tags?: string;
-  user_id: number;
-  user_name: string;
   cover_image?: string;
 }
