@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { MessageSquare, FileText, MoreHorizontal } from 'lucide-react';
+import { FileText, MoreHorizontal } from 'lucide-react';
 import juice from 'juice';
 import { toast } from 'sonner';
 
@@ -8,7 +10,6 @@ import BlogDialog from '../DocumentSidebar/folder/BlogDialog';
 import HistoryPanel from '../HistoryPanel';
 
 import type { FileItem } from '@/types/file-system';
-import { Icon } from '@/components/ui/Icon';
 import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
 import {
@@ -273,14 +274,7 @@ export default function DocumentHeader({
         {/* 统一的协作用户显示 */}
         {isCollaborationMode && allUsers.length > 0 && (
           <>
-            <div className="flex items-center space-x-3 px-3 py-1.5 bg-green-50/80 dark:bg-green-950/30 rounded-lg border border-green-200/50 dark:border-green-800/50">
-              {/* 桌面端显示完整信息 */}
-              <div className="hidden lg:flex items-center">
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  在线协作
-                </span>
-              </div>
-
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-green-50/80 dark:bg-green-950/30 rounded-lg border border-green-200/50 dark:border-green-800/50">
               {/* 用户头像列表 */}
               <div className="flex items-center -space-x-1">
                 {allUsers.slice(0, 5).map((user, index) => (
@@ -295,14 +289,14 @@ export default function DocumentHeader({
 
                 {/* 更多用户计数 */}
                 {allUsers.length > 5 && (
-                  <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 border-2 border-white dark:border-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-sm ml-1 hover:scale-105 transition-transform duration-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 border-2 border-white dark:border-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-sm ml-1 hover:scale-105 transition-transform duration-200 cursor-default">
                     +{allUsers.length - 5}
                   </div>
                 )}
               </div>
 
               {/* 用户数量文字说明 */}
-              <div className="text-sm font-medium text-green-600 dark:text-green-400">
+              <div className="text-sm font-medium text-green-700 dark:text-green-300 tabular-nums">
                 <span className="hidden sm:inline">{allUsers.length}位用户在线</span>
                 <span className="sm:hidden">{allUsers.length}人</span>
               </div>
@@ -313,46 +307,13 @@ export default function DocumentHeader({
           </>
         )}
 
-        {/* 评论按钮 */}
-        <button
-          type="button"
-          onClick={togglePanel}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 border ${
-            isPanelOpen
-              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
-          }`}
-          aria-label="评论"
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span className="hidden sm:inline text-sm font-medium">评论</span>
-          {comments.length > 0 && (
-            <span className="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-500 text-white min-w-[20px] text-center">
-              {comments.length}
-            </span>
-          )}
-        </button>
-
-        {/* 分享按钮 */}
-        {documentId && (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
-            aria-label="分享文档"
-          >
-            <Icon name="Share" className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm font-medium">分享</span>
-          </button>
-        )}
-
         {/* 操作菜单 */}
         {editor && (
           <PopoverMenu
             trigger={
               <button
                 type="button"
-                className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
+                className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 cursor-pointer"
               >
                 <MoreHorizontal className="w-4 h-4" />
                 <span className="hidden sm:inline text-sm font-medium">操作</span>
@@ -360,6 +321,22 @@ export default function DocumentHeader({
             }
             customTrigger
           >
+            <PopoverCategoryTitle>协作与分享</PopoverCategoryTitle>
+            <PopoverItem
+              label={
+                <div className="flex w-full items-center justify-between">
+                  <span>{isPanelOpen ? '关闭评论' : '打开评论'}</span>
+                  {comments.length > 0 && (
+                    <span className="ml-2 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+                      {comments.length}
+                    </span>
+                  )}
+                </div>
+              }
+              icon="MessageSquare"
+              onClick={togglePanel}
+            />
+            {documentId && <PopoverItem label="分享" icon="Share" onClick={handleShare} />}
             <PopoverCategoryTitle>文档操作</PopoverCategoryTitle>
             {documentId && doc && (
               <HistoryPanel
@@ -417,7 +394,7 @@ export default function DocumentHeader({
           href="https://github.com/xun082/DocFlow"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700"
+          className="flex items-center justify-center p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 cursor-pointer"
           aria-label="查看 GitHub 仓库"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
