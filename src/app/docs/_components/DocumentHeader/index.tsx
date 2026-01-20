@@ -181,7 +181,7 @@ export default function DocumentHeader({
   };
 
   // 评论面板状态
-  const { isPanelOpen, togglePanel } = useCommentStore();
+  const { isPanelOpen, togglePanel, comments } = useCommentStore();
 
   // 获取编辑器实例
   const { editor } = useEditorStore();
@@ -323,7 +323,16 @@ export default function DocumentHeader({
           >
             <PopoverCategoryTitle>协作与分享</PopoverCategoryTitle>
             <PopoverItem
-              label={isPanelOpen ? '关闭评论' : '打开评论'}
+              label={
+                <div className="flex w-full items-center justify-between">
+                  <span>{isPanelOpen ? '关闭评论' : '打开评论'}</span>
+                  {comments.length > 0 && (
+                    <span className="ml-2 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+                      {comments.length}
+                    </span>
+                  )}
+                </div>
+              }
               icon="MessageSquare"
               onClick={togglePanel}
             />
