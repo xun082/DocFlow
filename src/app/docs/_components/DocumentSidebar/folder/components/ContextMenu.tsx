@@ -27,9 +27,14 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState(position);
+  const [isPositioned, setIsPositioned] = useState(false);
 
   useEffect(() => {
-    if (!position || !menuRef.current) return;
+    if (!position || !menuRef.current) {
+      setIsPositioned(false);
+
+      return;
+    }
 
     const menu = menuRef.current;
     const menuRect = menu.getBoundingClientRect();
@@ -89,6 +94,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     y = Math.max(minY, Math.min(y, maxY));
 
     setAdjustedPosition({ x, y });
+    setIsPositioned(true);
   }, [position, containerRef]);
 
   if (!position) return null;
@@ -108,7 +114,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           'shadow-xl shadow-slate-900/10 dark:shadow-slate-900/40',
           'z-9999 absolute',
         )}
-        style={{ top: displayPosition.y, left: displayPosition.x }}
+        style={{
+          top: displayPosition.y,
+          left: displayPosition.x,
+          visibility: isPositioned ? 'visible' : 'hidden',
+        }}
       >
         {isFolder && (
           <>
