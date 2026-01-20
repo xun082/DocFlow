@@ -4,6 +4,7 @@ import juice from 'juice';
 import { toast } from 'sonner';
 
 import ShareDialog from '../DocumentSidebar/folder/ShareDialog';
+import BlogDialog from '../DocumentSidebar/folder/BlogDialog';
 import HistoryPanel from '../HistoryPanel';
 
 import type { FileItem } from '@/types/file-system';
@@ -23,6 +24,7 @@ import {
   Item as PopoverItem,
   CategoryTitle as PopoverCategoryTitle,
 } from '@/components/ui/PopoverMenu';
+import { blogsApi } from '@/services/blogs';
 
 // 类型定义
 interface CollaborationUser {
@@ -32,7 +34,7 @@ interface CollaborationUser {
   avatar: string;
 }
 
-type ExportAction = 'copy' | 'pdf' | 'docx';
+type ExportAction = 'copy' | 'pdf' | 'docx' | 'blog';
 
 // 协作用户头像组件
 function UserAvatar({
@@ -136,6 +138,32 @@ export default function DocumentHeader({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareDialogFile, setShareDialogFile] = useState<FileItem | null>(null);
 
+  // 博客发布对话框状态
+  const [blogDialogOpen, setBlogDialogOpen] = useState(false);
+
+  // 处理博客提交
+  const handleBlogSubmit = (data: any) => {
+    const htmlContent = editor?.getHTML();
+    if (!htmlContent) return;
+
+    blogsApi
+      .createBlog({
+        title: data.title || displayTitle,
+        summary: data.summary || '',
+        content: htmlContent,
+        category: data.category || 'OTHER',
+        tags: data.tags.join(','),
+        cover_image: data.coverImage || 'https://example.com/cover.jpg',
+      })
+      .then(() => {
+        toast.success('博客发布成功');
+      })
+      .catch((error) => {
+        toast.error('博客发布失败');
+        console.error('发布博客失败:', error);
+      });
+  };
+
   const handleSelectAction = (value: ExportAction) => {
     if (value === 'copy') {
       handleCopy();
@@ -143,6 +171,11 @@ export default function DocumentHeader({
       handleExportPDF(displayTitle);
     } else if (value === 'docx') {
       handleExportDOCX(displayTitle, editor!);
+    } else if (value === 'blog') {
+      // 打开博客发布对话框
+      const htmlContent = editor?.getHTML();
+      console.log('htmlContent', htmlContent);
+      setBlogDialogOpen(true);
     }
   };
 
@@ -371,6 +404,11 @@ export default function DocumentHeader({
               icon="FileText"
               onClick={() => handleSelectAction('docx')}
             />
+            <PopoverItem
+              label="发布到博客"
+              icon="GlobeLock"
+              onClick={() => handleSelectAction('blog')}
+            />
           </PopoverMenu>
         )}
 
@@ -399,6 +437,14 @@ export default function DocumentHeader({
           }}
         />
       )}
+
+      {/* 博客发布对话框 */}
+      <BlogDialog
+        isOpen={blogDialogOpen}
+        onClose={() => setBlogDialogOpen(false)}
+        onSubmit={handleBlogSubmit}
+        initialTitle={displayTitle}
+      />
     </div>
   );
 }

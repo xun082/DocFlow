@@ -290,6 +290,9 @@ importers:
       docx:
         specifier: ^9.5.1
         version: 9.5.1
+      dompurify:
+        specifier: ^3.3.1
+        version: 3.3.1
       emojibase-data:
         specifier: ^17.0.0
         version: 17.0.0(emojibase@16.0.0)
@@ -13335,7 +13338,6 @@ snapshots:
   dompurify@3.3.1:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
-    optional: true
 
   domutils@2.8.0:
     dependencies:

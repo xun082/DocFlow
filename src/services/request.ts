@@ -1,15 +1,10 @@
 import * as Sentry from '@sentry/nextjs';
 import { createSseStream } from '@azure/core-sse';
 
-import {
-  getCookie,
-  saveAuthData,
-  clearAuthData,
-  HTTP_METHODS,
-  HTTP_CREDENTIALS,
-  HTTP_STATUS_MESSAGES,
-  ROUTES,
-} from '@/utils';
+// 修改后（直接从具体模块导入） 防止触发 file-system  导致服务器渲染报错
+import { getCookie, saveAuthData, clearAuthData } from '@/utils/auth/cookie';
+import { HTTP_METHODS, HTTP_CREDENTIALS, HTTP_STATUS_MESSAGES } from '@/utils/constants/http';
+import { ROUTES } from '@/utils/constants/routes';
 import type { TokenRefreshResponse } from '@/types/auth';
 
 type Method = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];

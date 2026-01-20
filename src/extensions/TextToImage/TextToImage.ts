@@ -59,6 +59,21 @@ export const TextToImage = Node.create<TextToImageOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const { state, imageUrl, prompt } = HTMLAttributes;
+
+    // 如果图片已生成，返回真正的 img 标签
+    if (state === 'display' && imageUrl) {
+      return [
+        'img',
+        {
+          src: imageUrl,
+          alt: prompt || 'AI 生成的图片',
+          class: 'max-w-full h-auto',
+        },
+      ];
+    }
+
+    // 否则返回 div 标签（用于编辑器中的交互式组件）
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'text-to-image' })];
   },
 

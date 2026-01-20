@@ -243,6 +243,26 @@ export const CodeBlock = CodeBlockLowlight.extend<CodeBlockOptions>({
     };
   },
 
+  renderHTML({ HTMLAttributes, node }) {
+    const { language } = HTMLAttributes;
+
+    const codeContent = node.textContent || '';
+
+    return [
+      'pre',
+      {
+        class: 'hljs',
+      },
+      [
+        'code',
+        {
+          class: language ? `language-${language}` : '',
+        },
+        codeContent,
+      ],
+    ];
+  },
+
   addNodeView() {
     return ReactNodeViewRenderer(CodeBlockComponent, {
       // 将扩展选项传递给组件（通过 extension.options 访问）
