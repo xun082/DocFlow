@@ -112,7 +112,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           'bg-white/95 dark:bg-slate-800/95 backdrop-blur-lg',
           'border border-slate-200/60 dark:border-slate-700/60',
           'shadow-xl shadow-slate-900/10 dark:shadow-slate-900/40',
-          'z-9999 absolute',
+          'z-9999',
         )}
         style={{
           top: displayPosition.y,
