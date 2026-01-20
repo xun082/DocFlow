@@ -51,7 +51,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
         <article className="prose prose-invert prose-lg max-w-none flex flex-col items-center">
           <header className="mb-16">
             {post.cover_image ? (
-              <div className="rounded-2xl overflow-hidden shadow-2xl">
+              <div className="rounded-xl overflow-hidden shadow-2xl">
                 <img
                   src={post.cover_image}
                   alt={post.title}
@@ -93,7 +93,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           </header>
 
           <div
-            className="max-w-[70vw] prose prose-invert prose-lg prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800"
+            className="tiptap-content max-w-[70vw] prose prose-invert prose-lg prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-violet-400 prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>

@@ -35,8 +35,8 @@ async function BlogContent({
 }: {
   searchParams: { category?: string; search?: string };
 }) {
-  const category = searchParams.category || '';
-  const searchQuery = searchParams.search || '';
+  const category = searchParams?.category || '';
+  const searchQuery = searchParams?.search || '';
 
   // 服务端获取博客数据
   const response = await blogsApi.getAll({ category, title: searchQuery });

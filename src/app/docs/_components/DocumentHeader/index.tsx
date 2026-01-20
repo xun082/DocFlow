@@ -177,6 +177,8 @@ export default function DocumentHeader({
       handleExportDOCX(displayTitle, editor!);
     } else if (value === 'blog') {
       // 打开博客发布对话框
+      const htmlContent = editor?.getHTML();
+      console.log('htmlContent', htmlContent);
       setBlogDialogOpen(true);
     }
   };

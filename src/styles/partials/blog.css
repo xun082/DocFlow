@@ -1,0 +1,77 @@
+@layer utilities {
+  /* 博客文章表格样式 */
+  .tiptap-content table {
+    @apply border-collapse rounded-lg w-full border border-white/10 my-6;
+  }
+
+  /* 处理单元格内的 p 标签，移除额外边距 */
+  .tiptap-content table td p {
+    @apply m-0;
+  }
+
+  .tiptap-content table thead {
+    @apply bg-white/5;
+  }
+
+  .tiptap-content table th {
+    @apply font-semibold px-4 py-3 text-left border-b border-white/10 text-white;
+  }
+
+  .tiptap-content table td {
+    @apply px-4 py-3 border-b border-white/10 text-gray-300;
+  }
+
+  .tiptap-content table tbody tr:hover {
+    @apply bg-white/5;
+  }
+
+  .tiptap-content table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* 深色模式下的表格边框 */
+  .dark .tiptap-content table {
+    @apply border-white/10;
+  }
+
+  .dark .tiptap-content table th {
+    @apply border-white/10;
+  }
+
+  .dark .tiptap-content table td {
+    @apply border-white/10;
+  }
+
+  .dark .tiptap-content table tbody tr:hover {
+    @apply bg-white/10;
+  }
+
+  /* 表格内的代码样式 */
+  .tiptap-content table code {
+    @apply text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded text-sm;
+  }
+
+  .tiptap-content table pre {
+    @apply bg-gray-900 rounded-lg p-4 my-4 border border-gray-800;
+  }
+
+  /* 表格内的链接样式 */
+  .tiptap-content table a {
+    @apply text-violet-400 hover:text-violet-300 underline;
+  }
+
+  /* 表格内的粗体样式 */
+  .tiptap-content table strong {
+    @apply text-white font-bold;
+  }
+
+  /* 表格内的斜体样式 */
+  .tiptap-content table em {
+    @apply text-gray-200 italic;
+  }
+
+  /* 表格内的图片样式 */
+  .tiptap-content table img {
+    @apply rounded-lg my-2;
+  }
+}
