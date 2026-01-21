@@ -32,15 +32,6 @@ export function BlogCard({ blog }: BlogCardProps) {
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      {blog.coverImage && (
-        <div className="aspect-video w-full overflow-hidden">
-          <img
-            src={blog.coverImage}
-            alt={blog.title}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-      )}
       <CardContent className="p-4">
         <div className="flex flex-wrap gap-2 mb-3">
           {tags.map((tag, index) => (
@@ -72,7 +63,7 @@ export function BlogCard({ blog }: BlogCardProps) {
           </span>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/blogs/${blog.id}`} className="flex items-center gap-1">
+          <Link href={`/blog/${blog.id}`} className="flex items-center gap-1">
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
