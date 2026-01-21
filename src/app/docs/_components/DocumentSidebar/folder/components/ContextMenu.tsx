@@ -14,7 +14,7 @@ interface ContextMenuProps {
   onRename: (fileId: string) => void;
 }
 
-const OFFSET_POSITION = 80;
+const CONTAINER_EDGE_OFFSET = 80; // 菜单距离容器边缘的最小间距
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
   position,
@@ -57,15 +57,15 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     // 智能定位 X 轴:
     // 如果右侧空间足够显示菜单,则显示在右侧(鼠标点击位置)
     // 否则显示在左侧
-    if (spaceOnRight >= menuRect.width + OFFSET_POSITION) {
+    if (spaceOnRight >= menuRect.width + CONTAINER_EDGE_OFFSET) {
       // 右侧空间充足,显示在鼠标右侧
       x = x + 10; // 添加小偏移避免遮挡鼠标
-    } else if (spaceOnLeft >= menuRect.width + OFFSET_POSITION) {
+    } else if (spaceOnLeft >= menuRect.width + CONTAINER_EDGE_OFFSET) {
       // 右侧空间不足但左侧空间充足,显示在鼠标左侧
       x = x - menuRect.width - 10;
     } else {
       // 左右空间都不足,优先贴右边界
-      x = containerRect.right - menuRect.width - OFFSET_POSITION;
+      x = containerRect.right - menuRect.width - CONTAINER_EDGE_OFFSET;
     }
 
     // 智能定位 Y 轴:
@@ -73,22 +73,22 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     const spaceBelow = containerRect.bottom - y;
     const spaceAbove = y - containerRect.top;
 
-    if (spaceBelow >= menuRect.height + OFFSET_POSITION) {
+    if (spaceBelow >= menuRect.height + CONTAINER_EDGE_OFFSET) {
       // 下方空间充足
       y = y + 10;
-    } else if (spaceAbove >= menuRect.height + OFFSET_POSITION) {
+    } else if (spaceAbove >= menuRect.height + CONTAINER_EDGE_OFFSET) {
       // 下方空间不足但上方空间充足
       y = y - menuRect.height - 10;
     } else {
       // 上下空间都不足,贴底部
-      y = containerRect.bottom - menuRect.height - OFFSET_POSITION;
+      y = containerRect.bottom - menuRect.height - CONTAINER_EDGE_OFFSET;
     }
 
     // 最终约束确保不超出边界
-    const minX = containerRect.left + OFFSET_POSITION;
-    const maxX = containerRect.right - menuRect.width - OFFSET_POSITION;
-    const minY = containerRect.top + OFFSET_POSITION;
-    const maxY = containerRect.bottom - menuRect.height - OFFSET_POSITION;
+    const minX = containerRect.left + CONTAINER_EDGE_OFFSET;
+    const maxX = containerRect.right - menuRect.width - CONTAINER_EDGE_OFFSET;
+    const minY = containerRect.top + CONTAINER_EDGE_OFFSET;
+    const maxY = containerRect.bottom - menuRect.height - CONTAINER_EDGE_OFFSET;
 
     x = Math.max(minX, Math.min(x, maxX));
     y = Math.max(minY, Math.min(y, maxY));

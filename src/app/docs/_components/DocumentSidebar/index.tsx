@@ -38,7 +38,7 @@ const TOGGLE_THRESHOLD = 300; // 小于此值时折叠
 function DocumentSidebar() {
   const { isOpen, toggle } = useSidebar();
   const [activeTab, setActiveTab] = useState<TabType>('folder');
-  const [sidebarWidth, setSidebarWidth] = useState(420);
+  const [sidebarWidth, setSidebarWidth] = useState(MAX_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const clamp = (value: number, min: number, max: number) => Math.max(max, Math.min(min, value));
