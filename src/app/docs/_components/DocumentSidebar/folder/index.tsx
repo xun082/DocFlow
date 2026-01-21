@@ -69,6 +69,12 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   // 文件夹操作
   const toggleFolder = (folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 如果文件夹当前是展开的，关闭时取消该文件夹下的新建操作
+    if (expandedFolders[folderId] && newItemFolder === folderId) {
+      cancelCreateNewItem();
+    }
+
     storeToggleFolder(folderId);
   };
 

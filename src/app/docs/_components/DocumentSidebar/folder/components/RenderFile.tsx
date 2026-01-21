@@ -1,4 +1,4 @@
-import React, { Ref } from 'react';
+import React, { Ref, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -90,6 +90,15 @@ export const RenderFile: React.FC<{
     transform: isExpanded ? '' : CSS.Transform.toString(transform),
     transition,
   };
+
+  // 当进入重命名状态时自动聚焦
+  useEffect(() => {
+    if (isItemRenaming && inputRef && typeof inputRef === 'object' && 'current' in inputRef) {
+      inputRef.current?.focus();
+      // 选中所有文本，方便用户直接输入
+      inputRef.current?.select();
+    }
+  }, [isItemRenaming, inputRef]);
 
   return (
     <div
@@ -198,36 +207,52 @@ export const RenderFile: React.FC<{
 
           {/* 名称/重命名输入框 - 美化样式 */}
           <div className="flex-1 min-w-0 mr-3">
-            {isItemRenaming ? (
-              <input
-                ref={inputRef}
-                type="text"
-                className={cn(
-                  'w-full bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm',
-                  'border-2 border-blue-400/70 dark:border-blue-500/70',
-                  'focus:border-blue-500 dark:focus:border-blue-400',
-                  'focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-400/30',
-                  'px-2 py-1 text-sm rounded-lg transition-all duration-300',
-                  'text-slate-900 dark:text-slate-100',
-                  'shadow-lg shadow-blue-200/30 dark:shadow-blue-800/20',
-                )}
-                defaultValue={file.name}
-                onBlur={(e) => onFinishRenaming(e.target.value)}
-                onKeyDown={onKeyDown}
-                autoFocus
-              />
-            ) : (
-              <span
-                className={cn(
-                  'block truncate font-medium transition-all duration-300',
-                  isSelected
-                    ? 'text-blue-700 dark:text-blue-300 font-medium'
-                    : 'text-slate-700 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-blue-300',
-                )}
-              >
-                {file.name}
-              </span>
-            )}
+            <input
+              ref={inputRef}
+              type="text"
+              readOnly={!isItemRenaming}
+              className={cn(
+                'w-full text-sm rounded-lg transition-all duration-300 font-medium',
+                'outline-none border-2',
+                isItemRenaming
+                  ? [
+                      // 编辑状态
+                      'bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm',
+                      'border-blue-400/70 dark:border-blue-500/70',
+                      'focus:border-blue-500 dark:focus:border-blue-400',
+                      'focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-400/30',
+                      'px-2 py-1',
+                      'text-slate-900 dark:text-slate-100',
+                      'shadow-lg shadow-blue-200/30 dark:shadow-blue-800/20',
+                      'cursor-text',
+                    ]
+                  : [
+                      // 只读状态（看起来像普通文本）
+                      'bg-transparent border-transparent',
+                      'px-0 py-0',
+                      'cursor-pointer pointer-events-none',
+                      'truncate',
+                      isSelected
+                        ? 'text-blue-700 dark:text-blue-300'
+                        : 'text-slate-700 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-blue-300',
+                    ],
+              )}
+              defaultValue={file.name}
+              onBlur={(e) => {
+                if (!isItemRenaming) return;
+
+                const newValue = e.target.value.trim();
+
+                // 只有值改变且不为空时才触发更新
+                if (newValue && newValue !== file.name) {
+                  onFinishRenaming(newValue);
+                } else if (!newValue) {
+                  // 如果为空，恢复原值
+                  e.target.value = file.name;
+                }
+              }}
+              onKeyDown={onKeyDown}
+            />
           </div>
 
           {/* 快捷操作按钮区域 - 更精美的设计 */}
