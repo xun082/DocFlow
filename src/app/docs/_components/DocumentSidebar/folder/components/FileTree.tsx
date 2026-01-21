@@ -24,6 +24,7 @@ export interface FileTreeProps {
   onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
+  closeContextMenu: () => void;
   onStartCreateNewItem: (folderId: string, type: 'file' | 'folder') => void;
   onFinishRenaming: (newName: string) => void;
   onFinishCreateNewItem: () => void;

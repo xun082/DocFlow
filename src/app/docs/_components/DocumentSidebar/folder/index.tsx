@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { closestCenter, DndContext, MeasuringStrategy, PointerSensor } from '@dnd-kit/core';
 import { useSensor, useSensors } from '@dnd-kit/core';
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useFileStore } from '@/stores/fileStore';
+import { DocumentGroup, useFileStore } from '@/stores/fileStore';
 import { flattenTreeFile, getProjection, removeChildrenOf } from '@/utils';
 
 export const TRASH_ID = 'void';
@@ -34,6 +34,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const { refreshTrigger, lastOperationSource, triggerRefresh } = useSidebar();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 使用 Zustand stores
   const {
@@ -68,6 +69,12 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
   // 文件夹操作
   const toggleFolder = (folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 如果文件夹当前是展开的，关闭时取消该文件夹下的新建操作
+    if (expandedFolders[folderId] && newItemFolder === folderId) {
+      cancelCreateNewItem();
+    }
+
     storeToggleFolder(folderId);
   };
 
@@ -255,8 +262,59 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
       })()
     : null;
 
+  // 递归查找第一个文件
+  const findFirstFile = (items: FileItem[]): string | null => {
+    for (const item of items) {
+      if (item.type === 'file') return item.id;
+
+      if (item.children && item.children.length > 0) {
+        const found = findFirstFile(item.children);
+        if (found) return found;
+      }
+    }
+
+    return null;
+  };
+
+  // 查找所有分组中的第一个文件 ID
+  const findFirstFileIdInGroups = (groups: DocumentGroup[]): string | null => {
+    for (const group of groups) {
+      const firstFileId = findFirstFile(group.files);
+      if (firstFileId) return firstFileId;
+    }
+
+    return null;
+  };
+
+  // 确认删除
+  const handleConfirm = async () => {
+    try {
+      await fileOperations.confirmDelete();
+      await triggerRefresh('side');
+
+      // 重新加载文件列表
+      await loadFiles(false);
+
+      // 等待状态更新
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // 从更新后的 documentGroups 中查找第一个文件
+      const firstFileId = findFirstFileIdInGroups(documentGroups);
+
+      if (firstFileId) {
+        setSelectedFileId(firstFileId);
+        router.push(`/docs/${firstFileId}`);
+      } else {
+        setSelectedFileId(null);
+        router.push('/docs');
+      }
+    } catch (error) {
+      console.error('删除操作失败:', error);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 h-full">
+    <div ref={containerRef} className="flex flex-col flex-1 h-full">
       {/* 头部工具栏 - 始终显示 */}
       <Toolbar
         onCreateFile={() => {
@@ -453,6 +511,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
                     onToggleFolder={toggleFolder}
                     onToggleGroup={toggleGroup}
                     onContextMenu={handleContextMenu}
+                    closeContextMenu={closeContextMenu}
                     onStartCreateNewItem={startCreateNewItem}
                     onFinishRenaming={finishRenaming}
                     onFinishCreateNewItem={() =>
@@ -478,6 +537,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
       <ContextMenu
         position={contextMenuPosition}
         targetFile={targetFile}
+        containerRef={containerRef}
         onClose={closeContextMenu}
         onCreateFile={(folderId) => {
           // 找到文件所属的分组
@@ -565,7 +625,7 @@ const Folder = ({ onFileSelect }: FileExplorerProps) => {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => fileOperations.confirmDelete().then(() => triggerRefresh('side'))}
+              onClick={handleConfirm}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white transition-colors"
             >
               删除

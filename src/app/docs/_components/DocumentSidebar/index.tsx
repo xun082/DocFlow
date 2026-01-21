@@ -31,24 +31,33 @@ const tabs: TabConfig[] = [
   { id: 'settings', icon: 'Settings', label: '设置', component: SettingsTab },
 ];
 
+const MIN_WIDTH = 500;
+const MAX_WIDTH = 420;
+const TOGGLE_THRESHOLD = 300; // 小于此值时折叠
+
 function DocumentSidebar() {
   const { isOpen, toggle } = useSidebar();
   const [activeTab, setActiveTab] = useState<TabType>('folder');
-  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [sidebarWidth, setSidebarWidth] = useState(MAX_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const clamp = (value: number, min: number, max: number) => Math.max(max, Math.min(min, value));
 
   // 拖拽调整宽度
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
 
-      const newWidth = Math.max(280, Math.min(500, e.clientX));
+      const newWidth = clamp(e.clientX, MIN_WIDTH, MAX_WIDTH);
       setSidebarWidth(newWidth);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       setIsResizing(false);
+
+      if (e.clientX < TOGGLE_THRESHOLD && isOpen) {
+        toggle();
+      }
     };
 
     if (isResizing) {
@@ -124,7 +133,7 @@ function DocumentSidebar() {
       {isOpen && (
         <>
           <div className="flex-1 h-full overflow-hidden relative bg-gradient-to-br from-white/95 via-slate-50/60 to-white/95 dark:from-slate-800/95 dark:via-slate-800/70 dark:to-slate-800/95 backdrop-blur-lg before:absolute before:left-0 before:top-0 before:bottom-0 before:w-4 before:bg-gradient-to-r before:from-slate-900/5 before:to-transparent dark:before:from-slate-900/20 before:pointer-events-none animate-in slide-in-from-left duration-300">
-            <Surface className="h-full overflow-hidden">
+            <Surface className="h-full overflow-hidden min-w-[360px]">
               {ActiveComponent && <ActiveComponent />}
             </Surface>
           </div>
