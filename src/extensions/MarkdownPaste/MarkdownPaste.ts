@@ -1,4 +1,4 @@
-import { Extension, CommandProps, Editor } from '@tiptap/core';
+import { Extension, CommandProps, Editor, findParentNode } from '@tiptap/core';
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Slice } from '@tiptap/pm/model';
 import { Fragment } from '@tiptap/pm/model';
@@ -6,6 +6,8 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
 import { gfm } from 'micromark-extension-gfm';
 import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
+
+import { toast } from '@/hooks/use-toast';
 
 export interface MarkdownPasteOptions {
   transformPastedText?: boolean;
@@ -50,21 +52,12 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
                   const { state } = view;
                   const tr = state.tr;
                   const hasTable = nodes.some((n) => n.type.name === 'table');
-                  let inTable = false;
-                  let tableDepth = -1;
+                  const parentTable = findParentNode((node) => node.type.name === 'table')(
+                    state.selection,
+                  );
 
-                  const $from = state.selection.$from;
-
-                  for (let d = $from.depth; d > 0; d--) {
-                    if ($from.node(d).type.name === 'table') {
-                      inTable = true;
-                      tableDepth = d;
-                      break;
-                    }
-                  }
-
-                  if (inTable && hasTable && tableDepth >= 0) {
-                    const pos = $from.after(tableDepth);
+                  if (parentTable && hasTable) {
+                    const pos = parentTable.pos + parentTable.node.nodeSize;
                     const slice = new Slice(Fragment.fromArray(nodes), 0, 0);
                     tr.insert(pos, slice.content);
                     tr.setSelection(TextSelection.near(tr.doc.resolve(pos + slice.content.size)));
@@ -82,6 +75,10 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
                 }
               } catch (e) {
                 console.error('Markdown 粘贴失败：', e);
+                toast({
+                  title: 'Markdown 粘贴失败',
+                  variant: 'destructive',
+                });
 
                 try {
                   const tr = view.state.tr;
@@ -121,6 +118,10 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
             }
           } catch (error) {
             console.error('粘贴 Markdown 失败:', error);
+            toast({
+              title: '粘贴 Markdown 失败',
+              variant: 'destructive',
+            });
           }
 
           return false;
