@@ -1,23 +1,21 @@
 import Link from 'next/link';
-import { Calendar, Eye, Heart } from 'lucide-react';
+import { Calendar, ArrowRight } from 'lucide-react';
 
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { BLOG_CATEGORIES } from '@/utils/constants/blog';
+import { formatDateTime } from '@/utils/format/date';
 
 export interface BlogItem {
-  id: string;
+  id: number;
   title: string;
-  excerpt: string;
+  summary: string;
   coverImage?: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
+  tags: string;
+  category: string;
+  content: string;
   createdAt: string;
-  views: number;
-  likes: number;
-  tags: string[];
+  updatedAt: string;
 }
 
 interface BlogCardProps {
@@ -25,6 +23,13 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ blog }: BlogCardProps) {
+  const tags = blog.tags
+    ? blog.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    : [];
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {blog.coverImage && (
@@ -38,8 +43,11 @@ export function BlogCard({ blog }: BlogCardProps) {
       )}
       <CardContent className="p-4">
         <div className="flex flex-wrap gap-2 mb-3">
-          {blog.tags.map((tag) => (
-            <span key={tag} className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+          {tags.map((tag, index) => (
+            <span
+              key={`${tag}-${index}`}
+              className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
+            >
               {tag}
             </span>
           ))}
@@ -47,36 +55,26 @@ export function BlogCard({ blog }: BlogCardProps) {
         <h3 className="font-semibold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors">
           <Link href={`/dashboard/blogs/${blog.id}`}>{blog.title}</Link>
         </h3>
-        <p className="text-muted-foreground text-sm line-clamp-2">{blog.excerpt}</p>
+        <p className="text-muted-foreground text-sm line-clamp-2">{blog.summary}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={blog.author.avatar} />
-            <AvatarFallback>{blog.author.name.slice(0, 2)}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-muted-foreground">{blog.author.name}</span>
-        </div>
         <div className="flex items-center space-x-4 text-muted-foreground text-sm">
           <div className="flex items-center space-x-1">
             <Calendar className="h-3 w-3" />
-            <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
+            <span>{formatDateTime(blog.createdAt)}</span>
           </div>
         </div>
       </CardFooter>
       <div className="px-4 pb-4 flex items-center justify-between text-muted-foreground text-sm">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1">
-            <Eye className="h-4 w-4" />
-            <span>{blog.views}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Heart className="h-4 w-4" />
-            <span>{blog.likes}</span>
-          </div>
+          <span className="text-xs px-2 py-1 rounded-full bg-secondary/50">
+            {BLOG_CATEGORIES.find((item) => item.key === blog.category)?.label || blog.category}
+          </span>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/blogs/${blog.id}`}>阅读更多</Link>
+          <Link href={`/dashboard/blogs/${blog.id}`} className="flex items-center gap-1">
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </Button>
       </div>
     </Card>

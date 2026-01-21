@@ -13,26 +13,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { blogsServerApi } from '@/services/blogs';
+import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; search?: string }>;
 }
-
-const BLOG_CATEGORIES = [
-  { key: 'ALL', label: '' },
-  { key: 'TECH', label: '技术' },
-  { key: 'LIFE', label: '生活' },
-  { key: 'STUDY', label: '学习' },
-  { key: 'ENTERTAINMENT', label: '娱乐' },
-  { key: 'SPORTS', label: '运动' },
-  { key: 'TRAVEL', label: '旅游' },
-  { key: 'FOOD', label: '美食' },
-  { key: 'PHOTOGRAPHY', label: '摄影' },
-  { key: 'MUSIC', label: '音乐' },
-  { key: 'MOVIE', label: '电影' },
-  { key: 'READING', label: '阅读' },
-  { key: 'OTHER', label: '其他' },
-] as const;
 
 async function BlogContent({
   searchParams,
@@ -45,6 +30,7 @@ async function BlogContent({
 
   // 服务端获取博客数据
   const response = await blogsServerApi.getAll({ category, title: searchQuery });
+
   const blogPosts = response.data?.data || [];
 
   return (
@@ -126,7 +112,7 @@ async function BlogContent({
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{formatDateTime(post.updated_at)}</span>
+                          <span>{formatDateTime(post.updatedAt)}</span>
                         </div>
                       </div>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 group-hover:text-violet-400 transition-all" />

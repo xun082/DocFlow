@@ -10,6 +10,7 @@ import {
   Workflow,
   Users,
   Building2,
+  Newspaper,
 } from 'lucide-react';
 
 // Import route constants from routes.ts (Edge runtime compatible)
@@ -84,7 +85,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     name: '博客',
     href: ROUTES.BLOG,
-    icon: <BookOpen className="w-5 h-5" />,
+    icon: <Newspaper className="w-5 h-5" />,
     tourContent: '博客模块提供博客相关能力，用于创建和管理博客内容。',
   },
   {

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     title: post.title,
     description,
     keywords: post.tags ? post.tags.split(',') : [],
-    authors: [{ name: post.user_name }],
+    authors: [{ name: post.user.name }],
     openGraph: {
       type: 'article',
       locale: 'zh_CN',
@@ -42,17 +42,16 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
       title: post.title,
       description,
       siteName: 'DocFlow',
-      images: post.cover_image ? [{ url: post.cover_image, alt: post.title }] : [],
-      publishedTime: post.created_at,
-      modifiedTime: post.updated_at,
-      authors: [post.user_name],
+      images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : [],
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
       tags: post.tags ? post.tags.split(',') : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description,
-      images: post.cover_image ? [post.cover_image] : [],
+      images: post.coverImage ? [post.coverImage] : [],
     },
     alternates: {
       canonical: blogUrl,
@@ -81,6 +80,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
 
   const response = await blogsServerApi.getInfo(postId);
   const post = response.data?.data;
+
   const gradient = getRandomGradient();
 
   if (!post) {
@@ -104,10 +104,10 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
       <main className="max-w-[90vw] mx-auto text-white ">
         <article className="prose prose-invert prose-lg max-w-none flex flex-col items-center">
           <header className="mb-16">
-            {post.cover_image ? (
+            {post.coverImage ? (
               <div className="rounded-xl overflow-hidden shadow-2xl">
                 <img
-                  src={post.cover_image}
+                  src={post.coverImage}
                   alt={post.title}
                   className="w-full h-auto object-cover"
                   style={{ aspectRatio: '3/1' }}
@@ -125,7 +125,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
                 <span className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-md">
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{formatDateTime(post.updated_at)}</span>
+                  <span>{formatDateTime(post.updatedAt)}</span>
                 </span>
                 <span className="px-2.5 py-1 bg-violet-500/10 text-violet-300 rounded-md">
                   {post.category}

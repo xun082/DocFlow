@@ -27,4 +27,7 @@ export const blogsClientApi = {
   /** 创建博客 */
   create: (data: CreateBlogParams) =>
     clientRequest.post<BlogPost>('/api/v1/blog/create', { params: data }),
+
+  // 获取当前用户的博客列表
+  getMyBlogs: () => clientRequest.get<BlogPost[]>('/api/v1/blog/my-blogs'),
 };
