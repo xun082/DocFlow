@@ -12,7 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { blogsApi } from '@/services/blogs';
+import { blogsServerApi } from '@/services/blogs';
+
+interface BlogListPageProps {
+  searchParams: Promise<{ category?: string; search?: string }>;
+}
 
 const BLOG_CATEGORIES = [
   { key: 'ALL', label: '' },
@@ -33,13 +37,14 @@ const BLOG_CATEGORIES = [
 async function BlogContent({
   searchParams,
 }: {
-  searchParams: { category?: string; search?: string };
+  searchParams: Promise<{ category?: string; search?: string }>;
 }) {
-  const category = searchParams?.category || '';
-  const searchQuery = searchParams?.search || '';
+  const resolvedParams = await searchParams;
+  const category = resolvedParams?.category || '';
+  const searchQuery = resolvedParams?.search || '';
 
   // 服务端获取博客数据
-  const response = await blogsApi.getAll({ category, title: searchQuery });
+  const response = await blogsServerApi.getAll({ category, title: searchQuery });
   const blogPosts = response.data?.data || [];
 
   return (
@@ -146,7 +151,7 @@ async function BlogContent({
   );
 }
 
-const BlogPage = ({ searchParams }: { searchParams: { category?: string; search?: string } }) => {
+export default function BlogPage({ searchParams }: BlogListPageProps) {
   return (
     <Suspense
       fallback={
@@ -158,6 +163,4 @@ const BlogPage = ({ searchParams }: { searchParams: { category?: string; search?
       <BlogContent searchParams={searchParams} />
     </Suspense>
   );
-};
-
-export default BlogPage;
+}
