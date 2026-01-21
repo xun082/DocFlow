@@ -82,6 +82,12 @@ export const NAV_ITEMS: NavItem[] = [
     tourContent: '播客模块提供播客相关能力，用于创建和管理播客内容。',
   },
   {
+    name: '博客',
+    href: ROUTES.BLOG,
+    icon: <Podcast className="w-5 h-5" />,
+    tourContent: '博客模块提供博客相关能力，用于创建和管理博客内容。',
+  },
+  {
     name: '设置',
     href: ROUTES.SETTINGS,
     icon: <Settings className="w-5 h-5" />,
