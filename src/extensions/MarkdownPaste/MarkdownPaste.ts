@@ -1,11 +1,13 @@
-import { Extension, CommandProps, Editor } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Extension, CommandProps, Editor, findParentNode } from '@tiptap/core';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Slice } from '@tiptap/pm/model';
 import { Fragment } from '@tiptap/pm/model';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
 import { gfm } from 'micromark-extension-gfm';
 import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
+
+import { toast } from '@/hooks/use-toast';
 
 export interface MarkdownPasteOptions {
   transformPastedText?: boolean;
@@ -47,12 +49,24 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
                 const nodes = parseMarkdownToProseMirror(text, this.editor);
 
                 if (nodes.length > 0) {
-                  const tr = view.state.tr;
+                  const { state } = view;
+                  const tr = state.tr;
+                  const hasTable = nodes.some((n) => n.type.name === 'table');
+                  const parentTable = findParentNode((node) => node.type.name === 'table')(
+                    state.selection,
+                  );
 
-                  if (nodes.length === 1) {
-                    tr.replaceSelectionWith(nodes[0]);
+                  if (parentTable && hasTable) {
+                    const pos = parentTable.pos + parentTable.node.nodeSize;
+                    const slice = new Slice(Fragment.fromArray(nodes), 0, 0);
+                    tr.insert(pos, slice.content);
+                    tr.setSelection(TextSelection.near(tr.doc.resolve(pos + slice.content.size)));
                   } else {
-                    tr.replaceSelection(new Slice(Fragment.fromArray(nodes), 0, 0));
+                    if (nodes.length === 1) {
+                      tr.replaceSelectionWith(nodes[0]);
+                    } else {
+                      tr.replaceSelection(new Slice(Fragment.fromArray(nodes), 0, 0));
+                    }
                   }
 
                   view.dispatch(tr);
@@ -61,6 +75,20 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
                 }
               } catch (e) {
                 console.error('Markdown 粘贴失败：', e);
+                toast({
+                  title: 'Markdown 粘贴失败',
+                  variant: 'destructive',
+                });
+
+                try {
+                  const tr = view.state.tr;
+                  tr.insertText(text, view.state.selection.from, view.state.selection.to);
+                  view.dispatch(tr);
+
+                  return true;
+                } catch {
+                  return false;
+                }
               }
 
               return false;
@@ -90,6 +118,10 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
             }
           } catch (error) {
             console.error('粘贴 Markdown 失败:', error);
+            toast({
+              title: '粘贴 Markdown 失败',
+              variant: 'destructive',
+            });
           }
 
           return false;
@@ -221,21 +253,39 @@ function mdastNodeToPM(node: any, schema: Schema): ProseMirrorNode | ProseMirror
       )
         return null;
 
-      const rows = node.children.map((row: any, rowIdx: number) => {
-        const cells = row.children.map((cell: any) => {
-          const cellContent = mdastInlineToPM(cell.children || [], schema);
-          const cellType = rowIdx === 0 ? 'tableHeader' : 'tableCell';
+      const paragraph = schema.nodes.paragraph;
+      if (!paragraph) return null;
 
-          return schema.nodes[cellType].create(
-            {},
-            cellContent.length ? cellContent : [schema.nodes.paragraph.create()],
-          );
+      const rows = (node.children || []).map((row: any, rowIdx: number) => {
+        const rawCells = row.children || [];
+        const cells = rawCells.map((cell: any) => {
+          const raw =
+            (cell.children && cell.children.length) > 0
+              ? cell.children
+              : cell.value != null
+                ? [{ type: 'text', value: String(cell.value) }]
+                : [];
+          const inlineContent = mdastInlineToPM(raw, schema);
+          const cellType = rowIdx === 0 ? 'tableHeader' : 'tableCell';
+          const CellType = schema.nodes[cellType];
+
+          if (inlineContent.length === 0) {
+            const filled = CellType.createAndFill();
+
+            return filled ?? CellType.create(null, Fragment.from([paragraph.create()]));
+          }
+
+          // block+ 要求直接子节点为 block，inline 必须包在 paragraph 里
+          const paraContent = Fragment.from(inlineContent);
+          const block = paragraph.create(null, paraContent);
+
+          return CellType.create(null, Fragment.from([block]));
         });
 
-        return schema.nodes.tableRow.create({}, cells);
+        return schema.nodes.tableRow.create(null, cells);
       });
 
-      return schema.nodes.table.create({}, rows);
+      return schema.nodes.table.create(null, rows);
     }
 
     case 'image':
