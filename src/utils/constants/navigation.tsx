@@ -84,7 +84,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     name: '博客',
     href: ROUTES.BLOG,
-    icon: <Podcast className="w-5 h-5" />,
+    icon: <BookOpen className="w-5 h-5" />,
     tourContent: '博客模块提供博客相关能力，用于创建和管理博客内容。',
   },
   {

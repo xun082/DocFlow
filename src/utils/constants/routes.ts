@@ -16,7 +16,7 @@ export const ROUTES = {
   SETTINGS: '/dashboard/settings',
   CONTACTS: '/dashboard/contacts',
   ORGANIZATIONS: '/dashboard/organizations',
-  BLOG: '/dashboard/blog',
+  BLOG: '/dashboard/blogs',
 } as const;
 
 // 页面标题映射
