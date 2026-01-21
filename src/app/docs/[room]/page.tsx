@@ -24,6 +24,7 @@ import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId, getAuthToken } from '@/utils';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
 import { FloatingToc } from '@/app/docs/_components/FloatingToc';
+import { SearchPanel } from '@/app/docs/_components/SearchPanel';
 import { useFileStore } from '@/stores/fileStore';
 import type { FileItem } from '@/types/file-system';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
@@ -73,6 +74,7 @@ export default function DocumentPage() {
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const { openPanel, setActiveCommentId, closePanel, isPanelOpen } = useCommentStore();
   const { setEditor, clearEditor } = useEditorStore();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEditorHistory({
     documentId,
@@ -248,6 +250,26 @@ export default function DocumentPage() {
 
   // 判断是否为只读模式
   const isReadOnly = forceReadOnly || permissionData?.permission === 'VIEW';
+
+  // 搜索快捷键监听
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + F 打开搜索
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+
+      // ESC 关闭搜索
+      if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen]);
 
   // 创建编辑器 - 只有在 IndexedDB 准备好之后才创建
   const editor = useEditor(
@@ -471,6 +493,11 @@ export default function DocumentPage() {
           <FloatingToc editor={editor} />
           <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
         </>
+      )}
+
+      {/* 搜索面板 */}
+      {editor && editor.view && (
+        <SearchPanel editor={editor} isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       )}
 
       {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
