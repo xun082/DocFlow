@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 import { useMotionValue, useSpring } from 'framer-motion';
 
 import useAnalytics from '@/hooks/useAnalysis';
-import { getCookie, springConfig } from '@/utils';
+import { springConfig } from '@/utils';
 import Header from '@/components/homepage/Header';
 import Hero from '@/components/homepage/Hero';
 
@@ -39,8 +38,6 @@ const BackgroundEffects = dynamic(() => import('@/components/homepage/Background
 const Page = () => {
   useAnalytics();
 
-  const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   const mouseX = useMotionValue(0);
@@ -53,17 +50,12 @@ const Page = () => {
   useEffect(() => {
     setIsMounted(true);
 
-    const token = getCookie('auth_token');
-    setIsLoggedIn(!!token);
-
-    // 检查是否是GitHub OAuth回调（如果callback URL配置错误指向了根目录）
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const state = urlParams.get('state');
 
-    if (code) {
-      // 构建完整的callback URL，保留所有参数
+    if (code && state) {
       const callbackUrl = `/auth/callback${window.location.search}`;
-      // 使用replace避免在浏览器历史中留下痕迹
       window.location.replace(callbackUrl);
     }
   }, []);
@@ -81,14 +73,6 @@ const Page = () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [mouseX, mouseY]);
-
-  const handleGetStarted = () => {
-    if (isLoggedIn) {
-      router.push('/dashboard');
-    } else {
-      router.push('/auth');
-    }
-  };
 
   return (
     <>
@@ -166,7 +150,7 @@ const Page = () => {
         <BackgroundEffects springX={springX} springY={springY} />
 
         {/* Header */}
-        <Header isLoggedIn={isLoggedIn} onGetStarted={handleGetStarted} />
+        <Header />
 
         {/* Hero Section - 主要内容 */}
         <Hero isMounted={isMounted} />

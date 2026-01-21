@@ -1,22 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Github, Menu, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { getCookie } from '@/utils';
 
-interface HeaderProps {
-  isLoggedIn: boolean;
-  onGetStarted: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ isLoggedIn, onGetStarted }) => {
+const Header: React.FC = () => {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+
+    const token = getCookie('auth_token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const onGetStarted = () => {
+    console.log('isLoggedIn', isLoggedIn);
+
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth');
+    }
   };
 
   return (
@@ -42,9 +59,15 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onGetStarted }) => {
         <motion.div
           className="hidden md:flex items-center space-x-6"
           initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          animate={isMounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
           transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
         >
+          <Link href="/blog" aria-label="查看 DocFlow 博客">
+            <div className="flex items-center space-x-2 text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl transition-all duration-300 px-4 py-2.5 rounded-xl border border-white/20 hover:border-white/40 shadow-lg hover:shadow-white/10 hover:scale-105">
+              <FileText className="h-4 w-4" />
+              <span className="text-sm font-semibold">博客</span>
+            </div>
+          </Link>
           <Link
             href="https://github.com/xun082/DocFlow"
             target="_blank"
@@ -68,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onGetStarted }) => {
           className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
           onClick={toggleMobileMenu}
           initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          animate={isMounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
           transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
           aria-label="切换菜单"
         >
@@ -117,6 +140,16 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onGetStarted }) => {
               {/* 菜单内容 */}
               <div className="p-6 space-y-6">
                 <div className="space-y-4">
+                  <Link
+                    href="/blog"
+                    aria-label="查看 DocFlow 博客"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <div className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors duration-300 px-4 py-4 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10">
+                      <FileText className="h-5 w-5" />
+                      <span className="font-medium">博客</span>
+                    </div>
+                  </Link>
                   <Link
                     href="https://github.com/xun082/DocFlow"
                     target="_blank"

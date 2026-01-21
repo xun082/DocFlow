@@ -23,7 +23,7 @@
     "react"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "build:analyze": "next experimental-analyze",
     "analyze": "ANALYZE=true pnpm build",
@@ -131,6 +131,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "docx": "^9.5.1",
+    "dompurify": "^3.3.1",
     "emojibase-data": "^17.0.0",
     "file-saver": "^2.0.5",
     "file-type": "^21.0.0",
