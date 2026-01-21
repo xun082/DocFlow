@@ -20,6 +20,7 @@ export const RenderFile: React.FC<{
   onFileSelect: (file: FileItem, e: React.MouseEvent) => void;
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
+  closeContextMenu: () => void;
   onFinishRenaming: (newName: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onRename: (file: FileItem) => void;
@@ -37,6 +38,7 @@ export const RenderFile: React.FC<{
   onFileSelect,
   onToggleFolder,
   onContextMenu,
+  closeContextMenu,
   onFinishRenaming,
   onKeyDown,
   onRename,
@@ -106,7 +108,7 @@ export const RenderFile: React.FC<{
           '[&>div>div>*]:opacity-0 [&>div>div>*]:h-0',
         ],
       )}
-      style={{ paddingLeft: `${depth * 16}px` }}
+      style={{ paddingLeft: `${(depth === 0 ? 1 : depth) * 20}px` }}
     >
       <div style={style} {...listeners}>
         <div
@@ -274,10 +276,7 @@ export const RenderFile: React.FC<{
             )}
 
             {/* 三个点菜单 */}
-            <div
-              className={cn('transition-all duration-300 transform hover:scale-110')}
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className={cn('transition-all duration-300 transform hover:scale-110')}>
               <FileItemMenu
                 file={file}
                 onShare={onShare}
@@ -285,6 +284,7 @@ export const RenderFile: React.FC<{
                 onRename={onRename}
                 onDuplicate={onDuplicate}
                 onDownload={onDownload}
+                onMenuOpen={closeContextMenu}
                 className={cn(
                   'p-1.5 rounded-lg',
                   isSelected

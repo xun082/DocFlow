@@ -29,6 +29,7 @@ export interface GroupedFileTreeProps {
   onToggleFolder: (folderId: string, e: React.MouseEvent) => void;
   onToggleGroup: (groupId: string) => void;
   onContextMenu: (e: React.MouseEvent, fileId: string) => void;
+  closeContextMenu: () => void;
   onStartCreateNewItem: (folderId: string, type: 'file' | 'folder', groupId: string) => void;
   onFinishRenaming: (newName: string) => void;
   onFinishCreateNewItem: () => void;
@@ -59,6 +60,7 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
     onCancelCreateNewItem,
     onKeyDown,
     onSetNewItemName,
+    closeContextMenu,
   } = props;
 
   // 渲染顶级新建输入框（分组根级）
@@ -269,6 +271,7 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
                         {...props}
                         key={file.id}
                         file={file}
+                        closeContextMenu={closeContextMenu}
                         groupId={group.id}
                         depth={
                           file.id === dndState.activeId && projected ? projected.depth : file.depth

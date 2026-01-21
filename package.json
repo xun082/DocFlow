@@ -256,6 +256,5 @@
     "node": ">=20",
     "pnpm": ">=9.0.0"
   },
-  "engineStrict": true,
-  "packageManager": "pnpm@10.22.0"
+  "engineStrict": true
 }
