@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { blogsApi } from '@/services/blogs';
+import { blogsServerApi } from '@/services/blogs';
 
 const BLOG_CATEGORIES = [
   { key: 'ALL', label: '' },
@@ -39,7 +39,7 @@ async function BlogContent({
   const searchQuery = searchParams?.search || '';
 
   // 服务端获取博客数据
-  const response = await blogsApi.getAll({ category, title: searchQuery });
+  const response = await blogsServerApi.getAll({ category, title: searchQuery });
   const blogPosts = response.data?.data || [];
 
   return (
