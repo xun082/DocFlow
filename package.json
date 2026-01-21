@@ -23,7 +23,7 @@
     "react"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "build:analyze": "next experimental-analyze",
     "analyze": "ANALYZE=true pnpm build",
