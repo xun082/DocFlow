@@ -11,6 +11,8 @@ interface BlogPageProps {
   params: Promise<{ id: string }>;
 }
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.codecrack.cn';
+
 // 动态生成 SEO 元数据
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -26,6 +28,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
   }
 
   const description = post.summary || post.content.slice(0, 160).replace(/<[^>]*>/g, '');
+  const blogUrl = `${siteUrl}/blog/${post.id}`;
 
   return {
     title: post.title,
@@ -35,7 +38,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     openGraph: {
       type: 'article',
       locale: 'zh_CN',
-      url: `https://www.codecrack.cn/blog/${post.id}`,
+      url: blogUrl,
       title: post.title,
       description,
       siteName: 'DocFlow',
@@ -52,7 +55,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
       images: post.cover_image ? [post.cover_image] : [],
     },
     alternates: {
-      canonical: `https://www.codecrack.cn/blog/${post.id}`,
+      canonical: blogUrl,
     },
   };
 }

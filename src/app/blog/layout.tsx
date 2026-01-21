@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.codecrack.cn';
+const blogUrl = `${siteUrl}/blog`;
+
 export const metadata: Metadata = {
   title: {
     template: '%s | DocFlow 博客',
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
-    url: 'https://www.codecrack.cn/blog',
+    url: blogUrl,
     title: '博客 | DocFlow',
     description:
       '探索 DocFlow 的技术实现、产品理念以及开发经验分享。涵盖前端开发、协同编辑、AI 技术等领域的深度文章。',
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
       '探索 DocFlow 的技术实现、产品理念以及开发经验分享。涵盖前端开发、协同编辑、AI 技术等领域的深度文章。',
   },
   alternates: {
-    canonical: 'https://www.codecrack.cn/blog',
+    canonical: blogUrl,
   },
 };
 
