@@ -18,7 +18,7 @@ interface FloatingTocProps {
 
 export function FloatingToc({ editor }: FloatingTocProps) {
   const [items, setItems] = useState<TocItem[]>([]);
-  const [isHovered, setIsHovered] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
   // 最终是否显示/激活：悬停 或 点击激活 任一为true即可
@@ -137,7 +137,6 @@ export function FloatingToc({ editor }: FloatingTocProps) {
       className="fixed right-6 top-[50%] -translate-y-1/2 z-50 flex items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      
     >
       {/* 悬浮展开的目录面板 */}
       <div
