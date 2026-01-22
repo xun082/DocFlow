@@ -4,8 +4,10 @@ import { useCallback } from 'react';
 import { ShouldShowProps } from '../../types';
 
 import { isCustomNodeSelected, isTextSelected } from '@/utils';
+import { useEditorStore } from '@/stores/editorStore';
 
 export const useTextmenuStates = (editor: Editor) => {
+  const { isContentItemMenuOpen } = useEditorStore();
   const states = useEditorState({
     editor,
     selector: (ctx) => {
@@ -32,7 +34,7 @@ export const useTextmenuStates = (editor: Editor) => {
 
   const shouldShow = useCallback(
     ({ view, from }: ShouldShowProps) => {
-      if (!view || editor.view.dragging) {
+      if (!view || editor.view.dragging || isContentItemMenuOpen) {
         return false;
       }
 
@@ -46,7 +48,7 @@ export const useTextmenuStates = (editor: Editor) => {
 
       return isTextSelected({ editor });
     },
-    [editor],
+    [editor, isContentItemMenuOpen],
   );
 
   return {

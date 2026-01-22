@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
+import { useEditorStore } from '@/stores/editorStore';
 
 export type ContentItemMenuProps = {
   editor: Editor;
@@ -20,14 +21,17 @@ export const ContentItemMenu = ({ editor, isEditable = true }: ContentItemMenuPr
   const [menuOpen, setMenuOpen] = useState(false);
   const data = useData();
   const actions = useContentItemActions(editor, data.currentNode, data.currentNodePos);
+  const { setIsContentItemMenuOpen } = useEditorStore();
 
   useEffect(() => {
     if (menuOpen) {
       editor.commands.setMeta('lockDragHandle', true);
+      setIsContentItemMenuOpen(true);
     } else {
       editor.commands.setMeta('lockDragHandle', false);
+      setIsContentItemMenuOpen(false);
     }
-  }, [editor, menuOpen]);
+  }, [editor, menuOpen, setIsContentItemMenuOpen]);
 
   return (
     <DragHandle pluginKey="ContentItemMenu" editor={editor} onNodeChange={data.handleNodeChange}>
