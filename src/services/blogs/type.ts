@@ -28,6 +28,11 @@ export interface BlogPost {
   };
 }
 
+export interface BlogListResponse {
+  list: BlogPost[];
+  total: number;
+}
+
 export interface GetAllBlogsParams {
   category?: string;
   title?: string;

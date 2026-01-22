@@ -26,7 +26,7 @@ import { ROUTES } from '@/utils/constants/routes';
 
 const searchFormSchema = z.object({
   search: z.string().optional(),
-  category: z.string().min(1, '请选择分类'),
+  category: z.string().optional(),
 });
 
 type SearchFormData = z.infer<typeof searchFormSchema>;
@@ -40,7 +40,7 @@ export function BlogList() {
     resolver: zodResolver(searchFormSchema),
     defaultValues: {
       search: '',
-      category: '',
+      category: 'ALL',
     },
   });
 
@@ -54,10 +54,10 @@ export function BlogList() {
     blogsClientApi
       .getMyBlogs({
         title: formData.search,
-        category: formData.category,
+        category: formData.category === 'ALL' ? '' : formData.category,
       })
       .then((res) => {
-        setBlogList(res?.data?.data || []);
+        setBlogList(res?.data?.data?.list || []);
       })
       .catch((error) => {
         console.error('获取博客列表失败:', error);
@@ -112,6 +112,7 @@ export function BlogList() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="ALL">全部</SelectItem>
                       {BLOG_CATEGORIES.map((category) => (
                         <SelectItem key={category.key} value={category.key}>
                           {category.label}

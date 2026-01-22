@@ -15,6 +15,7 @@ const STORE_NAME = 'snapshots';
 export class SnapshotService {
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
+  private contentHashCache = new Map<string, string>();
 
   async init(): Promise<void> {
     if (this.db) return;
@@ -44,6 +45,50 @@ export class SnapshotService {
     });
 
     return this.initPromise;
+  }
+
+  /**
+   * 计算文档内容的哈希值，用于检测内容变化
+   */
+  private computeContentHash(doc: Y.Doc): string {
+    const stateVector = Y.encodeStateVector(doc);
+    const hash = Array.from(stateVector)
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+
+    return hash;
+  }
+
+  /**
+   * 检查文档内容是否发生变化
+   */
+  async hasContentChanged(doc: Y.Doc, documentId: string): Promise<boolean> {
+    const currentHash = this.computeContentHash(doc);
+    const cachedHash = this.contentHashCache.get(documentId);
+
+    if (!cachedHash) {
+      const snapshots = await this.getSnapshots(documentId);
+
+      if (snapshots.length === 0) {
+        return true;
+      }
+
+      const latestSnapshot = snapshots[0];
+
+      try {
+        const decodedSnapshot = Y.decodeSnapshot(latestSnapshot.snapshotData);
+        const tempDoc = Y.createDocFromSnapshot(doc, decodedSnapshot);
+        const lastHash = this.computeContentHash(tempDoc);
+
+        this.contentHashCache.set(documentId, lastHash);
+
+        return currentHash !== lastHash;
+      } catch {
+        return true;
+      }
+    }
+
+    return currentHash !== cachedHash;
   }
 
   async createSnapshot(doc: Y.Doc, documentId: string, description?: string): Promise<Snapshot> {
@@ -76,10 +121,29 @@ export class SnapshotService {
 
       await this.cleanupOldSnapshots(documentId);
 
+      this.contentHashCache.set(documentId, this.computeContentHash(doc));
+
       return newSnapshot;
     } finally {
       doc.gc = prevGc;
     }
+  }
+
+  /**
+   * 智能创建快照：仅在内容发生变化时才创建
+   */
+  async createSnapshotIfChanged(
+    doc: Y.Doc,
+    documentId: string,
+    description?: string,
+  ): Promise<Snapshot | null> {
+    const hasChanged = await this.hasContentChanged(doc, documentId);
+
+    if (!hasChanged) {
+      return null;
+    }
+
+    return this.createSnapshot(doc, documentId, description);
   }
 
   async restoreSnapshot(doc: Y.Doc, snapshotId: string): Promise<boolean> {
@@ -96,8 +160,6 @@ export class SnapshotService {
     });
 
     if (!snapshot) {
-      console.error('Snapshot not found:', snapshotId);
-
       return false;
     }
 
@@ -120,13 +182,13 @@ export class SnapshotService {
           }
         });
 
+        this.contentHashCache.set(snapshot.documentId, this.computeContentHash(doc));
+
         return true;
       } finally {
         doc.gc = prevGc;
       }
-    } catch (error) {
-      console.error('Failed to restore snapshot:', error);
-
+    } catch {
       return false;
     }
   }

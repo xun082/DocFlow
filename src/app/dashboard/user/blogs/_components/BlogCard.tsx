@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 
@@ -23,6 +26,16 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ blog }: BlogCardProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   const tags = blog.tags
     ? blog.tags
         .split(',')
@@ -32,13 +45,19 @@ export function BlogCard({ blog }: BlogCardProps) {
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      {blog.coverImage && (
+        <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
+          <img
+            src={blog.coverImage}
+            alt={blog.title}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full object-cover"
+          />
+        </div>
+      )}
       <CardContent className="p-4">
         <div className="flex flex-wrap gap-2 mb-3">
-          {tags.map((tag, index) => (
-            <span
-              key={`${tag}-${index}`}
-              className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
-            >
+          {tags.map((tag) => (
+            <span key={tag} className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
               {tag}
             </span>
           ))}

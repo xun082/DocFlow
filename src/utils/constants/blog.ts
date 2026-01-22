@@ -1,5 +1,4 @@
 export const BLOG_CATEGORIES = [
-  { key: 'ALL', label: '' },
   { key: 'TECH', label: '技术' },
   { key: 'LIFE', label: '生活' },
   { key: 'STUDY', label: '学习' },

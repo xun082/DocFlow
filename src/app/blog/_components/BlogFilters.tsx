@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEffect } from 'react';
 
 import {
   Select,
@@ -38,10 +39,17 @@ export default function BlogFilters({
   const form = useForm<BlogFilterFormValues>({
     resolver: zodResolver(blogFilterSchema),
     defaultValues: {
-      search: initialSearch,
-      category: initialCategory || 'all',
+      search: '',
+      category: 'all',
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      search: initialSearch,
+      category: initialCategory || 'all',
+    });
+  }, [initialSearch, initialCategory, form]);
 
   const updateUrl = (name: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -90,10 +98,10 @@ export default function BlogFilters({
           control={form.control}
           name="category"
           render={({ field }) => (
-            <FormItem className="w-full md:w-[200px]">
+            <FormItem className="w-full md:w-[200px] !space-y-0">
               <FormControl>
                 <Select value={field.value} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="!h-10 bg-white/10 border-white/20 text-white">
                     <SelectValue placeholder="分类" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 text-white">

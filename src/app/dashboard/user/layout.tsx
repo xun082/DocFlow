@@ -13,6 +13,7 @@ import {
   Users,
   FileText,
   User as ProfileIcon,
+  Newspaper,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -41,6 +42,12 @@ const navigationItems = [
     label: '共享文档',
     icon: FileText,
     description: '查看和管理共享文档',
+  },
+  {
+    key: '/dashboard/user/blogs',
+    label: '博客',
+    icon: Newspaper,
+    description: '查看和管理博客',
   },
 ];
 

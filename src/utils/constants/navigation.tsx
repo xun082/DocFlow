@@ -10,7 +10,6 @@ import {
   Workflow,
   Users,
   Building2,
-  Newspaper,
 } from 'lucide-react';
 
 // Import route constants from routes.ts (Edge runtime compatible)
@@ -71,7 +70,7 @@ export const NAV_ITEMS: NavItem[] = [
     tourContent: '组织管理用于管理组织架构、成员与权限，是企业级协作的基础配置。',
   },
   {
-    name: '个人资料',
+    name: '我的资料',
     href: ROUTES.USER,
     icon: <User className="w-5 h-5" />,
     tourContent: '个人资料页面用于设置个人信息、账号与偏好。',
@@ -81,12 +80,6 @@ export const NAV_ITEMS: NavItem[] = [
     href: ROUTES.PODCAST,
     icon: <Podcast className="w-5 h-5" />,
     tourContent: '播客模块提供播客相关能力，用于创建和管理播客内容。',
-  },
-  {
-    name: '博客',
-    href: ROUTES.BLOG,
-    icon: <Newspaper className="w-5 h-5" />,
-    tourContent: '博客模块提供博客相关能力，用于创建和管理博客内容。',
   },
   {
     name: '设置',
