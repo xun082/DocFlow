@@ -1,19 +1,13 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Calendar, ArrowRight, FileText, Search, Tag } from 'lucide-react';
+import { Calendar, ArrowRight, FileText, Tag } from 'lucide-react';
+
+import BlogFilters from './_components/BlogFilters';
 
 import { formatDateTime } from '@/utils/format/date';
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { blogsServerApi } from '@/services/blogs';
-import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; search?: string }>;
@@ -50,35 +44,7 @@ async function BlogContent({
             </p>
           </div>
 
-          <div className="mb-12 flex flex-col md:flex-row gap-8 items-center">
-            <div className="relative flex-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索文章..."
-                defaultValue={searchQuery}
-                className="w-full pl-10 pr-4 py-1.5 bg-white/10 border border-white/20 rounded-[8px] text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300"
-              />
-            </div>
-            <div className="flex-1">
-              <Select defaultValue={category} name="category">
-                <SelectTrigger className="w-full px-4 py-5 bg-white/10 border-white/20 text-white focus:border-violet-500 focus:ring-violet-500/20">
-                  <SelectValue placeholder="分类" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white">
-                  {BLOG_CATEGORIES.map((category) => (
-                    <SelectItem
-                      key={category.key}
-                      value={category.key}
-                      className="focus:bg-violet-600/20 focus:text-white"
-                    >
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <BlogFilters initialSearch={searchQuery} initialCategory={category} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogPosts.map((post) => (
