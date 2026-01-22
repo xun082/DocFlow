@@ -143,7 +143,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
               prose-ul:text-gray-300 prose-ol:text-gray-300
               prose-li:marker:text-violet-400
               prose-blockquote:border-l-violet-500 prose-blockquote:text-gray-300 prose-blockquote:italic
-              prose-img:rounded-lg prose-img:shadow-lg prose-img:max-h-[500px] prose-img:object-contain prose-img:mx-auto"
+              prose-img:rounded-lg prose-img:shadow-lg prose-img:max-h-[500px] prose-img:object-contain prose-img:mx-auto text-white"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>

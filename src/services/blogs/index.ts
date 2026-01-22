@@ -19,7 +19,7 @@ export const blogsServerApi = {
 export const blogsClientApi = {
   /** 创建博客（需要认证） */
   create: (data: CreateBlogParams) =>
-    clientRequest.post<BlogPost>('/api/v1/blog/create', { params: data }),
+    clientRequest.post<BlogPost>('/api/v1/blog', { params: data }),
 
   // 获取当前用户的博客列表
   getMyBlogs: (data: GetAllBlogsParams) =>

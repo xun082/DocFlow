@@ -56,7 +56,7 @@ export function useBlogPublish(editor: Editor | null, defaultTitle: string) {
       content: validatedData.content,
       category: validatedData.category || 'OTHER',
       tags: validatedData.tags.join(','),
-      cover_image: validatedData.coverImage || '',
+      coverImage: validatedData.coverImage || '',
     });
 
     setIsSubmitting(false);

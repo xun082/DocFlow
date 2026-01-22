@@ -44,5 +44,5 @@ export interface CreateBlogParams {
   content: string;
   category?: string;
   tags?: string;
-  cover_image?: string;
+  coverImage?: string;
 }
