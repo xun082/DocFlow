@@ -155,15 +155,16 @@ export default function EmailRegisterForm() {
 
         <Button
           type="submit"
-          className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+          className="w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
           {isSubmitting ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
               <span>注册中...</span>
-            </>
+            </div>
           ) : (
-            <span>注册</span>
+            '注册'
           )}
         </Button>
       </form>

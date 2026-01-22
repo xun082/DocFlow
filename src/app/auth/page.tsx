@@ -13,54 +13,53 @@ import AuthDecoration from './_components/AuthDecoration';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
+/**
+ * 重定向工具
+ */
+const redirectManager = {
+  get: (searchParams: ReturnType<typeof useSearchParams>) => {
+    const redirectTo = searchParams?.get('redirect_to');
+
+    return redirectTo ? decodeURIComponent(redirectTo) : '/dashboard';
+  },
+  save: (url: string) => {
+    if (typeof window === 'undefined' || url === '/dashboard') return;
+
+    try {
+      sessionStorage.setItem('auth_redirect', url);
+    } catch {
+      // 静默处理存储错误
+    }
+  },
+};
+
 function LoginContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
-  // 确保组件在客户端挂载后再处理重定向逻辑
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 获取重定向URL
-  const getRedirectUrl = () => {
-    if (!mounted) return '/'; // 未挂载时返回默认值
-
-    const redirectTo = searchParams?.get('redirect_to');
-
-    if (redirectTo) {
-      return decodeURIComponent(redirectTo);
-    }
-
-    return '/'; // 默认跳转到首页
-  };
-
-  // 保存重定向信息到sessionStorage
+  // 保存重定向 URL
   useEffect(() => {
-    if (!mounted) return; // 确保在客户端执行
+    if (!mounted) return;
 
-    const redirectUrl = getRedirectUrl();
-
-    if (redirectUrl !== '/') {
-      try {
-        sessionStorage.setItem('auth_redirect', redirectUrl);
-      } catch (error) {
-        // 静默处理sessionStorage错误（如隐私模式）
-        console.warn('Failed to save redirect URL to sessionStorage:', error);
-      }
-    }
+    const redirectUrl = redirectManager.get(searchParams);
+    redirectManager.save(redirectUrl);
   }, [searchParams, mounted]);
 
   const handleGitHubLogin = () => {
-    if (!mounted) return; // 确保在客户端执行
+    if (!mounted) return;
 
-    const redirectUrl = getRedirectUrl();
-
-    // 构建GitHub授权URL，通过state参数传递重定向信息
+    const redirectUrl = redirectManager.get(searchParams);
     const baseUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/auth/github`;
-    const state = redirectUrl !== '/' ? encodeURIComponent(redirectUrl) : '';
 
-    const authUrl = state ? `${baseUrl}?state=${state}` : baseUrl;
+    // 仅在需要时添加 state 参数
+    const authUrl =
+      redirectUrl !== '/dashboard'
+        ? `${baseUrl}?state=${encodeURIComponent(redirectUrl)}`
+        : baseUrl;
 
     window.location.href = authUrl;
   };

@@ -7,7 +7,7 @@ import { type ReactNode, useState } from 'react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Tour, TourProvider, tourSteps, useDashboardTour } from '@/components/tour';
 import { NotificationSocketProvider } from '@/providers/NotificationSocketProvider';
-import { getPageTitle, NAV_ITEMS } from '@/utils';
+import { getPageTitle, getPageDescription, NAV_ITEMS } from '@/utils';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -155,6 +155,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
             onMenuToggle={toggleSidebar}
             showMenuButton={true}
             pageTitle={getPageTitle(pathname)}
+            pageDescription={getPageDescription(pathname)}
             key={pathname} // 添加 key 属性，确保路径变化时组件重新渲染
           />
 
