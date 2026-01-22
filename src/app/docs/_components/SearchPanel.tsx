@@ -21,6 +21,7 @@ interface SearchPanelProps {
 export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
   const commands = editor.commands as unknown as SearchAndReplaceCommands & typeof editor.commands;
 
+  const [isClient, setIsClient] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [replaceTerm, setReplaceTerm] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -32,6 +33,10 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
       currentIndex: -1,
     },
   );
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // 监听编辑器更新，同步搜索结果
   useEffect(() => {
@@ -70,14 +75,14 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
 
   // 更新搜索词
   useEffect(() => {
-    if (editor && searchTerm !== undefined) {
+    if (editor) {
       commands.setSearchTerm(searchTerm);
     }
   }, [editor, searchTerm]);
 
   // 更新替换词
   useEffect(() => {
-    if (editor && replaceTerm !== undefined) {
+    if (editor) {
       commands.setReplaceTerm(replaceTerm);
     }
   }, [editor, replaceTerm]);
@@ -122,7 +127,9 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isClient) {
+    return null;
+  }
 
   const panelContent = (
     <div className="fixed top-20 right-6 z-50 w-96 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -133,14 +140,16 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">搜索</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowReplace(!showReplace)}
-            className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-2 py-0 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-          >
-            {showReplace ? '隐藏替换' : '显示替换'}
-          </Button>
+          {editor.isEditable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowReplace(!showReplace)}
+              className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-2 py-0 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              {showReplace ? '隐藏替换' : '显示替换'}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -194,7 +203,7 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
         )}
 
         {/* Replace Input */}
-        {showReplace && (
+        {editor.isEditable && showReplace && (
           <>
             <div className="flex items-center gap-2">
               <Input

@@ -14,6 +14,29 @@ declare module '@tiptap/core' {
 export const searchAndReplacePluginKey = new PluginKey('searchAndReplace');
 
 /**
+ * 滚动到搜索结果的可视区域
+ */
+const scrollToSearchResult = (editor: any, pos: number) => {
+  if (editor && editor.view) {
+    try {
+      const domInfo = editor.view.domAtPos(pos);
+      const node = domInfo.node;
+      const element = node instanceof Element ? node : node.parentElement;
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      }
+    } catch (e) {
+      console.warn('Manual scroll failed:', e);
+    }
+  }
+};
+
+/**
  * 自定义搜索和替换的插件
  * 参考 https://tiptap.dev/docs/editor/extensions/custom-extensions/create-new/extension
  */
@@ -92,23 +115,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
             dispatch(tr.scrollIntoView());
 
             // 滚动到可视区域
-            if (this.editor && this.editor.view) {
-              try {
-                const domInfo = this.editor.view.domAtPos(result.from);
-                const node = domInfo.node;
-                const element = node instanceof Element ? node : node.parentElement;
-
-                if (element) {
-                  element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'nearest',
-                  });
-                }
-              } catch (e) {
-                console.warn('Manual scroll failed:', e);
-              }
-            }
+            scrollToSearchResult(this.editor, result.from);
           }
 
           return true;
@@ -133,23 +140,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
             dispatch(tr.scrollIntoView());
 
             // 滚动到可视区域
-            if (this.editor && this.editor.view) {
-              try {
-                const domInfo = this.editor.view.domAtPos(result.from);
-                const node = domInfo.node;
-                const element = node instanceof Element ? node : node.parentElement;
-
-                if (element) {
-                  element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'nearest',
-                  });
-                }
-              } catch (e) {
-                console.warn('Manual scroll failed:', e);
-              }
-            }
+            scrollToSearchResult(this.editor, result.from);
           }
 
           return true;
@@ -160,7 +151,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
         ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, currentIndex, replaceTerm } = this.storage;
 
-          if (results.length === 0 || currentIndex < 0) return false;
+          if (results.length === 0 || currentIndex < 0 || !this.editor.isEditable) return false;
 
           const result = results[currentIndex];
 
@@ -185,7 +176,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
         ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, replaceTerm } = this.storage;
 
-          if (results.length === 0) return false;
+          if (results.length === 0 || !this.editor.isEditable) return false;
 
           // 从后往前替换，避免位置偏移
           const sortedResults = [...results].sort((a, b) => b.from - a.from);
