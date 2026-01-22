@@ -9,6 +9,7 @@ import { blogsServerApi } from '@/services/blogs';
 import type { BlogPost } from '@/services/blogs/type';
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
+import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; search?: string }>;
@@ -86,7 +87,10 @@ async function BlogContent({
                         {/* 分类标签 */}
                         <div className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg text-xs text-violet-300 border border-violet-500/30">
                           <Tag className="h-3 w-3" />
-                          <span>{post.category}</span>
+                          <span>
+                            {BLOG_CATEGORIES.find((cat) => cat.key === post.category)?.label ||
+                              '未分类'}
+                          </span>
                         </div>
                       </div>
 

@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     title: `${post.title} - DocFlow`,
     description,
     keywords: post.tags ? post.tags.split(',') : [],
-    authors: [{ name: post.user.name }],
+    authors: [{ name: post.user?.name }],
     openGraph: {
       type: 'article',
       locale: 'zh_CN',
