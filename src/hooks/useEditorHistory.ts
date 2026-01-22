@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as Y from 'yjs';
+import { toast } from 'sonner';
 
 import { snapshotService, Snapshot } from '@/services/snapshot';
 
@@ -32,6 +33,8 @@ export function useEditorHistory({
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const hasContentChangedRef = useRef(false);
+  const lastSnapshotTimeRef = useRef<number>(Date.now());
 
   const refreshSnapshots = useCallback(async () => {
     if (!documentId) return;
@@ -41,8 +44,8 @@ export function useEditorHistory({
     try {
       const result = await snapshotService.getSnapshots(documentId);
       setSnapshots(result);
-    } catch (error) {
-      console.error('Failed to load snapshots:', error);
+    } catch {
+      toast.error('加载快照失败');
     } finally {
       setIsLoading(false);
     }
@@ -51,18 +54,22 @@ export function useEditorHistory({
   const createSnapshot = useCallback(
     async (description?: string) => {
       if (!doc || !documentId) {
-        console.error('Document or documentId is not available');
+        toast.error('文档未准备好');
 
         return null;
       }
 
       try {
         const newSnapshot = await snapshotService.createSnapshot(doc, documentId, description);
+
+        hasContentChangedRef.current = false;
+        lastSnapshotTimeRef.current = Date.now();
+
         await refreshSnapshots();
 
         return newSnapshot;
-      } catch (error) {
-        console.error('Failed to create snapshot:', error);
+      } catch {
+        toast.error('创建快照失败');
 
         return null;
       }
@@ -73,7 +80,7 @@ export function useEditorHistory({
   const restoreSnapshot = useCallback(
     async (snapshotId: string) => {
       if (!doc) {
-        console.error('Document is not available');
+        toast.error('文档未准备好');
 
         return false;
       }
@@ -84,12 +91,15 @@ export function useEditorHistory({
         const success = await snapshotService.restoreSnapshot(doc, snapshotId);
 
         if (success) {
+          hasContentChangedRef.current = false;
+          lastSnapshotTimeRef.current = Date.now();
+
           await refreshSnapshots();
         }
 
         return success;
-      } catch (error) {
-        console.error('Failed to restore snapshot:', error);
+      } catch {
+        toast.error('恢复快照失败');
 
         return false;
       } finally {
@@ -109,8 +119,8 @@ export function useEditorHistory({
         }
 
         return success;
-      } catch (error) {
-        console.error('Failed to delete snapshot:', error);
+      } catch {
+        toast.error('删除快照失败');
 
         return false;
       }
@@ -129,8 +139,8 @@ export function useEditorHistory({
       }
 
       return success;
-    } catch (error) {
-      console.error('Failed to clear snapshots:', error);
+    } catch {
+      toast.error('清空快照失败');
 
       return false;
     }
@@ -145,20 +155,53 @@ export function useEditorHistory({
   useEffect(() => {
     if (!autoSnapshot || !doc || !documentId) return;
 
-    const interval = setInterval(() => {
-      createSnapshot(`自动保存 - ${new Date().toLocaleString()}`);
-    }, autoSnapshotInterval);
+    const updateHandler = () => {
+      hasContentChangedRef.current = true;
+    };
 
-    return () => clearInterval(interval);
-  }, [autoSnapshot, autoSnapshotInterval, doc, documentId, createSnapshot]);
+    doc.on('update', updateHandler);
+
+    const checkInterval = Math.min(autoSnapshotInterval / 10, 30000);
+
+    const interval = setInterval(async () => {
+      if (!hasContentChangedRef.current) {
+        return;
+      }
+
+      const timeSinceLastSnapshot = Date.now() - lastSnapshotTimeRef.current;
+
+      if (timeSinceLastSnapshot < autoSnapshotInterval) {
+        return;
+      }
+
+      const snapshot = await snapshotService.createSnapshotIfChanged(
+        doc,
+        documentId,
+        `自动保存 - ${new Date().toLocaleString()}`,
+      );
+
+      if (snapshot) {
+        hasContentChangedRef.current = false;
+        lastSnapshotTimeRef.current = Date.now();
+        await refreshSnapshots();
+      }
+    }, checkInterval);
+
+    return () => {
+      doc.off('update', updateHandler);
+      clearInterval(interval);
+    };
+  }, [autoSnapshot, autoSnapshotInterval, doc, documentId, refreshSnapshots]);
 
   useEffect(() => {
     if (!snapshotOnUnmount || !doc || !documentId) return;
 
     return () => {
-      createSnapshot('组件卸载自动保存');
+      if (hasContentChangedRef.current) {
+        snapshotService.createSnapshotIfChanged(doc, documentId, '组件卸载自动保存');
+      }
     };
-  }, [snapshotOnUnmount, doc, documentId, createSnapshot]);
+  }, [snapshotOnUnmount, doc, documentId]);
 
   return {
     snapshots,
