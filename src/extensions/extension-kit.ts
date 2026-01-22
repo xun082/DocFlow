@@ -71,6 +71,7 @@ import {
   mentionSuggestion,
   Alert,
   MathLiveExtension,
+  SearchAndReplace,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -454,6 +455,12 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
       class: 'mention',
     },
     suggestion: mentionSuggestion,
+  }),
+  SearchAndReplace.configure({
+    searchResultClass: 'search-result',
+    currentSearchResultClass: 'current-search-result',
+    disableRegex: true,
+    caseSensitive: false,
   }),
 ];
 
