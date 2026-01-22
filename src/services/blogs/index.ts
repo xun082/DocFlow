@@ -19,5 +19,15 @@ export const blogsServerApi = {
 export const blogsClientApi = {
   /** 创建博客（需要认证） */
   create: (data: CreateBlogParams) =>
-    clientRequest.post<BlogPost>('/api/v1/blog/create', { params: data }),
+    clientRequest.post<BlogPost>('/api/v1/blog', { params: data }),
+
+  // 获取当前用户的博客列表
+  getMyBlogs: (params: GetAllBlogsParams) =>
+    clientRequest.get<BlogListResponse>('/api/v1/blog/my-blogs', {
+      params,
+      cacheTime: 0, // 不缓存，确保数据最新
+    }),
+
+  /** 删除博客 */
+  delete: (id: number) => clientRequest.delete(`/api/v1/blog/${id}`),
 };

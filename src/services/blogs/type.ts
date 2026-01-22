@@ -4,12 +4,28 @@ export interface BlogPost {
   summary: string;
   content: string;
   category: string;
-  created_at: string;
-  updated_at: string;
-  user_id: number;
-  user_name: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: number;
   tags: string;
-  cover_image?: string;
+  coverImage?: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    github_id: string | null;
+    avatar_url?: string;
+    bio: string | null;
+    location: string | null;
+    websiteUrl: string | null;
+    company: string | null;
+    role: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    lastLoginAt: string;
+    preferences: any;
+  };
 }
 
 export interface BlogListResponse {
@@ -28,5 +44,5 @@ export interface CreateBlogParams {
   content: string;
   category?: string;
   tags?: string;
-  cover_image?: string;
+  coverImage?: string;
 }

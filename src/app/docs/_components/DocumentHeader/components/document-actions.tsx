@@ -180,7 +180,7 @@ export function DocumentActions({
         <PopoverItem label="导出Word" icon="FileText" onClick={() => handleSelectAction('docx')} />
         <PopoverItem
           label="发布到博客"
-          icon="GlobeLock"
+          icon="Newspaper"
           onClick={() => handleSelectAction('blog')}
           disabled={isSubmitting}
         />

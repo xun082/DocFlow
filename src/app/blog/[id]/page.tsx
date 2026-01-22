@@ -6,6 +6,7 @@ import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
 import { blogsServerApi } from '@/services/blogs';
 import { formatDateTime } from '@/utils/format/date';
+import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogPageProps {
   params: Promise<{ id: string }>;
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     title: `${post.title} - DocFlow`,
     description,
     keywords: post.tags ? post.tags.split(',') : [],
-    authors: [{ name: post.user_name }],
+    authors: [{ name: post.user?.name }],
     openGraph: {
       type: 'article',
       locale: 'zh_CN',
@@ -43,17 +44,16 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
       title: post.title,
       description,
       siteName: 'DocFlow',
-      images: post.cover_image ? [{ url: post.cover_image, alt: post.title }] : [],
-      publishedTime: post.created_at,
-      modifiedTime: post.updated_at,
-      authors: [post.user_name],
+      images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : [],
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
       tags: post.tags ? post.tags.split(',') : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description,
-      images: post.cover_image ? [post.cover_image] : [],
+      images: post.coverImage ? [post.coverImage] : [],
     },
     alternates: {
       canonical: blogUrl,
@@ -66,7 +66,6 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
   const postId = Number(id);
 
   const response = await blogsServerApi.getInfo(postId);
-  console.log(response);
 
   const post = response.data?.data;
 
@@ -92,7 +91,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
         <article className="max-w-4xl mx-auto">
           {/* 封面图片 */}
           <div className="relative w-full h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-2xl mb-12">
-            <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+            <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
 
@@ -105,10 +104,10 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg text-sm text-gray-400">
                 <Calendar className="w-4 h-4" />
-                <span>{formatDateTime(post.updated_at)}</span>
+                <span>{formatDateTime(post.updatedAt)}</span>
               </span>
               <span className="px-3 py-1.5 bg-violet-500/10 text-violet-300 rounded-lg text-sm border border-violet-500/20">
-                {post.category}
+                {BLOG_CATEGORIES.find((cat) => cat.key === post.category)?.label || '未分类'}
               </span>
             </div>
 
@@ -144,7 +143,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
               prose-ul:text-gray-300 prose-ol:text-gray-300
               prose-li:marker:text-violet-400
               prose-blockquote:border-l-violet-500 prose-blockquote:text-gray-300 prose-blockquote:italic
-              prose-img:rounded-lg prose-img:shadow-lg prose-img:max-h-[500px] prose-img:object-contain prose-img:mx-auto"
+              prose-img:rounded-lg prose-img:shadow-lg prose-img:max-h-[500px] prose-img:object-contain prose-img:mx-auto text-white"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>

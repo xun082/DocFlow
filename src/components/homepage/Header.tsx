@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Github, Menu, X } from 'lucide-react';
+import { FileText, Github, Menu, Newspaper, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,7 @@ const Header: React.FC = () => {
         >
           <Link href="/blog" aria-label="查看 DocFlow 博客">
             <div className="flex items-center space-x-2 text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl transition-all duration-300 px-4 py-2.5 rounded-xl border border-white/20 hover:border-white/40 shadow-lg hover:shadow-white/10 hover:scale-105">
-              <FileText className="h-4 w-4" />
+              <Newspaper className="h-4 w-4" />
               <span className="text-sm font-semibold">博客</span>
             </div>
           </Link>

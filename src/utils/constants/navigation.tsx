@@ -70,7 +70,7 @@ export const NAV_ITEMS: NavItem[] = [
     tourContent: '组织管理用于管理组织架构、成员与权限，是企业级协作的基础配置。',
   },
   {
-    name: '个人资料',
+    name: '我的资料',
     href: ROUTES.USER,
     icon: <User className="w-5 h-5" />,
     tourContent: '个人资料页面用于设置个人信息、账号与偏好。',

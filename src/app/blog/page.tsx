@@ -1,39 +1,19 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Calendar, ArrowRight, FileText, Search, Tag } from 'lucide-react';
+import { Calendar, ArrowRight, FileText, Tag } from 'lucide-react';
+
+import BlogFilters from './_components/BlogFilters';
 
 import { formatDateTime } from '@/utils/format/date';
 import { blogsServerApi } from '@/services/blogs';
 import type { BlogPost } from '@/services/blogs/type';
 import Header from '@/components/homepage/Header';
 import Footer from '@/components/homepage/Footer';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; search?: string }>;
 }
-
-const BLOG_CATEGORIES = [
-  { key: 'ALL', label: '' },
-  { key: 'TECH', label: '技术' },
-  { key: 'LIFE', label: '生活' },
-  { key: 'STUDY', label: '学习' },
-  { key: 'ENTERTAINMENT', label: '娱乐' },
-  { key: 'SPORTS', label: '运动' },
-  { key: 'TRAVEL', label: '旅游' },
-  { key: 'FOOD', label: '美食' },
-  { key: 'PHOTOGRAPHY', label: '摄影' },
-  { key: 'MUSIC', label: '音乐' },
-  { key: 'MOVIE', label: '电影' },
-  { key: 'READING', label: '阅读' },
-  { key: 'OTHER', label: '其他' },
-] as const;
 
 async function BlogContent({
   searchParams,
@@ -56,7 +36,7 @@ async function BlogContent({
     <div className="min-h-screen bg-black relative overflow-hidden">
       <Header />
 
-      <main className="relative z-10 pt-32 pb-20 px-4 sm:px-6">
+      <main className="relative z-10 pt-10 pb-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
@@ -69,35 +49,7 @@ async function BlogContent({
             </p>
           </div>
 
-          <div className="mb-12 flex flex-col md:flex-row gap-8 items-center">
-            <div className="relative flex-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索文章..."
-                defaultValue={searchQuery}
-                className="w-full pl-10 pr-4 py-1.5 bg-white/10 border border-white/20 rounded-[8px] text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300"
-              />
-            </div>
-            <div className="flex-1">
-              <Select defaultValue={category} name="category">
-                <SelectTrigger className="w-full px-4 py-5 bg-white/10 border-white/20 text-white focus:border-violet-500 focus:ring-violet-500/20">
-                  <SelectValue placeholder="分类" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white">
-                  {BLOG_CATEGORIES.map((category) => (
-                    <SelectItem
-                      key={category.key}
-                      value={category.key}
-                      className="focus:bg-violet-600/20 focus:text-white"
-                    >
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <BlogFilters initialSearch={searchQuery} initialCategory={category} />
 
           {/* 错误提示 */}
           {hasError && (
@@ -126,7 +78,7 @@ async function BlogContent({
                       {/* 封面图片 */}
                       <div className="relative w-full h-48 overflow-hidden">
                         <img
-                          src={post.cover_image}
+                          src={post.coverImage}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -135,7 +87,10 @@ async function BlogContent({
                         {/* 分类标签 */}
                         <div className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg text-xs text-violet-300 border border-violet-500/30">
                           <Tag className="h-3 w-3" />
-                          <span>{post.category}</span>
+                          <span>
+                            {BLOG_CATEGORIES.find((cat) => cat.key === post.category)?.label ||
+                              '未分类'}
+                          </span>
                         </div>
                       </div>
 
@@ -175,7 +130,7 @@ async function BlogContent({
                         <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-white/5">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-4 w-4" />
-                            <span>{formatDateTime(post.updated_at)}</span>
+                            <span>{formatDateTime(post.updatedAt)}</span>
                           </div>
                           <ArrowRight className="h-4 w-4 group-hover:translate-x-1 group-hover:text-violet-400 transition-all" />
                         </div>
