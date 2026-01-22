@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CheckCircle, Shield } from 'lucide-react';
+import { CheckCircle, Shield, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -170,7 +170,7 @@ export default function EmailCodeForm() {
             <Button
               type="button"
               variant="outline"
-              className="whitespace-nowrap min-w-[100px] bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-600 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
+              className="whitespace-nowrap min-w-[110px] bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-600 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -178,7 +178,16 @@ export default function EmailCodeForm() {
               }}
               disabled={isSendCodeDisabled}
             >
-              {countdown > 0 ? `${countdown}s` : isSendingCode ? '发送中...' : '获取验证码'}
+              {isSendingCode ? (
+                <div className="flex items-center justify-center space-x-1.5">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>发送中</span>
+                </div>
+              ) : countdown > 0 ? (
+                `${countdown}s`
+              ) : (
+                '获取验证码'
+              )}
             </Button>
           </div>
           {errors.code && (
@@ -196,9 +205,17 @@ export default function EmailCodeForm() {
 
         <Button
           type="submit"
-          className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={emailLoginMutation.isPending || loggingInRef.current}
+          className="w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
-          登录
+          {emailLoginMutation.isPending || loggingInRef.current ? (
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>登录中...</span>
+            </div>
+          ) : (
+            '登录'
+          )}
         </Button>
 
         <div className="flex items-center justify-center space-x-2 text-xs text-gray-600 bg-gray-100 rounded-lg py-2 px-3">

@@ -18,7 +18,6 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { useNotificationSocketContext } from '@/providers/NotificationSocketProvider';
 import { TraceApi } from '@/services/trace';
 import { AnalyticsData } from '@/services/trace/types';
 
@@ -99,8 +98,6 @@ const timeRangeOptions = [
 ];
 
 export default function DashboardPage() {
-  // 从 Context 获取 WebSocket 状态（连接逻辑已在 Provider 中处理）
-  const { isConnected, onlineUsers } = useNotificationSocketContext();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState(1); // 默认1天
@@ -239,63 +236,30 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50">
       {/* 欢迎区域 */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">欢迎回来！</h1>
-              {/* 在线状态指示器 */}
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-2 h-2 rounded-full animate-pulse ${
-                    isConnected ? 'bg-green-500' : 'bg-gray-400'
-                  }`}
-                ></div>
-                <span className="text-sm text-gray-500 hidden sm:inline">
-                  {isConnected ? '已连接' : '未连接'}
-                </span>
-              </div>
-            </div>
-            <p className="text-gray-600 text-sm sm:text-base">
-              今天是个美好的工作日，{currentTime}
-            </p>
-          </div>
-
-          {/* 在线用户统计卡片 */}
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-100 rounded-xl px-6 py-4 min-w-[140px]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                    <Users className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {isConnected ? onlineUsers.length : 0}
-                    </p>
-                    <p className="text-xs text-gray-600 font-medium">在线用户</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="mb-8 sm:mb-10">
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">欢迎回来！</h1>
+          <p className="text-gray-600 text-sm sm:text-base flex items-center gap-2">
+            <Clock className="w-4 h-4 text-gray-400" />
+            今天是个美好的工作日，{currentTime}
+          </p>
         </div>
       </div>
 
-      {/* 数据概览区域 - 只有在有数据或加载中时才显示 */}
+      {/* 数据概览区域 */}
       {(loading || analyticsData) && (
         <>
           {/* 时间范围选择器 */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">数据概览</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">数据概览</h2>
               <div className="relative">
                 <select
                   value={selectedTimeRange}
                   onChange={(e) => handleTimeRangeChange(Number(e.target.value))}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
+                  className="appearance-none bg-white border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-semibold text-gray-700 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
                 >
                   {timeRangeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -303,30 +267,30 @@ export default function DashboardPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* 数据统计卡片 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5 mb-8 sm:mb-10">
             {loading
               ? // 骨架屏
                 Array.from({ length: 5 }).map((_, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
+                    className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-gray-200 rounded animate-pulse mr-1"></div>
-                        <div className="w-8 h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-10 h-4 bg-gray-200 rounded animate-pulse"></div>
                       </div>
                     </div>
                     <div>
-                      <div className="w-16 h-6 sm:h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
-                      <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="w-20 h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
                     </div>
                   </div>
                 ))
@@ -334,34 +298,34 @@ export default function DashboardPage() {
                 quickStats.map((stat, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
+                    className="group bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div
-                        className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}
+                        className={`w-12 h-12 sm:w-14 sm:h-14 ${stat.color} rounded-lg flex items-center justify-center text-white`}
                       >
                         {stat.icon}
                       </div>
                       <div
-                        className={`flex items-center text-xs sm:text-sm ${
+                        className={`flex items-center text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full ${
                           stat.trend && stat.trend > 0
-                            ? 'text-green-600'
+                            ? 'text-green-700 bg-green-50'
                             : stat.trend && stat.trend < 0
-                              ? 'text-red-600'
-                              : 'text-gray-600'
+                              ? 'text-red-700 bg-red-50'
+                              : 'text-gray-600 bg-gray-50'
                         }`}
                       >
                         <TrendingUp
-                          className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 ${stat.trend && stat.trend < 0 ? 'rotate-180' : ''}`}
+                          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 ${stat.trend && stat.trend < 0 ? 'rotate-180' : ''}`}
                         />
                         <span className="hidden sm:inline">{stat.trendText || stat.change}</span>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                         {stat.value}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600">{stat.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 font-medium">{stat.name}</p>
                     </div>
                   </div>
                 ))}
@@ -372,33 +336,36 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
         {/* 快速操作 */}
         <div className="xl:col-span-2">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">快速操作</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">快速操作</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-8">
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className={`${action.color} text-white p-4 sm:p-6 rounded-lg transition-colors text-left`}
+                className={`group ${action.color} text-white p-6 sm:p-7 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-lg hover:-translate-y-1`}
               >
-                <div className="mb-3">{action.icon}</div>
-                <h3 className="font-semibold mb-1 text-sm sm:text-base">{action.name}</h3>
+                <div className="mb-4">{action.icon}</div>
+                <h3 className="font-bold mb-2 text-base sm:text-lg">{action.name}</h3>
                 <p className="text-xs sm:text-sm opacity-90">{action.description}</p>
               </button>
             ))}
           </div>
 
           {/* 最近活动 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">最近活动</h3>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-5">最近活动</h3>
             <div className="space-y-4">
               {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                <div
+                  key={activity.id}
+                  className="group flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                >
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-base flex-shrink-0">
                     {activity.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
-                      <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
+                    <p className="text-sm font-semibold text-gray-900 truncate">{activity.title}</p>
+                    <div className="flex items-center text-xs text-gray-500 mt-1.5">
+                      <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
                       {activity.time}
                     </div>
                   </div>
@@ -411,59 +378,75 @@ export default function DashboardPage() {
         {/* 侧边栏 */}
         <div className="space-y-6">
           {/* 今日日程 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">今日日程</h3>
-              <button className="text-blue-600 hover:text-blue-700">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">今日日程</h3>
+              <button className="w-9 h-9 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center">
                 <Plus className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {upcomingEvents.map((event) => (
-                <div key={event.id} className="border-l-4 border-blue-500 pl-3">
-                  <p className="font-medium text-gray-900 text-sm">{event.title}</p>
-                  <p className="text-xs text-gray-600">{event.time}</p>
-                  <p className="text-xs text-gray-500">{event.participants} 人参与</p>
+                <div key={event.id} className="border-l-4 border-blue-600 pl-4 py-2">
+                  <p className="font-bold text-gray-900 text-sm mb-1">{event.title}</p>
+                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {event.time}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
+                      {event.participants} 人参与
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* 快捷导航 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">快捷导航</h3>
-            <div className="space-y-3">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-5">快捷导航</h3>
+            <div className="space-y-2">
               <Link
                 href="/dashboard/messages"
                 prefetch={false}
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
+                className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 transition-colors p-3 rounded-lg hover:bg-gray-50"
               >
-                <Bot className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm">查看消息</span>
+                <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                </div>
+                <span className="text-sm font-semibold">查看消息</span>
               </Link>
               <Link
                 href="/dashboard/contacts"
                 prefetch={false}
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
+                className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 transition-colors p-3 rounded-lg hover:bg-gray-50"
               >
-                <Users className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm">通讯录</span>
+                <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                </div>
+                <span className="text-sm font-semibold">通讯录</span>
               </Link>
               <Link
                 href="/docs"
                 prefetch={false}
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
+                className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 transition-colors p-3 rounded-lg hover:bg-gray-50"
               >
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm">文档协作</span>
+                <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                </div>
+                <span className="text-sm font-semibold">文档协作</span>
               </Link>
               <Link
                 href="/dashboard/calendar"
                 prefetch={false}
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
+                className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 transition-colors p-3 rounded-lg hover:bg-gray-50"
               >
-                <Calendar className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm">查看日历</span>
+                <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                </div>
+                <span className="text-sm font-semibold">查看日历</span>
               </Link>
             </div>
           </div>

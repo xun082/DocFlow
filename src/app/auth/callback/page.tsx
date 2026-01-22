@@ -22,66 +22,53 @@ function CallbackContent() {
     setMounted(true);
   }, []);
 
-  // 获取原始跳转页面
-  const getRedirectUrl = () => {
-    // 优先从state参数获取（GitHub OAuth标准做法）
+  // 获取重定向 URL
+  const getRedirectUrl = (): string => {
+    // 1. 优先从 state 参数获取（GitHub OAuth 标准）
     const state = searchParams?.get('state');
 
     if (state) {
       try {
         return decodeURIComponent(state);
-      } catch {
-        // 解析失败时忽略state参数
-      }
+      } catch {}
     }
 
-    // 其次从URL参数获取
-    const redirectTo = searchParams?.get('redirect_to') || searchParams?.get('returnTo');
+    // 2. 从 redirect_to 参数获取
+    const redirectTo = searchParams?.get('redirect_to');
 
     if (redirectTo) {
-      return decodeURIComponent(redirectTo);
+      try {
+        return decodeURIComponent(redirectTo);
+      } catch {}
     }
 
-    // 最后从sessionStorage获取（仅在客户端）
+    // 3. 从 sessionStorage 获取（仅客户端）
     if (mounted && typeof window !== 'undefined') {
       try {
-        const savedRedirect = sessionStorage.getItem('auth_redirect');
+        const saved = sessionStorage.getItem('auth_redirect');
 
-        if (savedRedirect) {
-          sessionStorage.removeItem('auth_redirect'); // 使用后清除
+        if (saved) {
+          sessionStorage.removeItem('auth_redirect');
 
-          return savedRedirect;
+          return saved;
         }
-      } catch (error) {
-        // 静默处理sessionStorage错误
-        console.warn('Failed to access sessionStorage:', error);
-      }
+      } catch {}
     }
 
-    // 默认跳转到首页
+    // 4. 默认跳转到仪表盘
     return '/dashboard';
   };
 
   useEffect(() => {
-    // 只有在客户端挂载后才执行认证处理，且未处理过认证
-    if (!mounted || authProcessed) return;
+    if (!mounted || authProcessed || !searchParams) return;
 
     const processAuth = async () => {
-      setAuthProcessed(true); // 标记认证处理已开始
+      setAuthProcessed(true);
 
       try {
-        // 检查searchParams是否存在
-        if (!searchParams) {
-          setStatus('URL参数获取失败');
-          setState('error');
-
-          return;
-        }
-
-        // 尝试从URL参数中获取token
+        // 场景1: 直接 Token 登录
         const token = searchParams.get('token');
 
-        // 如果URL中直接包含token
         if (token) {
           const authData = {
             token,
@@ -94,10 +81,9 @@ function CallbackContent() {
               : undefined,
           };
 
-          setStatus('登录成功! 正在获取用户资料...');
+          setStatus('登录成功，正在跳转...');
           setState('success');
 
-          // 使用 React Query 处理登录
           tokenLoginMutation.mutate({
             authData,
             redirectUrl: getRedirectUrl(),
@@ -106,19 +92,18 @@ function CallbackContent() {
           return;
         }
 
-        // 否则尝试使用code获取token
+        // 场景2: GitHub OAuth 授权码登录
         const code = searchParams.get('code');
 
         if (!code) {
-          setStatus('未收到授权码或Token，请重新尝试登录');
+          setStatus('缺少授权码，请重新登录');
           setState('error');
 
           return;
         }
 
-        setStatus('正在与GitHub服务器通信...');
+        setStatus('正在验证授权...');
 
-        // 使用 React Query 处理 GitHub 登录
         gitHubLoginMutation.mutate(
           {
             code,
@@ -126,45 +111,25 @@ function CallbackContent() {
           },
           {
             onSuccess: () => {
-              setStatus('登录成功! 正在跳转...');
+              setStatus('登录成功，正在跳转...');
               setState('success');
             },
             onError: (error) => {
-              if (error instanceof Error) {
-                if (error.message.includes('超时') || error.message.includes('timeout')) {
-                  setStatus('GitHub认证超时，请重试或检查网络连接');
-                } else if (error.message.includes('网络')) {
-                  setStatus('网络连接错误，请检查您的网络设置');
-                } else {
-                  setStatus(`认证失败: ${error.message}`);
-                }
-              } else {
-                setStatus(`登录失败: ${String(error)}`);
-              }
-
+              const message = error instanceof Error ? error.message : String(error);
+              setStatus(`认证失败: ${message}`);
               setState('error');
             },
           },
         );
-      } catch (e) {
-        if (e instanceof Error) {
-          if (e.message.includes('Failed to fetch') || e.message.includes('Network')) {
-            setStatus('网络连接失败，请检查网络设置后重试');
-          } else if (e.message.includes('timeout') || e.message.includes('超时')) {
-            setStatus('请求超时，服务器响应较慢，请重试');
-          } else {
-            setStatus(`认证失败: ${e.message}`);
-          }
-        } else {
-          setStatus('登录过程中发生未知错误，请重试');
-        }
-
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '未知错误';
+        setStatus(`登录失败: ${message}`);
         setState('error');
       }
     };
 
     processAuth();
-  }, [searchParams, router, mounted, authProcessed]); // 添加 authProcessed 依赖项
+  }, [mounted, authProcessed, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -191,25 +156,12 @@ function CallbackContent() {
               <div className="flex flex-col items-center">
                 <AlertCircle className="h-14 w-14 text-red-500 mb-4" />
                 <p className="text-lg font-medium text-gray-700 text-center mb-4">{status}</p>
-                <div className="flex space-x-3">
-                  <button
-                    className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                    onClick={() => {
-                      setState('loading');
-                      setStatus('重新尝试认证...');
-                      // 重新触发认证流程
-                      window.location.reload();
-                    }}
-                  >
-                    重试
-                  </button>
-                  <button
-                    className="py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                    onClick={() => router.push('/auth')}
-                  >
-                    返回登录
-                  </button>
-                </div>
+                <button
+                  className="py-2.5 px-6 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all duration-200 cursor-pointer"
+                  onClick={() => router.push('/auth')}
+                >
+                  返回登录
+                </button>
               </div>
             )}
           </div>

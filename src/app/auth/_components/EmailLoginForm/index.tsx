@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -83,9 +83,17 @@ export default function EmailLoginForm() {
 
         <Button
           type="submit"
-          className="w-full bg-black text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={emailLoginMutation.isPending || isSubmitting}
+          className="w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
-          登录
+          {emailLoginMutation.isPending || isSubmitting ? (
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>登录中...</span>
+            </div>
+          ) : (
+            '登录'
+          )}
         </Button>
       </form>
     </div>
