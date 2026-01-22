@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
+import { CustomBubbleMenu } from './BubbleMenu';
 import { memo, useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 
@@ -16,8 +16,7 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { ColorPicker } from '@/components/panels';
 
-// We memorize the button so each button is not rerendered
-// on every editor state change
+// 记忆化按钮组件,避免每次编辑器状态变化时重新渲染
 const MemoButton = memo(Toolbar.Button);
 const MemoColorPicker = memo(ColorPicker);
 const MemoFontFamilyPicker = memo(FontFamilyPicker);
@@ -34,6 +33,7 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
   const states = useTextmenuStates(editor);
   const blockOptions = useTextmenuContentTypes(editor);
 
+  // 监听选区变化,添加短暂延迟以避免菜单闪烁
   useEffect(() => {
     let selectionTimeout: number;
 
@@ -57,16 +57,15 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
   }, [editor]);
 
   return (
-    <BubbleMenu
-      className={selecting ? 'hidden' : ''}
-      options={{
-        placement: 'top',
-        offset: -60,
-      }}
+    <CustomBubbleMenu
       editor={editor}
-      pluginKey="textMenu"
+      className={selecting ? 'hidden' : ''}
       shouldShow={states.shouldShow}
+      placement="top"
+      offsetDistance={8}
+      boundaryPadding={8}
       updateDelay={0}
+      boundaryElement={editor.view.dom}
     >
       <Toolbar.Wrapper>
         <Toolbar.Divider />
@@ -219,6 +218,6 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
           </Popover.Content>
         </Popover.Root>
       </Toolbar.Wrapper>
-    </BubbleMenu>
+    </CustomBubbleMenu>
   );
 };
