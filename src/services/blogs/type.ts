@@ -12,6 +12,11 @@ export interface BlogPost {
   cover_image?: string;
 }
 
+export interface BlogListResponse {
+  list: BlogPost[];
+  total: number;
+}
+
 export interface GetAllBlogsParams {
   category?: string;
   title?: string;
