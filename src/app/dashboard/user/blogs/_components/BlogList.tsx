@@ -21,6 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 import { ROUTES } from '@/utils/constants/routes';
 
@@ -35,6 +45,8 @@ export function BlogList() {
   const [blogList, setBlogList] = useState<BlogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [blogToDelete, setBlogToDelete] = useState<number | null>(null);
 
   const form = useForm<SearchFormData>({
     resolver: zodResolver(searchFormSchema),
@@ -65,6 +77,27 @@ export function BlogList() {
       })
       .finally(() => {
         setLoading(false);
+      });
+  };
+
+  const handleDelete = (id: number) => {
+    setBlogToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!blogToDelete) return;
+
+    blogsClientApi
+      .delete(blogToDelete)
+      .then(() => {
+        setBlogList((prev) => prev.filter((blog) => blog.id !== blogToDelete));
+        setDeleteDialogOpen(false);
+        setBlogToDelete(null);
+      })
+      .catch((error) => {
+        console.error('删除博客失败:', error);
+        alert('删除失败，请重试');
       });
   };
 
@@ -136,7 +169,7 @@ export function BlogList() {
       {!loading && blogList.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogList.map((blog) => (
-            <BlogCard key={blog.id} blog={blog} />
+            <BlogCard key={blog.id} blog={blog} onDelete={handleDelete} />
           ))}
         </div>
       )}
@@ -151,6 +184,26 @@ export function BlogList() {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除这篇博客吗？删除后将无法恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-white"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

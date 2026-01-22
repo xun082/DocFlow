@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight, Trash2 } from 'lucide-react';
 
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,10 @@ export interface BlogItem {
 
 interface BlogCardProps {
   blog: BlogItem;
+  onDelete?: (id: number) => void;
 }
 
-export function BlogCard({ blog }: BlogCardProps) {
+export function BlogCard({ blog, onDelete }: BlogCardProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function BlogCard({ blog }: BlogCardProps) {
     : [];
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 relative">
       {blog.coverImage && (
         <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
           <img
@@ -81,11 +82,23 @@ export function BlogCard({ blog }: BlogCardProps) {
             {BLOG_CATEGORIES.find((item) => item.key === blog.category)?.label || blog.category}
           </span>
         </div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/blog/${blog.id}`} className="flex items-center gap-1">
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(blog.id)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={`/blog/${blog.id}`} className="flex items-center gap-1">
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
     </Card>
   );

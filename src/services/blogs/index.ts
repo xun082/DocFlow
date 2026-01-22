@@ -26,4 +26,7 @@ export const blogsClientApi = {
     clientRequest.post<BlogListResponse>('/api/v1/blog/my-blogs', {
       params: data,
     }),
+
+  /** 删除博客 */
+  delete: (id: number) => clientRequest.delete(`/api/v1/blog/${id}`),
 };
