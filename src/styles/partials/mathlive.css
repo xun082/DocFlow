@@ -1,0 +1,71 @@
+@layer utilities {
+  /* ========================================
+     MathLive 样式定制
+     ======================================== */
+
+  /* MathLive 编辑器基础样式 */
+  math-field {
+    display: block;
+    width: 100%;
+    min-height: 60px;
+    padding: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 1.25rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  math-field:focus {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 1px hsl(var(--ring));
+  }
+
+  /* 暗色模式 */
+  .dark math-field {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* 虚拟键盘样式 */
+  .ML__keyboard {
+    z-index: 10001 !important;
+  }
+
+  /* MathLive 光标 */
+  math-field .ML__caret {
+    border-left-color: hsl(var(--foreground));
+  }
+
+  /* MathLive 选中文本 */
+  math-field .ML__selected {
+    background-color: hsl(var(--accent) / 0.3);
+  }
+
+  /* MathLive 占位符 */
+  math-field .ML__placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* 块级公式的 MathLive 编辑器 */
+  math-field[data-block='true'] {
+    font-size: 1.5rem;
+    min-height: 100px;
+    text-align: center;
+  }
+
+  /* MathLive 弹出层样式 */
+  .ML__popover {
+    background: hsl(var(--popover));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .ML__popover {
+    background: hsl(var(--popover));
+    border-color: hsl(var(--border));
+  }
+}

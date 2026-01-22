@@ -73,3 +73,5 @@ export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache 
 export type { MentionUser } from './Mention';
 export { Alert } from './Alert';
 export type { AlertType } from './Alert';
+export { MathLiveExtension } from './MathLiveEditor';
+export type { MathLiveExtensionOptions } from './MathLiveEditor';
