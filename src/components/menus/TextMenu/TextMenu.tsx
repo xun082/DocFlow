@@ -3,7 +3,6 @@ import * as Popover from '@radix-ui/react-popover';
 import { Editor } from '@tiptap/react';
 
 import { CustomBubbleMenu } from './BubbleMenu';
-
 import { useTextmenuStates } from './hooks/useTextMenuStates';
 import { useTextmenuCommands } from './hooks/useTextMenuCommands';
 import { useTextmenuContentTypes } from './hooks/useTextMenuContentTypes';
