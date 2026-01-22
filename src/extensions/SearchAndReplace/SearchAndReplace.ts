@@ -63,7 +63,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
 
       setCaseSensitive:
         (caseSensitive: boolean) =>
-        ({ state, dispatch }: { state: EditorState; dispatch: any }) => {
+        ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           this.storage.caseSensitive = caseSensitive;
 
           if (dispatch) {
@@ -75,7 +75,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
 
       goToNextSearchResult:
         () =>
-        ({ state, dispatch }: { state: EditorState; dispatch: any }) => {
+        ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, currentIndex } = this.storage;
 
           if (results.length === 0) return false;
@@ -116,7 +116,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
 
       goToPreviousSearchResult:
         () =>
-        ({ state, dispatch }: { state: EditorState; dispatch: any }) => {
+        ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, currentIndex } = this.storage;
 
           if (results.length === 0) return false;
@@ -157,7 +157,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
 
       replace:
         () =>
-        ({ state, dispatch }: { state: EditorState; dispatch: any }) => {
+        ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, currentIndex, replaceTerm } = this.storage;
 
           if (results.length === 0 || currentIndex < 0) return false;
@@ -169,16 +169,12 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
             dispatch(tr);
 
             // 触发重新搜索
-            setTimeout(() => {
-              if (this.editor) {
-                const searchTerm = this.storage.searchTerm;
-                this.storage.searchTerm = '';
-                setTimeout(() => {
-                  this.storage.searchTerm = searchTerm;
-                  this.editor.view.dispatch(this.editor.state.tr);
-                }, 0);
-              }
-            }, 0);
+            if (this.editor) {
+              const searchTerm = this.storage.searchTerm;
+              this.storage.searchTerm = '';
+              this.storage.searchTerm = searchTerm;
+              this.editor.view.dispatch(this.editor.state.tr);
+            }
           }
 
           return true;
@@ -186,7 +182,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
 
       replaceAll:
         () =>
-        ({ state, dispatch }: { state: EditorState; dispatch: any }) => {
+        ({ state, dispatch }: { state: EditorState; dispatch: (tr: Transaction) => void }) => {
           const { results, replaceTerm } = this.storage;
 
           if (results.length === 0) return false;
@@ -204,13 +200,11 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
           }
 
           // 清空搜索
-          setTimeout(() => {
-            if (this.editor) {
-              this.storage.results = [];
-              this.storage.currentIndex = -1;
-              this.storage.searchTerm = '';
-            }
-          }, 0);
+          if (this.editor) {
+            this.storage.results = [];
+            this.storage.currentIndex = -1;
+            this.storage.searchTerm = '';
+          }
 
           return true;
         },

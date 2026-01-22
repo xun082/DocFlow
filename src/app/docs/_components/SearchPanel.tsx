@@ -7,7 +7,10 @@ import { X, Search, ChevronUp, ChevronDown, Replace, ReplaceAll } from 'lucide-r
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { SearchAndReplaceCommands } from '@/extensions/SearchAndReplace/types';
+import { SearchResult } from '@/extensions/SearchAndReplace/types';
 
 interface SearchPanelProps {
   editor: Editor;
@@ -23,15 +26,16 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [showReplace, setShowReplace] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [searchState, setSearchState] = useState<{ results: any[]; currentIndex: number }>({
-    results: [],
-    currentIndex: -1,
-  });
+  const [searchState, setSearchState] = useState<{ results: SearchResult[]; currentIndex: number }>(
+    {
+      results: [],
+      currentIndex: -1,
+    },
+  );
 
   // 监听编辑器更新，同步搜索结果
   useEffect(() => {
     if (!editor) return;
-    console.log(editor, 'editor====>');
 
     const updateSearchState = () => {
       const storage = (editor.storage as any).searchAndReplace;
@@ -55,7 +59,6 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
   }, [editor]);
 
   const { results, currentIndex } = searchState;
-  console.log('results', results);
 
   // 当面板打开时聚焦搜索框
   useEffect(() => {
@@ -130,18 +133,22 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">搜索</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowReplace(!showReplace)}
-            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-2 py-0 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           >
             {showReplace ? '隐藏替换' : '显示替换'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="h-7 w-7 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -225,16 +232,16 @@ export function SearchPanel({ editor, isOpen, onClose }: SearchPanelProps) {
         )}
 
         {/* Options */}
-        <div className="flex items-center gap-4 pt-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={caseSensitive}
-              onChange={(e) => setCaseSensitive(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">区分大小写</span>
-          </label>
+        <div className="flex items-center gap-2 pt-2">
+          <Checkbox
+            id="case-sensitive"
+            checked={caseSensitive}
+            onCheckedChange={(checked) => setCaseSensitive(!!checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <Label htmlFor="case-sensitive" className="cursor-pointer text-sm text-gray-500">
+            区分大小写
+          </Label>
         </div>
 
         {/* Keyboard Shortcuts */}
