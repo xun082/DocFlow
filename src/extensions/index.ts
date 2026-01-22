@@ -2,7 +2,6 @@
 
 export { StarterKit } from '@tiptap/starter-kit';
 export { Highlight } from '@tiptap/extension-highlight';
-// 拆分批量导出以避免 HMR 模块工厂丢失问题
 export { CharacterCount } from '@tiptap/extension-character-count';
 export { Placeholder } from '@tiptap/extension-placeholder';
 export { Focus } from '@tiptap/extension-focus';
@@ -74,3 +73,10 @@ export type { MentionUser } from './Mention';
 export { Alert } from './Alert';
 export type { AlertType } from './Alert';
 export { SearchAndReplace } from './SearchAndReplace';
+export type {
+  SearchAndReplaceOptions,
+  SearchAndReplaceStorage,
+  SearchResult,
+} from './SearchAndReplace';
+export { MathLiveExtension } from './MathLiveEditor';
+export type { MathLiveExtensionOptions } from './MathLiveEditor';

@@ -243,6 +243,16 @@ export const GROUPS: Group[] = [
         },
       },
       {
+        name: 'mathFormula',
+        label: '数学公式',
+        iconName: 'Sigma',
+        description: '插入数学公式（行内或块级）',
+        aliases: ['math', 'formula', 'equation', 'latex', '公式', '数学'],
+        action: (editor) => {
+          editor.chain().focus().openMathLiveEditor().run();
+        },
+      },
+      {
         name: 'image',
         label: 'Image',
         iconName: 'Image',
