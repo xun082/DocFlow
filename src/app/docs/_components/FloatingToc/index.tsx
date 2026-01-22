@@ -19,6 +19,10 @@ interface FloatingTocProps {
 export function FloatingToc({ editor }: FloatingTocProps) {
   const [items, setItems] = useState<TocItem[]>([]);
   const [isHovered, setIsHovered] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+
+  // 最终是否显示/激活：悬停 或 点击激活 任一为true即可
+  const isVisible = isHovered || isActive;
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -110,7 +114,8 @@ export function FloatingToc({ editor }: FloatingTocProps) {
     };
   }, [editor, items, activeItem]);
 
-  const scrollToHeading = (pos: number, id: string) => {
+  const scrollToHeading = (pos: number, id: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // 阻止事件冒泡到父级 div
     editor.commands.focus();
     editor.commands.setTextSelection(pos);
     setActiveItem(id);
@@ -129,7 +134,7 @@ export function FloatingToc({ editor }: FloatingTocProps) {
 
   const content = (
     <div
-      className="fixed right-6 top-[35%] -translate-y-1/2 z-50 flex items-center"
+      className="fixed right-6 top-[50%] -translate-y-1/2 z-50 flex items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -138,7 +143,7 @@ export function FloatingToc({ editor }: FloatingTocProps) {
         className={`
           bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 
           rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out
-          ${isHovered ? 'w-72 opacity-100' : 'w-0 opacity-0'}
+          ${isVisible ? 'w-72 opacity-100' : 'w-0 opacity-0'}
         `}
       >
         <div className="p-3 max-h-[60vh] overflow-y-auto">
@@ -149,7 +154,7 @@ export function FloatingToc({ editor }: FloatingTocProps) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => scrollToHeading(item.pos, item.id)}
+                  onClick={(e) => scrollToHeading(item.pos, item.id, e)}
                   className={`
                     w-full text-left py-1.5 px-2 rounded-md transition-all duration-200 text-sm
                     ${
@@ -171,8 +176,9 @@ export function FloatingToc({ editor }: FloatingTocProps) {
 
       {/* 右侧固定的目录按钮 */}
       <div
+        onClick={() => setIsActive(!isActive)}
         className={`
-          ml-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 
+          ml-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
           rounded-lg shadow-lg p-2.5 cursor-pointer transition-all duration-200
           ${isHovered ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
         `}
