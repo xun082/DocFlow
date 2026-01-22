@@ -72,3 +72,11 @@ export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache 
 export type { MentionUser } from './Mention';
 export { Alert } from './Alert';
 export type { AlertType } from './Alert';
+export { SearchAndReplace } from './SearchAndReplace';
+export type {
+  SearchAndReplaceOptions,
+  SearchAndReplaceStorage,
+  SearchResult,
+} from './SearchAndReplace';
+export { MathLiveExtension } from './MathLiveEditor';
+export type { MathLiveExtensionOptions } from './MathLiveEditor';
