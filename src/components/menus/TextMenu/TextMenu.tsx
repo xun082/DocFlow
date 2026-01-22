@@ -1,7 +1,8 @@
-import { Editor } from '@tiptap/react';
-import { CustomBubbleMenu } from './BubbleMenu';
 import { memo, useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
+import { Editor } from '@tiptap/react';
+
+import { CustomBubbleMenu } from './BubbleMenu';
 
 import { useTextmenuStates } from './hooks/useTextMenuStates';
 import { useTextmenuCommands } from './hooks/useTextMenuCommands';
@@ -62,8 +63,8 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
       className={selecting ? 'hidden' : ''}
       shouldShow={states.shouldShow}
       placement="top"
-      offsetDistance={8}
-      boundaryPadding={8}
+      offsetDistance={6}
+      boundaryPadding={6}
       updateDelay={0}
       boundaryElement={editor.view.dom}
     >

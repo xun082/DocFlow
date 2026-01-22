@@ -2,6 +2,7 @@ import { Editor } from '@tiptap/react';
 import { computePosition, flip, shift, offset, autoUpdate, Placement } from '@floating-ui/dom';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+
 import { ShouldShowProps } from '../types';
 
 /**
@@ -62,6 +63,7 @@ export const CustomBubbleMenu: React.FC<CustomBubbleMenuProps> = ({
     // 基础判断：空选区或不可编辑时隐藏
     if (empty || !editor.isEditable) {
       setIsVisible(false);
+
       return;
     }
 
@@ -78,6 +80,7 @@ export const CustomBubbleMenu: React.FC<CustomBubbleMenuProps> = ({
 
       if (!shouldShowResult) {
         setIsVisible(false);
+
         return;
       }
     }
@@ -161,12 +164,15 @@ export const CustomBubbleMenu: React.FC<CustomBubbleMenuProps> = ({
       {
         getBoundingClientRect: () => {
           const { selection } = editor.state;
+
           if (selection.empty) {
             return new DOMRect();
           }
+
           const { from, to } = selection;
           const start = editor.view.coordsAtPos(from);
           const end = editor.view.coordsAtPos(to);
+
           return new DOMRect(
             Math.min(start.left, end.left),
             Math.min(start.top, end.top),
