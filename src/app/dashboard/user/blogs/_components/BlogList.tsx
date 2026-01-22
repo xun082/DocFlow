@@ -97,7 +97,6 @@ export function BlogList() {
       })
       .catch((error) => {
         console.error('删除博客失败:', error);
-        alert('删除失败，请重试');
       });
   };
 

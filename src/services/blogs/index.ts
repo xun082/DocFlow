@@ -22,9 +22,10 @@ export const blogsClientApi = {
     clientRequest.post<BlogPost>('/api/v1/blog', { params: data }),
 
   // 获取当前用户的博客列表
-  getMyBlogs: (data: GetAllBlogsParams) =>
-    clientRequest.post<BlogListResponse>('/api/v1/blog/my-blogs', {
-      params: data,
+  getMyBlogs: (params: GetAllBlogsParams) =>
+    clientRequest.get<BlogListResponse>('/api/v1/blog/my-blogs', {
+      params,
+      cacheTime: 0, // 不缓存，确保数据最新
     }),
 
   /** 删除博客 */

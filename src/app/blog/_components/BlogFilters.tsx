@@ -49,7 +49,7 @@ export default function BlogFilters({
       search: initialSearch,
       category: initialCategory || 'all',
     });
-  }, [initialSearch, initialCategory, form]);
+  }, [initialSearch, initialCategory]);
 
   const updateUrl = (name: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
