@@ -1,131 +1,57 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 
 import { CreateDocumentDialog } from './folder/components/CreateDocumentDialog';
 import { DeleteConfirmDialog } from './folder/components/DeleteConfirmDialog';
+import { useTemplateOperations, type Template } from './folder/hooks/useTemplateOperations';
 
-import { templateServerApi, templateClientApi } from '@/services/template';
-import type { Template as ApiTemplate, CreateTemplateParams } from '@/services/template/type';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils';
+import { DocumentApi } from '@/services/document';
 
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  tags: string;
-  preview?: string;
-}
+const categories = [
+  { id: 'all', name: '全部', icon: 'Grid3X3' },
+  { id: 'TECH', name: '技术', icon: 'Code' },
+  { id: 'BUSINESS', name: '商务', icon: 'Users' },
+  { id: 'PROJECT', name: '项目', icon: 'Calendar' },
+  { id: 'EDUCATION', name: '教育', icon: 'BookOpen' },
+  { id: 'PRODUCT', name: '产品', icon: 'Package' },
+  { id: 'DESIGN', name: '设计', icon: 'Palette' },
+];
 
 const TemplatesTab = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    { id: 'all', name: '全部', icon: 'Grid3X3' },
-    { id: 'TECH', name: '技术', icon: 'Code' },
-    { id: 'BUSINESS', name: '商务', icon: 'Users' },
-    { id: 'PROJECT', name: '项目', icon: 'Calendar' },
-    { id: 'EDUCATION', name: '教育', icon: 'BookOpen' },
-    { id: 'PRODUCT', name: '产品', icon: 'Package' },
-    { id: 'DESIGN', name: '设计', icon: 'Palette' },
-  ];
+  const {
+    templates,
+    loading,
+    loadTemplates,
+    handleDeleteTemplate,
+    confirmDelete,
+    confirmCreate,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+  } = useTemplateOperations(selectedCategory, searchQuery);
 
   useEffect(() => {
     loadTemplates();
   }, [selectedCategory, searchQuery]);
 
-  const loadTemplates = async () => {
-    setLoading(true);
-
-    try {
-      const params: any = {};
-
-      if (selectedCategory !== 'all') {
-        params.category = selectedCategory;
-      }
-
-      if (searchQuery) {
-        params.name = searchQuery;
-      }
-
-      const res = await templateServerApi.getAll(params);
-
-      const apiTemplates = res.data?.data?.list || [];
-      const transformedTemplates: Template[] = apiTemplates.map((t: ApiTemplate) => ({
-        id: String(t.id),
-        name: t.name,
-        description: t.description,
-        icon: t.icon,
-        category: t.category,
-        tags: t.tags || '',
-        preview: t.content,
-      }));
-      setTemplates(transformedTemplates);
-    } catch (error) {
-      console.error('Failed to load templates:', error);
-      toast.error('加载模板失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateDocument = () => {
-    setCreateDialogOpen(true);
+  const handleCreateDocument = async (template: Template) => {
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    await DocumentApi.CreateDocument({
+      title: `${dateStr} ${template.name}`,
+      type: 'FILE',
+    });
   };
 
   const handleCreateCustomTemplate = () => {
     setCreateDialogOpen(true);
-  };
-
-  const handleDeleteTemplate = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setDeleteTemplateId(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteTemplateId) return;
-
-    try {
-      await templateClientApi.delete(Number(deleteTemplateId));
-      toast.success('模板删除成功');
-      await loadTemplates();
-      setDeleteDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to delete template:', error);
-      toast.error('删除模板失败');
-    }
-  };
-
-  const confirmCreate = async (data: any) => {
-    try {
-      const createData: CreateTemplateParams = {
-        name: data.name,
-        description: data.description,
-        content: data.preview,
-        icon: data.icon,
-        category: data.category,
-        tags: data.tags,
-      };
-      await templateClientApi.create(createData);
-      toast.success('模板创建成功');
-      await loadTemplates();
-      setCreateDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to create template:', error);
-      toast.error('创建模板失败');
-    }
   };
 
   return (
@@ -197,7 +123,7 @@ const TemplatesTab = () => {
                     'bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-500',
                     'hover:shadow-sm transition-all duration-200 cursor-pointer',
                   )}
-                  onClick={() => handleCreateDocument()}
+                  onClick={() => handleCreateDocument(template)}
                 >
                   <div className="flex items-start space-x-3">
                     <div
@@ -218,14 +144,20 @@ const TemplatesTab = () => {
                         <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                           {template.name}
                         </h4>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4">
                           <Trash2
-                            onClick={(e) => handleDeleteTemplate(e, template.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTemplate(template.id);
+                            }}
                             className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                           />
-                          <Icon
-                            name="Plus"
-                            className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          <Plus
+                            className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateDocument(template);
+                            }}
                           />
                         </div>
                       </div>
