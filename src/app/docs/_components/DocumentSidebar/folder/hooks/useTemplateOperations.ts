@@ -11,7 +11,7 @@ export interface Template {
   icon: string;
   category: string;
   tags: string;
-  preview?: string;
+  content?: string;
 }
 
 interface UseTemplateOperationsReturn {
@@ -58,7 +58,7 @@ export const useTemplateOperations = (
         icon: t.icon,
         category: t.category,
         tags: t.tags || '',
-        preview: t.content,
+        content: t.content,
       }));
       setTemplates(transformedTemplates);
     } catch (error) {

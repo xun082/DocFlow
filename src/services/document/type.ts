@@ -115,6 +115,7 @@ export interface CreateDocumentDto {
   sort_order?: number;
   is_starred?: boolean;
   organization_id?: number;
+  content?: string | '';
 }
 
 export interface CreateShareLinkDto {

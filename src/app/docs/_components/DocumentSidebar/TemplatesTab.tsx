@@ -42,11 +42,14 @@ const TemplatesTab = () => {
   }, [selectedCategory, searchQuery]);
 
   const handleCreateDocument = async (template: Template) => {
+    console.log('🚀 ~ handleCreateDocument ~ template:', template);
+
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     await DocumentApi.CreateDocument({
       title: `${dateStr} ${template.name}`,
       type: 'FILE',
+      content: template.content || '',
     });
   };
 
