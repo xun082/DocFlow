@@ -45,7 +45,7 @@ const TemplatesTab = () => {
 
   useEffect(() => {
     loadTemplates();
-  }, [selectedCategory, searchQuery]);
+  }, [loadTemplates]);
 
   const handleCreateDocument = (template: Template) => {
     setSelectedTemplate(template);
