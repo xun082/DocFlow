@@ -35,6 +35,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     name: '聊天助手',
     href: ROUTES.MESSAGES,
+    external: true,
     icon: <Bot className="w-5 h-5" />,
     tourContent: '聊天助手提供 AI 对话能力，支持智能问答、写作辅助等功能。',
   },
