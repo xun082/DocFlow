@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { CreateDocumentDialog } from './folder/components/CreateDocumentDialog';
 import { DeleteConfirmDialog } from './folder/components/DeleteConfirmDialog';
+import { CreateDocumentFromTemplateDialog } from './folder/components/CreateDocumentFromTemplateDialog';
 import { useTemplateOperations, type Template } from './folder/hooks/useTemplateOperations';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils';
 import { DocumentApi } from '@/services/document';
+import { templateToTiptapJSONWithEditor } from '@/utils/template-converter';
 
 const categories = [
   { id: 'all', name: '全部', icon: 'Grid3X3' },
@@ -22,9 +25,12 @@ const categories = [
 ];
 
 const TemplatesTab = () => {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createFromTemplateDialogOpen, setCreateFromTemplateDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   const {
     templates,
@@ -41,16 +47,29 @@ const TemplatesTab = () => {
     loadTemplates();
   }, [selectedCategory, searchQuery]);
 
-  const handleCreateDocument = async (template: Template) => {
-    console.log('🚀 ~ handleCreateDocument ~ template:', template);
+  const handleCreateDocument = (template: Template) => {
+    setSelectedTemplate(template);
+    setCreateFromTemplateDialogOpen(true);
+  };
 
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    await DocumentApi.CreateDocument({
-      title: `${dateStr} ${template.name}`,
-      type: 'FILE',
-      content: template.content || '',
+  const handleConfirmCreateFromTemplate = async (fileName: string) => {
+    if (!selectedTemplate) return;
+
+    const tiptapContent = await templateToTiptapJSONWithEditor({
+      content: selectedTemplate.content || '',
     });
+    console.log('🚀 ~ handleConfirmCreateFromTemplate ~ tiptapContent:', tiptapContent);
+
+    const document = await DocumentApi.CreateDocument({
+      title: fileName,
+      type: 'FILE',
+      content: tiptapContent,
+    });
+
+    if (document.data?.code === 200) {
+      // 跳转文档详情页
+      router.push(`/docs/${document.data?.data?.id}`);
+    }
   };
 
   const handleCreateCustomTemplate = () => {
@@ -212,6 +231,17 @@ const TemplatesTab = () => {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onConfirm={confirmCreate}
+      />
+
+      <CreateDocumentFromTemplateDialog
+        open={createFromTemplateDialogOpen}
+        onOpenChange={setCreateFromTemplateDialogOpen}
+        onConfirm={handleConfirmCreateFromTemplate}
+        defaultFileName={
+          selectedTemplate
+            ? `${new Date().toISOString().split('T')[0]} ${selectedTemplate.name}`
+            : ''
+        }
       />
 
       <DeleteConfirmDialog
