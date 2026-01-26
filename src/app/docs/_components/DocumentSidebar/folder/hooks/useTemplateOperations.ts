@@ -8,9 +8,8 @@ export interface Template {
   id: string;
   name: string;
   description: string;
-  icon: string;
   category: string;
-  tags: string;
+  tags: string[];
   content?: string;
 }
 
@@ -20,7 +19,7 @@ interface UseTemplateOperationsReturn {
   loadTemplates: () => Promise<void>;
   handleDeleteTemplate: (id: string) => void;
   confirmDelete: () => Promise<void>;
-  confirmCreate: (data: any) => Promise<void>;
+  confirmCreate: (data: CreateTemplateParams) => Promise<void>;
   deleteDialogOpen: boolean;
   setDeleteDialogOpen: (open: boolean) => void;
 }
@@ -38,7 +37,7 @@ export const useTemplateOperations = (
     setLoading(true);
 
     try {
-      const params: any = {};
+      const params: { category?: string; name?: string } = {};
 
       if (selectedCategory !== 'all') {
         params.category = selectedCategory;
@@ -55,9 +54,8 @@ export const useTemplateOperations = (
         id: String(t.id),
         name: t.name,
         description: t.description,
-        icon: t.icon,
         category: t.category,
-        tags: t.tags || '',
+        tags: (t.tags || '').split(',').filter((tag: string) => tag.trim()),
         content: t.content,
       }));
       setTemplates(transformedTemplates);
@@ -88,13 +86,12 @@ export const useTemplateOperations = (
     }
   };
 
-  const confirmCreate = async (data: any) => {
+  const confirmCreate = async (data: CreateTemplateParams) => {
     try {
       const createData: CreateTemplateParams = {
         name: data.name,
         description: data.description,
-        content: data.preview,
-        icon: data.icon,
+        content: data.content,
         category: data.category,
         tags: data.tags,
       };

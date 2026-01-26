@@ -48,7 +48,7 @@ const formSchema = z.object({
   description: z.string().min(1, '描述不能为空'),
   category: z.string().min(1, '请选择分类'),
   tags: z.string().min(1, '至少添加一个标签'),
-  preview: z.string().min(1, '预览内容不能为空'),
+  content: z.string().min(1, '内容不能为空'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -70,7 +70,7 @@ export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDo
       description: '',
       category: '',
       tags: '',
-      preview: '',
+      content: '',
     },
   });
 
@@ -224,7 +224,7 @@ export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDo
 
             <FormField
               control={form.control}
-              name="preview"
+              name="content"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>预览内容</FormLabel>

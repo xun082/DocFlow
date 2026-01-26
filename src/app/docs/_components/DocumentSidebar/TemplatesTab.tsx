@@ -58,7 +58,6 @@ const TemplatesTab = () => {
     const tiptapContent = await templateToTiptapJSONWithEditor({
       content: selectedTemplate.content || '',
     });
-    console.log('🚀 ~ handleConfirmCreateFromTemplate ~ tiptapContent:', tiptapContent);
 
     const document = await DocumentApi.CreateDocument({
       title: fileName,
@@ -188,7 +187,7 @@ const TemplatesTab = () => {
                         {template.description}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {template.tags.split(',').map((tag) => (
+                        {template.tags.map((tag) => (
                           <span
                             key={tag}
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
@@ -196,9 +195,9 @@ const TemplatesTab = () => {
                             {tag}
                           </span>
                         ))}
-                        {template.tags.split(',').length > 3 && (
+                        {template.tags.length > 3 && (
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            +{template.tags.split(',').length - 3}
+                            +{template.tags.length - 3}
                           </span>
                         )}
                       </div>

@@ -3,7 +3,6 @@ export interface Template {
   name: string;
   description: string;
   content: string;
-  icon: string;
   category: string;
   tags?: string;
   isDeleted: boolean;
@@ -11,25 +10,25 @@ export interface Template {
   updatedAt: string;
 }
 
+// 模板列表响应
 export interface TemplateListResponse {
   list: Template[];
   total: number;
 }
 
+// 创建模板参数
 export interface CreateTemplateParams {
   name: string;
   description: string;
   content: string;
-  icon: string;
   category: string;
-  tags?: string[];
+  tags?: string;
 }
 
 export interface UpdateTemplateParams {
   name?: string;
   description?: string;
   content?: string;
-  icon?: string;
   category?: string;
   tags?: string[];
 }
