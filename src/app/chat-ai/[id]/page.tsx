@@ -1,41 +1,49 @@
 'use client';
 
 /**
- * AI 聊天页面
+ * 聊天会话详情页面
  *
  * 功能说明：
+ * - 根据 URL 中的 room（会话ID）展示对应的聊天内容
  * - 左侧侧边栏：模型参数配置 + 聊天历史记录
- * - 右侧聊天区：支持单模型或多模型对比
- * - 添加对比模型后，聊天区域会分栏显示
- *
- * 状态管理：
- * - modelConfigs: 当前所有模型配置（主模型 + 对比模型）
- * - inputValues: 各模型的输入框内容
- * - 会话列表通过 useConversations Hook 管理
+ * - 右侧聊天区：显示该会话的聊天记录
+ * - 支持 SSE 流式消息发送和接收
  */
 
-import React, { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
-import { ChatSidebar, ChatAIPanels } from './_components';
-import { createModelConfig, INITIAL_PRIMARY_MODEL } from './constants';
-import { useConversations } from './hooks/useChatAI';
-import type { ModelConfig } from './types';
+import { ChatSidebar, ChatAIPanels } from '../_components';
+import { createModelConfig, INITIAL_PRIMARY_MODEL } from '../constants';
+import { useConversations, useChat } from '../hooks/useChatAI';
+import type { ModelConfig, ChatSession } from '../types';
 
 /** 最大允许的对比模型数量（不含主模型） */
 const MAX_COMPARE_MODELS = 1;
 
-export default function ChatAIPage() {
+export default function ChatRoomPage() {
+  const params = useParams();
   const router = useRouter();
+  const chatId = params.id as string;
+
+  // 判断是否是新会话（ID 是时间戳格式）
+  const isNewSession = /^\d{13,}$/.test(chatId);
 
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession } = useConversations();
+  const { sessions, deleteSession, addSession } = useConversations();
 
-  // 模型配置列表：第一个是主模型，后续是对比模型
+  // 使用 Hook 管理聊天状态
+  const { messages, status, conversationId, sendMessage, stopGenerating, loadConversation } =
+    useChat();
+
+  // 模型配置列表
   const [modelConfigs, setModelConfigs] = useState<ModelConfig[]>([INITIAL_PRIMARY_MODEL]);
 
-  // 输入框内容：以模型 id 为 key
+  // 输入框内容
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+
+  // 是否已发送过消息（用于判断是否添加到历史）
+  const [hasSentMessage, setHasSentMessage] = useState(false);
 
   // 主模型配置
   const primaryConfig = modelConfigs[0];
@@ -45,6 +53,50 @@ export default function ChatAIPage() {
 
   // 是否处于对比模式
   const isCompareMode = modelConfigs.length > 1;
+
+  // 加载会话历史（非新会话）
+  useEffect(() => {
+    if (!isNewSession) {
+      loadConversation(chatId);
+    }
+  }, [isNewSession, chatId, loadConversation]);
+
+  // 检查是否有初始消息（从主页面跳转过来的）
+  useEffect(() => {
+    if (isNewSession) {
+      const initialMessage = sessionStorage.getItem(`chat_initial_message_${chatId}`);
+
+      if (initialMessage) {
+        sessionStorage.removeItem(`chat_initial_message_${chatId}`);
+        // 设置到输入框并自动发送
+        setInputValues((prev) => ({ ...prev, [primaryConfig.id]: initialMessage }));
+        // 使用 setTimeout 确保状态更新后再发送
+        setTimeout(() => {
+          sendMessage(initialMessage, primaryConfig);
+          setHasSentMessage(true);
+        }, 100);
+      }
+    }
+  }, [isNewSession, chatId, primaryConfig, sendMessage]);
+
+  // 当获得 conversationId 后，将会话添加到历史列表
+  useEffect(() => {
+    if (conversationId && hasSentMessage) {
+      const newSession: ChatSession = {
+        id: conversationId,
+        title: messages[0]?.content.slice(0, 20) || '新会话',
+        createdAt: new Date(),
+        lastMessageAt: new Date(),
+        messageCount: messages.length,
+      };
+      addSession(newSession);
+
+      // 如果 URL 中的 ID 与实际 conversationId 不同，更新 URL
+      if (chatId !== conversationId) {
+        router.replace(`/chat-ai/${conversationId}`);
+      }
+    }
+  }, [conversationId, hasSentMessage, messages, addSession, chatId, router]);
 
   /**
    * 更新主模型配置
@@ -59,7 +111,6 @@ export default function ChatAIPage() {
   const handleAddCompareModel = useCallback(() => {
     if (!canAddCompareModel) return;
 
-    // 基于主模型配置创建新的对比模型
     const newModelConfig = createModelConfig({
       modelName: primaryConfig.modelName,
       maxTokens: primaryConfig.maxTokens,
@@ -73,14 +124,14 @@ export default function ChatAIPage() {
   }, [canAddCompareModel, primaryConfig]);
 
   /**
-   * 更新对比模型配置（仅对比模式下存在）
+   * 更新对比模型配置
    */
   const handleCompareConfigChange = useCallback((newConfig: ModelConfig) => {
     setModelConfigs((prev) => (prev.length > 1 ? [prev[0], newConfig, ...prev.slice(2)] : prev));
   }, []);
 
   /**
-   * 取消模型对比，仅保留主模型
+   * 取消模型对比
    */
   const handleCancelCompare = useCallback(() => {
     setModelConfigs((prev) => prev.slice(0, 1));
@@ -94,20 +145,19 @@ export default function ChatAIPage() {
   }, []);
 
   /**
-   * 发送消息（主页面只是跳转到新会话页面，实际发送在会话页面处理）
+   * 发送消息
    */
   const handleSend = useCallback(
     (modelId: string) => {
       const value = inputValues[modelId] || '';
-      if (!value.trim()) return;
+      if (!value.trim() || status === 'streaming') return;
 
-      // 生成新会话 ID 并跳转
-      const newSessionId = Date.now().toString();
-      // 将输入内容保存到 sessionStorage，以便会话页面获取
-      sessionStorage.setItem(`chat_initial_message_${newSessionId}`, value.trim());
-      router.push(`/chat-ai/${newSessionId}`);
+      const config = modelConfigs.find((c) => c.id === modelId) || primaryConfig;
+      sendMessage(value.trim(), config);
+      setInputValues((prev) => ({ ...prev, [modelId]: '' }));
+      setHasSentMessage(true);
     },
-    [inputValues, router],
+    [inputValues, status, modelConfigs, primaryConfig, sendMessage],
   );
 
   /**
@@ -128,7 +178,7 @@ export default function ChatAIPage() {
   );
 
   /**
-   * 新建会话 - 只跳转到新会话页面，不添加到历史记录
+   * 新建会话
    */
   const handleNewSession = useCallback(() => {
     router.push('/chat-ai');
@@ -139,9 +189,20 @@ export default function ChatAIPage() {
    */
   const handleDeleteSession = useCallback(
     async (sessionId: string) => {
-      await deleteSession(sessionId);
+      const success = await deleteSession(sessionId);
+
+      // 如果删除的是当前会话，跳转到首页或第一个会话
+      if (success && (chatId === sessionId || conversationId === sessionId)) {
+        const remainingSessions = sessions.filter((s) => s.id !== sessionId);
+
+        if (remainingSessions.length > 0) {
+          router.push(`/chat-ai/${remainingSessions[0].id}`);
+        } else {
+          router.push('/chat-ai');
+        }
+      }
     },
-    [deleteSession],
+    [chatId, conversationId, sessions, deleteSession, router],
   );
 
   return (
@@ -157,7 +218,7 @@ export default function ChatAIPage() {
         onCompareConfigChange={handleCompareConfigChange}
         onCancelCompare={handleCancelCompare}
         sessions={sessions}
-        activeSessionId=""
+        activeSessionId={conversationId || chatId}
         onSessionClick={handleSessionClick}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
@@ -174,6 +235,9 @@ export default function ChatAIPage() {
             onSend={() => handleSend(config.id)}
             onQuickQuestionClick={(q) => handleQuickQuestionClick(config.id, q)}
             showBorder={isCompareMode && index > 0}
+            messages={messages}
+            status={status}
+            onStopGenerating={stopGenerating}
           />
         ))}
       </div>

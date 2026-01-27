@@ -25,6 +25,14 @@ export const THINKING_OPTIONS = [
 ];
 
 /**
+ * 联网搜索选项
+ */
+export const WEB_SEARCH_OPTIONS = [
+  { value: 'enabled', label: '开启' },
+  { value: 'disabled', label: '关闭' },
+];
+
+/**
  * 快捷问题列表
  */
 export const QUICK_QUESTIONS: QuickQuestion[] = [
@@ -39,11 +47,12 @@ export const QUICK_QUESTIONS: QuickQuestion[] = [
  */
 export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
   modelName: 'glm-4.7-pro',
-  maxTokens: 8192,
-  temperature: 0.6,
+  maxTokens: 1024,
+  temperature: 1,
   topP: 0.95,
   enableThinking: true,
   thinkingBudget: 4096,
+  enableWebSearch: false,
 };
 
 /**

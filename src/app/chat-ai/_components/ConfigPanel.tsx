@@ -60,7 +60,7 @@ export default function ConfigPanel({
   const updateCompareConfig: UpdateConfigFn =
     compareConfig && onCompareConfigChange
       ? (key, value) => onCompareConfigChange({ ...compareConfig, [key]: value })
-      : ((() => { }) as UpdateConfigFn);
+      : ((() => {}) as UpdateConfigFn);
 
   return (
     <div className="border-b border-gray-100">

@@ -978,6 +978,12 @@ class ClientRequest {
           tags: { errorType: 'SSEStreamError', url: fullUrl },
           level: 'error',
         });
+
+        if (typeof params?.errorHandler === 'function') {
+          params.errorHandler(err);
+        } else if (params?.errorHandler?.onError) {
+          params.errorHandler.onError(err);
+        }
       });
     };
 
@@ -986,6 +992,12 @@ class ClientRequest {
         tags: { errorType: 'SSEOpenError', url: fullUrl },
         level: 'error',
       });
+
+      if (typeof params?.errorHandler === 'function') {
+        params.errorHandler(err);
+      } else if (params?.errorHandler?.onError) {
+        params.errorHandler.onError(err);
+      }
     });
 
     return () => activeController.abort();

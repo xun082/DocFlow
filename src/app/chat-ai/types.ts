@@ -12,9 +12,9 @@ export interface ModelConfig {
   id: string;
   /** 模型名称，用于显示 */
   modelName: string;
-  /** 最大生成 Token 数量 */
+  /** 最大生成 Token 数量 (1-32768, 默认 1024) */
   maxTokens: number;
-  /** 温度参数：控制输出的随机性，值越高结果越随机 */
+  /** 温度参数：控制输出的随机性 (0-2, 默认 1) */
   temperature: number;
   /** Top-P 参数：核采样，控制候选词的概率质量 */
   topP: number;
@@ -22,6 +22,8 @@ export interface ModelConfig {
   enableThinking: boolean;
   /** 思维预算：分配给推理思考的 Token 数量 */
   thinkingBudget: number;
+  /** 是否启用联网搜索（启用后会先搜索相关网页内容） */
+  enableWebSearch: boolean;
 }
 
 /**
@@ -55,4 +57,42 @@ export interface ChatSession {
   lastMessageAt: Date;
   /** 消息数量 */
   messageCount: number;
+}
+
+/**
+ * 聊天消息角色
+ */
+export type MessageRole = 'user' | 'assistant' | 'system';
+
+/**
+ * 聊天消息接口
+ */
+export interface ChatMessage {
+  /** 消息唯一标识符 */
+  id: string;
+  /** 消息角色 */
+  role: MessageRole;
+  /** 消息内容 */
+  content: string;
+  /** 创建时间 */
+  createdAt: Date;
+  /** 是否正在流式加载中 */
+  isStreaming?: boolean;
+}
+
+/**
+ * 聊天状态
+ */
+export type ChatStatus = 'idle' | 'loading' | 'streaming' | 'error';
+
+/**
+ * 聊天状态接口
+ */
+export interface ChatState {
+  /** 当前状态 */
+  status: ChatStatus;
+  /** 消息列表 */
+  messages: ChatMessage[];
+  /** 错误信息 */
+  error?: string;
 }

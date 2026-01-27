@@ -69,8 +69,20 @@ export default function ChatHistoryList({
         </Button>
       </div>
 
-      {/* 会话列表 */}
-      <div className="flex-1 overflow-y-auto">
+      {/* 会话列表 - 默认隐藏滚动条，悬停时显示 */}
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'transparent transparent',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.scrollbarColor = '#d1d5db transparent';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.scrollbarColor = 'transparent transparent';
+        }}
+      >
         <div className="text-xs text-gray-400 mt-2 mb-2 pl-2">最近会话({sessions.length})</div>
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
