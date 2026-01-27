@@ -40,5 +40,9 @@ interface ChatAILayoutProps {
 }
 
 export default function ChatAILayout({ children }: ChatAILayoutProps) {
-  return <div className="h-full w-full bg-white">{children}</div>;
+  return (
+    <div className="h-full w-full bg-white" suppressHydrationWarning>
+      {children}
+    </div>
+  );
 }

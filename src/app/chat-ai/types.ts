@@ -39,3 +39,20 @@ export interface QuickQuestion {
   id: string;
   text: string;
 }
+
+/**
+ * 聊天会话接口
+ * 用于历史记录管理
+ */
+export interface ChatSession {
+  /** 会话唯一标识符 */
+  id: string;
+  /** 会话标题 */
+  title: string;
+  /** 创建时间 */
+  createdAt: Date;
+  /** 最后一条消息时间 */
+  lastMessageAt: Date;
+  /** 消息数量 */
+  messageCount: number;
+}

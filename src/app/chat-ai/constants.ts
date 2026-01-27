@@ -47,13 +47,27 @@ export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
 };
 
 /**
+ * 初始主模型配置（使用固定 ID 避免 Hydration 错误）
+ */
+export const INITIAL_PRIMARY_MODEL: ModelConfig = {
+  id: 'primary-model',
+  ...DEFAULT_MODEL_CONFIG,
+};
+
+/** 用于生成唯一 ID 的计数器 */
+let modelIdCounter = 0;
+
+/**
  * 创建新的模型配置
+ * 注意：此函数仅在客户端事件处理中调用，不要在组件初始化时使用
  * @param overrides 覆盖的配置项
  * @returns 完整的模型配置
  */
 export function createModelConfig(overrides?: Partial<ModelConfig>): ModelConfig {
+  modelIdCounter += 1;
+
   return {
-    id: `model-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    id: `model-${modelIdCounter}-${Date.now()}`,
     ...DEFAULT_MODEL_CONFIG,
     ...overrides,
   };

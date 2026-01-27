@@ -1,6 +1,4 @@
-/**
- * Chat AI 组件导出
- */
-
-export { ChatSidebar } from './ChatSidebar';
-export { ChatPanel } from './ChatPanel';
+export { default as ChatSidebar } from './ChatSidebar';
+export { default as ChatAIPanels } from './ChatAIPanels';
+export { default as ChatHistoryList } from './ChatHistoryList';
+export { default as ConfigPanel } from './ConfigPanel';
