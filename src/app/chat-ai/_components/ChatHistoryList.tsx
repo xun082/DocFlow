@@ -71,6 +71,7 @@ export default function ChatHistoryList({
 
       {/* 会话列表 */}
       <div className="flex-1 overflow-y-auto">
+        <div className="text-xs text-gray-400 mt-2 mb-2 pl-2">最近会话({sessions.length})</div>
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
             <MessageSquare className="h-8 w-8 mb-2" />

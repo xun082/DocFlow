@@ -64,8 +64,8 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
   // 侧边栏折叠状态（默认展开）
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  // 配置面板折叠状态（默认不折叠）
-  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
+  // 配置面板折叠状态（默认折叠）
+  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
 
   // 切换侧边栏折叠状态
   const toggleSidebar = () => {
