@@ -34,6 +34,15 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const validateBilibiliUrl = (url: string): boolean => {
+    // 验证 Bilibili URL 格式
+    const bilibiliRegex = /(https?:\/\/)?(www\.)?(bilibili\.com|b23\.tv)\/.+/;
+    const bvidRegex = /[Bb][Vv][a-zA-Z0-9]+/;
+    const avidRegex = /[Aa][Vv]\d+/;
+
+    return bilibiliRegex.test(url) || bvidRegex.test(url) || avidRegex.test(url);
+  };
+
   const handleSubmit = async () => {
     if (!url || !url.trim()) {
       setError('请输入 Bilibili 视频链接');
@@ -41,11 +50,11 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
       return;
     }
 
-    // 使用DOMParser解析
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(url, 'text/html');
-    const iframe = doc.querySelector('iframe');
-    const videoUrl = iframe ? iframe.getAttribute('src') : url;
+    if (!validateBilibiliUrl(url)) {
+      setError('请输入有效的 Bilibili 视频链接');
+
+      return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -55,9 +64,9 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
         .chain()
         .focus()
         .setBilibili({
-          src: videoUrl || url,
-          width: Math.max(320, width),
-          height: Math.max(180, height),
+          src: url.trim(),
+          width: Math.max(320, width) || 560,
+          height: Math.max(180, height) || 315,
         })
         .run();
 
