@@ -31,6 +31,9 @@ export const STORAGE_KEYS = {
   TEMP_DATA: 'temp_data',
   CACHE_TIMESTAMP: 'cache_timestamp',
 
+  // Template content for new documents
+  TEMPLATE_CONTENT: 'template_content',
+
   // API configuration
   API_KEYS: 'docflow_api_keys',
 } as const;
@@ -72,6 +75,7 @@ export interface StorageValueMap {
   [STORAGE_KEYS.DASHBOARD_TOUR_COMPLETED]: boolean;
   [STORAGE_KEYS.TEMP_DATA]: any;
   [STORAGE_KEYS.CACHE_TIMESTAMP]: number;
+  [STORAGE_KEYS.TEMPLATE_CONTENT]: Record<string, string>; // documentId -> markdown content
   [STORAGE_KEYS.API_KEYS]: {
     siliconflow?: string;
     minimax?: string;

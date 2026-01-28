@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Activity } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { EditorContent, useEditor } from '@tiptap/react';
 import * as Y from 'yjs';
@@ -38,6 +38,7 @@ import { DocumentPermissionData } from '@/services/document/type';
 import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
+import { storage, STORAGE_KEYS } from '@/utils/storage/local-storage';
 
 // 类型定义
 interface CollaborationUser {
@@ -388,6 +389,59 @@ export default function DocumentPage() {
     return () => document.removeEventListener('copy', handleCopy);
   }, [editor]);
 
+  // 自动插入模板内容
+  useEffect(() => {
+    if (!editor || !documentId || !isIndexedDBReady || isReadOnly) {
+      return;
+    }
+
+    const templateContents = storage.get(STORAGE_KEYS.TEMPLATE_CONTENT) || {};
+    const docIdString = String(documentId);
+    const templateContent = templateContents[docIdString];
+
+    if (templateContent) {
+      const timer = setTimeout(() => {
+        try {
+          if (!editor || editor.isDestroyed) {
+            return;
+          }
+
+          const currentContent = editor.getText().trim();
+
+          if (currentContent.length > 0) {
+            const updatedContents = { ...templateContents };
+            delete updatedContents[docIdString];
+            storage.set(STORAGE_KEYS.TEMPLATE_CONTENT, updatedContents);
+
+            return;
+          }
+
+          if (!editor.commands.pasteMarkdown) {
+            return;
+          }
+
+          editor.commands.clearContent();
+
+          const result = editor.commands.pasteMarkdown(templateContent);
+
+          if (result) {
+            const updatedContents = { ...templateContents };
+            delete updatedContents[docIdString];
+            storage.set(STORAGE_KEYS.TEMPLATE_CONTENT, updatedContents);
+
+            setTimeout(() => {
+              editor.commands.focus('start');
+            }, 100);
+          }
+        } catch {
+          // 静默处理错误
+        }
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [editor, documentId, isIndexedDBReady, isReadOnly]);
+
   // 组件卸载时清理编辑器实例
   useEffect(() => {
     return () => {
@@ -395,55 +449,51 @@ export default function DocumentPage() {
     };
   }, [clearEditor]);
 
-  // 加载中状态
-  if (isLoadingPermission) {
-    return (
-      <div
-        className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
-        suppressHydrationWarning
-      >
-        <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-          <p className="text-lg text-gray-600 dark:text-gray-400">正在加载文档权限...</p>
-        </div>
+  // 可复用的加载状态组件
+  const LoadingState = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+    <div
+      className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
+      suppressHydrationWarning
+    >
+      <div className="text-center">
+        <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <p className="text-lg text-gray-600 dark:text-gray-400">{title}</p>
+        {subtitle && (
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" suppressHydrationWarning>
+            {subtitle}
+          </p>
+        )}
       </div>
-    );
+    </div>
+  );
+
+  // 权限加载中
+  if (isLoadingPermission) {
+    return <LoadingState title="正在加载文档权限..." />;
   }
 
-  // 权限错误状态
-  if (permissionError) {
-    return <NoPermission message={permissionError} />;
-  }
-
-  // 无权限访问 - 只在明确permission为NONE时才拒绝
-  if (permissionData?.permission === 'NONE') {
+  // 权限错误或无权限访问
+  if (permissionError || permissionData?.permission === 'NONE') {
     return (
       <NoPermission
         documentTitle={permissionData?.documentTitle}
-        message="您没有访问此文档的权限。请联系文档所有者获取访问权限。"
+        message={permissionError || '您没有访问此文档的权限。请联系文档所有者获取访问权限。'}
       />
     );
   }
 
-  // 编辑器未初始化（等待编辑器准备）
+  // 编辑器初始化中
   if (!isMounted || !doc || !isIndexedDBReady || !editor) {
-    return (
-      <div
-        className="h-screen flex items-center justify-center bg-white dark:bg-gray-900"
-        suppressHydrationWarning
-      >
-        <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-          <p className="text-lg text-gray-600 dark:text-gray-400">正在初始化编辑器...</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2" suppressHydrationWarning>
-            {!isMounted && '等待挂载...'}
-            {isMounted && !doc && '创建文档...'}
-            {isMounted && doc && !isIndexedDBReady && '加载数据...'}
-            {isMounted && doc && isIndexedDBReady && !editor && '初始化编辑器...'}
-          </p>
-        </div>
-      </div>
-    );
+    const getSubtitle = () => {
+      if (!isMounted) return '等待挂载...';
+      if (!doc) return '创建文档...';
+      if (!isIndexedDBReady) return '加载数据...';
+      if (!editor) return '初始化编辑器...';
+
+      return '';
+    };
+
+    return <LoadingState title="正在初始化编辑器..." subtitle={getSubtitle()} />;
   }
 
   return (
@@ -452,8 +502,8 @@ export default function DocumentPage() {
       ref={menuContainerRef}
       suppressHydrationWarning
     >
-      {/* 只读模式提示条 */}
-      {isReadOnly && (
+      {/* 只读模式提示条 - 使用 Activity 优化显示/隐藏性能 */}
+      <Activity mode={isReadOnly ? 'visible' : 'hidden'}>
         <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-center gap-2 text-amber-800 dark:text-amber-200">
           <Eye className="w-4 h-4" />
           <span className="text-sm font-medium">
@@ -462,7 +512,7 @@ export default function DocumentPage() {
               : '只读模式 - 您只能查看此文档，无法编辑'}
           </span>
         </div>
-      )}
+      </Activity>
 
       {/* Header */}
       <DocumentHeader
@@ -487,11 +537,15 @@ export default function DocumentPage() {
         </div>
       </div>
 
-      {/* 右侧悬浮目录 - Notion 风格 */}
+      {/* 右侧悬浮目录和评论面板 - 使用 Activity 优化 Selective Hydration */}
       {editor && (
         <>
-          <FloatingToc editor={editor} />
-          <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
+          <Activity>
+            <FloatingToc editor={editor} />
+          </Activity>
+          <Activity>
+            <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
+          </Activity>
         </>
       )}
 
@@ -500,9 +554,9 @@ export default function DocumentPage() {
         <SearchPanel editor={editor} isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       )}
 
-      {/* 编辑器菜单 - 只读模式下不显示编辑菜单 */}
-      {editor && !isReadOnly && (
-        <>
+      {/* 编辑器菜单 - 使用 Activity 在只读模式下隐藏而非卸载，提升模式切换性能 */}
+      {editor && (
+        <Activity mode={isReadOnly ? 'hidden' : 'visible'}>
           <ContentItemMenu editor={editor} />
           <LinkMenu editor={editor} appendTo={menuContainerRef} />
           <TextMenu editor={editor} />
@@ -511,7 +565,7 @@ export default function DocumentPage() {
           <TableMenu editor={editor} appendTo={menuContainerRef} />
           <TableCellMenu editor={editor} appendTo={menuContainerRef} />
           <ImageBlockMenu editor={editor} />
-        </>
+        </Activity>
       )}
     </div>
   );

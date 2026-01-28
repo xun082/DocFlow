@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { CreateDocumentDialog } from './folder/components/CreateDocumentDialog';
 import { DeleteConfirmDialog } from './folder/components/DeleteConfirmDialog';
 import { CreateDocumentFromTemplateDialog } from './folder/components/CreateDocumentFromTemplateDialog';
-import { useTemplateOperations, type Template } from './folder/hooks/useTemplateOperations';
+import { filterTemplates, type Template } from './template';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils';
 import { DocumentApi } from '@/services/document';
-import { templateToTiptapJSONWithEditor } from '@/utils/template-converter';
+import { storage, STORAGE_KEYS } from '@/utils/storage/local-storage';
 
 const categories = [
   { id: 'all', name: '全部', icon: 'Grid3X3' },
@@ -31,21 +32,15 @@ const TemplatesTab = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createFromTemplateDialogOpen, setCreateFromTemplateDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const {
-    templates,
-    loading,
-    loadTemplates,
-    handleDeleteTemplate,
-    confirmDelete,
-    confirmCreate,
-    deleteDialogOpen,
-    setDeleteDialogOpen,
-  } = useTemplateOperations(selectedCategory, searchQuery);
-
-  useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+  // 过滤模板列表
+  const templates = filterTemplates(
+    selectedCategory !== 'all' ? selectedCategory : undefined,
+    searchQuery || undefined,
+  );
 
   const handleCreateDocument = (template: Template) => {
     setSelectedTemplate(template);
@@ -53,22 +48,81 @@ const TemplatesTab = () => {
   };
 
   const handleConfirmCreateFromTemplate = async (fileName: string) => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || isCreating) return;
 
-    const tiptapContent = await templateToTiptapJSONWithEditor({
-      content: selectedTemplate.content || '',
-    });
+    setIsCreating(true);
 
-    const document = await DocumentApi.CreateDocument({
-      title: fileName,
-      type: 'FILE',
-      content: tiptapContent,
-    });
+    try {
+      const templateContent = selectedTemplate.content;
 
-    if (document.data?.code === 200) {
-      // 跳转文档详情页
-      router.push(`/docs/${document.data?.data?.id}`);
+      if (!templateContent) {
+        toast.error('模板内容加载失败');
+        setIsCreating(false);
+        setCreateFromTemplateDialogOpen(false);
+
+        return;
+      }
+
+      // 创建空文档
+      const document = await DocumentApi.CreateDocument({
+        title: fileName,
+        type: 'FILE',
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph' }],
+        },
+      });
+
+      if (document.data?.code === 200) {
+        const documentId = document.data?.data?.id;
+        const docIdString = String(documentId);
+
+        // 将模板内容存储到 localStorage，供文档页面使用
+        const existingContents = storage.get(STORAGE_KEYS.TEMPLATE_CONTENT) || {};
+        const newContents = {
+          ...existingContents,
+          [docIdString]: templateContent,
+        };
+
+        storage.set(STORAGE_KEYS.TEMPLATE_CONTENT, newContents);
+
+        // 先关闭对话框和重置状态
+        setIsCreating(false);
+        setCreateFromTemplateDialogOpen(false);
+
+        toast.success('文档创建成功，正在跳转...');
+
+        // 延迟跳转，确保 localStorage 写入完成
+        setTimeout(() => {
+          router.push(`/docs/${docIdString}`);
+        }, 100);
+      } else {
+        toast.error('文档创建失败');
+        setIsCreating(false);
+        setCreateFromTemplateDialogOpen(false);
+      }
+    } catch {
+      toast.error('文档创建失败，请重试');
+      setIsCreating(false);
+      setCreateFromTemplateDialogOpen(false);
     }
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    setDeleteTemplateId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTemplateId) return;
+
+    toast.success('模板删除功能暂未实现（使用硬编码数据）');
+    setDeleteDialogOpen(false);
+  };
+
+  const confirmCreate = async () => {
+    toast.success('模板创建功能暂未实现（使用硬编码数据）');
+    setCreateDialogOpen(false);
   };
 
   const handleCreateCustomTemplate = () => {
@@ -126,11 +180,7 @@ const TemplatesTab = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-              加载中...
-            </div>
-          ) : templates.length === 0 ? (
+          {templates.length === 0 ? (
             <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
               {searchQuery ? '未找到匹配的模板' : '该分类下暂无模板'}
             </div>
