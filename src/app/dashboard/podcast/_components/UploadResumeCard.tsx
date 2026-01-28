@@ -32,7 +32,7 @@ interface UploadResumeCardProps {
 }
 
 // 使用服务层的常量
-const { INTERVIEWER_OPTIONS, CANDIDATE_ID, VOICE_ID, SUPPORTED_FILE_TYPES } = PODCAST_CONSTANTS;
+const { INTERVIEWER_OPTIONS, DEFAULTS, SUPPORTED_FILE_TYPES } = PODCAST_CONSTANTS;
 
 export const UploadResumeCard = ({ onUploadSuccess }: UploadResumeCardProps) => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -100,9 +100,11 @@ export const UploadResumeCard = ({ onUploadSuccess }: UploadResumeCardProps) => 
       const res = await PodcastApi.generatePodcastFromFileAsync({
         file: selectedFile,
         interviewer: interviewer as 'front_end' | 'hrbp' | 'marketing_manager',
-        candidate_id: CANDIDATE_ID,
-        interviewer_voice_id: VOICE_ID,
-        minimax_key: minimaxKey,
+        interviewer_voice: DEFAULTS.INTERVIEWER_VOICE,
+        candidate_voice: DEFAULTS.CANDIDATE_VOICE,
+        speech_speed: DEFAULTS.SPEECH_SPEED,
+        sample_rate: DEFAULTS.SAMPLE_RATE,
+        temperature: DEFAULTS.TEMPERATURE,
       });
 
       // 检查请求是否成功

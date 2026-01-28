@@ -131,10 +131,10 @@ export default function EmailCodeForm() {
   };
 
   return (
-    <div className="bg-gray-100/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-300">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-3">
-          <Label htmlFor="tab-email" className="text-gray-700 font-medium">
+    <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="space-y-2.5">
+          <Label htmlFor="tab-email" className="text-gray-700 font-semibold text-sm">
             邮箱地址
           </Label>
           <Input
@@ -142,35 +142,35 @@ export default function EmailCodeForm() {
             type="email"
             placeholder="请输入邮箱地址"
             {...register('email')}
-            className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${errors.email ? 'border-gray-600 focus:border-gray-600' : ''}`}
+            className={`bg-white/90 border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl py-3 text-sm transition-all duration-300 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm ${errors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-100' : ''}`}
             autoComplete="email"
           />
           {errors.email && (
-            <div className="flex items-center space-x-2 text-red-500 text-xs">
+            <div className="flex items-center space-x-1.5 text-red-500 text-xs">
               <span>{errors.email.message}</span>
             </div>
           )}
         </div>
 
-        <div className="space-y-3">
-          <Label htmlFor="tab-code" className="text-gray-700 font-medium">
+        <div className="space-y-2.5">
+          <Label htmlFor="tab-code" className="text-gray-700 font-semibold text-sm">
             验证码
           </Label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Input
               id="tab-code"
               type="text"
               placeholder={`${CODE_LENGTH}位数字`}
               {...register('code')}
               onChange={handleCodeChange}
-              className={`bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 rounded-xl py-3 transition-all duration-300 focus:bg-gray-50 focus:border-gray-600 ${errors.code ? 'border-gray-600 focus:border-gray-600' : ''}`}
+              className={`bg-white/90 border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl py-3 text-sm transition-all duration-300 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm ${errors.code ? 'border-red-400 focus:border-red-400 focus:ring-red-100' : ''}`}
               maxLength={CODE_LENGTH}
               autoComplete="one-time-code"
             />
             <Button
               type="button"
               variant="outline"
-              className="whitespace-nowrap min-w-[110px] bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-600 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
+              className="whitespace-nowrap min-w-[110px] bg-white/90 border-gray-200 text-gray-700 hover:bg-white hover:border-blue-400 hover:text-blue-600 rounded-xl py-3 transition-all duration-300 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-xs font-semibold flex-shrink-0 h-auto shadow-sm"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -180,7 +180,7 @@ export default function EmailCodeForm() {
             >
               {isSendingCode ? (
                 <div className="flex items-center justify-center space-x-1.5">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>发送中</span>
                 </div>
               ) : countdown > 0 ? (
@@ -191,35 +191,40 @@ export default function EmailCodeForm() {
             </Button>
           </div>
           {errors.code && (
-            <div className="flex items-center space-x-2 text-red-500 text-xs">
+            <div className="flex items-center space-x-1.5 text-red-500 text-xs">
               <span>{errors.code.message}</span>
             </div>
           )}
           {countdown > 0 && !errors.code && (
-            <div className="flex items-center space-x-2 text-gray-600 text-xs">
-              <CheckCircle className="h-3 w-3" />
+            <div className="flex items-center space-x-2 text-green-600 text-xs bg-green-50 rounded-lg py-2 px-3">
+              <CheckCircle className="h-3.5 w-3.5" />
               <span>验证码已发送，{countdown}秒后可重新发送</span>
             </div>
           )}
         </div>
 
-        <Button
-          type="submit"
-          disabled={emailLoginMutation.isPending || loggingInRef.current}
-          className="w-full bg-black hover:bg-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-lg font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-        >
-          {emailLoginMutation.isPending || loggingInRef.current ? (
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>登录中...</span>
-            </div>
-          ) : (
-            '登录'
-          )}
-        </Button>
+        <div className="pt-2">
+          <div className="relative group/btn">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl blur opacity-40 group-hover/btn:opacity-60 transition duration-300" />
+            <Button
+              type="submit"
+              disabled={emailLoginMutation.isPending || loggingInRef.current}
+              className="relative w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 hover:from-gray-800 hover:via-gray-700 hover:to-gray-800 text-white border-0 rounded-2xl py-6 px-6 text-base font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              {emailLoginMutation.isPending || loggingInRef.current ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>登录中...</span>
+                </div>
+              ) : (
+                '登录'
+              )}
+            </Button>
+          </div>
+        </div>
 
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-600 bg-gray-100 rounded-lg py-2 px-3">
-          <Shield className="w-3.5 h-3.5 text-gray-600" />
+        <div className="flex items-center justify-center space-x-2 text-xs text-blue-600 bg-blue-50/50 rounded-xl py-2.5 px-3 border border-blue-100">
+          <Shield className="w-3.5 h-3.5" />
           <span>验证码有效期为5分钟</span>
         </div>
       </form>
