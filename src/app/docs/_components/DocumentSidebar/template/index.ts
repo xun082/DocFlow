@@ -11,14 +11,20 @@ import {
 
 /**
  * 模板接口定义
+ * @property {string} id - 模板唯一标识符
+ * @property {string} name - 模板名称
+ * @property {string} description - 模板描述
+ * @property {string} category - 模板分类 (TECH, BUSINESS, PROJECT, EDUCATION, PRODUCT, DESIGN)
+ * @property {string[]} tags - 模板标签数组
+ * @property {string} content - 模板的 Markdown 内容
  */
 export interface Template {
   id: string;
   name: string;
   description: string;
-  category: string;
+  category: 'TECH' | 'BUSINESS' | 'PROJECT' | 'EDUCATION' | 'PRODUCT' | 'DESIGN';
   tags: string[];
-  content: string; // Markdown 内容
+  content: string;
 }
 
 /**
