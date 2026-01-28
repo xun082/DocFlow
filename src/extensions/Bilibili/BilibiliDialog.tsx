@@ -34,6 +34,31 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const validateBilibiliUrl = (url: string): boolean => {
+    // 移除首尾空格
+    const trimmedUrl = url.trim();
+
+    // 验证必须以 http:// 或 https:// 开头的完整 URL
+    // 只允许 bilibili.com 或 b23.tv 域名
+    const bilibiliUrlRegex = /^https?:\/\/(www\.)?(bilibili\.com|b23\.tv)\/.+/;
+
+    // 验证 BV 号格式：必须以 BV 开头，后跟 10 个字符（字母和数字）
+    const bvidRegex = /^[Bb][Vv][a-zA-Z0-9]{10}$/;
+
+    // 验证 av 号格式：必须以 av 开头，后跟数字
+    const avidRegex = /^[Aa][Vv]\d+$/;
+
+    // 验证嵌入播放器 URL
+    const embedUrlRegex = /^https?:\/\/player\.bilibili\.com\/player\.html/;
+
+    return (
+      bilibiliUrlRegex.test(trimmedUrl) ||
+      bvidRegex.test(trimmedUrl) ||
+      avidRegex.test(trimmedUrl) ||
+      embedUrlRegex.test(trimmedUrl)
+    );
+  };
+
   const handleSubmit = async () => {
     if (!url || !url.trim()) {
       setError('请输入 Bilibili 视频链接');
@@ -41,11 +66,11 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
       return;
     }
 
-    // 使用DOMParser解析
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(url, 'text/html');
-    const iframe = doc.querySelector('iframe');
-    const videoUrl = iframe ? iframe.getAttribute('src') : url;
+    if (!validateBilibiliUrl(url)) {
+      setError('请输入有效的 Bilibili 视频链接');
+
+      return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -55,9 +80,9 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
         .chain()
         .focus()
         .setBilibili({
-          src: videoUrl || url,
-          width: Math.max(320, width),
-          height: Math.max(180, height),
+          src: url.trim(),
+          width: Math.max(320, width) || 560,
+          height: Math.max(180, height) || 315,
         })
         .run();
 
