@@ -1,17 +1,40 @@
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 
 import { AnalyticsTracker } from '@/components/homepage/AnalyticsTracker';
 import { OAuthCallback } from '@/components/homepage/OAuthCallback';
 import Header from '@/components/homepage/Header';
 import Hero from '@/components/homepage/Hero';
-import Features from '@/components/homepage/Features';
-import Contact from '@/components/homepage/Contact';
-import Footer from '@/components/homepage/Footer';
+
+// 懒加载底部组件 - 优化首屏加载
+const Features = dynamic(() => import('@/components/homepage/Features'), {
+  loading: () => (
+    <div className="relative py-20 px-6 bg-white">
+      <div className="max-w-7xl mx-auto">
+        <div className="h-96 animate-pulse bg-gray-100 rounded-3xl" />
+      </div>
+    </div>
+  ),
+});
+
+const Contact = dynamic(() => import('@/components/homepage/Contact'), {
+  loading: () => (
+    <div className="relative px-6 py-24 bg-gray-50">
+      <div className="max-w-6xl mx-auto">
+        <div className="h-64 animate-pulse bg-gray-100 rounded-3xl" />
+      </div>
+    </div>
+  ),
+});
+
+const Footer = dynamic(() => import('@/components/homepage/Footer'), {
+  loading: () => <div className="h-32 bg-white" />,
+});
 
 // SEO Metadata 配置
 export const metadata: Metadata = {
-  title: 'DocFlow',
+  title: 'DocFlow - AI 智能写作平台',
   description:
     'DocFlow 是一个基于 Tiptap 构建的现代化富文本编辑器，支持实时协作、智能AI助手和丰富的内容格式。好用的在线文本编辑器，支持多人协同编辑、Markdown、RTF文件等多种格式。',
   keywords: [
@@ -117,14 +140,55 @@ function StructuredData() {
   );
 }
 
-// 页面组件 - 纯服务端组件
+// 页面组件 - 纯服务端组件，优化性能
 export default function Page() {
   return (
     <>
+      {/* 预连接优化 - 减少网络延迟 */}
+      <link rel="preconnect" href="https://www.codecrack.cn" />
+      <link rel="dns-prefetch" href="https://www.codecrack.cn" />
+      <link rel="preconnect" href="https://images.unsplash.com" />
+      <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      <link rel="preconnect" href="https://api.dicebear.com" />
+
       {/* 结构化数据 - 提升 SEO */}
       <StructuredData />
 
-      {/* 客户端组件 - 使用 Suspense 包裹 */}
+      {/* 内联关键 CSS - 确保动画初始状态 */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .animate-fade-in,
+          .animate-fade-in-delay-100,
+          .animate-fade-in-delay-200,
+          .animate-fade-in-delay-300,
+          .animate-fade-in-delay-500 {
+            opacity: 0;
+          }
+          .animate-scale-in {
+            opacity: 0;
+          }
+          .animate-float {
+            will-change: transform;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .animate-fade-in,
+            .animate-fade-in-delay-100,
+            .animate-fade-in-delay-200,
+            .animate-fade-in-delay-300,
+            .animate-fade-in-delay-500,
+            .animate-scale-in,
+            .animate-float {
+              animation: none !important;
+              opacity: 1 !important;
+              transform: none !important;
+            }
+          }
+        `,
+        }}
+      />
+
+      {/* 客户端组件 - 延迟加载，优先渲染内容 */}
       <Suspense fallback={null}>
         <AnalyticsTracker />
         <OAuthCallback />
@@ -142,33 +206,48 @@ export default function Page() {
       </div>
 
       <div className="min-h-screen bg-gradient-to-br from-white via-violet-50/30 to-purple-50/20 relative overflow-hidden">
-        {/* 装饰性渐变背景 - 优化配色方案 */}
-        <div className="fixed inset-0 -z-10 overflow-hidden">
+        {/* 装饰性渐变背景 - 使用 CSS transform 优化性能 */}
+        <div className="fixed inset-0 -z-10 overflow-hidden will-change-transform">
           {/* 主题紫色系 */}
-          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-300/40 to-purple-300/30 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-300/35 to-pink-300/25 rounded-full blur-3xl animate-float [animation-delay:3s]" />
+          <div
+            className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-300/40 to-purple-300/30 rounded-full blur-3xl animate-float"
+            style={{ transform: 'translateZ(0)' }}
+          />
+          <div
+            className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-300/35 to-pink-300/25 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: '3s', transform: 'translateZ(0)' }}
+          />
 
           {/* 辅助蓝色系 - 增加层次感 */}
-          <div className="absolute top-1/3 right-1/3 w-[450px] h-[450px] bg-gradient-to-br from-blue-200/25 to-cyan-200/20 rounded-full blur-3xl animate-float [animation-delay:1.5s]" />
-          <div className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/30 to-violet-200/25 rounded-full blur-3xl animate-float [animation-delay:4.5s]" />
+          <div
+            className="absolute top-1/3 right-1/3 w-[450px] h-[450px] bg-gradient-to-br from-blue-200/25 to-cyan-200/20 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: '1.5s', transform: 'translateZ(0)' }}
+          />
+          <div
+            className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/30 to-violet-200/25 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: '4.5s', transform: 'translateZ(0)' }}
+          />
 
           {/* 点缀色 - 增强视觉效果 */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-gradient-to-br from-fuchsia-200/20 to-pink-200/15 rounded-full blur-3xl animate-float [animation-delay:2s]" />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-gradient-to-br from-fuchsia-200/20 to-pink-200/15 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: '2s', transform: 'translateZ(0)' }}
+          />
         </div>
 
         {/* Header - 纯服务端组件 */}
         <Header />
 
-        {/* Hero Section - 服务端组件（交互部分用 Suspense） */}
+        {/* Hero Section - 优先渲染（Above the fold，关键内容） */}
         <Hero />
 
-        {/* Features Section - 纯服务端组件 */}
+        {/* Features Section - 懒加载优化（Below the fold） */}
         <Features />
 
-        {/* Contact 组件 - 联系我们部分（纯服务端组件） */}
+        {/* Contact 组件 - 懒加载优化（Below the fold） */}
         <Contact />
 
-        {/* Footer */}
+        {/* Footer - 懒加载优化（Below the fold） */}
         <Footer />
       </div>
     </>
