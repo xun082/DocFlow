@@ -1,4 +1,4 @@
-import { mergeAttributes, Range, ChainedCommands } from '@tiptap/core';
+import { mergeAttributes, Range } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import ImageBlockView from './components/imageBlockView';
@@ -81,32 +81,24 @@ export const ImageBlock = Image.extend({
 
   addCommands() {
     return {
-      setImageBlock:
-        (attrs: { src: string }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
-          return commands.insertContent({ type: 'imageBlock', attrs: { src: attrs.src } });
-        },
+      setImageBlock: (attrs: { src: string }) => (props) => {
+        return props.commands.insertContent({ type: 'imageBlock', attrs: { src: attrs.src } });
+      },
 
-      setImageBlockAt:
-        (attrs: { src: string; pos: number | Range }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
-          return commands.insertContentAt(attrs.pos, {
-            type: 'imageBlock',
-            attrs: { src: attrs.src },
-          });
-        },
+      setImageBlockAt: (attrs: { src: string; pos: number | Range }) => (props) => {
+        return props.commands.insertContentAt(attrs.pos, {
+          type: 'imageBlock',
+          attrs: { src: attrs.src },
+        });
+      },
 
-      setImageBlockAlign:
-        (align: 'left' | 'center' | 'right') =>
-        ({ commands }: { commands: ChainedCommands }) =>
-          commands.updateAttributes('imageBlock', { align }),
+      setImageBlockAlign: (align: 'left' | 'center' | 'right') => (props) =>
+        props.commands.updateAttributes('imageBlock', { align }),
 
-      setImageBlockWidth:
-        (width: number) =>
-        ({ commands }: { commands: ChainedCommands }) =>
-          commands.updateAttributes('imageBlock', {
-            width: `${Math.max(0, Math.min(100, width))}%`,
-          }),
+      setImageBlockWidth: (width: number) => (props) =>
+        props.commands.updateAttributes('imageBlock', {
+          width: `${Math.max(0, Math.min(100, width))}%`,
+        }),
     };
   },
 

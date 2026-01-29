@@ -1,4 +1,4 @@
-import { mergeAttributes, Range, ChainedCommands } from '@tiptap/core';
+import { mergeAttributes, Range } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import TableImageView from './components/TableImageView';
@@ -72,20 +72,16 @@ export const TableImage = Image.extend({
 
   addCommands() {
     return {
-      setTableImage:
-        (attrs: { src: string }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
-          return commands.insertContent({ type: 'tableImage', attrs: { src: attrs.src } });
-        },
+      setTableImage: (attrs: { src: string }) => (props) => {
+        return props.commands.insertContent({ type: 'tableImage', attrs: { src: attrs.src } });
+      },
 
-      setTableImageAt:
-        (attrs: { src: string; pos: number | Range }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
-          return commands.insertContentAt(attrs.pos, {
-            type: 'tableImage',
-            attrs: { src: attrs.src },
-          });
-        },
+      setTableImageAt: (attrs: { src: string; pos: number | Range }) => (props) => {
+        return props.commands.insertContentAt(attrs.pos, {
+          type: 'tableImage',
+          attrs: { src: attrs.src },
+        });
+      },
     };
   },
 
