@@ -7,8 +7,11 @@ import BlogFilters from './_components/BlogFilters';
 import { formatDateTime } from '@/utils/format/date';
 import { blogsServerApi } from '@/services/blogs';
 import type { BlogPost } from '@/services/blogs/type';
-import { Header, Footer } from '@/app/page';
+import { Header, Footer } from '@/app/_components/homepage';
 import { BLOG_CATEGORIES } from '@/utils/constants/blog';
+
+// ISR: 每小时重新生成一次
+export const revalidate = 3600;
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; search?: string }>;

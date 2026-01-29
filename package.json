@@ -22,11 +22,18 @@
     "document-editor",
     "react"
   ],
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build",
+    "dev": "next dev --turbo",
+    "build": "next build --turbo",
+    "build:webpack": "next build --webpack",
     "build:analyze": "next experimental-analyze",
-    "analyze": "ANALYZE=true pnpm build",
+    "analyze": "ANALYZE=true pnpm build:webpack",
     "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:ci": "eslint \"**/*.{ts,tsx,js,jsx}\"",

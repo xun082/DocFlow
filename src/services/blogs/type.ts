@@ -36,6 +36,8 @@ export interface BlogListResponse {
 export interface GetAllBlogsParams {
   category?: string;
   title?: string;
+  limit?: number;
+  page?: number;
 }
 
 export interface CreateBlogParams {
