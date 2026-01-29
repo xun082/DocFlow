@@ -209,29 +209,26 @@ export default function Page() {
         {/* 装饰性渐变背景 - 使用 CSS transform 优化性能 */}
         <div className="fixed inset-0 -z-10 overflow-hidden will-change-transform">
           {/* 主题紫色系 */}
-          <div
-            className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-300/40 to-purple-300/30 rounded-full blur-3xl animate-float"
-            style={{ transform: 'translateZ(0)' }}
-          />
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-300/40 to-purple-300/30 rounded-full blur-3xl animate-float" />
           <div
             className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-300/35 to-pink-300/25 rounded-full blur-3xl animate-float"
-            style={{ animationDelay: '3s', transform: 'translateZ(0)' }}
+            style={{ animationDelay: '3s' }}
           />
 
           {/* 辅助蓝色系 - 增加层次感 */}
           <div
             className="absolute top-1/3 right-1/3 w-[450px] h-[450px] bg-gradient-to-br from-blue-200/25 to-cyan-200/20 rounded-full blur-3xl animate-float"
-            style={{ animationDelay: '1.5s', transform: 'translateZ(0)' }}
+            style={{ animationDelay: '1.5s' }}
           />
           <div
             className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/30 to-violet-200/25 rounded-full blur-3xl animate-float"
-            style={{ animationDelay: '4.5s', transform: 'translateZ(0)' }}
+            style={{ animationDelay: '4.5s' }}
           />
 
           {/* 点缀色 - 增强视觉效果 */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-gradient-to-br from-fuchsia-200/20 to-pink-200/15 rounded-full blur-3xl animate-float"
-            style={{ animationDelay: '2s', transform: 'translateZ(0)' }}
+            style={{ animationDelay: '2s' }}
           />
         </div>
 
