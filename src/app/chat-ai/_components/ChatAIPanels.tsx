@@ -15,10 +15,13 @@
 import React, { useRef, useState } from 'react';
 import { Send, Copy, User, Bot, Square, Loader2, Pencil, Share2, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useStickToBottom } from 'use-stick-to-bottom';
 
+import SyntaxHighlight from './SyntaxHighlight';
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
+import { useChatModels } from '../hooks/useChatAI';
 
 import { cn } from '@/utils';
 
@@ -46,8 +49,13 @@ interface ChatPanelProps {
 /**
  * 根据模型值获取显示名称
  */
-function getModelDisplayName(modelValue: string): string {
-  const option = MODEL_OPTIONS.find((opt) => opt.value === modelValue);
+function getModelDisplayName(
+  modelValue: string,
+  models: { value: string; label: string }[],
+): string {
+  // 优先使用 API 获取的模型，否则使用静态配置
+  const options = models.length > 0 ? models : MODEL_OPTIONS;
+  const option = options.find((opt) => opt.value === modelValue);
 
   return option?.label || modelValue;
 }
@@ -138,7 +146,19 @@ function MessageBubble({
             // AI 消息使用 Markdown 渲染
             <div className="prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-purple-600 prose-code:bg-purple-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
               {message.content ? (
-                <ReactMarkdown>{message.content}</ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code: SyntaxHighlight,
+                    pre: ({ children, className, ...props }: any) => (
+                      <pre className={`rounded ${className || ''}`} {...props}>
+                        {children}
+                      </pre>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
               ) : message.isStreaming ? (
                 <span className="inline-flex items-center gap-1 text-gray-400">
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -223,6 +243,9 @@ export default function ChatAIPanels({
 }: ChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 获取动态模型列表用于显示名称
+  const { models } = useChatModels();
+
   // 使用 use-stick-to-bottom 实现自动滚动
   const { scrollRef, contentRef } = useStickToBottom();
 
@@ -253,7 +276,7 @@ export default function ChatAIPanels({
       {/* ----- 模型标题栏 ----- */}
       <header className="px-4 py-3 border-b border-gray-100">
         <h2 className="text-sm font-medium text-gray-800 border border-gray-200 rounded px-3 py-1.5 inline-block bg-white shadow-sm">
-          {getModelDisplayName(config.modelName)}
+          {getModelDisplayName(config.modelName, models)}
         </h2>
       </header>
 

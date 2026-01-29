@@ -10,7 +10,6 @@
  * - 位于侧边栏上方
  */
 
-import React from 'react';
 import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 import type { ModelConfig } from '../types';

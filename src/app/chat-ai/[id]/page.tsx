@@ -15,7 +15,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { ChatSidebar, ChatAIPanels } from '../_components';
 import { createModelConfig, INITIAL_PRIMARY_MODEL } from '../constants';
-import { useConversations, useChat } from '../hooks/useChatAI';
+import { useConversations, useChat, useChatModels } from '../hooks/useChatAI';
 import type { ModelConfig, ChatSession } from '../types';
 
 /** 最大允许的对比模型数量（不含主模型） */
@@ -30,7 +30,10 @@ export default function ChatRoomPage() {
   const isNewSession = /^\d{13,}$/.test(chatId);
 
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession, addSession } = useConversations();
+  const { sessions, deleteSession, renameSession, addSession } = useConversations();
+
+  // 获取动态模型列表
+  const { models, isLoading: isModelsLoading } = useChatModels();
 
   // 使用 Hook 管理聊天状态
   const { messages, status, conversationId, sendMessage, stopGenerating, loadConversation } =
@@ -54,6 +57,39 @@ export default function ChatRoomPage() {
   // 是否处于对比模式
   const isCompareMode = modelConfigs.length > 1;
 
+  // 从 sessionStorage 读取保存的模型配置（解决新建会话时模型被重置的问题）
+  // 使用 useEffect 避免 Hydration 错误
+  useEffect(() => {
+    const saved = sessionStorage.getItem('chat_model_config');
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as ModelConfig;
+        setModelConfigs([{ ...parsed, id: 'primary-model' }]);
+      } catch {
+        // 解析失败，保持默认配置
+      }
+    }
+  }, []);
+
+  // 当模型列表加载完成后，自动选择第一个模型
+  useEffect(() => {
+    if (!isModelsLoading && models.length > 0) {
+      const firstModel = models[0];
+      setModelConfigs((prev) => {
+        const current = prev[0];
+        // 只有当当前模型不在列表中时才更新
+        const isCurrentValid = models.some((m) => m.value === current.modelName);
+
+        if (!isCurrentValid) {
+          return [{ ...current, modelName: firstModel.value }, ...prev.slice(1)];
+        }
+
+        return prev;
+      });
+    }
+  }, [isModelsLoading, models]);
+
   // 加载会话历史（非新会话）
   useEffect(() => {
     if (!isNewSession) {
@@ -63,7 +99,7 @@ export default function ChatRoomPage() {
 
   // 检查是否有初始消息（从主页面跳转过来的）
   useEffect(() => {
-    if (isNewSession) {
+    if (isNewSession && !isModelsLoading) {
       const initialMessage = sessionStorage.getItem(`chat_initial_message_${chatId}`);
 
       if (initialMessage) {
@@ -77,7 +113,7 @@ export default function ChatRoomPage() {
         }, 100);
       }
     }
-  }, [isNewSession, chatId, primaryConfig, sendMessage]);
+  }, [isNewSession, chatId, primaryConfig, sendMessage, isModelsLoading]);
 
   // 当获得 conversationId 后，将会话添加到历史列表
   useEffect(() => {
@@ -103,6 +139,8 @@ export default function ChatRoomPage() {
    */
   const handleConfigChange = useCallback((newConfig: ModelConfig) => {
     setModelConfigs((prev) => [newConfig, ...prev.slice(1)]);
+    // 保存到 sessionStorage，以便新建会话时恢复
+    sessionStorage.setItem('chat_model_config', JSON.stringify(newConfig));
   }, []);
 
   /**
@@ -205,6 +243,16 @@ export default function ChatRoomPage() {
     [chatId, conversationId, sessions, deleteSession, router],
   );
 
+  /**
+   * 重命名会话
+   */
+  const handleRenameSession = useCallback(
+    async (sessionId: string, newTitle: string) => {
+      await renameSession(sessionId, newTitle);
+    },
+    [renameSession],
+  );
+
   return (
     <div className="flex h-full">
       {/* ----- 左侧侧边栏 ----- */}
@@ -222,6 +270,7 @@ export default function ChatRoomPage() {
         onSessionClick={handleSessionClick}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
       />
 
       {/* ----- 右侧聊天区域 ----- */}

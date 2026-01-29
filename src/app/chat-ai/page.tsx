@@ -14,12 +14,12 @@
  * - 会话列表通过 useConversations Hook 管理
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ChatSidebar, ChatAIPanels } from './_components';
 import { createModelConfig, INITIAL_PRIMARY_MODEL } from './constants';
-import { useConversations } from './hooks/useChatAI';
+import { useConversations, useChatModels } from './hooks/useChatAI';
 import type { ModelConfig } from './types';
 
 /** 最大允许的对比模型数量（不含主模型） */
@@ -29,7 +29,10 @@ export default function ChatAIPage() {
   const router = useRouter();
 
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession } = useConversations();
+  const { sessions, deleteSession, renameSession } = useConversations();
+
+  // 获取动态模型列表
+  const { models, isLoading: isModelsLoading } = useChatModels();
 
   // 模型配置列表：第一个是主模型，后续是对比模型
   const [modelConfigs, setModelConfigs] = useState<ModelConfig[]>([INITIAL_PRIMARY_MODEL]);
@@ -46,11 +49,46 @@ export default function ChatAIPage() {
   // 是否处于对比模式
   const isCompareMode = modelConfigs.length > 1;
 
+  // 从 sessionStorage 读取保存的模型配置（解决新建会话时模型被重置的问题）
+  // 使用 useEffect 避免 Hydration 错误
+  useEffect(() => {
+    const saved = sessionStorage.getItem('chat_model_config');
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as ModelConfig;
+        setModelConfigs([{ ...parsed, id: 'primary-model' }]);
+      } catch {
+        // 解析失败，保持默认配置
+      }
+    }
+  }, []);
+
+  // 当模型列表加载完成后，自动选择第一个模型
+  useEffect(() => {
+    if (!isModelsLoading && models.length > 0) {
+      const firstModel = models[0];
+      setModelConfigs((prev) => {
+        const current = prev[0];
+        // 只有当当前模型不在列表中时才更新
+        const isCurrentValid = models.some((m) => m.value === current.modelName);
+
+        if (!isCurrentValid) {
+          return [{ ...current, modelName: firstModel.value }, ...prev.slice(1)];
+        }
+
+        return prev;
+      });
+    }
+  }, [isModelsLoading, models]);
+
   /**
    * 更新主模型配置
    */
   const handleConfigChange = useCallback((newConfig: ModelConfig) => {
     setModelConfigs((prev) => [newConfig, ...prev.slice(1)]);
+    // 保存到 sessionStorage，以便新建会话时恢复
+    sessionStorage.setItem('chat_model_config', JSON.stringify(newConfig));
   }, []);
 
   /**
@@ -144,6 +182,16 @@ export default function ChatAIPage() {
     [deleteSession],
   );
 
+  /**
+   * 重命名会话
+   */
+  const handleRenameSession = useCallback(
+    async (sessionId: string, newTitle: string) => {
+      await renameSession(sessionId, newTitle);
+    },
+    [renameSession],
+  );
+
   return (
     <div className="flex h-full">
       {/* ----- 左侧侧边栏 ----- */}
@@ -161,6 +209,7 @@ export default function ChatAIPage() {
         onSessionClick={handleSessionClick}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
       />
 
       {/* ----- 右侧聊天区域 ----- */}

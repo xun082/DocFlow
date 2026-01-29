@@ -46,7 +46,7 @@ export const QUICK_QUESTIONS: QuickQuestion[] = [
  * 默认模型配置
  */
 export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
-  modelName: 'glm-4.7-pro',
+  modelName: MODEL_OPTIONS[0].value,
   maxTokens: 1024,
   temperature: 1,
   topP: 0.95,

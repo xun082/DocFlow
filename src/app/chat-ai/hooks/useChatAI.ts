@@ -11,11 +11,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 
-import type { ChatSession, ChatMessage, ChatStatus, ModelConfig } from '../types';
+import type { ChatSession, ChatMessage, ChatStatus, ModelConfig, ModelOption } from '../types';
 
 import { ChatAiApi, type StreamChunk, type Conversation } from '@/services/chat-ai';
-
-// ==================== 工具函数 ====================
 
 /**
  * 将后端会话数据转换为前端格式
@@ -25,7 +23,7 @@ function convertConversation(conv: Conversation): ChatSession {
     id: conv.id,
     title: conv.title,
     createdAt: new Date(conv.created_at),
-    lastMessageAt: new Date(conv.updated_at),
+    lastMessageAt: new Date(conv.last_message_at),
     messageCount: conv.message_count,
   };
 }
@@ -36,8 +34,6 @@ function convertConversation(conv: Conversation): ChatSession {
 function generateMessageId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
-
-// ==================== Hook: 会话列表管理 ====================
 
 export interface UseConversationsResult {
   /** 会话列表 */
@@ -50,17 +46,44 @@ export interface UseConversationsResult {
   refresh: () => Promise<void>;
   /** 删除会话 */
   deleteSession: (id: string) => Promise<boolean>;
+  /** 重命名会话 */
+  renameSession: (id: string, newTitle: string) => Promise<boolean>;
   /** 添加会话到列表（本地） */
   addSession: (session: ChatSession) => void;
+}
+
+// 会话列表缓存，避免多个组件重复调用接口
+let cachedSessions: ChatSession[] | null = null;
+let sessionsPromise: Promise<void> | null = null;
+let sessionListeners: Array<(sessions: ChatSession[]) => void> = [];
+
+// 通知所有监听器更新
+function notifySessionListeners(sessions: ChatSession[]) {
+  cachedSessions = sessions;
+  sessionListeners.forEach((listener) => listener(sessions));
 }
 
 /**
  * 会话列表管理 Hook
  */
 export function useConversations(): UseConversationsResult {
+  // 初始状态使用空数组，避免 Hydration 错误
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 注册监听器
+  useEffect(() => {
+    const listener = (newSessions: ChatSession[]) => {
+      setSessions(newSessions);
+    };
+
+    sessionListeners.push(listener);
+
+    return () => {
+      sessionListeners = sessionListeners.filter((l) => l !== listener);
+    };
+  }, []);
 
   // 获取会话列表
   const refresh = useCallback(async () => {
@@ -78,7 +101,7 @@ export function useConversations(): UseConversationsResult {
 
     if (data?.data?.list) {
       const convertedSessions = data.data.list.map(convertConversation);
-      setSessions(convertedSessions);
+      notifySessionListeners(convertedSessions);
     }
 
     setIsLoading(false);
@@ -94,26 +117,68 @@ export function useConversations(): UseConversationsResult {
       return false;
     }
 
-    setSessions((prev) => prev.filter((s) => s.id !== id));
+    const newSessions = (cachedSessions || []).filter((s) => s.id !== id);
+    notifySessionListeners(newSessions);
 
     return true;
   }, []);
 
   // 添加会话到列表
   const addSession = useCallback((session: ChatSession) => {
-    setSessions((prev) => {
-      // 检查是否已存在
-      if (prev.some((s) => s.id === session.id)) {
-        return prev;
-      }
+    const current = cachedSessions || [];
 
-      return [session, ...prev];
-    });
+    // 检查是否已存在
+    if (current.some((s) => s.id === session.id)) {
+      return;
+    }
+
+    notifySessionListeners([session, ...current]);
+  }, []);
+
+  // 重命名会话
+  const renameSession = useCallback(async (id: string, newTitle: string): Promise<boolean> => {
+    const { error: apiError } = await ChatAiApi.UpdateConversationTitle(id, newTitle);
+
+    if (apiError) {
+      console.error('重命名会话失败:', apiError);
+
+      return false;
+    }
+
+    // 更新本地缓存
+    const newSessions = (cachedSessions || []).map((s) =>
+      s.id === id ? { ...s, title: newTitle } : s,
+    );
+    notifySessionListeners(newSessions);
+
+    return true;
   }, []);
 
   // 初始化加载
   useEffect(() => {
-    refresh();
+    // 如果已有缓存，直接使用
+    if (cachedSessions) {
+      setSessions(cachedSessions);
+      setIsLoading(false);
+
+      return;
+    }
+
+    // 如果已有请求在进行中，等待完成
+    if (sessionsPromise) {
+      sessionsPromise.then(() => {
+        if (cachedSessions) {
+          setSessions(cachedSessions);
+        }
+
+        setIsLoading(false);
+      });
+
+      return;
+    }
+
+    // 发起新请求
+    sessionsPromise = refresh();
   }, [refresh]);
 
   return {
@@ -122,11 +187,82 @@ export function useConversations(): UseConversationsResult {
     error,
     refresh,
     deleteSession,
+    renameSession,
     addSession,
   };
 }
 
-// ==================== Hook: 聊天消息管理 ====================
+/**
+ * 模型列表管理 Hook
+ */
+export interface UseChatModelsResult {
+  /** 模型列表选项 */
+  models: ModelOption[];
+  /** 是否正在加载 */
+  isLoading: boolean;
+}
+
+// 模块级缓存，避免多个组件重复调用接口
+let cachedModels: ModelOption[] | null = null;
+let modelsPromise: Promise<void> | null = null;
+
+/**
+ * 获取可用模型列表 Hook
+ */
+export function useChatModels(): UseChatModelsResult {
+  // 初始状态使用空数组，避免 Hydration 错误
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 如果已有缓存，直接使用
+    if (cachedModels) {
+      setModels(cachedModels);
+      setIsLoading(false);
+
+      return;
+    }
+
+    // 如果已有请求在进行中，等待完成
+    if (modelsPromise) {
+      modelsPromise.then(() => {
+        if (cachedModels) {
+          setModels(cachedModels);
+        }
+
+        setIsLoading(false);
+      });
+
+      return;
+    }
+
+    // 发起新请求
+    const fetchModels = async () => {
+      setIsLoading(true);
+
+      const { data } = await ChatAiApi.ChatModels();
+
+      if (data?.data?.list && Array.isArray(data.data.list)) {
+        const options: ModelOption[] = data.data.list.map((m) => ({
+          value: m.id,
+          label: m.name,
+        }));
+        cachedModels = options;
+        setModels(options);
+      }
+
+      setIsLoading(false);
+    };
+
+    modelsPromise = fetchModels();
+  }, []);
+
+  return { models, isLoading };
+}
+
+/**
+ * 聊天消息管理 Hook
+ */
 
 export interface UseChatResult {
   /** 消息列表 */
@@ -147,9 +283,6 @@ export interface UseChatResult {
   loadConversation: (id: string) => Promise<boolean>;
 }
 
-/**
- * 聊天消息管理 Hook
- */
 export function useChat(): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>('idle');
@@ -218,14 +351,17 @@ export function useChat(): UseChatResult {
       setError(null);
 
       // 构建请求参数（只发送后端当前支持的字段）
-      // 注意：model, top_p, enable_thinking, thinking_budget 为预留字段，后端暂不支持
       // 新会话时不发送 conversation_id，让后端自动创建
       const requestData = {
         ...(conversationId ? { conversation_id: conversationId } : {}),
+        model: config.modelName,
         messages: [
           ...messages.map((m) => ({ role: m.role, content: m.content })),
           { role: 'user' as const, content: content.trim() },
         ],
+        top_p: config.topP,
+        enable_thinking: config.enableThinking,
+        thinking_budget: config.thinkingBudget,
         max_tokens: config.maxTokens,
         temperature: config.temperature,
         enable_web_search: config.enableWebSearch,

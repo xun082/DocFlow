@@ -10,8 +10,6 @@
 
 import request, { type ErrorHandler } from '../request';
 
-// ==================== 类型定义 ====================
-
 /** 聊天消息角色 */
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -36,7 +34,7 @@ export interface Conversation {
   /** 创建时间 */
   created_at: string;
   /** 更新时间 */
-  updated_at: string;
+  last_message_at: string;
   /** 消息数量 */
   message_count: number;
 }
@@ -94,7 +92,24 @@ export interface ConversationsResponse {
   total: number;
 }
 
-// ==================== API 接口 ====================
+/** 聊天模型信息 */
+export interface ChatModel {
+  /** 模型 ID */
+  id: string;
+  /** 模型名称 */
+  name: string;
+  /** 模型描述 */
+  description: string;
+  /** 是否支持深入思考 */
+  support_thinking: boolean;
+  /** 最大上下文长度 */
+  max_context_length: number;
+}
+
+/** 模型列表响应 */
+export interface ModelListResponse {
+  list: ChatModel[];
+}
 
 export const ChatAiApi = {
   /**
@@ -120,15 +135,31 @@ export const ChatAiApi = {
             ? { onError: (err) => onError(err instanceof Error ? err : new Error(String(err))) }
             : undefined,
         },
-        (rawData: string) => {
+        (rawData) => {
           try {
-            // 解析 SSE 数据
-            const parsed = JSON.parse(rawData) as StreamChunk;
-            onMessage(parsed);
+            // 检查是否是结束标记
+            const trimmed = rawData.data.trim();
+
+            if (trimmed === '[DONE]') {
+              onMessage({ event: 'done' });
+
+              return;
+            }
+
+            const parsed = JSON.parse(trimmed);
+
+            const content = parsed.choices?.[0]?.delta?.content || '';
+            onMessage({
+              event: 'message',
+              content,
+              conversation_id: parsed.conversation_id,
+              message_id: parsed.id,
+            });
           } catch {
-            // 如果不是 JSON，尝试作为纯文本内容处理
-            if (rawData.trim()) {
-              onMessage({ event: 'message', content: rawData });
+            const trimmed = rawData.data.trim();
+
+            if (trimmed && trimmed !== '[DONE]') {
+              onMessage({ event: 'message', content: trimmed });
             }
           }
         },
@@ -150,7 +181,7 @@ export const ChatAiApi = {
   Conversations: (data?: { page?: number; page_size?: number }, errorHandler?: ErrorHandler) =>
     request.get<ConversationsResponse>('/api/v1/chat/conversations', {
       errorHandler,
-      timeout: 15000,
+      timeout: 80000,
       retries: 2,
       retryDelay: 1000,
       params: data,
@@ -162,7 +193,7 @@ export const ChatAiApi = {
   ConversationDetail: (id: string, errorHandler?: ErrorHandler) =>
     request.get<ConversationDetail>(`/api/v1/chat/conversations/${id}`, {
       errorHandler,
-      timeout: 15000,
+      timeout: 80000,
       retries: 2,
       retryDelay: 1000,
     }),
@@ -173,7 +204,7 @@ export const ChatAiApi = {
   DeleteConversation: (id: string, errorHandler?: ErrorHandler) =>
     request.delete(`/api/v1/chat/conversations/${id}`, {
       errorHandler,
-      timeout: 10000,
+      timeout: 80000,
       retries: 1,
       retryDelay: 1000,
     }),
@@ -184,10 +215,19 @@ export const ChatAiApi = {
   UpdateConversationTitle: (id: string, title: string, errorHandler?: ErrorHandler) =>
     request.patch(`/api/v1/chat/conversations/${id}/title`, {
       errorHandler,
-      timeout: 10000,
+      timeout: 80000,
       retries: 1,
       retryDelay: 1000,
       params: { title },
+    }),
+
+  // 获取可用 AI 模型列表
+  ChatModels: (errorHandler?: ErrorHandler) =>
+    request.get<ModelListResponse>('/api/v1/chat/models', {
+      errorHandler,
+      timeout: 80000,
+      retries: 2,
+      retryDelay: 1000,
     }),
 };
 

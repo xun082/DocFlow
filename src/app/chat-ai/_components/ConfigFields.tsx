@@ -7,11 +7,12 @@
  * 供主模型与对比模型配置复用。
  */
 
-import React from 'react';
+import { useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 
 import type { ModelConfig } from '../types';
 import { MODEL_OPTIONS, THINKING_OPTIONS, WEB_SEARCH_OPTIONS } from '../constants';
+import { useChatModels } from '../hooks/useChatAI';
 
 import { Input } from '@/components/ui/input';
 import {
@@ -97,6 +98,23 @@ export interface ConfigFieldsProps {
 }
 
 export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps) {
+  // 使用 Hook 获取模型列表
+  const { models, isLoading } = useChatModels();
+
+  // 优先使用 API 获取的模型，否则使用静态配置
+  const options = models.length > 0 ? models : MODEL_OPTIONS;
+
+  // 当模型列表加载完成后，如果当前选择的模型不在列表中，自动选择第一个模型
+  useEffect(() => {
+    if (!isLoading && options.length > 0) {
+      const isCurrentModelValid = options.some((opt) => opt.value === config.modelName);
+
+      if (!isCurrentModelValid) {
+        updateConfig('modelName', options[0].value);
+      }
+    }
+  }, [isLoading, options, config.modelName, updateConfig]);
+
   return (
     <div className="space-y-5">
       {/* 模型选择 */}
@@ -107,7 +125,7 @@ export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps
             <SelectValue placeholder="选择模型" />
           </SelectTrigger>
           <SelectContent>
-            {MODEL_OPTIONS.map((option) => (
+            {options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

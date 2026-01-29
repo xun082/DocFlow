@@ -45,6 +45,8 @@ interface ChatSidebarProps {
   onNewSession: () => void;
   /** 删除会话回调 */
   onDeleteSession: (sessionId: string) => void;
+  /** 重命名会话回调 */
+  onRenameSession?: (sessionId: string, newTitle: string) => void;
 }
 
 export default function ChatSidebar({
@@ -61,6 +63,7 @@ export default function ChatSidebar({
   onSessionClick,
   onNewSession,
   onDeleteSession,
+  onRenameSession,
 }: ChatSidebarProps) {
   // 侧边栏折叠状态（默认展开）
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -124,6 +127,7 @@ export default function ChatSidebar({
               onSessionClick={onSessionClick}
               onNewSession={onNewSession}
               onDeleteSession={onDeleteSession}
+              onRenameSession={onRenameSession}
             />
           </div>
         </>

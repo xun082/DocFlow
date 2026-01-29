@@ -5,12 +5,13 @@
  *
  * 功能说明：
  * - 显示所有聊天会话
- * - 支持新建、切换和删除会话
+ * - 支持新建、切换、重命名和删除会话
  * - 位于侧边栏下方
  */
 
-import React from 'react';
-import { Plus, Trash2, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import { Plus, Trash2, MessageSquare, Pencil, Check, X } from 'lucide-react';
 
 import type { ChatSession } from '../types';
 
@@ -28,24 +29,15 @@ interface ChatHistoryListProps {
   onNewSession: () => void;
   /** 删除会话回调 */
   onDeleteSession: (sessionId: string) => void;
+  /** 重命名会话回调 */
+  onRenameSession?: (sessionId: string, newTitle: string) => void;
 }
 
 /**
  * 格式化时间显示
  */
 function formatTime(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 7) return `${days}天前`;
-
-  return date.toLocaleDateString('zh-CN');
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 }
 
 export default function ChatHistoryList({
@@ -54,7 +46,50 @@ export default function ChatHistoryList({
   onSessionClick,
   onNewSession,
   onDeleteSession,
+  onRenameSession,
 }: ChatHistoryListProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+
+  const handleStartEdit = (e: React.MouseEvent, session: ChatSession) => {
+    e.stopPropagation();
+    setEditingId(session.id);
+    setEditValue(session.title);
+  };
+
+  const handleConfirmRename = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+
+    if (editValue.trim() && onRenameSession) {
+      onRenameSession(sessionId, editValue.trim());
+    }
+
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, sessionId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (editValue.trim() && onRenameSession) {
+        onRenameSession(sessionId, editValue.trim());
+      }
+
+      setEditingId(null);
+      setEditValue('');
+    } else if (e.key === 'Escape') {
+      setEditingId(null);
+      setEditValue('');
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* 新建会话按钮 */}
@@ -94,7 +129,7 @@ export default function ChatHistoryList({
             {sessions.map((session) => (
               <div
                 key={session.id}
-                onClick={() => onSessionClick(session.id)}
+                onClick={() => editingId !== session.id && onSessionClick(session.id)}
                 className={cn(
                   'group relative p-2 rounded-lg cursor-pointer transition-colors',
                   activeSessionId === session.id
@@ -103,34 +138,76 @@ export default function ChatHistoryList({
                 )}
               >
                 {/* 会话信息 */}
-                <div className="pr-6">
-                  <h4
-                    className={cn(
-                      'text-xs font-medium truncate',
-                      activeSessionId === session.id ? 'text-purple-700' : 'text-gray-700',
-                    )}
-                  >
-                    {session.title}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-gray-400">
-                      {formatTime(session.lastMessageAt)}
-                    </span>
-                    <span className="text-[10px] text-gray-400">·</span>
-                    <span className="text-[10px] text-gray-400">{session.messageCount} 条消息</span>
-                  </div>
+                <div className="pr-14">
+                  {editingId === session.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, session.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 text-xs px-1 py-0.5 border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        autoFocus
+                      />
+                      <button
+                        onClick={(e) => handleConfirmRename(e, session.id)}
+                        className="p-0.5 hover:bg-green-50 rounded"
+                      >
+                        <Check className="h-3 w-3 text-green-600" />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="p-0.5 hover:bg-gray-100 rounded"
+                      >
+                        <X className="h-3 w-3 text-gray-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h4
+                        className={cn(
+                          'text-xs font-medium truncate',
+                          activeSessionId === session.id ? 'text-purple-700' : 'text-gray-700',
+                        )}
+                      >
+                        {session.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-gray-400">
+                          {formatTime(session.lastMessageAt)}
+                        </span>
+                        <span className="text-[10px] text-gray-400">·</span>
+                        <span className="text-[10px] text-gray-400">
+                          {session.messageCount} 条消息
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {/* 删除按钮 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteSession(session.id);
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-opacity"
-                >
-                  <Trash2 className="h-3 w-3 text-red-500" />
-                </button>
+                {/* 操作按钮 */}
+                {editingId !== session.id && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* 编辑按钮 */}
+                    <button
+                      onClick={(e) => handleStartEdit(e, session)}
+                      className="p-1 hover:bg-purple-50 rounded"
+                    >
+                      <Pencil className="h-3 w-3 text-purple-500" />
+                    </button>
+                    {/* 删除按钮 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteSession(session.id);
+                      }}
+                      className="p-1 hover:bg-red-50 rounded"
+                    >
+                      <Trash2 className="h-3 w-3 text-red-500" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

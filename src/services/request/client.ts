@@ -901,7 +901,7 @@ class ClientRequest {
   async sseStream(
     url: string,
     params: ClientParams,
-    onMessage: (data: string) => void,
+    onMessage: (data: { data: string }) => void,
   ): Promise<() => void> {
     const controller = new AbortController();
     let activeController = controller;
@@ -964,7 +964,10 @@ class ClientRequest {
           while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            if (typeof value === 'string') onMessage(value);
+
+            if (value && value.data) {
+              onMessage(value);
+            }
           }
         } catch (err) {
           if (!(err instanceof DOMException && err.name === 'AbortError')) {
@@ -1022,6 +1025,12 @@ const clientRequest = new ClientRequest(process.env.NEXT_PUBLIC_SERVER_URL || ''
   retries: 1,
   retryDelay: 1000,
 });
+
+// const clientRequest = new ClientRequest('', {
+//   timeout: 15000,
+//   retries: 1,
+//   retryDelay: 1000,
+// });
 
 export { ClientRequest, clientRequest };
 export default clientRequest;

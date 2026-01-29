@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
     removeConsole:
       process.env.NODE_ENV === 'production'
         ? {
-            exclude: ['error', 'warn'], // 保留错误和警告日志
-          }
+          exclude: ['error', 'warn'], // 保留错误和警告日志
+        }
         : false,
   },
 
@@ -228,6 +228,19 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // async rewrites() {
+  //   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+  //   if (!serverUrl) return [];
+
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: `${serverUrl}/api/:path*`,
+  //     },
+  //   ];
+  // },
 };
 
 // 配置 Bundle Analyzer
