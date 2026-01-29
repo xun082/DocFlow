@@ -1,15 +1,42 @@
-import { mergeAttributes, Range } from '@tiptap/core';
+import { mergeAttributes, Range, type CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import ImageBlockView from './components/imageBlockView';
 import { Image } from '../Image';
 
+/**
+ * 图片块对齐方式
+ */
+type ImageBlockAlign = 'left' | 'center' | 'right';
+
+/**
+ * 图片块属性接口
+ */
+interface ImageBlockAttributes {
+  src: string;
+  width?: string;
+  align?: ImageBlockAlign;
+  alt?: string;
+}
+
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     imageBlock: {
+      /**
+       * 插入图片块
+       */
       setImageBlock: (attributes: { src: string }) => ReturnType;
+      /**
+       * 在指定位置插入图片块
+       */
       setImageBlockAt: (attributes: { src: string; pos: number | Range }) => ReturnType;
-      setImageBlockAlign: (align: 'left' | 'center' | 'right') => ReturnType;
+      /**
+       * 设置图片对齐方式
+       */
+      setImageBlockAlign: (align: ImageBlockAlign) => ReturnType;
+      /**
+       * 设置图片宽度（百分比）
+       */
       setImageBlockWidth: (width: number) => ReturnType;
     };
   }
@@ -31,28 +58,28 @@ export const ImageBlock = Image.extend({
       src: {
         default: '',
         parseHTML: (element: Element) => element.getAttribute('src'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: ImageBlockAttributes) => ({
           src: attributes.src,
         }),
       },
       width: {
         default: '100%',
         parseHTML: (element: Element) => element.getAttribute('data-width'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: ImageBlockAttributes) => ({
           'data-width': attributes.width,
         }),
       },
       align: {
         default: 'center',
         parseHTML: (element: Element) => element.getAttribute('data-align'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: ImageBlockAttributes) => ({
           'data-align': attributes.align,
         }),
       },
       alt: {
         default: undefined,
         parseHTML: (element: Element) => element.getAttribute('alt'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: ImageBlockAttributes) => ({
           alt: attributes.alt,
         }),
       },
@@ -81,24 +108,39 @@ export const ImageBlock = Image.extend({
 
   addCommands() {
     return {
-      setImageBlock: (attrs: { src: string }) => (props) => {
-        return props.commands.insertContent({ type: 'imageBlock', attrs: { src: attrs.src } });
-      },
+      setImageBlock:
+        (attrs: { src: string }) =>
+        ({ commands }: CommandProps) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: { src: attrs.src },
+          });
+        },
 
-      setImageBlockAt: (attrs: { src: string; pos: number | Range }) => (props) => {
-        return props.commands.insertContentAt(attrs.pos, {
-          type: 'imageBlock',
-          attrs: { src: attrs.src },
-        });
-      },
+      setImageBlockAt:
+        (attrs: { src: string; pos: number | Range }) =>
+        ({ commands }: CommandProps) => {
+          return commands.insertContentAt(attrs.pos, {
+            type: this.name,
+            attrs: { src: attrs.src },
+          });
+        },
 
-      setImageBlockAlign: (align: 'left' | 'center' | 'right') => (props) =>
-        props.commands.updateAttributes('imageBlock', { align }),
+      setImageBlockAlign:
+        (align: ImageBlockAlign) =>
+        ({ commands }: CommandProps) => {
+          return commands.updateAttributes(this.name, { align });
+        },
 
-      setImageBlockWidth: (width: number) => (props) =>
-        props.commands.updateAttributes('imageBlock', {
-          width: `${Math.max(0, Math.min(100, width))}%`,
-        }),
+      setImageBlockWidth:
+        (width: number) =>
+        ({ commands }: CommandProps) => {
+          const clampedWidth = Math.max(0, Math.min(100, width));
+
+          return commands.updateAttributes(this.name, {
+            width: `${clampedWidth}%`,
+          });
+        },
     };
   },
 

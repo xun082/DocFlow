@@ -141,13 +141,19 @@ export default function Page() {
         </p>
       </div>
 
-      <div className="min-h-screen bg-white relative overflow-hidden">
-        {/* 装饰性渐变背景 - 纯 CSS */}
+      <div className="min-h-screen bg-gradient-to-br from-white via-violet-50/30 to-purple-50/20 relative overflow-hidden">
+        {/* 装饰性渐变背景 - 优化配色方案 */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-200/30 rounded-full blur-3xl animate-float" />
-          <div className="absolute top-20 right-1/4 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl animate-float [animation-delay:2s]" />
-          <div className="absolute top-1/2 left-1/3 w-96 h-96 bg-pink-200/30 rounded-full blur-3xl animate-float [animation-delay:4s]" />
-          <div className="absolute bottom-20 right-1/3 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-float [animation-delay:6s]" />
+          {/* 主题紫色系 */}
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-violet-300/40 to-purple-300/30 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-300/35 to-pink-300/25 rounded-full blur-3xl animate-float [animation-delay:3s]" />
+
+          {/* 辅助蓝色系 - 增加层次感 */}
+          <div className="absolute top-1/3 right-1/3 w-[450px] h-[450px] bg-gradient-to-br from-blue-200/25 to-cyan-200/20 rounded-full blur-3xl animate-float [animation-delay:1.5s]" />
+          <div className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/30 to-violet-200/25 rounded-full blur-3xl animate-float [animation-delay:4.5s]" />
+
+          {/* 点缀色 - 增强视觉效果 */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-gradient-to-br from-fuchsia-200/20 to-pink-200/15 rounded-full blur-3xl animate-float [animation-delay:2s]" />
         </div>
 
         {/* Header - 纯服务端组件 */}
@@ -159,10 +165,8 @@ export default function Page() {
         {/* Features Section - 纯服务端组件 */}
         <Features />
 
-        {/* Contact 组件 - 联系我们部分 */}
-        <Suspense fallback={<div className="min-h-[400px] bg-gray-50" />}>
-          <Contact />
-        </Suspense>
+        {/* Contact 组件 - 联系我们部分（纯服务端组件） */}
+        <Contact />
 
         {/* Footer */}
         <Footer />
