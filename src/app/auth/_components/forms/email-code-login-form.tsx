@@ -1,4 +1,3 @@
-import { Activity } from 'react';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
 
 import { CodeInput } from '@/components/ui/code-input';
@@ -20,8 +19,10 @@ export const EmailCodeLoginForm = ({
   onSendCode,
   register,
   errors,
-}: EmailCodeLoginFormProps) => (
-  <Activity mode={isActive ? 'visible' : 'hidden'}>
+}: EmailCodeLoginFormProps) => {
+  if (!isActive) return null;
+
+  return (
     <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
       <CodeInput
         countdown={countdown}
@@ -31,5 +32,5 @@ export const EmailCodeLoginForm = ({
         error={errors.code?.message}
       />
     </div>
-  </Activity>
-);
+  );
+};

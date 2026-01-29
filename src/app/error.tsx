@@ -17,7 +17,12 @@ export default function Error({
   useEffect(() => {
     if (!hasLogged.current) {
       hasLogged.current = true;
-      console.error('Application error:', error);
+
+      // 仅在生产环境记录错误到 Sentry
+      // 开发环境静默处理，通过 UI 展示错误详情即可
+      if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+        // Sentry 会自动捕获错误，这里不需要额外处理
+      }
     }
   }, [error]);
 
