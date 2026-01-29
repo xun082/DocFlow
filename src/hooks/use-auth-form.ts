@@ -4,12 +4,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import authApi from '@/services/auth';
-import {
-  LoginFormData,
-  passwordLoginSchema,
-  emailCodeLoginSchema,
-  registerSchema,
-} from '@/utils/auth-schemas';
+import { LoginFormData } from '@/utils/auth-schemas';
 import { LoginMode } from '@/app/auth/_components/login-mode-switcher';
 
 export const useAuthForm = (loginMode: LoginMode) => {
@@ -27,14 +22,19 @@ export const useAuthForm = (loginMode: LoginMode) => {
     setError,
     clearErrors,
   } = useForm<LoginFormData>({
-    mode: 'onBlur',
+    mode: 'onChange',
   });
 
   // 当 loginMode 改变时重置表单和错误
   useEffect(() => {
-    reset();
+    reset({
+      email: getValues('email') || '', // 保留邮箱地址
+      password: '',
+      code: '',
+      confirmPassword: '',
+    });
     clearErrors();
-  }, [loginMode, reset, clearErrors]);
+  }, [loginMode, reset, clearErrors, getValues]);
 
   // 验证码倒计时
   useEffect(() => {
@@ -65,39 +65,31 @@ export const useAuthForm = (loginMode: LoginMode) => {
 
     setIsSendingCode(true);
 
-    const { data, error } = await authApi.sendEmailCode(email);
+    try {
+      const { data, error } = await authApi.sendEmailCode(email);
 
-    setIsSendingCode(false);
+      setIsSendingCode(false);
 
-    if (error) {
-      toast.error(error);
+      if (error) {
+        toast.error(error);
 
-      return;
-    }
+        return;
+      }
 
-    if (!data || data.code !== 200) {
-      toast.error(data?.message || '发送验证码失败');
+      if (!data || data.code !== 200) {
+        toast.error(data?.message || '发送验证码失败');
 
-      return;
-    }
+        return;
+      }
 
-    toast.success('验证码已发送', {
-      description: '请查收您的邮箱，验证码有效期为10分钟',
-    });
+      toast.success('验证码已发送', {
+        description: '请查收您的邮箱，验证码有效期为10分钟',
+      });
 
-    setCountdown(60);
-  };
-
-  const getSchema = () => {
-    switch (loginMode) {
-      case 'password':
-        return passwordLoginSchema;
-      case 'email':
-        return emailCodeLoginSchema;
-      case 'register':
-        return registerSchema;
-      default:
-        return emailCodeLoginSchema;
+      setCountdown(60);
+    } catch (error) {
+      setIsSendingCode(false);
+      toast.error(error instanceof Error ? error.message : '发送验证码失败，请稍后重试');
     }
   };
 
@@ -113,6 +105,5 @@ export const useAuthForm = (loginMode: LoginMode) => {
     handleSubmit,
     errors,
     setError,
-    getSchema,
   };
 };
