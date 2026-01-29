@@ -220,6 +220,7 @@
     "@vitest/ui": "3.0.8",
     "autoprefixer": "10.4.21",
     "commitizen": "^4.3.1",
+    "critters": "^0.0.25",
     "cz-git": "^1.11.1",
     "eslint": "9.27.0",
     "eslint-config-next": "16.1.5",

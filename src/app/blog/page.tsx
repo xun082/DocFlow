@@ -7,8 +7,7 @@ import BlogFilters from './_components/BlogFilters';
 import { formatDateTime } from '@/utils/format/date';
 import { blogsServerApi } from '@/services/blogs';
 import type { BlogPost } from '@/services/blogs/type';
-import Header from '@/components/homepage/Header';
-import Footer from '@/components/homepage/Footer';
+import { Header, Footer } from '@/app/page';
 import { BLOG_CATEGORIES } from '@/utils/constants/blog';
 
 interface BlogListPageProps {
