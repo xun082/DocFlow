@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 
-import Header from '@/components/homepage/Header';
-import Footer from '@/components/homepage/Footer';
+import { Header, Footer } from '@/app/page';
 import { blogsServerApi } from '@/services/blogs';
 import { formatDateTime } from '@/utils/format/date';
 import { BLOG_CATEGORIES } from '@/utils/constants/blog';
