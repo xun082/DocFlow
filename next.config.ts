@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
     removeConsole:
       process.env.NODE_ENV === 'production'
         ? {
-          exclude: ['error', 'warn'], // 保留错误和警告日志
-        }
+            exclude: ['error', 'warn'], // 保留错误和警告日志
+          }
         : false,
   },
 
