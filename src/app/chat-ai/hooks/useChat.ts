@@ -43,7 +43,7 @@ export interface UseChatResult {
   /** 清空消息 */
   clearMessages: () => void;
   /** 加载会话历史 */
-  loadConversation: (id: string) => Promise<boolean>;
+  loadConversation: (id: string, options?: { cursor?: string; limit?: number }) => Promise<boolean>;
 }
 
 export function useChat(): UseChatResult {
@@ -58,34 +58,37 @@ export function useChat(): UseChatResult {
   const cancelFnRef = useRef<(() => void) | null>(null);
 
   // 加载会话历史
-  const loadConversation = useCallback(async (id: string): Promise<boolean> => {
-    setStatus('loading');
-    setError(null);
+  const loadConversation = useCallback(
+    async (id: string, options?: { cursor?: string; limit?: number }): Promise<boolean> => {
+      setStatus('loading');
+      setError(null);
 
-    const { data, error: apiError } = await ChatAiApi.ConversationDetail(id);
+      const { data, error: apiError } = await ChatAiApi.ConversationDetail(id, options);
 
-    if (apiError) {
-      setError(apiError);
-      setStatus('error');
+      if (apiError) {
+        setError(apiError);
+        setStatus('error');
 
-      return false;
-    }
+        return false;
+      }
 
-    if (data?.data?.messages) {
-      const convertedMessages: ChatMessage[] = data.data.messages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        createdAt: new Date(msg.created_at),
-      }));
-      setMessages(convertedMessages);
-      setConversationId(id);
-    }
+      if (data?.data?.messages) {
+        const convertedMessages: ChatMessage[] = data.data.messages.map((msg) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          createdAt: new Date(msg.created_at),
+        }));
+        setMessages(convertedMessages);
+        setConversationId(id);
+      }
 
-    setStatus('idle');
+      setStatus('idle');
 
-    return true;
-  }, []);
+      return true;
+    },
+    [],
+  );
 
   // 发送消息
   // 发送消息
@@ -124,6 +127,9 @@ export function useChat(): UseChatResult {
         ...(conversationId ? { conversation_id: conversationId } : {}),
         model: config.modelName,
         messages: [
+          ...(config.systemPrompt
+            ? [{ role: 'system' as const, content: config.systemPrompt.trim() }]
+            : []),
           ...messages.map((m) => ({ role: m.role, content: m.content })),
           { role: 'user' as const, content: content.trim() },
         ],
@@ -133,6 +139,11 @@ export function useChat(): UseChatResult {
         max_tokens: config.maxTokens,
         temperature: config.temperature,
         enable_web_search: config.enableWebSearch,
+        top_k: config.topK,
+        frequency_penalty: config.frequencyPenalty,
+        min_p: config.minP,
+        stop: config.stop,
+        n: config.n,
       };
 
       try {
@@ -191,9 +202,7 @@ export function useChat(): UseChatResult {
             if (chunk.finish_reason) {
               setStatus('idle');
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMessage.id ? { ...m, isStreaming: false } : m,
-                ),
+                prev.map((m) => (m.id === assistantMessage.id ? { ...m, isStreaming: false } : m)),
               );
 
               // 触发成功回调

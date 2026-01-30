@@ -13,7 +13,18 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { Send, Copy, User, Bot, Square, Loader2, Pencil, Share2, Check } from 'lucide-react';
+import {
+  Send,
+  Copy,
+  User,
+  Bot,
+  Square,
+  Loader2,
+  Pencil,
+  Share2,
+  Check,
+  Settings2,
+} from 'lucide-react';
 import { MdPreview } from 'md-editor-rt';
 import 'md-editor-rt/lib/preview.css';
 import { useStickToBottom } from 'use-stick-to-bottom';
@@ -21,7 +32,10 @@ import { useStickToBottom } from 'use-stick-to-bottom';
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
+import ModelConfigModal from './ModelConfigModal';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUserQuery } from '@/hooks/useUserQuery';
 import { cn } from '@/utils';
 
 interface ChatPanelProps {
@@ -43,6 +57,14 @@ interface ChatPanelProps {
   status?: ChatStatus;
   /** 停止生成回调 */
   onStopGenerating?: () => void;
+  /** 配置变更回调 */
+  onConfigChange?: (config: ModelConfig) => void;
+  /** 是否处于对比模式 */
+  isCompareMode?: boolean;
+  /** 添加对比模型回调 */
+  onAddCompareModel?: () => void;
+  /** 取消模型对比回调 */
+  onCancelCompare?: () => void;
 }
 
 /**
@@ -79,10 +101,14 @@ function MessageBubble({
   message,
   onEdit,
   isGenerating = false,
+  userAvatar,
+  userName,
 }: {
   message: ChatMessage;
   onEdit?: (message: ChatMessage) => void;
   isGenerating?: boolean;
+  userAvatar?: string;
+  userName?: string;
 }) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -118,15 +144,19 @@ function MessageBubble({
     <div className="group">
       <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
         {/* 头像 */}
-        <div
-          className={cn(
-            'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-            isUser
-              ? 'bg-purple-600 text-white'
-              : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white',
+        <div className="flex-shrink-0">
+          {isUser ? (
+            <Avatar className="h-8 w-8 ring-1 ring-gray-100 shadow-sm">
+              <AvatarImage src={userAvatar || ''} alt={userName || 'User'} />
+              <AvatarFallback className="bg-blue-500 text-white">
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm">
+              <Bot className="h-4 w-4" />
+            </div>
           )}
-        >
-          {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
         </div>
 
         {/* 消息内容 */}
@@ -134,8 +164,8 @@ function MessageBubble({
           className={cn(
             'max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
             isUser
-              ? 'bg-purple-600 text-white rounded-tr-sm'
-              : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm',
+              ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
+              : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
           )}
         >
           {isUser ? (
@@ -145,10 +175,10 @@ function MessageBubble({
             // AI 消息使用 Markdown 渲染
             <div
               className={cn(
-                'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-purple-600 prose-code:bg-purple-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
+                'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
                 // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
                 message.isStreaming &&
-                'after:content-["▋"] after:ml-1 after:animate-pulse after:text-purple-600 after:inline-block after:align-middle',
+                  'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-500 after:inline-block after:align-middle',
               )}
             >
               {message.content ? (
@@ -179,7 +209,7 @@ function MessageBubble({
               'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200',
               isGenerating
                 ? 'text-gray-300 cursor-not-allowed'
-                : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50 cursor-pointer',
+                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer',
             )}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -191,7 +221,7 @@ function MessageBubble({
               'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200 cursor-pointer',
               copied
                 ? 'text-green-600 bg-green-50'
-                : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50',
+                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50',
             )}
           >
             {copied ? (
@@ -208,7 +238,7 @@ function MessageBubble({
           </button>
           <button
             onClick={handleShare}
-            className="cursor-pointer flex items-center gap-1 px-2 py-1 text-xs text-gray-400 rounded-md hover:text-purple-600 hover:bg-purple-50 transition-all duration-200"
+            className="cursor-pointer flex items-center gap-1 px-2 py-1 text-xs text-gray-400 rounded-md hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
           >
             <Share2 className="h-3.5 w-3.5" />
             分享
@@ -229,8 +259,15 @@ export default function ChatAIPanels({
   messages = [],
   status = 'idle',
   onStopGenerating,
+  onConfigChange,
+  isCompareMode = false,
+  onAddCompareModel,
+  onCancelCompare,
 }: ChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 获取当前用户信息用于头像显示
+  const { data: user } = useUserQuery();
 
   // 获取动态模型列表用于显示名称
   const { models } = useChatModels();
@@ -254,8 +291,8 @@ export default function ChatAIPanels({
     }
   };
 
-  // 是否禁用发送
-  const isSendDisabled = status === 'streaming' || !inputValue.trim();
+  // 是否禁用发送 (仅在空闲且输入为空时禁用)
+  const isSendDisabled = status === 'idle' && !inputValue.trim();
 
   // 是否显示快捷问题（仅在消息为空时显示）
   const showQuickQuestions = messages.length === 0;
@@ -263,15 +300,28 @@ export default function ChatAIPanels({
   return (
     <div
       className={cn(
-        'flex flex-col flex-1 min-w-0 bg-gradient-to-br from-gray-50 to-purple-50/30',
-        showBorder ? 'border border-gray-200 rounded-lg' : '',
+        'flex flex-col flex-1 min-w-0 bg-gradient-to-br from-gray-50 to-blue-50/30',
+        showBorder ? 'border border-gray-100 rounded-xl' : '',
       )}
     >
       {/* ----- 模型标题栏 ----- */}
-      <header className="px-4 py-3 border-b border-gray-100">
-        <h2 className="text-sm font-medium text-gray-800 border border-gray-200 rounded px-3 py-1.5 inline-block bg-white shadow-sm">
+      <header className="px-4 py-2 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700">
           {getModelDisplayName(config.modelName, models)}
         </h2>
+
+        {onConfigChange && (
+          <ModelConfigModal
+            config={config}
+            onConfigChange={onConfigChange}
+            isCompareMode={isCompareMode}
+            onAddCompareModel={onAddCompareModel}
+            onCancelCompare={onCancelCompare}
+            triggerClassName="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-all"
+            icon={<Settings2 className="h-4 w-4" />}
+            title="面板模型配置"
+          />
+        )}
       </header>
 
       {/* ----- 消息区域 ----- */}
@@ -287,6 +337,8 @@ export default function ChatAIPanels({
                 key={message.id}
                 message={message}
                 isGenerating={status === 'streaming'}
+                userAvatar={user?.avatar_url}
+                userName={user?.name}
                 onEdit={(msg) => {
                   onInputChange(msg.content);
                   textareaRef.current?.focus();
@@ -313,26 +365,12 @@ export default function ChatAIPanels({
                   }}
                   className={cn(
                     'px-3 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-full cursor-pointer',
-                    'hover:bg-gray-50 hover:border-purple-200 transition-colors',
+                    'hover:bg-gray-50 hover:border-blue-200 transition-colors',
                   )}
                 >
                   {question.text}
                 </button>
               ))}
-            </div>
-          )}
-
-          {/* 操作栏 */}
-          {!showQuickQuestions && status === 'streaming' && onStopGenerating && (
-            <div className="flex items-center gap-2">
-              {/* 停止生成按钮 */}
-              <button
-                onClick={onStopGenerating}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-full hover:bg-red-100 transition-colors"
-              >
-                <Square className="h-3 w-3" />
-                停止生成
-              </button>
             </div>
           )}
 
@@ -346,25 +384,28 @@ export default function ChatAIPanels({
               placeholder={status === 'streaming' ? 'AI 正在回复中...' : '请输入提示词...'}
               disabled={status === 'streaming'}
               className={cn(
-                'w-full min-h-[100px] pr-14 resize-none border border-gray-200 rounded-xl bg-white focus:border-purple-300 focus:ring-2 focus:ring-purple-200 outline-none px-4 py-3 text-sm text-gray-800 shadow-sm',
+                'w-full min-h-[100px] pr-14 resize-none border border-gray-200 rounded-xl bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none px-4 py-3 text-sm text-gray-800 shadow-sm transition-all duration-200',
                 status === 'streaming' && 'opacity-60 cursor-not-allowed',
               )}
             />
-            {/* 发送按钮 */}
+            {/* 发送/停止按钮 */}
             <button
               type="button"
-              onClick={onSend}
+              onClick={status === 'streaming' ? onStopGenerating : onSend}
               disabled={isSendDisabled}
               className={cn(
-                'absolute right-3 bottom-3 h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-colors',
-                isSendDisabled
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white',
+                'absolute right-3 bottom-3 h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-all duration-200',
+                status === 'streaming'
+                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 shadow-red-100/50 active:scale-90'
+                  : isSendDisabled
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
               )}
-              aria-label="发送"
+              aria-label={status === 'streaming' ? '停止生成' : '发送'}
+              title={status === 'streaming' ? '停止生成' : '发送'}
             >
               {status === 'streaming' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Square className="h-4 w-4 fill-current" />
               ) : (
                 <Send className="h-4 w-4" />
               )}

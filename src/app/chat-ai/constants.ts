@@ -43,6 +43,11 @@ export const QUICK_QUESTIONS: QuickQuestion[] = [
 ];
 
 /**
+ * 默认系统提示词
+ */
+export const DEFAULT_SYSTEM_PROMPT = '你是一个专业、礼貌、高效的 AI 助手。';
+
+/**
  * 默认模型配置
  */
 export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
@@ -53,6 +58,12 @@ export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
   enableThinking: true,
   thinkingBudget: 4096,
   enableWebSearch: false,
+  systemPrompt: DEFAULT_SYSTEM_PROMPT,
+  topK: 50,
+  frequencyPenalty: 0.5,
+  minP: 0.05,
+  stop: [],
+  n: 0.05,
 };
 
 /**

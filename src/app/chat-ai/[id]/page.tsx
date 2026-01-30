@@ -12,9 +12,10 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Menu, Plus } from 'lucide-react';
 
 import { ChatSidebar, ChatAIPanels } from '../_components';
-import { createModelConfig, INITIAL_PRIMARY_MODEL } from '../constants';
+import { createModelConfig, INITIAL_PRIMARY_MODEL, DEFAULT_MODEL_CONFIG } from '../constants';
 import { useConversations } from '../hooks/useConversations';
 import { useChat } from '../hooks/useChat';
 import { useChatModels } from '../hooks/useChatModels';
@@ -32,7 +33,16 @@ export default function ChatRoomPage() {
   const isNewSession = /^\d{13,}$/.test(chatId);
 
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession, renameSession, addSession, refresh } = useConversations();
+  const {
+    sessions,
+    deleteSession,
+    renameSession,
+    addSession,
+    refresh,
+    hasMore,
+    isLoadingMore,
+    loadMore,
+  } = useConversations();
 
   // 获取动态模型列表
   const { models, isLoading: isModelsLoading } = useChatModels();
@@ -46,9 +56,6 @@ export default function ChatRoomPage() {
 
   // 输入框内容
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-
-  // 是否已发送过消息（用于判断是否添加到历史）
-  const [hasSentMessage, setHasSentMessage] = useState(false);
 
   // 主模型配置
   const primaryConfig = modelConfigs[0];
@@ -67,7 +74,13 @@ export default function ChatRoomPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ModelConfig;
-        setModelConfigs([{ ...parsed, id: 'primary-model' }]);
+        // 合并默认配置，防止因新增字段导致的属性缺失错误
+        const mergedConfig = {
+          ...DEFAULT_MODEL_CONFIG,
+          ...parsed,
+          id: 'primary-model',
+        } as ModelConfig;
+        setModelConfigs([mergedConfig]);
       } catch {
         // 解析失败，保持默认配置
       }
@@ -112,7 +125,6 @@ export default function ChatRoomPage() {
         setTimeout(() => {
           sendMessage(initialMessage, primaryConfig);
           setInputValues((prev) => ({ ...prev, [primaryConfig.id]: '' }));
-          setHasSentMessage(true);
         }, 100);
       }
     }
@@ -120,11 +132,20 @@ export default function ChatRoomPage() {
 
   // 当获得 conversationId 后，将会话添加到历史列表
   useEffect(() => {
-    if (conversationId && hasSentMessage) {
-      // 查找是否已经存在于会话列表中
+    // 只有当有确切的 conversationId，且当前列表里没有它时，尝试添加
+    if (conversationId && messages.length > 0) {
+      // 如果 URL 中的 ID (chatId) 与实际正式的 conversationId 不同，说明是新会话的首次跳转
+      // 此时我们需要优先更新 URL，这样整个页面逻辑可以围绕正式 ID 运行
+      if (chatId !== conversationId) {
+        router.replace(`/chat-ai/${conversationId}`);
+
+        return; // 跳转会导致重挂载，不再执行后续逻辑
+      }
+
       const sessionExists = sessions.some((session) => session.id === conversationId);
 
       if (!sessionExists) {
+        // 如果是新创建的或者是刚跳转过来的，确保它在列表中
         const newSession: ChatSession = {
           id: conversationId,
           title: messages[0]?.content.slice(0, 20) || '新会话',
@@ -134,13 +155,8 @@ export default function ChatRoomPage() {
         };
         addSession(newSession);
       }
-
-      // 如果 URL 中的 ID 与实际 conversationId 不同，更新 URL
-      if (chatId !== conversationId) {
-        router.replace(`/chat-ai/${conversationId}`);
-      }
     }
-  }, [conversationId, hasSentMessage, messages, addSession, chatId, router, sessions]);
+  }, [conversationId, messages, addSession, chatId, router, sessions]);
 
   /**
    * 更新主模型配置
@@ -206,7 +222,6 @@ export default function ChatRoomPage() {
         },
       });
       setInputValues((prev) => ({ ...prev, [modelId]: '' }));
-      setHasSentMessage(true);
     },
     [inputValues, status, modelConfigs, primaryConfig, sendMessage, refresh],
   );
@@ -257,42 +272,78 @@ export default function ChatRoomPage() {
     [renameSession],
   );
 
-  return (
-    <div className="flex h-full">
-      {/* ----- 左侧侧边栏 ----- */}
-      <ChatSidebar
-        config={primaryConfig}
-        onConfigChange={handleConfigChange}
-        onAddCompareModel={handleAddCompareModel}
-        canAddCompareModel={canAddCompareModel}
-        isCompareMode={isCompareMode}
-        compareConfig={isCompareMode ? modelConfigs[1]! : null}
-        onCompareConfigChange={handleCompareConfigChange}
-        onCancelCompare={handleCancelCompare}
-        sessions={sessions}
-        activeSessionId={conversationId || chatId}
-        onSessionClick={handleSessionClick}
-        onNewSession={handleNewSession}
-        onDeleteSession={handleDeleteSession}
-        onRenameSession={handleRenameSession}
-      />
+  // 移动端侧边栏状态
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-      {/* ----- 右侧聊天区域 ----- */}
-      <div className={`flex flex-1 min-w-0 ${isCompareMode ? 'gap-0' : ''}`}>
-        {modelConfigs.map((config, index) => (
-          <ChatAIPanels
-            key={config.id}
-            config={config}
-            inputValue={inputValues[config.id] || ''}
-            onInputChange={(value) => handleInputChange(config.id, value)}
-            onSend={() => handleSend(config.id)}
-            onQuickQuestionClick={(q) => handleQuickQuestionClick(config.id, q)}
-            showBorder={isCompareMode && index > 0}
-            messages={messages}
-            status={status}
-            onStopGenerating={stopGenerating}
-          />
-        ))}
+  return (
+    <div className="flex flex-col h-full overflow-hidden bg-white">
+      {/* 移动端顶栏 */}
+      <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <span className="text-base font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            DocFlow AI
+          </span>
+        </div>
+        <button
+          onClick={handleNewSession}
+          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+          title="新建会话"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* ----- 左侧侧边栏 ----- */}
+        <ChatSidebar
+          config={primaryConfig}
+          onConfigChange={handleConfigChange}
+          onAddCompareModel={handleAddCompareModel}
+          isCompareMode={isCompareMode}
+          onCancelCompare={handleCancelCompare}
+          sessions={sessions}
+          activeSessionId={conversationId || chatId}
+          onSessionClick={handleSessionClick}
+          onNewSession={handleNewSession}
+          onDeleteSession={handleDeleteSession}
+          onRenameSession={handleRenameSession}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadMore}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
+
+        {/* ----- 右侧聊天区域 ----- */}
+        <div className={`flex flex-1 min-w-0 ${isCompareMode ? 'gap-0' : ''}`}>
+          {modelConfigs.map((config, index) => (
+            <ChatAIPanels
+              key={config.id}
+              config={config}
+              inputValue={inputValues[config.id] || ''}
+              onInputChange={(value) => handleInputChange(config.id, value)}
+              onSend={() => handleSend(config.id)}
+              onQuickQuestionClick={(q) => handleQuickQuestionClick(config.id, q)}
+              onConfigChange={(newConfig) => {
+                if (index === 0) handleConfigChange(newConfig);
+                else handleCompareConfigChange(newConfig);
+              }}
+              isCompareMode={isCompareMode}
+              onAddCompareModel={handleAddCompareModel}
+              onCancelCompare={handleCancelCompare}
+              showBorder={isCompareMode && index > 0}
+              messages={messages}
+              status={status}
+              onStopGenerating={stopGenerating}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

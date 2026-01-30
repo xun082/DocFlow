@@ -24,6 +24,18 @@ export interface ModelConfig {
   thinkingBudget: number;
   /** 是否启用联网搜索（启用后会先搜索相关网页内容） */
   enableWebSearch: boolean;
+  /** 系统提示词：用于设定 AI 的角色 and 行为 */
+  systemPrompt: string;
+  /** Top-k 采样参数 */
+  topK: number;
+  /** 频率惩罚参数 (-2.0 到 2.0) */
+  frequencyPenalty: number;
+  /** 最小概率参数 (0-1) */
+  minP: number;
+  /** 停止序列 */
+  stop: string[];
+  /** 生成结果数量 */
+  n: number;
 }
 
 /**

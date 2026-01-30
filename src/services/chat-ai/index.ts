@@ -72,6 +72,16 @@ export interface CompletionsRequest {
   thinking_budget?: number;
   /** 是否启用联网搜索（启用后会先搜索相关网页内容，默认 false） */
   enable_web_search?: boolean;
+  /** Top-k 采样参数 */
+  top_k?: number;
+  /** 频率惩罚参数 (-2.0 到 2.0) */
+  frequency_penalty?: number;
+  /** 最小概率参数 (0-1) */
+  min_p?: number;
+  /** 停止序列，最多 4 个 */
+  stop?: string[];
+  /** 生成结果数量 */
+  n?: number;
 }
 
 /** SSE 流式响应事件数据 */
@@ -140,6 +150,13 @@ export const ChatAiApi = {
             : undefined,
         },
         async (response) => {
+          // 提取响应头中的 Session-Id（新会话时返回）
+          const sessionId = response.headers.get('Session-Id');
+
+          if (sessionId) {
+            onMessage({ event: 'message', conversation_id: sessionId });
+          }
+
           if (!response.body) return;
 
           const reader = response.body.getReader();
@@ -225,13 +242,13 @@ export const ChatAiApi = {
         },
       );
 
-      return cancel || (() => { });
+      return cancel || (() => {});
     } catch (error) {
       if (onError) {
         onError(error instanceof Error ? error : new Error(String(error)));
       }
 
-      return () => { };
+      return () => {};
     }
   },
 
@@ -250,12 +267,17 @@ export const ChatAiApi = {
   /**
    * 获取会话详情
    */
-  ConversationDetail: (id: string, errorHandler?: ErrorHandler) =>
+  ConversationDetail: (
+    id: string,
+    data?: { cursor?: string; limit?: number },
+    errorHandler?: ErrorHandler,
+  ) =>
     request.get<ConversationDetail>(`/api/v1/chat/conversations/${id}`, {
       errorHandler,
       timeout: 80000,
       retries: 2,
       retryDelay: 1000,
+      params: data,
     }),
 
   /**
