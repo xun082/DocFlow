@@ -12,7 +12,7 @@ import { HelpCircle } from 'lucide-react';
 
 import type { ModelConfig } from '../types';
 import { MODEL_OPTIONS, THINKING_OPTIONS, WEB_SEARCH_OPTIONS } from '../constants';
-import { useChatModels } from '../hooks/useChatAI';
+import { useChatModels } from '../hooks/useChatModels';
 
 import { Input } from '@/components/ui/input';
 import {

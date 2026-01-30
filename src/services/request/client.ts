@@ -843,19 +843,6 @@ class ClientRequest {
         data: { url: fullUrl, status: response.status },
       });
 
-      try {
-        if (response.body) {
-          createSseStream(response.body);
-        }
-      } catch (e) {
-        addSentryBreadcrumb({
-          category: 'sse',
-          message: `SSE parser init failed: ${fullUrl}`,
-          level: 'warning',
-          data: { error: e instanceof Error ? e.message : 'Unknown' },
-        });
-      }
-
       callback(response);
 
       return () => activeController.abort();

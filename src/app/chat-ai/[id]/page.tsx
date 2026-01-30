@@ -15,7 +15,9 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { ChatSidebar, ChatAIPanels } from '../_components';
 import { createModelConfig, INITIAL_PRIMARY_MODEL } from '../constants';
-import { useConversations, useChat, useChatModels } from '../hooks/useChatAI';
+import { useConversations } from '../hooks/useConversations';
+import { useChat } from '../hooks/useChat';
+import { useChatModels } from '../hooks/useChatModels';
 import type { ModelConfig, ChatSession } from '../types';
 
 /** 最大允许的对比模型数量（不含主模型） */
@@ -30,7 +32,7 @@ export default function ChatRoomPage() {
   const isNewSession = /^\d{13,}$/.test(chatId);
 
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession, renameSession, addSession } = useConversations();
+  const { sessions, deleteSession, renameSession, addSession, refresh } = useConversations();
 
   // 获取动态模型列表
   const { models, isLoading: isModelsLoading } = useChatModels();
@@ -109,6 +111,7 @@ export default function ChatRoomPage() {
         // 使用 setTimeout 确保状态更新后再发送
         setTimeout(() => {
           sendMessage(initialMessage, primaryConfig);
+          setInputValues((prev) => ({ ...prev, [primaryConfig.id]: '' }));
           setHasSentMessage(true);
         }, 100);
       }
@@ -118,21 +121,40 @@ export default function ChatRoomPage() {
   // 当获得 conversationId 后，将会话添加到历史列表
   useEffect(() => {
     if (conversationId && hasSentMessage) {
-      const newSession: ChatSession = {
-        id: conversationId,
-        title: messages[0]?.content.slice(0, 20) || '新会话',
-        createdAt: new Date(),
-        lastMessageAt: new Date(),
-        messageCount: messages.length,
-      };
-      addSession(newSession);
+      // 查找是否已经存在于会话列表中
+      const sessionExists = sessions.some((session) => session.id === conversationId);
+
+      if (!sessionExists) {
+        const newSession: ChatSession = {
+          id: conversationId,
+          title: messages[0]?.content.slice(0, 20) || '新会话',
+          createdAt: new Date(),
+          lastMessageAt: new Date(),
+          messageCount: messages.length,
+        };
+        addSession(newSession);
+      }
 
       // 如果 URL 中的 ID 与实际 conversationId 不同，更新 URL
       if (chatId !== conversationId) {
         router.replace(`/chat-ai/${conversationId}`);
       }
     }
-  }, [conversationId, hasSentMessage, messages, addSession, chatId, router]);
+  }, [conversationId, hasSentMessage, messages, addSession, chatId, router, sessions]);
+
+  // 当消息状态变为 idle 且有消息时，刷新会话列表
+  useEffect(() => {
+    if (status === 'idle' && messages.length > 0) {
+      // 延迟执行以确保会话已完全保存
+      const timer = setTimeout(() => {
+        // 刷新会话列表以确保最新状态
+        // 直接调用 refresh 来获取服务器上的最新会话列表
+        refresh();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, messages, refresh]);
 
   /**
    * 更新主模型配置
@@ -222,25 +244,16 @@ export default function ChatRoomPage() {
     router.push('/chat-ai');
   }, [router]);
 
-  /**
-   * 删除会话
-   */
   const handleDeleteSession = useCallback(
     async (sessionId: string) => {
       const success = await deleteSession(sessionId);
 
-      // 如果删除的是当前会话，跳转到首页或第一个会话
+      // 如果删除的是当前会话，跳转到新会话页面
       if (success && (chatId === sessionId || conversationId === sessionId)) {
-        const remainingSessions = sessions.filter((s) => s.id !== sessionId);
-
-        if (remainingSessions.length > 0) {
-          router.push(`/chat-ai/${remainingSessions[0].id}`);
-        } else {
-          router.push('/chat-ai');
-        }
+        router.push('/chat-ai');
       }
     },
-    [chatId, conversationId, sessions, deleteSession, router],
+    [chatId, conversationId, deleteSession, router],
   );
 
   /**

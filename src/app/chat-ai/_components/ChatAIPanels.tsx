@@ -14,14 +14,13 @@
 
 import React, { useRef, useState } from 'react';
 import { Send, Copy, User, Bot, Square, Loader2, Pencil, Share2, Check } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MdPreview } from 'md-editor-rt';
+import 'md-editor-rt/lib/preview.css';
 import { useStickToBottom } from 'use-stick-to-bottom';
 
-import SyntaxHighlight from './SyntaxHighlight';
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
-import { useChatModels } from '../hooks/useChatAI';
+import { useChatModels } from '../hooks/useChatModels';
 
 import { cn } from '@/utils';
 
@@ -144,21 +143,16 @@ function MessageBubble({
             <div className="whitespace-pre-wrap">{message.content}</div>
           ) : (
             // AI 消息使用 Markdown 渲染
-            <div className="prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-purple-600 prose-code:bg-purple-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+            <div
+              className={cn(
+                'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-purple-600 prose-code:bg-purple-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
+                // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
+                message.isStreaming &&
+                  'after:content-["▋"] after:ml-1 after:animate-pulse after:text-purple-600 after:inline-block after:align-middle',
+              )}
+            >
               {message.content ? (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code: SyntaxHighlight,
-                    pre: ({ children, className, ...props }: any) => (
-                      <pre className={`rounded ${className || ''}`} {...props}>
-                        {children}
-                      </pre>
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                <MdPreview value={message.content} theme="light" showCodeRowNumber={false} />
               ) : message.isStreaming ? (
                 <span className="inline-flex items-center gap-1 text-gray-400">
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -166,11 +160,6 @@ function MessageBubble({
                 </span>
               ) : null}
             </div>
-          )}
-
-          {/* 流式加载指示器 */}
-          {message.isStreaming && message.content && (
-            <span className="inline-block w-1.5 h-4 bg-purple-600 animate-pulse ml-0.5 align-middle" />
           )}
         </div>
       </div>

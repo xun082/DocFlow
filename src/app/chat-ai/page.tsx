@@ -19,7 +19,8 @@ import { useRouter } from 'next/navigation';
 
 import { ChatSidebar, ChatAIPanels } from './_components';
 import { createModelConfig, INITIAL_PRIMARY_MODEL } from './constants';
-import { useConversations, useChatModels } from './hooks/useChatAI';
+import { useConversations } from './hooks/useConversations';
+import { useChatModels } from './hooks/useChatModels';
 import type { ModelConfig } from './types';
 
 /** 最大允许的对比模型数量（不含主模型） */

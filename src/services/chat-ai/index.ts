@@ -126,7 +126,7 @@ export const ChatAiApi = {
     onError?: (error: Error) => void,
   ): Promise<() => void> => {
     try {
-      const cancel = await request.sseStream(
+      const cancel = await request.sse(
         '/api/v1/chat/completions',
         {
           timeout: 80000,
@@ -135,37 +135,89 @@ export const ChatAiApi = {
             ? { onError: (err) => onError(err instanceof Error ? err : new Error(String(err))) }
             : undefined,
         },
-        (rawData) => {
+        async (response) => {
+          if (!response.body) return;
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
           try {
-            // 检查是否是结束标记
-            const trimmed = rawData.data.trim();
+            while (true) {
+              const { done, value } = await reader.read();
 
-            if (trimmed === '[DONE]') {
-              onMessage({ event: 'done' });
+              if (done) {
+                onMessage({ event: 'done' });
+                break;
+              }
 
-              return;
+              buffer += decoder.decode(value, { stream: true });
+
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // 保留不完整的最后一行
+
+              for (const line of lines) {
+                if (line.trim() === '') continue;
+
+                // 处理 data: 开头的行
+                if (line.startsWith('data: ')) {
+                  const jsonStr = line.slice(6);
+
+                  if (jsonStr.trim() === '[DONE]') {
+                    onMessage({ event: 'done' });
+                    continue;
+                  }
+
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+                    const content = parsed.choices?.[0]?.delta?.content || '';
+
+                    if (content || parsed.choices?.[0]?.finish_reason) {
+                      onMessage({
+                        event: 'message',
+                        content,
+                        conversation_id: parsed.conversation_id,
+                        message_id: parsed.id,
+                      });
+                    }
+                  } catch (e) {
+                    // 忽略解析错误，可能是非 JSON 数据
+                    console.error('解析错误', e);
+                  }
+                } else if (
+                  !line.startsWith('event:') &&
+                  !line.startsWith('id:') &&
+                  !line.startsWith('retry:')
+                ) {
+                  // 尝试直接解析非 SSE 格式的 JSON（兼容性处理）
+                  try {
+                    const parsed = JSON.parse(line);
+                    const content = parsed.choices?.[0]?.delta?.content || '';
+
+                    if (content || parsed.choices?.[0]?.finish_reason) {
+                      onMessage({
+                        event: 'message',
+                        content,
+                        conversation_id: parsed.conversation_id,
+                        message_id: parsed.id,
+                      });
+                    }
+                  } catch (e) {
+                    // 忽略
+                    console.error('解析错误', e);
+                  }
+                }
+              }
             }
-
-            const parsed = JSON.parse(trimmed);
-
-            const content = parsed.choices?.[0]?.delta?.content || '';
-            onMessage({
-              event: 'message',
-              content,
-              conversation_id: parsed.conversation_id,
-              message_id: parsed.id,
-            });
-          } catch {
-            const trimmed = rawData.data.trim();
-
-            if (trimmed && trimmed !== '[DONE]') {
-              onMessage({ event: 'message', content: trimmed });
+          } catch (err) {
+            if (onError) {
+              onError(err instanceof Error ? err : new Error(String(err)));
             }
           }
         },
       );
 
-      return cancel;
+      return cancel || (() => {});
     } catch (error) {
       if (onError) {
         onError(error instanceof Error ? error : new Error(String(error)));
