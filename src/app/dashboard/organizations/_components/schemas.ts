@@ -36,7 +36,6 @@ export const inviteMemberSchema = z.object({
   role: z.nativeEnum(OrganizationRole),
   message: z
     .string()
-    .min(1, '邀请消息不能为空')
     .max(500, '邀请消息最多500个字符')
     .refine((val) => val.trim().length > 0, '邀请消息不能为空'), // 拒绝纯空格
 });
