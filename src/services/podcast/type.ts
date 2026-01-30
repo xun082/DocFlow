@@ -36,10 +36,29 @@ export interface ListResponse<T> {
   page: number;
 }
 
-// 面试官类型枚举
+// 面试官角色枚举
+export enum Interviewer {
+  FrontEnd = 'front_end',
+  Hrbp = 'hrbp',
+  MarketingManager = 'marketing_manager',
+}
+
+// 面试官类型（向后兼容）
 export type InterviewerType = 'front_end' | 'hrbp' | 'marketing_manager';
 
-// 语音 ID 类型（根据 API 文档）
+// 音色枚举
+export enum Voice {
+  FnlpMOSSTTSDV05Alex = 'fnlp/MOSS-TTSD-v0.5:alex',
+  FnlpMOSSTTSDV05Anna = 'fnlp/MOSS-TTSD-v0.5:anna',
+  FnlpMOSSTTSDV05Bella = 'fnlp/MOSS-TTSD-v0.5:bella',
+  FnlpMOSSTTSDV05Benjamin = 'fnlp/MOSS-TTSD-v0.5:benjamin',
+  FnlpMOSSTTSDV05Charles = 'fnlp/MOSS-TTSD-v0.5:charles',
+  FnlpMOSSTTSDV05Claire = 'fnlp/MOSS-TTSD-v0.5:claire',
+  FnlpMOSSTTSDV05David = 'fnlp/MOSS-TTSD-v0.5:david',
+  FnlpMOSSTTSDV05Diana = 'fnlp/MOSS-TTSD-v0.5:diana',
+}
+
+// 语音 ID 类型（向后兼容）
 export type VoiceId =
   | 'fnlp/MOSS-TTSD-v0.5:alex'
   | 'fnlp/MOSS-TTSD-v0.5:anna'
@@ -53,11 +72,9 @@ export type VoiceId =
 // 生成播客的请求参数
 export interface GeneratePodcastParams {
   file: File; // 必需
-  interviewer: InterviewerType; // 必需
-  interviewer_voice?: VoiceId; // 可选，面试官音色
-  candidate_voice?: VoiceId; // 可选，候选人音色
-  speech_speed?: number; // 可选，语音播放速度 (0.5-2.0，默认 1.0)
-  sample_rate?: number; // 可选，音频采样率 (Hz，默认 32000)
+  interviewer: InterviewerType | Interviewer; // 必需
+  interviewer_voice?: VoiceId | Voice; // 可选，面试官音色
+  candidate_voice?: VoiceId | Voice; // 可选，候选人音色
   temperature?: number; // 可选，AI 生成温度 (0-1，默认 0.8)
 }
 
