@@ -28,7 +28,7 @@ export default function ChatRoomPage() {
   const router = useRouter();
   const chatId = params.id as string;
 
-  // 判断是否是新会话（ID 是时间戳格式）
+  // 通过ID格式判断是否是新会话（新会话ID为13位以上的时间戳）
   const isNewSession = /^\d{13,}$/.test(chatId);
 
   // 使用 Hook 管理会话列表
@@ -142,20 +142,6 @@ export default function ChatRoomPage() {
     }
   }, [conversationId, hasSentMessage, messages, addSession, chatId, router, sessions]);
 
-  // 当消息状态变为 idle 且有消息时，刷新会话列表
-  useEffect(() => {
-    if (status === 'idle' && messages.length > 0) {
-      // 延迟执行以确保会话已完全保存
-      const timer = setTimeout(() => {
-        // 刷新会话列表以确保最新状态
-        // 直接调用 refresh 来获取服务器上的最新会话列表
-        refresh();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [status, messages, refresh]);
-
   /**
    * 更新主模型配置
    */
@@ -213,11 +199,16 @@ export default function ChatRoomPage() {
       if (!value.trim() || status === 'streaming') return;
 
       const config = modelConfigs.find((c) => c.id === modelId) || primaryConfig;
-      sendMessage(value.trim(), config);
+      sendMessage(value.trim(), config, {
+        onSuccess: () => {
+          // 消息生成完成后刷新会话列表
+          refresh();
+        },
+      });
       setInputValues((prev) => ({ ...prev, [modelId]: '' }));
       setHasSentMessage(true);
     },
-    [inputValues, status, modelConfigs, primaryConfig, sendMessage],
+    [inputValues, status, modelConfigs, primaryConfig, sendMessage, refresh],
   );
 
   /**

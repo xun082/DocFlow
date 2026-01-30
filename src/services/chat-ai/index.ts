@@ -8,6 +8,8 @@
  * - 会话删除和更新
  */
 
+import * as Sentry from '@sentry/nextjs';
+
 import request, { type ErrorHandler } from '../request';
 
 /** 聊天消息角色 */
@@ -182,6 +184,7 @@ export const ChatAiApi = {
                     }
                   } catch (e) {
                     // 忽略解析错误，可能是非 JSON 数据
+                    Sentry.captureException(e, { extra: { jsonStr } });
                     console.error('解析错误', e);
                   }
                 } else if (
@@ -204,6 +207,7 @@ export const ChatAiApi = {
                     }
                   } catch (e) {
                     // 忽略
+                    Sentry.captureException(e, { extra: { line } });
                     console.error('解析错误', e);
                   }
                 }

@@ -1016,11 +1016,5 @@ const clientRequest = new ClientRequest(process.env.NEXT_PUBLIC_SERVER_URL || ''
   retryDelay: 1000,
 });
 
-// const clientRequest = new ClientRequest('', {
-//   timeout: 15000,
-//   retries: 1,
-//   retryDelay: 1000,
-// });
-
 export { ClientRequest, clientRequest };
 export default clientRequest;

@@ -33,7 +33,11 @@ export interface UseChatResult {
   /** 会话 ID（发送首条消息后获得） */
   conversationId: string | null;
   /** 发送消息 */
-  sendMessage: (content: string, config: ModelConfig) => Promise<void>;
+  sendMessage: (
+    content: string,
+    config: ModelConfig,
+    options?: { onSuccess?: () => void; onError?: (err: any) => void },
+  ) => Promise<void>;
   /** 停止生成 */
   stopGenerating: () => void;
   /** 清空消息 */
@@ -84,8 +88,13 @@ export function useChat(): UseChatResult {
   }, []);
 
   // 发送消息
+  // 发送消息
   const sendMessage = useCallback(
-    async (content: string, config: ModelConfig) => {
+    async (
+      content: string,
+      config: ModelConfig,
+      options?: { onSuccess?: () => void; onError?: (err: any) => void },
+    ) => {
       if (!content.trim() || status === 'streaming') return;
 
       // 添加用户消息
@@ -136,11 +145,17 @@ export function useChat(): UseChatResult {
                 prev.map((m) => (m.id === assistantMessage.id ? { ...m, isStreaming: false } : m)),
               );
 
+              // 触发成功回调
+              if (options?.onSuccess) {
+                options.onSuccess();
+              }
+
               return;
             }
 
             if (chunk.event === 'error') {
-              setError(chunk.error || '发生错误');
+              const errorMsg = chunk.error || '发生错误';
+              setError(errorMsg);
               setStatus('error');
               // 错误时停止 streaming 状态
               setMessages((prev) =>
@@ -150,6 +165,10 @@ export function useChat(): UseChatResult {
                     : m,
                 ),
               );
+
+              if (options?.onError) {
+                options.onError(new Error(errorMsg));
+              }
 
               return;
             }
@@ -180,6 +199,10 @@ export function useChat(): UseChatResult {
                   : m,
               ),
             );
+
+            if (options?.onError) {
+              options.onError(err instanceof Error ? err : new Error(String(err)));
+            }
           },
         );
 
@@ -195,6 +218,10 @@ export function useChat(): UseChatResult {
               : m,
           ),
         );
+
+        if (options?.onError) {
+          options.onError(err instanceof Error ? err : new Error(String(err)));
+        }
       }
     },
     [conversationId, messages, status],

@@ -248,19 +248,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-
-  // async rewrites() {
-  //   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-  //   if (!serverUrl) return [];
-
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: `${serverUrl}/api/:path*`,
-  //     },
-  //   ];
-  // },
 };
 
 // 配置 Bundle Analyzer
