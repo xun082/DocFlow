@@ -2,17 +2,35 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 
-import Header from '@/components/homepage/Header';
-import Footer from '@/components/homepage/Footer';
+import { Header, Footer } from '@/app/_components/homepage';
 import { blogsServerApi } from '@/services/blogs';
 import { formatDateTime } from '@/utils/format/date';
 import { BLOG_CATEGORIES } from '@/utils/constants/blog';
+
+// ISR: 每小时重新生成一次
+export const revalidate = 3600;
 
 interface BlogPageProps {
   params: Promise<{ id: string }>;
 }
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+// 预生成热门博客（前 50 篇）
+export async function generateStaticParams() {
+  try {
+    const response = await blogsServerApi.getAll({ limit: 50 });
+    const posts = response.data?.data?.list || [];
+
+    return posts.map((post) => ({
+      id: String(post.id),
+    }));
+  } catch (error) {
+    console.error('Failed to generate static params for blogs:', error);
+
+    return [];
+  }
+}
 
 // 动态生成 SEO 元数据
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {

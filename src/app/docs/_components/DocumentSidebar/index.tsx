@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // 导入各个tab组件
 import Folder from './folder';
@@ -36,12 +37,31 @@ const MAX_WIDTH = 420;
 const TOGGLE_THRESHOLD = 300; // 小于此值时折叠
 
 function DocumentSidebar() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { isOpen, toggle } = useSidebar();
-  const [activeTab, setActiveTab] = useState<TabType>('folder');
+
+  // 从 URL 查询参数获取 tab
+  const tabParam = searchParams.get('tab');
+  const initialTab =
+    tabParam && tabs.some((t) => t.id === tabParam) ? (tabParam as TabType) : 'folder';
+
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [sidebarWidth, setSidebarWidth] = useState(MAX_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const clamp = (value: number, min: number, max: number) => Math.max(max, Math.min(min, value));
+
+  // 监听 URL 变化，同步 activeTab
+  useEffect(() => {
+    const newTabParam = searchParams.get('tab');
+    const newTab =
+      newTabParam && tabs.some((t) => t.id === newTabParam) ? (newTabParam as TabType) : 'folder';
+
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [searchParams, activeTab]);
 
   // 拖拽调整宽度
   useEffect(() => {
@@ -99,6 +119,20 @@ function DocumentSidebar() {
               <button
                 onClick={() => {
                   setActiveTab(tab.id);
+
+                  // 更新 URL 查询参数
+                  const params = new URLSearchParams(searchParams.toString());
+
+                  if (tab.id === 'folder') {
+                    // 文件夹标签不需要 tab 参数
+                    params.delete('tab');
+                  } else {
+                    params.set('tab', tab.id);
+                  }
+
+                  const newSearch = params.toString();
+                  const newUrl = newSearch ? `?${newSearch}` : window.location.pathname;
+                  router.push(newUrl, { scroll: false });
 
                   if (!isOpen) {
                     toggle();

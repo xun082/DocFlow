@@ -4,8 +4,16 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  reactStrictMode: true,
 
   serverExternalPackages: ['import-in-the-middle', 'require-in-the-middle'],
+
+  // 优化日志输出
+  logging: {
+    fetches: {
+      fullUrl: false, // 生产环境不显示完整 URL
+    },
+  },
 
   // 启用编译器优化
   compiler: {
@@ -25,11 +33,19 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // 优化图片加载
+    unoptimized: false,
+    // 添加远程图片域名（如果需要）
+    remotePatterns: [
+      // 可以在这里添加允许的远程图片域名
+      // { protocol: 'https', hostname: 'example.com' }
+    ],
   },
 
   // 性能优化配置
   compress: true,
-  productionBrowserSourceMaps: false,
+  // 排查性能时可用 ENABLE_SOURCE_MAPS=true pnpm build，便于在 Performance 面板看到真实函数名
+  productionBrowserSourceMaps: process.env.ENABLE_SOURCE_MAPS === 'true',
 
   // 实验性功能 - Turbopack 优化
   experimental: {
@@ -61,6 +77,10 @@ const nextConfig: NextConfig = {
     serverComponentsHmrCache: true,
     // Turbopack 文件系统缓存（Next.js 16 默认开启）
     turbopackFileSystemCacheForDev: true,
+    // 优化字体加载
+    optimizeServerReact: true,
+    // 使用 Lightning CSS 替代 PostCSS（更快的 CSS 处理）
+    // useLightningcss: true, // 取消注释以启用（需要确保兼容性）
   },
 
   // 开发模式优化
@@ -68,17 +88,17 @@ const nextConfig: NextConfig = {
     position: 'bottom-right',
   },
 
+  // 优化开发时内存使用
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000, // 页面在内存中保持 60 秒
+    pagesBufferLength: 5, // 同时保持 5 个页面在内存中
+  },
+
   // 优化模块导入 - 按需加载
+  // 注意：lodash-es 和 date-fns 已在 optimizePackageImports 中配置
+  // modularizeImports 主要用于没有被 optimizePackageImports 覆盖的库
   modularizeImports: {
-    'lodash-es': {
-      transform: 'lodash-es/{{member}}',
-      preventFullImport: true,
-    },
-    'date-fns': {
-      transform: 'date-fns/{{member}}',
-      preventFullImport: true,
-    },
-    // Lucide React 已经通过 optimizePackageImports 自动优化，不需要这里配置
+    // 可以在这里添加其他需要按需加载的库
   },
 
   // Turbopack 专用配置
