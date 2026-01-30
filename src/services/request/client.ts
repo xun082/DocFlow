@@ -30,18 +30,22 @@ import type { TokenRefreshResponse } from '@/types/auth';
 // 在开发环境禁止 Sentry 上报和 breadcrumb 记录
 const isProduction = process.env.NODE_ENV === 'production';
 
-function addSentryBreadcrumb(breadcrumb: Parameters<typeof Sentry.addBreadcrumb>[0]) {
-  if (!isProduction) return;
-  Sentry.addBreadcrumb(breadcrumb);
-}
+// 开发环境使用空函数，避免不必要的函数调用开销
+const addSentryBreadcrumb = isProduction
+  ? (breadcrumb: Parameters<typeof Sentry.addBreadcrumb>[0]) => {
+      Sentry.addBreadcrumb(breadcrumb);
+    }
+  : () => {
+      // 开发环境：空操作
+    };
 
-function captureSentryException(
-  error: unknown,
-  options?: Parameters<typeof Sentry.captureException>[1],
-) {
-  if (!isProduction) return;
-  Sentry.captureException(error, options as Parameters<typeof Sentry.captureException>[1]);
-}
+const captureSentryException = isProduction
+  ? (error: unknown, options?: Parameters<typeof Sentry.captureException>[1]) => {
+      Sentry.captureException(error, options as Parameters<typeof Sentry.captureException>[1]);
+    }
+  : () => {
+      // 开发环境：空操作
+    };
 
 interface ClientRequestProps {
   url: string;
@@ -874,7 +878,6 @@ class ClientRequest {
           params.errorHandler.onError(error);
         }
 
-        console.error('流读取过程中出错:', error);
         throw error;
       }
 

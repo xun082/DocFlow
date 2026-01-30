@@ -46,11 +46,14 @@ class AnalyticsTracker {
   }
 
   private setupEventListeners(): void {
-    ['beforeunload', 'unload', 'pagehide'].forEach((event) =>
-      window.addEventListener(event, this.handleExit),
-    );
-
+    // 使用现代事件替代废弃的 unload
+    // pagehide: 页面被隐藏时触发（包括关闭、前进/后退）
+    // visibilitychange: 页面可见性变化时触发
+    window.addEventListener('pagehide', this.handleExit);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
+    // 仅在需要提示用户保存数据时使用 beforeunload
+    // 这里只用于数据发送，不需要 beforeunload
   }
 
   private startHeartbeat(): void {

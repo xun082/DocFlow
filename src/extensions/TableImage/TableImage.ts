@@ -1,13 +1,28 @@
-import { mergeAttributes, Range, ChainedCommands } from '@tiptap/core';
+import { mergeAttributes, Range, type CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 
 import TableImageView from './components/TableImageView';
 import { Image } from '../Image';
 
+/**
+ * 表格图片属性接口
+ */
+interface TableImageAttributes {
+  src: string;
+  alt?: string;
+  isTableImage?: boolean;
+}
+
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     tableImage: {
+      /**
+       * 插入表格图片（缩略图模式）
+       */
       setTableImage: (attributes: { src: string }) => ReturnType;
+      /**
+       * 在指定位置插入表格图片
+       */
       setTableImageAt: (attributes: { src: string; pos: number | Range }) => ReturnType;
     };
   }
@@ -29,18 +44,20 @@ export const TableImage = Image.extend({
       src: {
         default: '',
         parseHTML: (element: Element) => element.getAttribute('src'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: TableImageAttributes) => ({
           src: attributes.src,
         }),
       },
       alt: {
         default: undefined,
         parseHTML: (element: Element) => element.getAttribute('alt'),
-        renderHTML: (attributes: any) => ({
+        renderHTML: (attributes: TableImageAttributes) => ({
           alt: attributes.alt,
         }),
       },
-      // 表格图片专用属性：始终保持缩略图尺寸
+      /**
+       * 表格图片专用属性：始终保持缩略图尺寸
+       */
       isTableImage: {
         default: true,
         parseHTML: () => true,
@@ -74,15 +91,18 @@ export const TableImage = Image.extend({
     return {
       setTableImage:
         (attrs: { src: string }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
-          return commands.insertContent({ type: 'tableImage', attrs: { src: attrs.src } });
+        ({ commands }: CommandProps) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: { src: attrs.src },
+          });
         },
 
       setTableImageAt:
         (attrs: { src: string; pos: number | Range }) =>
-        ({ commands }: { commands: ChainedCommands }) => {
+        ({ commands }: CommandProps) => {
           return commands.insertContentAt(attrs.pos, {
-            type: 'tableImage',
+            type: this.name,
             attrs: { src: attrs.src },
           });
         },
