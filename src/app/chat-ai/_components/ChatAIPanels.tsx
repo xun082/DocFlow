@@ -148,7 +148,7 @@ function MessageBubble({
                 'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-purple-600 prose-code:bg-purple-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
                 // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
                 message.isStreaming &&
-                  'after:content-["▋"] after:ml-1 after:animate-pulse after:text-purple-600 after:inline-block after:align-middle',
+                'after:content-["▋"] after:ml-1 after:animate-pulse after:text-purple-600 after:inline-block after:align-middle',
               )}
             >
               {message.content ? (
@@ -240,6 +240,11 @@ export default function ChatAIPanels({
 
   // 处理键盘事件（Enter 发送）
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // 如果正在输入法输入中，不触发发送
+    if (e.nativeEvent.isComposing) {
+      return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
 

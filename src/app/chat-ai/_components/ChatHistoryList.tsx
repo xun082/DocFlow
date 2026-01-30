@@ -37,7 +37,21 @@ interface ChatHistoryListProps {
  * 格式化时间显示
  */
 function formatTime(date: Date): string {
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
+  const d = dayjs(date);
+  const now = dayjs();
+
+  // 如果是今天，只显示时分
+  if (d.isSame(now, 'day')) {
+    return d.format('HH:mm');
+  }
+
+  // 如果是今年，显示 月-日 时:分
+  if (d.isSame(now, 'year')) {
+    return d.format('MM-DD HH:mm');
+  }
+
+  // 跨年显示 年-月-日 时:分
+  return d.format('YYYY-MM-DD HH:mm');
 }
 
 export default function ChatHistoryList({
@@ -173,11 +187,10 @@ export default function ChatHistoryList({
                       >
                         {session.title}
                       </h4>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center justify-between mt-1">
                         <span className="text-[10px] text-gray-400">
                           {formatTime(session.lastMessageAt)}
                         </span>
-                        <span className="text-[10px] text-gray-400">·</span>
                         <span className="text-[10px] text-gray-400">
                           {session.messageCount} 条消息
                         </span>

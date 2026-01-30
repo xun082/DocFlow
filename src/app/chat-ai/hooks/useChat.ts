@@ -186,6 +186,21 @@ export function useChat(): UseChatResult {
                 ),
               );
             }
+
+            // 检查是否有明确的结束标识
+            if (chunk.finish_reason) {
+              setStatus('idle');
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMessage.id ? { ...m, isStreaming: false } : m,
+                ),
+              );
+
+              // 触发成功回调
+              if (options?.onSuccess) {
+                options.onSuccess();
+              }
+            }
           },
           (err) => {
             console.error('SSE 错误:', err);

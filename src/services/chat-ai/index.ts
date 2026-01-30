@@ -86,6 +86,8 @@ export interface StreamChunk {
   message_id?: string;
   /** 错误信息 */
   error?: string;
+  /** 完成原因 */
+  finish_reason?: string;
 }
 
 /** 会话列表响应 */
@@ -180,6 +182,7 @@ export const ChatAiApi = {
                         content,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
+                        finish_reason: parsed.choices?.[0]?.finish_reason,
                       });
                     }
                   } catch (e) {
@@ -203,6 +206,7 @@ export const ChatAiApi = {
                         content,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
+                        finish_reason: parsed.choices?.[0]?.finish_reason,
                       });
                     }
                   } catch (e) {
@@ -221,13 +225,13 @@ export const ChatAiApi = {
         },
       );
 
-      return cancel || (() => {});
+      return cancel || (() => { });
     } catch (error) {
       if (onError) {
         onError(error instanceof Error ? error : new Error(String(error)));
       }
 
-      return () => {};
+      return () => { };
     }
   },
 
