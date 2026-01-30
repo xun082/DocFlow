@@ -231,12 +231,16 @@ export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps
       {/* Generation Count (n) */}
       <SliderInput
         label="N (生成数量)"
-        tooltip="控制每个输入提示生成的回复参数。范围 0-1。"
+        tooltip="控制每个输入提示生成的回复数量。建议范围 1-10 的整数。"
         value={n}
-        min={0}
-        max={1}
-        step={0.01}
-        onChange={(v) => updateConfig('n', v)}
+        min={1}
+        max={10}
+        step={1}
+        onChange={(v) => {
+          // 强制限制在 1-10 之间，且为整数
+          const validValue = Math.max(1, Math.min(10, Math.floor(v)));
+          updateConfig('n', validValue);
+        }}
       />
 
       {/* Enable Thinking */}

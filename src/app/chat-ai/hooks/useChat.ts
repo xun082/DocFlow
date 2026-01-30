@@ -147,10 +147,29 @@ export function useChat(): UseChatResult {
       };
 
       try {
+        let bufferedContent = '';
+        let lastUpdateTime = 0;
+        const THROTTLE_MS = 5; // 10ms force update interval for smoother perception
+
+        const flushBuffer = () => {
+          if (!bufferedContent) return;
+
+          const contentToAppend = bufferedContent;
+          bufferedContent = '';
+
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessage.id ? { ...m, content: m.content + contentToAppend } : m,
+            ),
+          );
+          lastUpdateTime = Date.now();
+        };
+
         const cancel = await ChatAiApi.Completions(
           requestData,
           (chunk: StreamChunk) => {
             if (chunk.event === 'done') {
+              flushBuffer(); // Ensure remaining content is flushed
               setStatus('idle');
               setMessages((prev) =>
                 prev.map((m) => (m.id === assistantMessage.id ? { ...m, isStreaming: false } : m)),
@@ -165,6 +184,8 @@ export function useChat(): UseChatResult {
             }
 
             if (chunk.event === 'error') {
+              flushBuffer();
+
               const errorMsg = chunk.error || '发生错误';
               setError(errorMsg);
               setStatus('error');
@@ -189,17 +210,21 @@ export function useChat(): UseChatResult {
               setConversationId(chunk.conversation_id);
             }
 
-            // 追加内容
+            // 追加内容到缓冲区
             if (chunk.content) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMessage.id ? { ...m, content: m.content + chunk.content } : m,
-                ),
-              );
+              bufferedContent += chunk.content;
+
+              // Throttle updates
+              const now = Date.now();
+
+              if (now - lastUpdateTime >= THROTTLE_MS) {
+                flushBuffer();
+              }
             }
 
             // 检查是否有明确的结束标识
             if (chunk.finish_reason) {
+              flushBuffer(); // Ensure remaining content is flushed
               setStatus('idle');
               setMessages((prev) =>
                 prev.map((m) => (m.id === assistantMessage.id ? { ...m, isStreaming: false } : m)),
@@ -213,6 +238,7 @@ export function useChat(): UseChatResult {
           },
           (err) => {
             console.error('SSE 错误:', err);
+            flushBuffer();
             setError(String(err));
             setStatus('error');
             // 错误时停止 streaming 状态
@@ -231,7 +257,10 @@ export function useChat(): UseChatResult {
         );
 
         cancelFnRef.current = cancel;
-      } catch (err) {
+      } catch (err: any) {
+        // 如果是取消请求导致的错误，直接忽略
+        if (err.name === 'AbortError') return;
+
         setError(String(err));
         setStatus('error');
         // 错误时停止 streaming 状态
@@ -278,7 +307,11 @@ export function useChat(): UseChatResult {
   useEffect(() => {
     return () => {
       if (cancelFnRef.current) {
-        cancelFnRef.current();
+        try {
+          cancelFnRef.current();
+        } catch {
+          // 忽略清理时的终止错误
+        }
       }
     };
   }, []);

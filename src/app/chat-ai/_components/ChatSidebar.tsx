@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -89,6 +90,7 @@ export default function ChatSidebar({
   isMobileOpen = false,
   onMobileClose,
 }: ChatSidebarProps) {
+  const router = useRouter();
   const { data: user } = useUserQuery();
   const logoutMutation = useLogoutMutation();
 
@@ -232,14 +234,14 @@ export default function ChatSidebar({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => (window.location.href = '/dashboard/user')}
+                    onClick={() => router.push('/dashboard/user')}
                   >
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>个人中心</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => (window.location.href = '/dashboard/settings')}
+                    onClick={() => router.push('/dashboard/settings')}
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>账户设置</span>

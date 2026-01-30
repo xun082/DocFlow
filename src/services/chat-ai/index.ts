@@ -234,7 +234,15 @@ export const ChatAiApi = {
                 }
               }
             }
-          } catch (err) {
+          } catch (err: any) {
+            // Include both DOMException and generic AbortError checks
+            if (
+              err.name === 'AbortError' ||
+              (err instanceof DOMException && err.name === 'AbortError')
+            ) {
+              return;
+            }
+
             if (onError) {
               onError(err instanceof Error ? err : new Error(String(err)));
             }

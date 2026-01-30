@@ -47,8 +47,6 @@ interface ChatPanelProps {
   onInputChange: (value: string) => void;
   /** 发送消息回调 */
   onSend: () => void;
-  /** 快捷问题点击回调 */
-  onQuickQuestionClick: (question: string) => void;
   /** 是否显示边框（对比模式下使用） */
   showBorder?: boolean;
   /** 聊天消息列表 */
@@ -97,164 +95,180 @@ async function copyToClipboard(text: string): Promise<boolean> {
 /**
  * 消息气泡组件
  */
-function MessageBubble({
-  message,
-  onEdit,
-  isGenerating = false,
-  userAvatar,
-  userName,
-}: {
-  message: ChatMessage;
-  onEdit?: (message: ChatMessage) => void;
-  isGenerating?: boolean;
-  userAvatar?: string;
-  userName?: string;
-}) {
-  const isUser = message.role === 'user';
-  const [copied, setCopied] = useState(false);
+const MessageBubble = React.memo(
+  function MessageBubble({
+    message,
+    onEdit,
+    isGenerating = false,
+    userAvatar,
+    userName,
+  }: {
+    message: ChatMessage;
+    onEdit?: (message: ChatMessage) => void;
+    isGenerating?: boolean;
+    userAvatar?: string;
+    userName?: string;
+  }) {
+    const isUser = message.role === 'user';
+    const [copied, setCopied] = useState(false);
 
-  // 处理编辑
-  const handleEdit = () => {
-    onEdit?.(message);
-  };
+    // 处理编辑
+    const handleEdit = () => {
+      onEdit?.(message);
+    };
 
-  // 处理复制
-  const handleCopy = async () => {
-    const success = await copyToClipboard(message.content);
+    // 处理复制
+    const handleCopy = async () => {
+      const success = await copyToClipboard(message.content);
 
-    if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    };
 
-  // 处理分享
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        text: message.content,
-      });
-    } else {
-      // 降级处理：复制到剪贴板
-      copyToClipboard(message.content);
-    }
-  };
+    // 处理分享
+    const handleShare = async () => {
+      if (typeof navigator !== 'undefined' && !!navigator.share) {
+        try {
+          await navigator.share({
+            text: message.content,
+          });
+        } catch {
+          // 用户取消分享或分享失败
+        }
+      } else {
+        // 降级处理：调用已有的复制逻辑，提供用户反馈
+        await handleCopy();
+      }
+    };
 
-  return (
-    <div className="group">
-      <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
-        {/* 头像 */}
-        <div className="flex-shrink-0">
-          {isUser ? (
-            <Avatar className="h-8 w-8 ring-1 ring-gray-100 shadow-sm">
-              <AvatarImage src={userAvatar || ''} alt={userName || 'User'} />
-              <AvatarFallback className="bg-blue-500 text-white">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm">
-              <Bot className="h-4 w-4" />
-            </div>
-          )}
+    return (
+      <div className="group">
+        <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
+          {/* 头像 */}
+          <div className="flex-shrink-0">
+            {isUser ? (
+              <Avatar className="h-8 w-8 ring-1 ring-gray-100 shadow-sm">
+                <AvatarImage src={userAvatar || ''} alt={userName || 'User'} />
+                <AvatarFallback className="bg-blue-500 text-white">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-sm">
+                <Bot className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+
+          {/* 消息内容 */}
+          <div
+            className={cn(
+              'max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
+              isUser
+                ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
+                : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
+            )}
+          >
+            {isUser ? (
+              // 用户消息直接显示
+              <div className="whitespace-pre-wrap">{message.content}</div>
+            ) : (
+              // AI 消息使用 Markdown 渲染
+              <div
+                className={cn(
+                  'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
+                  // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
+                  message.isStreaming &&
+                    'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-500 after:inline-block after:align-middle',
+                )}
+              >
+                {message.content ? (
+                  <MdPreview value={message.content} theme="light" showCodeRowNumber={false} />
+                ) : message.isStreaming ? (
+                  <span className="inline-flex items-center gap-1 text-gray-400">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    思考中...
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 消息内容 */}
-        <div
-          className={cn(
-            'max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
-            isUser
-              ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
-              : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
-          )}
-        >
-          {isUser ? (
-            // 用户消息直接显示
-            <div className="whitespace-pre-wrap">{message.content}</div>
-          ) : (
-            // AI 消息使用 Markdown 渲染
-            <div
+        {/* 消息操作按钮 */}
+        {!message.isStreaming && (
+          <div
+            className={cn(
+              'flex items-center gap-3 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity',
+              isUser ? 'justify-end pr-11' : 'pl-11',
+            )}
+          >
+            <button
+              onClick={handleEdit}
+              disabled={isGenerating}
               className={cn(
-                'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
-                // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
-                message.isStreaming &&
-                  'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-500 after:inline-block after:align-middle',
+                'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200',
+                isGenerating
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer',
               )}
             >
-              {message.content ? (
-                <MdPreview value={message.content} theme="light" showCodeRowNumber={false} />
-              ) : message.isStreaming ? (
-                <span className="inline-flex items-center gap-1 text-gray-400">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  思考中...
-                </span>
-              ) : null}
-            </div>
-          )}
-        </div>
+              <Pencil className="h-3.5 w-3.5" />
+              编辑
+            </button>
+            <button
+              onClick={handleCopy}
+              className={cn(
+                'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200 cursor-pointer',
+                copied
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50',
+              )}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  已复制
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  复制
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleShare}
+              className="cursor-pointer flex items-center gap-1 px-2 py-1 text-xs text-gray-400 rounded-md hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              分享
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* 消息操作按钮 */}
-      {!message.isStreaming && (
-        <div
-          className={cn(
-            'flex items-center gap-3 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity',
-            isUser ? 'justify-end pr-11' : 'pl-11',
-          )}
-        >
-          <button
-            onClick={handleEdit}
-            disabled={isGenerating}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200',
-              isGenerating
-                ? 'text-gray-300 cursor-not-allowed'
-                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer',
-            )}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            编辑
-          </button>
-          <button
-            onClick={handleCopy}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-all duration-200 cursor-pointer',
-              copied
-                ? 'text-green-600 bg-green-50'
-                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50',
-            )}
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5" />
-                已复制
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" />
-                复制
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleShare}
-            className="cursor-pointer flex items-center gap-1 px-2 py-1 text-xs text-gray-400 rounded-md hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
-          >
-            <Share2 className="h-3.5 w-3.5" />
-            分享
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+    );
+  },
+  (prevProps, nextProps) => {
+    // 自定义比较函数
+    // 如果消息内容变化、流式状态变化或生成状态变化，则重新渲染
+    return (
+      prevProps.message.content === nextProps.message.content &&
+      prevProps.message.isStreaming === nextProps.message.isStreaming &&
+      prevProps.isGenerating === nextProps.isGenerating &&
+      prevProps.userAvatar === nextProps.userAvatar &&
+      prevProps.userName === nextProps.userName
+    );
+  },
+);
 
 export default function ChatAIPanels({
   config,
   inputValue,
   onInputChange,
   onSend,
-  onQuickQuestionClick,
   showBorder = false,
   messages = [],
   status = 'idle',
@@ -324,7 +338,7 @@ export default function ChatAIPanels({
         )}
       </header>
 
-      {/* ----- 消息区域 ----- */}
+      {/* 消息区域 */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -339,10 +353,14 @@ export default function ChatAIPanels({
                 isGenerating={status === 'streaming'}
                 userAvatar={user?.avatar_url}
                 userName={user?.name}
-                onEdit={(msg) => {
-                  onInputChange(msg.content);
-                  textareaRef.current?.focus();
-                }}
+                onEdit={
+                  onInputChange
+                    ? (msg) => {
+                        onInputChange(msg.content);
+                        textareaRef.current?.focus();
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -361,7 +379,6 @@ export default function ChatAIPanels({
                   onClick={() => {
                     onInputChange(question.text);
                     textareaRef.current?.focus();
-                    onQuickQuestionClick(question.text);
                   }}
                   className={cn(
                     'px-3 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-full cursor-pointer',

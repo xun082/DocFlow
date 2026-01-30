@@ -63,7 +63,7 @@ export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
   frequencyPenalty: 0.5,
   minP: 0.05,
   stop: [],
-  n: 0.05,
+  n: 1,
 };
 
 /**

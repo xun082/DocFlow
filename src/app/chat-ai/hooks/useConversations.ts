@@ -184,9 +184,20 @@ export function useConversations(): UseConversationsResult {
     const { error: apiError } = await ChatAiApi.DeleteConversation(id);
 
     if (apiError) {
-      console.error('删除会话失败:', apiError);
+      // 如果是 404 或类似错误，视为删除成功（幂等性）
+      if (
+        apiError.includes('不存在') ||
+        apiError.includes('删除') ||
+        apiError.includes('Not Found') ||
+        apiError.includes('404')
+      ) {
+        // 继续执行本地删除
+        console.warn('会话可能已被删除，执行本地清理');
+      } else {
+        console.error('删除会话失败:', apiError);
 
-      return false;
+        return false;
+      }
     }
 
     const newSessions = globalState.sessions.filter((s) => s.id !== id);
