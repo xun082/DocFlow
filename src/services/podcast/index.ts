@@ -78,15 +78,15 @@ export const PodcastApi = {
   generatePodcastFromFileAsync: (params: GeneratePodcastParams, errorHandler?: ErrorHandler) => {
     const formData = new FormData();
     formData.append('file', params.file);
-    formData.append('interviewer', params.interviewer.toString());
+    formData.append('interviewer', params.interviewer);
 
     // 添加可选参数
     if (params.interviewer_voice) {
-      formData.append('interviewer_voice', params.interviewer_voice.toString());
+      formData.append('interviewer_voice', params.interviewer_voice);
     }
 
     if (params.candidate_voice) {
-      formData.append('candidate_voice', params.candidate_voice.toString());
+      formData.append('candidate_voice', params.candidate_voice);
     }
 
     if (params.temperature !== undefined) {

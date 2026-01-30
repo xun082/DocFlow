@@ -157,9 +157,9 @@ export function PodcastList({
                         isExpanded ? '' : 'max-h-32'
                       }`}
                     >
-                      {messages.map((message, index) => (
+                      {messages.map((message) => (
                         <div
-                          key={index}
+                          key={podcast.id}
                           className={`flex gap-3 items-start transition-all ${
                             message.role === 'interviewer'
                               ? 'bg-blue-50/50 rounded-lg p-3'
