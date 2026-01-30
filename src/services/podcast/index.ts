@@ -6,36 +6,36 @@ import {
   AsyncPodcast,
   GeneratePodcastParams,
   DeletePodcastsParams,
-  VoiceId,
+  Voice,
+  Interviewer,
 } from './type';
 
 // 播客服务相关常量
 export const PODCAST_CONSTANTS = {
   // 面试官选项
   INTERVIEWER_OPTIONS: [
-    { value: 'front_end', label: '前端面试官' },
-    { value: 'hrbp', label: 'HRBP面试官' },
-    { value: 'marketing_manager', label: '经理面试官' },
+    { value: Interviewer.FrontEnd, label: '前端面试官' },
+    { value: Interviewer.Hrbp, label: 'HRBP面试官' },
+    { value: Interviewer.MarketingManager, label: '经理面试官' },
   ] as const,
 
   // 语音选项
   VOICE_OPTIONS: [
-    { value: 'fnlp/MOSS-TTSD-v0.5:alex', label: 'Alex' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:anna', label: 'Anna' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:bella', label: 'Bella' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:benjamin', label: 'Benjamin' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:charles', label: 'Charles' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:claire', label: 'Claire' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:david', label: 'David' },
-    { value: 'fnlp/MOSS-TTSD-v0.5:diana', label: 'Diana' },
+    { value: Voice.FnlpMOSSTTSDV05Alex, label: 'Alex (男声)' },
+    { value: Voice.FnlpMOSSTTSDV05Anna, label: 'Anna (女声)' },
+    { value: Voice.FnlpMOSSTTSDV05Bella, label: 'Bella (女声)' },
+    { value: Voice.FnlpMOSSTTSDV05Benjamin, label: 'Benjamin (男声)' },
+    { value: Voice.FnlpMOSSTTSDV05Charles, label: 'Charles (男声)' },
+    { value: Voice.FnlpMOSSTTSDV05Claire, label: 'Claire (女声)' },
+    { value: Voice.FnlpMOSSTTSDV05David, label: 'David (男声)' },
+    { value: Voice.FnlpMOSSTTSDV05Diana, label: 'Diana (女声)' },
   ] as const,
 
   // 默认配置
   DEFAULTS: {
-    INTERVIEWER_VOICE: 'fnlp/MOSS-TTSD-v0.5:alex' as VoiceId,
-    CANDIDATE_VOICE: 'fnlp/MOSS-TTSD-v0.5:anna' as VoiceId,
-    SPEECH_SPEED: 1.0,
-    SAMPLE_RATE: 32000,
+    INTERVIEWER: Interviewer.FrontEnd,
+    INTERVIEWER_VOICE: Voice.FnlpMOSSTTSDV05Alex,
+    CANDIDATE_VOICE: Voice.FnlpMOSSTTSDV05Anna,
     TEMPERATURE: 0.8,
   },
 
@@ -71,44 +71,6 @@ export const PodcastApi = {
     }),
 
   /**
-   * 上传文件生成 AI 播客（同步）
-   * @param params - 生成播客的参数
-   * @param errorHandler - 错误处理函数
-   */
-  generatePodcastFromFile: (params: GeneratePodcastParams, errorHandler?: ErrorHandler) => {
-    const formData = new FormData();
-    formData.append('file', params.file);
-    formData.append('interviewer', params.interviewer);
-
-    // 添加可选参数
-    if (params.interviewer_voice) {
-      formData.append('interviewer_voice', params.interviewer_voice);
-    }
-
-    if (params.candidate_voice) {
-      formData.append('candidate_voice', params.candidate_voice);
-    }
-
-    if (params.speech_speed !== undefined) {
-      formData.append('speech_speed', params.speech_speed.toString());
-    }
-
-    if (params.sample_rate !== undefined) {
-      formData.append('sample_rate', params.sample_rate.toString());
-    }
-
-    if (params.temperature !== undefined) {
-      formData.append('temperature', params.temperature.toString());
-    }
-
-    return request.post<Podcast>('/api/v1/podcast', {
-      errorHandler,
-      timeout: 150000,
-      params: formData,
-    });
-  },
-
-  /**
    * 上传文件生成 AI 播客（异步）
    * @param params - 生成播客的参数
    * @param errorHandler - 错误处理函数
@@ -116,30 +78,22 @@ export const PodcastApi = {
   generatePodcastFromFileAsync: (params: GeneratePodcastParams, errorHandler?: ErrorHandler) => {
     const formData = new FormData();
     formData.append('file', params.file);
-    formData.append('interviewer', params.interviewer);
+    formData.append('interviewer', params.interviewer.toString());
 
     // 添加可选参数
     if (params.interviewer_voice) {
-      formData.append('interviewer_voice', params.interviewer_voice);
+      formData.append('interviewer_voice', params.interviewer_voice.toString());
     }
 
     if (params.candidate_voice) {
-      formData.append('candidate_voice', params.candidate_voice);
-    }
-
-    if (params.speech_speed !== undefined) {
-      formData.append('speech_speed', params.speech_speed.toString());
-    }
-
-    if (params.sample_rate !== undefined) {
-      formData.append('sample_rate', params.sample_rate.toString());
+      formData.append('candidate_voice', params.candidate_voice.toString());
     }
 
     if (params.temperature !== undefined) {
       formData.append('temperature', params.temperature.toString());
     }
 
-    return request.post<AsyncPodcast>('/api/v1/ai/podcast/async', {
+    return request.post<AsyncPodcast>('/api/v1/podcast', {
       errorHandler,
       timeout: 150000,
       params: formData,
