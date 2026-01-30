@@ -34,7 +34,11 @@ export type UpdateOrganizationFormData = z.infer<typeof updateOrganizationSchema
 export const inviteMemberSchema = z.object({
   user_id: z.number({ required_error: '请选择要邀请的用户' }).int().positive(),
   role: z.nativeEnum(OrganizationRole),
-  message: z.string().max(500, '邀请消息最多500个字符').optional(),
+  message: z
+    .string()
+    .min(1, '邀请消息不能为空')
+    .max(500, '邀请消息最多500个字符')
+    .refine((val) => val.trim().length > 0, '邀请消息不能为空'), // 拒绝纯空格
 });
 
 export type InviteMemberFormData = z.infer<typeof inviteMemberSchema>;
