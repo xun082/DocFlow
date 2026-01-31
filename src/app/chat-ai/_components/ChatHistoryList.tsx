@@ -31,13 +31,33 @@ interface ChatHistoryListProps {
   onDeleteSession: (sessionId: string) => void;
   /** 重命名会话回调 */
   onRenameSession?: (sessionId: string, newTitle: string) => void;
+  /** 是否还有更多 */
+  hasMore?: boolean;
+  /** 是否正在加载更多 */
+  isLoadingMore?: boolean;
+  /** 加载更多回调 */
+  onLoadMore?: () => void;
 }
 
 /**
  * 格式化时间显示
  */
 function formatTime(date: Date): string {
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
+  const d = dayjs(date);
+  const now = dayjs();
+
+  // 如果是今天，只显示时分
+  if (d.isSame(now, 'day')) {
+    return d.format('HH:mm');
+  }
+
+  // 如果是今年，显示 月-日 时:分
+  if (d.isSame(now, 'year')) {
+    return d.format('MM-DD HH:mm');
+  }
+
+  // 跨年显示 年-月-日 时:分
+  return d.format('YYYY-MM-DD HH:mm');
 }
 
 export default function ChatHistoryList({
@@ -47,9 +67,38 @@ export default function ChatHistoryList({
   onNewSession,
   onDeleteSession,
   onRenameSession,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: ChatHistoryListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+
+  // 监听滚动到底部
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [onLoadMore, hasMore, isLoadingMore]);
 
   const handleStartEdit = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation();
@@ -96,7 +145,7 @@ export default function ChatHistoryList({
       <div className="p-3 border-b border-gray-100">
         <Button
           onClick={onNewSession}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-blue-100 shadow-md active:scale-95 transition-all"
           size="sm"
         >
           <Plus className="h-4 w-4 mr-1" />
@@ -133,7 +182,7 @@ export default function ChatHistoryList({
                 className={cn(
                   'group relative p-2 rounded-lg cursor-pointer transition-colors',
                   activeSessionId === session.id
-                    ? 'bg-purple-50 border border-purple-200'
+                    ? 'bg-blue-50 border border-blue-200'
                     : 'hover:bg-gray-50 border border-transparent',
                 )}
               >
@@ -147,7 +196,7 @@ export default function ChatHistoryList({
                         onChange={(e) => setEditValue(e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, session.id)}
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 text-xs px-1 py-0.5 border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="flex-1 text-xs px-1 py-0.5 border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         autoFocus
                       />
                       <button
@@ -168,19 +217,18 @@ export default function ChatHistoryList({
                       <h4
                         className={cn(
                           'text-xs font-medium truncate',
-                          activeSessionId === session.id ? 'text-purple-700' : 'text-gray-700',
+                          activeSessionId === session.id ? 'text-blue-600' : 'text-gray-700',
                         )}
                       >
                         {session.title}
                       </h4>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center justify-between mt-1">
                         <span className="text-[10px] text-gray-400">
                           {formatTime(session.lastMessageAt)}
                         </span>
-                        <span className="text-[10px] text-gray-400">·</span>
-                        <span className="text-[10px] text-gray-400">
+                        {/* <span className="text-[10px] text-gray-400">
                           {session.messageCount} 条消息
-                        </span>
+                        </span> */}
                       </div>
                     </>
                   )}
@@ -192,9 +240,9 @@ export default function ChatHistoryList({
                     {/* 编辑按钮 */}
                     <button
                       onClick={(e) => handleStartEdit(e, session)}
-                      className="p-1 hover:bg-purple-50 rounded"
+                      className="p-1 hover:bg-blue-50 rounded"
                     >
-                      <Pencil className="h-3 w-3 text-purple-500" />
+                      <Pencil className="h-3 w-3 text-blue-500" />
                     </button>
                     {/* 删除按钮 */}
                     <button
@@ -210,6 +258,25 @@ export default function ChatHistoryList({
                 )}
               </div>
             ))}
+
+            {/* 滚动加载触发点 */}
+            {hasMore && (
+              <div
+                ref={observerTarget}
+                className="h-4 w-full flex items-center justify-center py-4"
+              >
+                {isLoadingMore && (
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                    <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                    正在加载...
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!hasMore && sessions.length > 0 && (
+              <div className="text-[10px] text-center text-gray-300 py-4">已显示全部会话</div>
+            )}
           </div>
         )}
       </div>

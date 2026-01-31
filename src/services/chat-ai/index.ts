@@ -72,6 +72,16 @@ export interface CompletionsRequest {
   thinking_budget?: number;
   /** 是否启用联网搜索（启用后会先搜索相关网页内容，默认 false） */
   enable_web_search?: boolean;
+  /** Top-k 采样参数 */
+  top_k?: number;
+  /** 频率惩罚参数 (-2.0 到 2.0) */
+  frequency_penalty?: number;
+  /** 最小概率参数 (0-1) */
+  min_p?: number;
+  /** 停止序列，最多 4 个 */
+  stop?: string[];
+  /** 生成结果数量 */
+  n?: number;
 }
 
 /** SSE 流式响应事件数据 */
@@ -86,6 +96,8 @@ export interface StreamChunk {
   message_id?: string;
   /** 错误信息 */
   error?: string;
+  /** 完成原因 */
+  finish_reason?: string;
 }
 
 /** 会话列表响应 */
@@ -138,6 +150,13 @@ export const ChatAiApi = {
             : undefined,
         },
         async (response) => {
+          // 提取响应头中的 Session-Id（新会话时返回）
+          const sessionId = response.headers.get('Session-Id');
+
+          if (sessionId) {
+            onMessage({ event: 'message', conversation_id: sessionId });
+          }
+
           if (!response.body) return;
 
           const reader = response.body.getReader();
@@ -180,6 +199,7 @@ export const ChatAiApi = {
                         content,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
+                        finish_reason: parsed.choices?.[0]?.finish_reason,
                       });
                     }
                   } catch (e) {
@@ -203,6 +223,7 @@ export const ChatAiApi = {
                         content,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
+                        finish_reason: parsed.choices?.[0]?.finish_reason,
                       });
                     }
                   } catch (e) {
@@ -213,7 +234,15 @@ export const ChatAiApi = {
                 }
               }
             }
-          } catch (err) {
+          } catch (err: any) {
+            // Include both DOMException and generic AbortError checks
+            if (
+              err.name === 'AbortError' ||
+              (err instanceof DOMException && err.name === 'AbortError')
+            ) {
+              return;
+            }
+
             if (onError) {
               onError(err instanceof Error ? err : new Error(String(err)));
             }
@@ -246,12 +275,17 @@ export const ChatAiApi = {
   /**
    * 获取会话详情
    */
-  ConversationDetail: (id: string, errorHandler?: ErrorHandler) =>
+  ConversationDetail: (
+    id: string,
+    data?: { cursor?: string; limit?: number },
+    errorHandler?: ErrorHandler,
+  ) =>
     request.get<ConversationDetail>(`/api/v1/chat/conversations/${id}`, {
       errorHandler,
       timeout: 80000,
       retries: 2,
       retryDelay: 1000,
+      params: data,
     }),
 
   /**

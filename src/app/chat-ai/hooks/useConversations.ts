@@ -30,12 +30,18 @@ function convertConversation(conv: Conversation): ChatSession {
 export interface UseConversationsResult {
   /** 会话列表 */
   sessions: ChatSession[];
-  /** 是否正在加载 */
+  /** 是否正在加载 (首次或刷新) */
   isLoading: boolean;
+  /** 是否正在加载更多 */
+  isLoadingMore: boolean;
+  /** 是否还有更多数据 */
+  hasMore: boolean;
   /** 错误信息 */
   error: string | null;
-  /** 刷新会话列表 */
+  /** 刷新会话列表 (重置到第一页) */
   refresh: () => Promise<void>;
+  /** 加载下一页 */
+  loadMore: () => Promise<void>;
   /** 删除会话 */
   deleteSession: (id: string) => Promise<boolean>;
   /** 重命名会话 */
@@ -44,30 +50,44 @@ export interface UseConversationsResult {
   addSession: (session: ChatSession) => void;
 }
 
-// 会话列表缓存，避免多个组件重复调用接口
-let cachedSessions: ChatSession[] | null = null;
+// 会话列表状态接口
+interface SessionState {
+  sessions: ChatSession[];
+  hasMore: boolean;
+  page: number;
+}
+
+// 全局缓存状态，避免多个组件重复调用接口
+let globalState: SessionState = {
+  sessions: [],
+  hasMore: true,
+  page: 1,
+};
+
 let sessionsPromise: Promise<void> | null = null;
-let sessionListeners: Array<(sessions: ChatSession[]) => void> = [];
+let isRefreshing = false;
+let sessionListeners: Array<(state: SessionState) => void> = [];
 
 // 通知所有监听器更新
-function notifySessionListeners(sessions: ChatSession[]) {
-  cachedSessions = sessions;
-  sessionListeners.forEach((listener) => listener(sessions));
+function notifySessionListeners(newState: Partial<SessionState>) {
+  globalState = { ...globalState, ...newState };
+  sessionListeners.forEach((listener) => listener(globalState));
 }
 
 /**
  * 会话列表管理 Hook
  */
 export function useConversations(): UseConversationsResult {
-  // 初始状态使用空数组，避免 Hydration 错误
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 获取全局状态
+  const [sessionState, setSessionState] = useState<SessionState>(globalState);
+  const [isLoading, setIsLoading] = useState(!globalState.sessions.length);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 注册监听器
   useEffect(() => {
-    const listener = (newSessions: ChatSession[]) => {
-      setSessions(newSessions);
+    const listener = (newState: SessionState) => {
+      setSessionState(newState);
     };
 
     sessionListeners.push(listener);
@@ -77,54 +97,125 @@ export function useConversations(): UseConversationsResult {
     };
   }, []);
 
-  // 获取会话列表
+  const pageSize = 20;
+
+  // 刷新会话列表 (重置到第一页)
   const refresh = useCallback(async () => {
+    if (isRefreshing) return (sessionsPromise || Promise.resolve()) as Promise<void>;
+
+    isRefreshing = true;
     setIsLoading(true);
     setError(null);
 
-    const { data, error: apiError } = await ChatAiApi.Conversations();
+    sessionsPromise = (async () => {
+      try {
+        const { data, error: apiError } = await ChatAiApi.Conversations({
+          page: 1,
+          page_size: pageSize,
+        });
+
+        if (apiError) {
+          setError(apiError);
+
+          return;
+        }
+
+        if (data?.data) {
+          const { list, total } = data.data;
+          const convertedSessions = list.map(convertConversation);
+          const hasMore = convertedSessions.length < total;
+
+          notifySessionListeners({
+            sessions: convertedSessions,
+            page: 1,
+            hasMore,
+          });
+        }
+      } catch (err) {
+        setError(String(err));
+      } finally {
+        setIsLoading(false);
+        isRefreshing = false;
+        sessionsPromise = null;
+      }
+    })();
+
+    return (sessionsPromise || Promise.resolve()) as Promise<void>;
+  }, []);
+
+  // 加载更多
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !sessionState.hasMore) return;
+
+    setIsLoadingMore(true);
+    setError(null);
+
+    const nextPage = sessionState.page + 1;
+    const { data, error: apiError } = await ChatAiApi.Conversations({
+      page: nextPage,
+      page_size: pageSize,
+    });
 
     if (apiError) {
       setError(apiError);
-      setIsLoading(false);
+      setIsLoadingMore(false);
 
       return;
     }
 
-    if (data?.data?.list) {
-      const convertedSessions = data.data.list.map(convertConversation);
-      notifySessionListeners(convertedSessions);
+    if (data?.data) {
+      const { list, total } = data.data;
+      const newSessions = list.map(convertConversation);
+      const updatedSessions = [...sessionState.sessions, ...newSessions];
+      const hasMore = updatedSessions.length < total;
+
+      notifySessionListeners({
+        sessions: updatedSessions,
+        page: nextPage,
+        hasMore,
+      });
     }
 
-    setIsLoading(false);
-  }, []);
+    setIsLoadingMore(false);
+  }, [sessionState.page, sessionState.hasMore, sessionState.sessions, isLoadingMore]);
 
   // 删除会话
   const deleteSession = useCallback(async (id: string): Promise<boolean> => {
     const { error: apiError } = await ChatAiApi.DeleteConversation(id);
 
     if (apiError) {
-      console.error('删除会话失败:', apiError);
+      // 如果是 404 或类似错误，视为删除成功（幂等性）
+      if (
+        apiError.includes('不存在') ||
+        apiError.includes('删除') ||
+        apiError.includes('Not Found') ||
+        apiError.includes('404')
+      ) {
+        // 继续执行本地删除
+        console.warn('会话可能已被删除，执行本地清理');
+      } else {
+        console.error('删除会话失败:', apiError);
 
-      return false;
+        return false;
+      }
     }
 
-    const newSessions = (cachedSessions || []).filter((s) => s.id !== id);
-    notifySessionListeners(newSessions);
+    const newSessions = globalState.sessions.filter((s) => s.id !== id);
+    notifySessionListeners({ sessions: newSessions });
 
     return true;
   }, []);
 
   // 添加会话到列表
   const addSession = useCallback((session: ChatSession) => {
-    const current = cachedSessions || [];
+    const current = globalState.sessions;
 
     // 检查是否已存在
     if (current.some((s) => s.id === session.id)) {
       return;
     }
 
-    notifySessionListeners([session, ...current]);
+    notifySessionListeners({ sessions: [session, ...current] });
   }, []);
 
   // 重命名会话
@@ -138,46 +229,36 @@ export function useConversations(): UseConversationsResult {
     }
 
     // 更新本地缓存
-    const newSessions = (cachedSessions || []).map((s) =>
+    const newSessions = globalState.sessions.map((s) =>
       s.id === id ? { ...s, title: newTitle } : s,
     );
-    notifySessionListeners(newSessions);
+    notifySessionListeners({ sessions: newSessions });
 
     return true;
   }, []);
 
   // 初始化加载
   useEffect(() => {
-    // 如果已有缓存，直接使用
-    if (cachedSessions) {
-      setSessions(cachedSessions);
+    // 如果已有缓存数据，且未在请求中
+    if (globalState.sessions.length > 0) {
+      setSessionState(globalState);
       setIsLoading(false);
 
       return;
     }
 
-    // 如果已有请求在进行中，等待完成
-    if (sessionsPromise) {
-      sessionsPromise.then(() => {
-        if (cachedSessions) {
-          setSessions(cachedSessions);
-        }
-
-        setIsLoading(false);
-      });
-
-      return;
-    }
-
     // 发起新请求
-    sessionsPromise = refresh();
+    refresh();
   }, [refresh]);
 
   return {
-    sessions,
+    sessions: sessionState.sessions,
     isLoading,
+    isLoadingMore,
+    hasMore: sessionState.hasMore,
     error,
     refresh,
+    loadMore,
     deleteSession,
     renameSession,
     addSession,

@@ -91,5 +91,6 @@ export const config = {
   matcher: [
     '/docs/:path*', // 文档页面需要登录
     '/dashboard/:path*', // 控制台页面需要登录
+    '/chat-ai/:path*', // AI 聊天页面需要登录
   ],
 };
