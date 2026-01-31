@@ -35,6 +35,8 @@ interface ModelConfigModalProps {
   icon?: React.ReactNode;
   /** 标题文本 */
   title?: string;
+  /** 自定义触发器内容 */
+  children?: React.ReactNode;
 }
 
 export default function ModelConfigModal({
@@ -46,6 +48,7 @@ export default function ModelConfigModal({
   triggerClassName,
   icon = <Settings2 className="h-4 w-4" />,
   title = '模型配置',
+  children,
 }: ModelConfigModalProps) {
   const updateConfig: UpdateConfigFn = (key, value) => {
     onConfigChange({ ...config, [key]: value });
@@ -66,9 +69,13 @@ export default function ModelConfigModal({
   return (
     <Dialog>
       <DialogTrigger asChild className="">
-        <Button variant="ghost" size="icon" className={triggerClassName} title="模型配置">
-          {icon}
-        </Button>
+        {children ? (
+          <span className={triggerClassName}>{children}</span>
+        ) : (
+          <Button variant="ghost" size="icon" className={triggerClassName} title="模型配置">
+            {icon}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-xl border-none shadow-2xl !z-[99999]">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-50 bg-white">

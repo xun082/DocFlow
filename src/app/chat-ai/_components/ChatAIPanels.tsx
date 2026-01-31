@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
+import ModelConfigModal from './ModelConfigModal';
 
 import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -286,6 +287,9 @@ export default function ChatAIPanels({
   status = 'idle',
   onStopGenerating,
   onConfigChange,
+  isCompareMode = false,
+  onAddCompareModel,
+  onCancelCompare,
 }: ChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -354,9 +358,18 @@ export default function ChatAIPanels({
     >
       {/* ----- 模型标题栏 ----- */}
       <header className="px-4 py-2 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <ModelConfigModal
+          config={config}
+          onConfigChange={onConfigChange || (() => {})}
+          isCompareMode={isCompareMode}
+          onAddCompareModel={onAddCompareModel}
+          onCancelCompare={onCancelCompare}
+          triggerClassName="text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-1 rounded-md transition-colors cursor-pointer"
+          icon={null}
+          title="模型配置"
+        >
           {getModelDisplayName(config.modelName, models)}
-        </h2>
+        </ModelConfigModal>
 
         {mounted && user && (
           <div className="border-t border-gray-100 bg-gray-50/50">
