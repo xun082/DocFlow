@@ -1,19 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { debounce } from 'lodash-es';
 
-import { CreateDocumentDialog } from './folder/components/CreateDocumentDialog';
+import { TemplateFormDialog } from './folder/components/TemplateFormDialog';
 import { DeleteConfirmDialog } from './folder/components/DeleteConfirmDialog';
 import { CreateDocumentFromTemplateDialog } from './folder/components/CreateDocumentFromTemplateDialog';
-import { filterTemplates, type Template } from './template';
 
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/utils';
 import { DocumentApi } from '@/services/document';
 import { storage, STORAGE_KEYS } from '@/utils/storage/local-storage';
+import { TemplateApi } from '@/services/template';
+import {
+  TemplateResponse as Template,
+  TemplateCategory,
+  QueryTemplate,
+} from '@/services/template/type';
 
 const categories = [
   { id: 'all', name: '全部', icon: 'Grid3X3' },
@@ -29,18 +35,41 @@ const TemplatesTab = () => {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [createFromTemplateDialogOpen, setCreateFromTemplateDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
+  const [deleteTemplateId, setDeleteTemplateId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
-  // 过滤模板列表
-  const templates = filterTemplates(
-    selectedCategory !== 'all' ? selectedCategory : undefined,
-    searchQuery || undefined,
+  const fetchTemplates = useCallback(
+    debounce((category: string, query: string) => {
+      const params: QueryTemplate = {};
+
+      if (category !== 'all') {
+        params.category = category as TemplateCategory;
+      }
+
+      if (query) {
+        params.name = query;
+      }
+
+      TemplateApi.GetTemplates(params).then((res) => {
+        if (res.data?.code === 200) {
+          setTemplates(res.data?.data.list || []);
+        } else {
+          toast.error('获取模板列表失败');
+        }
+      });
+    }, 300),
+    [],
   );
+
+  useEffect(() => {
+    fetchTemplates(selectedCategory, searchQuery);
+  }, [selectedCategory, searchQuery, fetchTemplates]);
 
   const handleCreateDocument = (template: Template) => {
     setSelectedTemplate(template);
@@ -57,8 +86,6 @@ const TemplatesTab = () => {
 
       if (!templateContent) {
         toast.error('模板内容加载失败');
-        setIsCreating(false);
-        setCreateFromTemplateDialogOpen(false);
 
         return;
       }
@@ -86,10 +113,6 @@ const TemplatesTab = () => {
 
         storage.set(STORAGE_KEYS.TEMPLATE_CONTENT, newContents);
 
-        // 先关闭对话框和重置状态
-        setIsCreating(false);
-        setCreateFromTemplateDialogOpen(false);
-
         toast.success('文档创建成功，正在跳转...');
 
         // 延迟跳转，确保 localStorage 写入完成
@@ -98,35 +121,73 @@ const TemplatesTab = () => {
         }, 100);
       } else {
         toast.error('文档创建失败');
-        setIsCreating(false);
-        setCreateFromTemplateDialogOpen(false);
       }
     } catch {
       toast.error('文档创建失败，请重试');
+    } finally {
       setIsCreating(false);
       setCreateFromTemplateDialogOpen(false);
     }
   };
 
-  const handleDeleteTemplate = (id: string) => {
+  const handleDeleteTemplate = (id: number) => {
     setDeleteTemplateId(id);
     setDeleteDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (template: Template) => {
+    setEditingTemplate(template);
+    setIsFormOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!deleteTemplateId) return;
 
-    toast.success('模板删除功能暂未实现（使用硬编码数据）');
-    setDeleteDialogOpen(false);
+    try {
+      await TemplateApi.DeleteTemplate(deleteTemplateId);
+      toast.success('模板删除成功');
+      fetchTemplates(selectedCategory, searchQuery); // 重新获取列表
+    } catch {
+      toast.error('模板删除失败');
+    } finally {
+      setDeleteDialogOpen(false);
+    }
   };
 
-  const confirmCreate = async () => {
-    toast.success('模板创建功能暂未实现（使用硬编码数据）');
-    setCreateDialogOpen(false);
+  const handleOpenCreateDialog = () => {
+    setEditingTemplate(null);
+    setIsFormOpen(true);
   };
 
-  const handleCreateCustomTemplate = () => {
-    setCreateDialogOpen(true);
+  const handleConfirmTemplateForm = async (formValues: any) => {
+    try {
+      if (editingTemplate) {
+        // 编辑模式
+        const res = await TemplateApi.UpdateTemplate(editingTemplate.id, formValues);
+
+        if (res.data?.code === 200) {
+          toast.success('模板更新成功');
+        } else {
+          toast.error('模板更新失败');
+        }
+      } else {
+        // 创建模式
+        const res = await TemplateApi.CreateTemplate(formValues);
+
+        if (res.data?.code === 200) {
+          toast.success('模板创建成功');
+        } else {
+          toast.error('模板创建失败');
+        }
+      }
+
+      fetchTemplates(selectedCategory, searchQuery);
+    } catch {
+      toast.error(editingTemplate ? '模板更新失败' : '模板创建失败');
+    } finally {
+      setIsFormOpen(false);
+      setEditingTemplate(null);
+    }
   };
 
   return (
@@ -216,20 +277,32 @@ const TemplatesTab = () => {
                           {template.name}
                         </h4>
                         <div className="flex items-center gap-4">
-                          <Trash2
+                          <Pencil
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteTemplate(template.id);
+                              handleOpenEditDialog(template);
                             }}
-                            className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                           />
-                          <Plus
-                            className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateDocument(template);
-                            }}
-                          />
+                          {/* 不是系统模板时才显示删除和创建按钮 */}
+                          {!template.isSystem ? (
+                            <>
+                              <Trash2
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTemplate(template.id);
+                                }}
+                                className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              />
+                              <Plus
+                                className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateDocument(template);
+                                }}
+                              />
+                            </>
+                          ) : null}
                         </div>
                       </div>
 
@@ -237,7 +310,7 @@ const TemplatesTab = () => {
                         {template.description}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {template.tags.map((tag) => (
+                        {template.tags.split(',').map((tag) => (
                           <span
                             key={tag}
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
@@ -245,9 +318,9 @@ const TemplatesTab = () => {
                             {tag}
                           </span>
                         ))}
-                        {template.tags.length > 3 && (
+                        {template.tags.split(',').length > 3 && (
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            +{template.tags.length - 3}
+                            +{template.tags.split(',').length - 3}
                           </span>
                         )}
                       </div>
@@ -269,17 +342,18 @@ const TemplatesTab = () => {
             'hover:border-blue-300 dark:hover:border-blue-500 transition-colors',
             'text-sm font-medium',
           )}
-          onClick={handleCreateCustomTemplate}
+          onClick={handleOpenCreateDialog}
         >
           <Icon name="Plus" className="h-4 w-4" />
           <span>创建自定义模板</span>
         </button>
       </div>
 
-      <CreateDocumentDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onConfirm={confirmCreate}
+      <TemplateFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onConfirm={handleConfirmTemplateForm}
+        template={editingTemplate}
       />
 
       <CreateDocumentFromTemplateDialog
