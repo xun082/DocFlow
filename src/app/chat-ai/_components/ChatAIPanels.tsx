@@ -26,6 +26,8 @@ import {
   UserIcon,
   Settings,
   LogOut,
+  Brain,
+  Globe,
 } from 'lucide-react';
 import { MdPreview } from 'md-editor-rt';
 import 'md-editor-rt/lib/preview.css';
@@ -283,6 +285,7 @@ export default function ChatAIPanels({
   messages = [],
   status = 'idle',
   onStopGenerating,
+  onConfigChange,
 }: ChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -327,6 +330,20 @@ export default function ChatAIPanels({
 
   // 是否显示快捷问题（仅在消息为空时显示）
   const showQuickQuestions = messages.length === 0;
+
+  // 从 config 中读取网页搜索和深度思考状态
+  const enableWebSearch = config.enableWebSearch || false;
+  const enableDeepThinking = config.enableThinking || false;
+
+  // 切换网页搜索
+  const toggleWebSearch = () => {
+    onConfigChange?.({ ...config, enableWebSearch: !enableWebSearch });
+  };
+
+  // 切换深度思考
+  const toggleDeepThinking = () => {
+    onConfigChange?.({ ...config, enableThinking: !enableDeepThinking });
+  };
 
   return (
     <div
@@ -440,7 +457,7 @@ export default function ChatAIPanels({
           )}
 
           {/* 输入框区域 */}
-          <div className="relative">
+          <div className="relative border border-gray-200 rounded-xl bg-white focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all duration-200">
             <textarea
               ref={textareaRef}
               value={inputValue}
@@ -449,32 +466,63 @@ export default function ChatAIPanels({
               placeholder={status === 'streaming' ? 'AI 正在回复中...' : '请输入提示词...'}
               disabled={status === 'streaming'}
               className={cn(
-                'w-full min-h-[100px] pr-14 resize-none border border-gray-200 rounded-xl bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none px-4 py-3 text-sm text-gray-800 shadow-sm transition-all duration-200',
+                'w-full min-h-[100px] px-4 py-3 pb-14 text-sm text-gray-800 outline-none resize-none',
                 status === 'streaming' && 'opacity-60 cursor-not-allowed',
               )}
             />
-            {/* 发送/停止按钮 */}
-            <button
-              type="button"
-              onClick={status === 'streaming' ? onStopGenerating : onSend}
-              disabled={isSendDisabled}
-              className={cn(
-                'absolute right-3 bottom-3 h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-all duration-200',
-                status === 'streaming'
-                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 shadow-red-100/50 active:scale-90'
-                  : isSendDisabled
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
-              )}
-              aria-label={status === 'streaming' ? '停止生成' : '发送'}
-              title={status === 'streaming' ? '停止生成' : '发送'}
-            >
-              {status === 'streaming' ? (
-                <Square className="h-4 w-4 fill-current" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+            <div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleWebSearch}
+                  className={cn(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg border transition-all duration-200',
+                    enableWebSearch
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-200 hover:text-blue-600',
+                  )}
+                  disabled={status === 'streaming'}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>网页搜索</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleDeepThinking}
+                  className={cn(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg border transition-all duration-200',
+                    enableDeepThinking
+                      ? 'bg-purple-50 text-purple-600 border-purple-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-purple-200 hover:text-purple-600',
+                  )}
+                  disabled={status === 'streaming'}
+                >
+                  <Brain className="h-3.5 w-3.5" />
+                  <span>深度思考</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={status === 'streaming' ? onStopGenerating : onSend}
+                disabled={isSendDisabled}
+                className={cn(
+                  'h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-all duration-200',
+                  status === 'streaming'
+                    ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 shadow-red-100/50 active:scale-90'
+                    : isSendDisabled
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
+                )}
+                aria-label={status === 'streaming' ? '停止生成' : '发送'}
+                title={status === 'streaming' ? '停止生成' : '发送'}
+              >
+                {status === 'streaming' ? (
+                  <Square className="h-4 w-4 fill-current" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
