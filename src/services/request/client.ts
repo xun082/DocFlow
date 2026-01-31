@@ -847,19 +847,6 @@ class ClientRequest {
         data: { url: fullUrl, status: response.status },
       });
 
-      try {
-        if (response.body) {
-          createSseStream(response.body);
-        }
-      } catch (e) {
-        addSentryBreadcrumb({
-          category: 'sse',
-          message: `SSE parser init failed: ${fullUrl}`,
-          level: 'warning',
-          data: { error: e instanceof Error ? e.message : 'Unknown' },
-        });
-      }
-
       callback(response);
 
       return () => activeController.abort();
@@ -904,7 +891,7 @@ class ClientRequest {
   async sseStream(
     url: string,
     params: ClientParams,
-    onMessage: (data: string) => void,
+    onMessage: (data: { data: string }) => void,
   ): Promise<() => void> {
     const controller = new AbortController();
     let activeController = controller;
@@ -967,7 +954,10 @@ class ClientRequest {
           while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            if (typeof value === 'string') onMessage(value);
+
+            if (value && value.data) {
+              onMessage(value);
+            }
           }
         } catch (err) {
           if (!(err instanceof DOMException && err.name === 'AbortError')) {
@@ -981,6 +971,12 @@ class ClientRequest {
           tags: { errorType: 'SSEStreamError', url: fullUrl },
           level: 'error',
         });
+
+        if (typeof params?.errorHandler === 'function') {
+          params.errorHandler(err);
+        } else if (params?.errorHandler?.onError) {
+          params.errorHandler.onError(err);
+        }
       });
     };
 
@@ -989,6 +985,12 @@ class ClientRequest {
         tags: { errorType: 'SSEOpenError', url: fullUrl },
         level: 'error',
       });
+
+      if (typeof params?.errorHandler === 'function') {
+        params.errorHandler(err);
+      } else if (params?.errorHandler?.onError) {
+        params.errorHandler.onError(err);
+      }
     });
 
     return () => activeController.abort();

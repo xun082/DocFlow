@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAudioPlayer } from 'react-use-audio-player';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ import { useNotificationSocket } from '@/hooks/ws/useNotificationSocket';
 const DEFAULT_PAGE_SIZE = 10;
 const INITIAL_VOLUME = 0.75;
 
-const PodcastPage = () => {
+const PodcastPageContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -181,6 +181,14 @@ const PodcastPage = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const PodcastPage = () => {
+  return (
+    <Suspense fallback={<PodcastListSkeleton />}>
+      <PodcastPageContent />
+    </Suspense>
   );
 };
 

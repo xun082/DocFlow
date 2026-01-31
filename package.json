@@ -138,6 +138,7 @@
     "cmdk": "^1.1.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.19",
     "docx": "^9.5.1",
     "dompurify": "^3.3.1",
     "emojibase-data": "^17.0.0",
@@ -158,6 +159,7 @@
     "mammoth": "^1.10.0",
     "markdown-it": "^14.1.0",
     "mathlive": "^0.108.2",
+    "md-editor-rt": "^6.3.1",
     "mdast-util-from-markdown": "^2.0.2",
     "mdast-util-gfm": "^3.1.0",
     "micromark-extension-gfm": "^3.0.0",
@@ -189,6 +191,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tiptap-extension-export-docx": "^0.0.9",
     "ua-parser-js": "^2.0.4",
+    "use-stick-to-bottom": "^1.1.2",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5",
@@ -263,8 +266,9 @@
     }
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.0"
+    "node": ">=24",
+    "pnpm": ">=10.28.2"
   },
-  "engineStrict": true
+  "engineStrict": true,
+  "packageManager": "pnpm@10.28.2"
 }

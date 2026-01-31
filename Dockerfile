@@ -1,9 +1,9 @@
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 RUN npm config set registry https://registry.npmmirror.com && \
     apk add --no-cache libc6-compat && \
     corepack enable && \
-    corepack prepare pnpm@10.22.0 --activate && \
+    corepack prepare pnpm@10.28.2 --activate && \
     pnpm config set registry https://registry.npmmirror.com
 
 WORKDIR /app
@@ -45,7 +45,7 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     find node_modules -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true && \
     find node_modules -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true
 
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 # 构建参数
 ARG VERSION=unknown
