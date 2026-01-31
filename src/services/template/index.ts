@@ -31,7 +31,7 @@ export const TemplateApi = {
 
   // 更新模版（重命名、修改描述等）
   UpdateTemplate: (templateId: number, data: UpdateTemplate, errorHandler?: ErrorHandler) =>
-    request.put<TemplateResponse>(`/api/v1/templates/${templateId}`, {
+    request.patch<TemplateResponse>(`/api/v1/template/${templateId}`, {
       errorHandler,
       params: data,
     }),

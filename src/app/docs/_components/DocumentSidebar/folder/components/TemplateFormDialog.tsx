@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TemplateResponse } from '@/services/template/type';
 
 const CATEGORIES = [
   { category: 'TECH', name: '技术', icon: 'Code' },
@@ -53,15 +54,23 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface CreateDocumentDialogProps {
+interface TemplateFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (data: FormValues) => void;
+  template?: TemplateResponse | null;
 }
 
-export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDocumentDialogProps) {
+export function TemplateFormDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  template,
+}: TemplateFormDialogProps) {
   const [tags, setTags] = useState<string>('');
   const [newTag, setNewTag] = useState('');
+
+  const isEditMode = !!template;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,6 +82,22 @@ export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDo
       content: '',
     },
   });
+
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset(template);
+      setTags(template.tags || '');
+    } else {
+      form.reset({
+        name: '',
+        description: '',
+        category: '',
+        tags: '',
+        content: '',
+      });
+      setTags('');
+    }
+  }, [template, isEditMode, form]);
 
   const handleAddTag = () => {
     if (newTag.trim()) {
@@ -110,15 +135,13 @@ export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDo
   const handleSubmit = (data: FormValues) => {
     onConfirm(data);
     onOpenChange(false);
-    form.reset();
-    setTags('');
   };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle>创建模版</AlertDialogTitle>
+          <AlertDialogTitle>{isEditMode ? '编辑模版' : '创建模版'}</AlertDialogTitle>
         </AlertDialogHeader>
 
         <Form {...form}>
@@ -242,7 +265,7 @@ export function CreateDocumentDialog({ open, onOpenChange, onConfirm }: CreateDo
 
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => onOpenChange(false)}>取消</AlertDialogCancel>
-              <Button type="submit">创建</Button>
+              <Button type="submit">{isEditMode ? '更新' : '创建'}</Button>
             </AlertDialogFooter>
           </form>
         </Form>

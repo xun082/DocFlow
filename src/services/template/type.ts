@@ -29,6 +29,7 @@ export interface TemplateResponse {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+  isSystem?: boolean;
 }
 
 export interface QueryTemplate {
