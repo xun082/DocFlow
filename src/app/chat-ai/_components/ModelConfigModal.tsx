@@ -65,12 +65,12 @@ export default function ModelConfigModal({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild className="">
         <Button variant="ghost" size="icon" className={triggerClassName} title="模型配置">
           {icon}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-xl border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-xl border-none shadow-2xl !z-[99999]">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-50 bg-white">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-50 rounded-xl text-blue-600 shadow-sm">{icon}</div>
@@ -78,7 +78,7 @@ export default function ModelConfigModal({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar ">
           <ConfigFields config={config} updateConfig={updateConfig} />
 
           <style jsx global>{`

@@ -12,7 +12,7 @@
  * - 使用 use-stick-to-bottom 自动滚动
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Send,
   Copy,
@@ -23,20 +23,30 @@ import {
   Pencil,
   Share2,
   Check,
-  Settings2,
+  UserIcon,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import { MdPreview } from 'md-editor-rt';
 import 'md-editor-rt/lib/preview.css';
 import { useStickToBottom } from 'use-stick-to-bottom';
+import { useRouter } from 'next/navigation';
 
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
-import ModelConfigModal from './ModelConfigModal';
 
+import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUserQuery } from '@/hooks/useUserQuery';
 import { cn } from '@/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChatPanelProps {
   /** 模型配置信息 */
@@ -273,10 +283,6 @@ export default function ChatAIPanels({
   messages = [],
   status = 'idle',
   onStopGenerating,
-  onConfigChange,
-  isCompareMode = false,
-  onAddCompareModel,
-  onCancelCompare,
 }: ChatPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -285,6 +291,17 @@ export default function ChatAIPanels({
 
   // 获取动态模型列表用于显示名称
   const { models } = useChatModels();
+
+  const router = useRouter();
+
+  const logoutMutation = useLogoutMutation();
+
+  // 挂载状态
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 使用 use-stick-to-bottom 实现自动滚动
   const { scrollRef, contentRef } = useStickToBottom();
@@ -324,17 +341,48 @@ export default function ChatAIPanels({
           {getModelDisplayName(config.modelName, models)}
         </h2>
 
-        {onConfigChange && (
-          <ModelConfigModal
-            config={config}
-            onConfigChange={onConfigChange}
-            isCompareMode={isCompareMode}
-            onAddCompareModel={onAddCompareModel}
-            onCancelCompare={onCancelCompare}
-            triggerClassName="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-all"
-            icon={<Settings2 className="h-4 w-4" />}
-            title="面板模型配置"
-          />
+        {mounted && user && (
+          <div className="border-t border-gray-100 bg-gray-50/50">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-sm transition-all duration-200 text-left group">
+                  <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
+                    <AvatarImage src={user.avatar_url || ''} />
+                    <AvatarFallback className="bg-blue-500 text-white">
+                      {user.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mb-2">
+                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/user')}
+                >
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>个人中心</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/settings')}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>账户设置</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  disabled={logoutMutation.isPending}
+                  onClick={() => logoutMutation.mutate()}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>退出登录</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </header>
 
