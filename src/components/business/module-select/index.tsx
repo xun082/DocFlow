@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ChevronDown } from 'lucide-react';
 
@@ -54,6 +54,8 @@ const variantStyles = {
   },
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const ModelSelector: React.FC<ModelSelectorProps> = ({
   selectedModel,
   setSelectedModel,
@@ -67,6 +69,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
 }) => {
   const [models, setModels] = useState<ChatModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -97,6 +101,26 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     };
 
     fetchModels();
+  }, []);
+
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+
+      // 当滚动到80%时加载更多
+      if (scrollPercentage > 0.8 && displayCount < models.length) {
+        setDisplayCount((prev) => Math.min(prev + ITEMS_PER_PAGE, models.length));
+      }
+    },
+    [displayCount, models.length],
+  );
+
+  // 重置显示数量当下拉菜单打开时
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (open) {
+      setDisplayCount(ITEMS_PER_PAGE);
+    }
   }, []);
 
   const currentModel = models.find((m) => m.id === selectedModel);
@@ -138,8 +162,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     <Sparkles className="w-3.5 h-3.5" />
   );
 
+  const displayedModels = models.slice(0, displayCount);
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <button className={getButtonClassName()} style={getButtonStyle()} disabled={disabled}>
           {useMotion ? (
@@ -155,31 +181,48 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           {showChevron && <ChevronDown className="w-3 h-3" />}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-64">
-        <DropdownMenuLabel className="text-xs">选择模型</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      <DropdownMenuContent align={align} className="w-64 p-0">
+        <div className="px-2 py-1.5">
+          <DropdownMenuLabel className="text-xs px-0">选择模型</DropdownMenuLabel>
+        </div>
+        <DropdownMenuSeparator className="my-0" />
         {loading ? (
-          <div className="px-2 py-2 text-xs text-gray-500">加载中...</div>
+          <div className="px-4 py-3 text-xs text-gray-500">加载中...</div>
         ) : models.length === 0 ? (
-          <div className="px-2 py-2 text-xs text-gray-500">暂无可用模型</div>
+          <div className="px-4 py-3 text-xs text-gray-500">暂无可用模型</div>
         ) : (
-          models.map((model) => (
-            <DropdownMenuItem
-              key={model.id}
-              onClick={() => setSelectedModel(model.id)}
-              className={cn(
-                'cursor-pointer',
-                selectedModel === model.id && currentVariantStyles.selectedClassName,
-              )}
-            >
-              <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-sm">{model.name}</span>
-                {model.description && (
-                  <span className="text-xs text-gray-500 line-clamp-1">{model.description}</span>
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="max-h-[400px] overflow-y-auto scrollbar-hide"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            {displayedModels.map((model) => (
+              <DropdownMenuItem
+                key={model.id}
+                onClick={() => setSelectedModel(model.id)}
+                className={cn(
+                  'cursor-pointer mx-1 my-0.5',
+                  selectedModel === model.id && currentVariantStyles.selectedClassName,
                 )}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-sm">{model.name}</span>
+                  {model.description && (
+                    <span className="text-xs text-gray-500 line-clamp-1">{model.description}</span>
+                  )}
+                </div>
+              </DropdownMenuItem>
+            ))}
+            {displayCount < models.length && (
+              <div className="px-4 py-2 text-xs text-gray-400 text-center">
+                滚动加载更多... ({displayCount}/{models.length})
               </div>
-            </DropdownMenuItem>
-          ))
+            )}
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
