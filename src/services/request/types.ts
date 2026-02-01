@@ -97,3 +97,13 @@ export interface RequestOptions {
   retries?: number;
   retryDelay?: number;
 }
+
+// 流式响应配置
+export interface StreamResponseConfig<T> {
+  /** 响应头处理回调（可选） */
+  onHeaders?: (headers: Headers) => void;
+  /** 解析单行数据的函数（可选，默认使用 OpenAI 格式解析） */
+  parseChunk?: (line: string) => T | null;
+  /** 流结束时的回调（可选） */
+  onDone?: () => void;
+}

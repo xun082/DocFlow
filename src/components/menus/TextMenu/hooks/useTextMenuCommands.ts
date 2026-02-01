@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
+import { TextSelection } from '@tiptap/pm/state';
 import { toast } from 'sonner';
 
 import { useCommentStore } from '@/stores/commentStore';
@@ -107,6 +108,80 @@ export const useTextmenuCommands = (editor: Editor) => {
     [editor],
   );
 
+  const onPolish = useCallback(() => {
+    const { selection } = editor.state;
+
+    // 检查是否有选中的文本
+    if (selection.empty) {
+      toast.error('请先选择要润色的文本');
+
+      return false;
+    }
+
+    // 获取选中的内容和位置
+    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, '\n\n');
+    const { from, to } = selection;
+
+    try {
+      // 检查是否已经存在 AI 润色块
+      let hasPolishNode = false;
+
+      editor.state.doc.nodesBetween(
+        to,
+        Math.min(to + 50, editor.state.doc.content.size),
+        (node) => {
+          if (node.type.name === 'aiPolish') {
+            hasPolishNode = true;
+
+            return false;
+          }
+        },
+      );
+
+      if (hasPolishNode) {
+        toast.error('已有润色节点，请先处理');
+
+        return false;
+      }
+
+      // 在选中内容后插入 AI 润色块，并保持原文选中状态
+      const inserted = editor
+        .chain()
+        .focus()
+        .command(({ tr, state }) => {
+          try {
+            // 创建润色节点
+            const polishNode = state.schema.nodes.aiPolish.create({
+              originalContent: selectedText,
+              state: 'input',
+              response: '',
+            });
+
+            // 在选择区域后插入节点
+            tr.insert(to, polishNode);
+
+            // 保持原文的选中状态（高亮显示）
+            tr.setSelection(TextSelection.create(tr.doc, from, to));
+
+            return true;
+          } catch {
+            return false;
+          }
+        })
+        .run();
+
+      if (!inserted) {
+        toast.error('插入失败，请重试');
+      }
+
+      return inserted;
+    } catch {
+      toast.error('插入失败，请重试');
+
+      return false;
+    }
+  }, [editor]);
+
   return {
     onBold,
     onItalic,
@@ -129,5 +204,6 @@ export const useTextmenuCommands = (editor: Editor) => {
     onLink,
     onComment,
     onRemoveComment,
+    onPolish,
   };
 };

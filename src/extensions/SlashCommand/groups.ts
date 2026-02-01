@@ -22,13 +22,17 @@ export const GROUPS: Group[] = [
         description: 'AI continues writing based on context',
         aliases: ['continue', 'write'],
         action: (editor) => {
-          const previousNode = editor.state.doc.resolve(editor.state.selection.anchor - 1).node();
-          const previousNodeContent = previousNode.textContent;
-          editor
-            .chain()
-            .focus()
-            .setAI({ prompt: previousNodeContent, op: 'continue', aiState: 'input' })
-            .run();
+          editor.chain().focus().setAIContinue().run();
+        },
+      },
+      {
+        name: 'brainstorm',
+        label: 'Brainstorm',
+        iconName: 'Lightbulb',
+        description: 'Generate multiple ideas at once',
+        aliases: ['ideas', 'brain', 'think'],
+        action: (editor) => {
+          editor.chain().focus().setAIBrainstorm().run();
         },
       },
       {
