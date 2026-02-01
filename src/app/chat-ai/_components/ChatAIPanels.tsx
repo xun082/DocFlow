@@ -12,7 +12,7 @@
  * - 使用 use-stick-to-bottom 自动滚动
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Send,
   Copy,
@@ -23,20 +23,33 @@ import {
   Pencil,
   Share2,
   Check,
-  Settings2,
+  UserIcon,
+  Settings,
+  LogOut,
+  Brain,
+  Globe,
 } from 'lucide-react';
 import { MdPreview } from 'md-editor-rt';
 import 'md-editor-rt/lib/preview.css';
 import { useStickToBottom } from 'use-stick-to-bottom';
+import { useRouter } from 'next/navigation';
 
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
 import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
 import ModelConfigModal from './ModelConfigModal';
 
+import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUserQuery } from '@/hooks/useUserQuery';
 import { cn } from '@/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChatPanelProps {
   /** 模型配置信息 */
@@ -286,6 +299,17 @@ export default function ChatAIPanels({
   // 获取动态模型列表用于显示名称
   const { models } = useChatModels();
 
+  const router = useRouter();
+
+  const logoutMutation = useLogoutMutation();
+
+  // 挂载状态
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // 使用 use-stick-to-bottom 实现自动滚动
   const { scrollRef, contentRef } = useStickToBottom();
 
@@ -311,6 +335,20 @@ export default function ChatAIPanels({
   // 是否显示快捷问题（仅在消息为空时显示）
   const showQuickQuestions = messages.length === 0;
 
+  // 从 config 中读取网页搜索和深度思考状态
+  const enableWebSearch = config.enableWebSearch || false;
+  const enableDeepThinking = config.enableThinking || false;
+
+  // 切换网页搜索
+  const toggleWebSearch = () => {
+    onConfigChange?.({ ...config, enableWebSearch: !enableWebSearch });
+  };
+
+  // 切换深度思考
+  const toggleDeepThinking = () => {
+    onConfigChange?.({ ...config, enableThinking: !enableDeepThinking });
+  };
+
   return (
     <div
       className={cn(
@@ -320,21 +358,61 @@ export default function ChatAIPanels({
     >
       {/* ----- 模型标题栏 ----- */}
       <header className="px-4 py-2 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <ModelConfigModal
+          config={config}
+          onConfigChange={onConfigChange || (() => {})}
+          isCompareMode={isCompareMode}
+          onAddCompareModel={onAddCompareModel}
+          onCancelCompare={onCancelCompare}
+          triggerClassName="text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-1 rounded-md transition-colors cursor-pointer"
+          icon={null}
+          title="模型配置"
+        >
           {getModelDisplayName(config.modelName, models)}
-        </h2>
+        </ModelConfigModal>
 
-        {onConfigChange && (
-          <ModelConfigModal
-            config={config}
-            onConfigChange={onConfigChange}
-            isCompareMode={isCompareMode}
-            onAddCompareModel={onAddCompareModel}
-            onCancelCompare={onCancelCompare}
-            triggerClassName="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-all"
-            icon={<Settings2 className="h-4 w-4" />}
-            title="面板模型配置"
-          />
+        {mounted && user && (
+          <div className="border-t border-gray-100 bg-gray-50/50">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-sm transition-all duration-200 text-left group">
+                  <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
+                    <AvatarImage src={user.avatar_url || ''} />
+                    <AvatarFallback className="bg-blue-500 text-white">
+                      {user.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mb-2">
+                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/user')}
+                >
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>个人中心</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/settings')}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>账户设置</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  disabled={logoutMutation.isPending}
+                  onClick={() => logoutMutation.mutate()}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>退出登录</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </header>
 
@@ -392,7 +470,7 @@ export default function ChatAIPanels({
           )}
 
           {/* 输入框区域 */}
-          <div className="relative">
+          <div className="relative border border-gray-200 rounded-xl bg-white focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all duration-200">
             <textarea
               ref={textareaRef}
               value={inputValue}
@@ -401,32 +479,63 @@ export default function ChatAIPanels({
               placeholder={status === 'streaming' ? 'AI 正在回复中...' : '请输入提示词...'}
               disabled={status === 'streaming'}
               className={cn(
-                'w-full min-h-[100px] pr-14 resize-none border border-gray-200 rounded-xl bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none px-4 py-3 text-sm text-gray-800 shadow-sm transition-all duration-200',
+                'w-full min-h-[100px] px-4 py-3 pb-14 text-sm text-gray-800 outline-none resize-none',
                 status === 'streaming' && 'opacity-60 cursor-not-allowed',
               )}
             />
-            {/* 发送/停止按钮 */}
-            <button
-              type="button"
-              onClick={status === 'streaming' ? onStopGenerating : onSend}
-              disabled={isSendDisabled}
-              className={cn(
-                'absolute right-3 bottom-3 h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-all duration-200',
-                status === 'streaming'
-                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 shadow-red-100/50 active:scale-90'
-                  : isSendDisabled
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
-              )}
-              aria-label={status === 'streaming' ? '停止生成' : '发送'}
-              title={status === 'streaming' ? '停止生成' : '发送'}
-            >
-              {status === 'streaming' ? (
-                <Square className="h-4 w-4 fill-current" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+            <div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleWebSearch}
+                  className={cn(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg border transition-all duration-200',
+                    enableWebSearch
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-200 hover:text-blue-600',
+                  )}
+                  disabled={status === 'streaming'}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>网页搜索</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleDeepThinking}
+                  className={cn(
+                    'flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg border transition-all duration-200',
+                    enableDeepThinking
+                      ? 'bg-purple-50 text-purple-600 border-purple-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-purple-200 hover:text-purple-600',
+                  )}
+                  disabled={status === 'streaming'}
+                >
+                  <Brain className="h-3.5 w-3.5" />
+                  <span>深度思考</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={status === 'streaming' ? onStopGenerating : onSend}
+                disabled={isSendDisabled}
+                className={cn(
+                  'h-9 w-9 inline-flex items-center justify-center rounded-lg shadow-sm transition-all duration-200',
+                  status === 'streaming'
+                    ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 shadow-red-100/50 active:scale-90'
+                    : isSendDisabled
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
+                )}
+                aria-label={status === 'streaming' ? '停止生成' : '发送'}
+                title={status === 'streaming' ? '停止生成' : '发送'}
+              >
+                {status === 'streaming' ? (
+                  <Square className="h-4 w-4 fill-current" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -9,32 +9,13 @@
  * - 配置面板默认不折叠
  */
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  X,
-  Settings2,
-  LogOut,
-  User as UserIcon,
-  Settings,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 
 import ChatHistoryList from './ChatHistoryList';
 import ModelConfigModal from './ModelConfigModal';
 import type { ModelConfig, ChatSession } from '../types';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
 import { cn } from '@/utils';
 
 interface ChatSidebarProps {
@@ -90,17 +71,6 @@ export default function ChatSidebar({
   isMobileOpen = false,
   onMobileClose,
 }: ChatSidebarProps) {
-  const router = useRouter();
-  const { data: user } = useUserQuery();
-  const logoutMutation = useLogoutMutation();
-
-  // 挂载状态
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // 侧边栏折叠状态（默认展开）
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -205,60 +175,6 @@ export default function ChatSidebar({
               onLoadMore={onLoadMore}
             />
           </div>
-
-          {/* 用户信息底栏 - 仅在非折叠状态且已挂载后显示 */}
-          {mounted && !isSidebarCollapsed && user && (
-            <div className="p-3 border-t border-gray-100 bg-gray-50/50">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-sm transition-all duration-200 text-left group">
-                    <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
-                      <AvatarImage src={user.avatar_url || ''} />
-                      <AvatarFallback className="bg-blue-500 text-white">
-                        {user.name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {user.name || '未命名用户'}
-                      </p>
-                      <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider font-medium">
-                        {user.role || 'GUEST'}
-                      </p>
-                    </div>
-                    <Settings2 className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 mb-2">
-                  <DropdownMenuLabel>我的账户</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => router.push('/dashboard/user')}
-                  >
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    <span>个人中心</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => router.push('/dashboard/settings')}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>账户设置</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                    disabled={logoutMutation.isPending}
-                    onClick={() => logoutMutation.mutate()}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>退出登录</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
         </div>
       </aside>
     </>
