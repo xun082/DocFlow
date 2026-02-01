@@ -13,6 +13,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { ChatSession } from '../types';
 
 import { ChatAiApi, type Conversation } from '@/services/chat-ai';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * 将后端会话数据转换为前端格式
@@ -83,6 +84,7 @@ export function useConversations(): UseConversationsResult {
   const [isLoading, setIsLoading] = useState(!globalState.sessions.length);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // 注册监听器
   useEffect(() => {
@@ -116,6 +118,11 @@ export function useConversations(): UseConversationsResult {
 
         if (apiError) {
           setError(apiError);
+          toast({
+            variant: 'destructive',
+            title: '加载失败',
+            description: apiError || '无法加载会话列表，请稍后重试',
+          });
 
           return;
         }
@@ -132,7 +139,13 @@ export function useConversations(): UseConversationsResult {
           });
         }
       } catch (err) {
-        setError(String(err));
+        const errorMsg = String(err);
+        setError(errorMsg);
+        toast({
+          variant: 'destructive',
+          title: '加载失败',
+          description: errorMsg || '无法加载会话列表，请稍后重试',
+        });
       } finally {
         setIsLoading(false);
         isRefreshing = false;
@@ -159,6 +172,11 @@ export function useConversations(): UseConversationsResult {
     if (apiError) {
       setError(apiError);
       setIsLoadingMore(false);
+      toast({
+        variant: 'destructive',
+        title: '加载更多失败',
+        description: apiError || '无法加载更多会话，请稍后重试',
+      });
 
       return;
     }
@@ -195,6 +213,11 @@ export function useConversations(): UseConversationsResult {
         console.warn('会话可能已被删除，执行本地清理');
       } else {
         console.error('删除会话失败:', apiError);
+        toast({
+          variant: 'destructive',
+          title: '删除失败',
+          description: apiError || '无法删除会话，请稍后重试',
+        });
 
         return false;
       }
@@ -202,6 +225,10 @@ export function useConversations(): UseConversationsResult {
 
     const newSessions = globalState.sessions.filter((s) => s.id !== id);
     notifySessionListeners({ sessions: newSessions });
+    toast({
+      title: '删除成功',
+      description: '会话已成功删除',
+    });
 
     return true;
   }, []);
@@ -224,6 +251,11 @@ export function useConversations(): UseConversationsResult {
 
     if (apiError) {
       console.error('重命名会话失败:', apiError);
+      toast({
+        variant: 'destructive',
+        title: '重命名失败',
+        description: apiError || '无法重命名会话，请稍后重试',
+      });
 
       return false;
     }
@@ -233,6 +265,10 @@ export function useConversations(): UseConversationsResult {
       s.id === id ? { ...s, title: newTitle } : s,
     );
     notifySessionListeners({ sessions: newSessions });
+    toast({
+      title: '重命名成功',
+      description: '会话标题已更新',
+    });
 
     return true;
   }, []);
@@ -249,7 +285,7 @@ export function useConversations(): UseConversationsResult {
 
     // 发起新请求
     refresh();
-  }, [refresh]);
+  }, []); // 只在组件挂载时执行一次
 
   return {
     sessions: sessionState.sessions,

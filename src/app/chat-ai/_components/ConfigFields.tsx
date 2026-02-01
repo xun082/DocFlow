@@ -3,20 +3,15 @@
 /**
  * 模型配置表单项组
  *
- * 包含 Model / Max Tokens / Temperature / Top-P / Enable Thinking / Thinking Budget / 联网搜索，
- * 供主模型与对比模型配置复用。
+ * 包含 Model / Max Tokens / Temperature / Top-P / Top-K / Frequency Penalty / Min-P / N / Stop Sequences / System Prompt，
+ * 供主模型与对比模型配置复用。网页搜索和深度思考功能已移至聊天界面底部。
  */
 
 import { useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 
 import type { ModelConfig } from '../types';
-import {
-  MODEL_OPTIONS,
-  THINKING_OPTIONS,
-  WEB_SEARCH_OPTIONS,
-  DEFAULT_MODEL_CONFIG,
-} from '../constants';
+import { MODEL_OPTIONS, DEFAULT_MODEL_CONFIG } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
 
 import { Input } from '@/components/ui/input';
@@ -120,12 +115,9 @@ export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps
     frequencyPenalty = DEFAULT_MODEL_CONFIG.frequencyPenalty,
     minP = DEFAULT_MODEL_CONFIG.minP,
     n = DEFAULT_MODEL_CONFIG.n,
-    enableThinking = DEFAULT_MODEL_CONFIG.enableThinking,
-    thinkingBudget = DEFAULT_MODEL_CONFIG.thinkingBudget,
-    enableWebSearch = DEFAULT_MODEL_CONFIG.enableWebSearch,
     systemPrompt = DEFAULT_MODEL_CONFIG.systemPrompt,
     stop = DEFAULT_MODEL_CONFIG.stop,
-  } = config || {};
+  } = config;
 
   // 当模型列表加载完成后，如果当前选择的模型不在列表中，自动选择第一个模型
   useEffect(() => {
@@ -242,70 +234,6 @@ export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps
           updateConfig('n', validValue);
         }}
       />
-
-      {/* Enable Thinking */}
-      <div className="space-y-2">
-        <LabelWithTooltip
-          label="Enable Thinking"
-          tooltip="启用思维链（Chain of Thought），让模型展示其推理过程，有助于得到更准确的答案。"
-        />
-        <Select
-          value={enableThinking ? 'enabled' : 'disabled'}
-          onValueChange={(v) => updateConfig('enableThinking', v === 'enabled')}
-        >
-          <SelectTrigger className="w-full h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {THINKING_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Thinking Budget */}
-      <div className="space-y-2">
-        <LabelWithTooltip
-          label="Thinking Budget"
-          tooltip="分配给模型推理思考的 Token 预算。更高的预算允许更深入的思考，但会增加响应时间。"
-        />
-        <Input
-          type="number"
-          value={thinkingBudget}
-          onChange={(e) => updateConfig('thinkingBudget', parseInt(e.target.value) || 4096)}
-          min={128}
-          max={32768}
-          step={128}
-          className="w-24 h-8 text-sm"
-          disabled={!enableThinking}
-        />
-      </div>
-
-      {/* 联网搜索 */}
-      <div className="space-y-2">
-        <LabelWithTooltip
-          label="联网搜索"
-          tooltip="启用后会先搜索相关网页内容，获取最新信息来回答问题。"
-        />
-        <Select
-          value={enableWebSearch ? 'enabled' : 'disabled'}
-          onValueChange={(v) => updateConfig('enableWebSearch', v === 'enabled')}
-        >
-          <SelectTrigger className="w-full h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {WEB_SEARCH_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Stop Sequences */}
       <div className="space-y-2">

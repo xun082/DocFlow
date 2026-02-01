@@ -23,6 +23,8 @@ export interface ChatMessage {
   role: MessageRole;
   /** 消息内容 */
   content: string;
+  /** 推理内容（深度思考模式） */
+  reasoning_content?: string;
   /** 创建时间 */
   created_at: string;
 }
@@ -90,6 +92,8 @@ export interface StreamChunk {
   event?: 'message' | 'done' | 'error';
   /** 内容片段 */
   content?: string;
+  /** 推理内容片段（深度思考模式） */
+  reasoning_content?: string;
   /** 会话 ID（首次响应时返回） */
   conversation_id?: string;
   /** 消息 ID */
@@ -192,11 +196,13 @@ export const ChatAiApi = {
                   try {
                     const parsed = JSON.parse(jsonStr);
                     const content = parsed.choices?.[0]?.delta?.content || '';
+                    const reasoningContent = parsed.choices?.[0]?.delta?.reasoning_content || '';
 
-                    if (content || parsed.choices?.[0]?.finish_reason) {
+                    if (content || reasoningContent || parsed.choices?.[0]?.finish_reason) {
                       onMessage({
                         event: 'message',
                         content,
+                        reasoning_content: reasoningContent,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
                         finish_reason: parsed.choices?.[0]?.finish_reason,
@@ -216,11 +222,13 @@ export const ChatAiApi = {
                   try {
                     const parsed = JSON.parse(line);
                     const content = parsed.choices?.[0]?.delta?.content || '';
+                    const reasoningContent = parsed.choices?.[0]?.delta?.reasoning_content || '';
 
-                    if (content || parsed.choices?.[0]?.finish_reason) {
+                    if (content || reasoningContent || parsed.choices?.[0]?.finish_reason) {
                       onMessage({
                         event: 'message',
                         content,
+                        reasoning_content: reasoningContent,
                         conversation_id: parsed.conversation_id,
                         message_id: parsed.id,
                         finish_reason: parsed.choices?.[0]?.finish_reason,

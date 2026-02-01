@@ -86,6 +86,8 @@ export interface ChatMessage {
   role: MessageRole;
   /** 消息内容 */
   content: string;
+  /** 推理内容（深度思考模式） */
+  reasoningContent?: string;
   /** 创建时间 */
   createdAt: Date;
   /** 是否正在流式加载中 */

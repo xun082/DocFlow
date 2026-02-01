@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { ChatMessage, ChatStatus, ModelConfig } from '../types';
 
 import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * 生成临时消息 ID
@@ -53,6 +54,7 @@ export function useChat(): UseChatResult {
   // 只有从后端成功获取或响应头返回的 ID 才是有效的 conversationId
   // 不要直接使用 URL 中的 ID，因为可能是前端生成的临时 ID
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // 用于取消 SSE 连接
   const cancelFnRef = useRef<(() => void) | null>(null);
@@ -68,6 +70,11 @@ export function useChat(): UseChatResult {
       if (apiError) {
         setError(apiError);
         setStatus('error');
+        toast({
+          variant: 'destructive',
+          title: '加载失败',
+          description: apiError || '无法加载会话历史，请稍后重试',
+        });
 
         return false;
       }
@@ -77,6 +84,7 @@ export function useChat(): UseChatResult {
           id: msg.id,
           role: msg.role,
           content: msg.content,
+          reasoningContent: msg.reasoning_content,
           createdAt: new Date(msg.created_at),
         }));
         setMessages(convertedMessages);
@@ -148,18 +156,28 @@ export function useChat(): UseChatResult {
 
       try {
         let bufferedContent = '';
+        let bufferedReasoningContent = '';
         let lastUpdateTime = 0;
         const THROTTLE_MS = 5; // 10ms force update interval for smoother perception
 
         const flushBuffer = () => {
-          if (!bufferedContent) return;
+          if (!bufferedContent && !bufferedReasoningContent) return;
 
           const contentToAppend = bufferedContent;
+          const reasoningToAppend = bufferedReasoningContent;
           bufferedContent = '';
+          bufferedReasoningContent = '';
 
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMessage.id ? { ...m, content: m.content + contentToAppend } : m,
+              m.id === assistantMessage.id
+                ? {
+                    ...m,
+                    content: m.content + contentToAppend,
+                    reasoningContent: (m.reasoningContent || '') + reasoningToAppend,
+                    isStreaming: m.isStreaming, // 保留流式状态
+                  }
+                : m,
             ),
           );
           lastUpdateTime = Date.now();
@@ -189,6 +207,11 @@ export function useChat(): UseChatResult {
               const errorMsg = chunk.error || '发生错误';
               setError(errorMsg);
               setStatus('error');
+              toast({
+                variant: 'destructive',
+                title: 'AI 回复失败',
+                description: errorMsg,
+              });
               // 错误时停止 streaming 状态
               setMessages((prev) =>
                 prev.map((m) =>
@@ -213,8 +236,15 @@ export function useChat(): UseChatResult {
             // 追加内容到缓冲区
             if (chunk.content) {
               bufferedContent += chunk.content;
+            }
 
-              // Throttle updates
+            // 追加推理内容到缓冲区
+            if (chunk.reasoning_content) {
+              bufferedReasoningContent += chunk.reasoning_content;
+            }
+
+            // Throttle updates
+            if (chunk.content || chunk.reasoning_content) {
               const now = Date.now();
 
               if (now - lastUpdateTime >= THROTTLE_MS) {
@@ -239,8 +269,15 @@ export function useChat(): UseChatResult {
           (err) => {
             console.error('SSE 错误:', err);
             flushBuffer();
-            setError(String(err));
+
+            const errorMsg = String(err);
+            setError(errorMsg);
             setStatus('error');
+            toast({
+              variant: 'destructive',
+              title: '连接失败',
+              description: errorMsg || '无法连接到 AI 服务，请检查网络或稍后重试',
+            });
             // 错误时停止 streaming 状态
             setMessages((prev) =>
               prev.map((m) =>
@@ -261,8 +298,14 @@ export function useChat(): UseChatResult {
         // 如果是取消请求导致的错误，直接忽略
         if (err.name === 'AbortError') return;
 
-        setError(String(err));
+        const errorMsg = String(err);
+        setError(errorMsg);
         setStatus('error');
+        toast({
+          variant: 'destructive',
+          title: '请求失败',
+          description: errorMsg || '发送消息失败，请稍后重试',
+        });
         // 错误时停止 streaming 状态
         setMessages((prev) =>
           prev.map((m) =>

@@ -2,13 +2,24 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu, Plus } from 'lucide-react';
+import { Menu, Plus, User, UserIcon, Settings, LogOut } from 'lucide-react';
 
 import { ChatSidebar, ChatAIPanels } from '.';
 import { createModelConfig, INITIAL_PRIMARY_MODEL, DEFAULT_MODEL_CONFIG } from '../constants';
 import { useConversations } from '../hooks/useConversations';
 import { useChatModels } from '../hooks/useChatModels';
-import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
+import type { ModelConfig, ChatMessage, ChatStatus, ChatSession } from '../types';
+
+import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /** 最大允许的对比模型数量（不含主模型） */
 const MAX_COMPARE_MODELS = 1;
@@ -20,6 +31,8 @@ interface ChatInterfaceProps {
   messages?: ChatMessage[];
   /** 当前聊天状态 */
   status?: ChatStatus;
+  /** 会话 ID（用于自动同步到会话列表） */
+  conversationId?: string | null;
   /** 发送消息处理函数 */
   onSend: (modelId: string, value: string, config: ModelConfig) => void;
   /** 新建会话处理函数 */
@@ -42,6 +55,7 @@ export default function ChatInterface({
   activeSessionId = '',
   messages = [],
   status = 'idle',
+  conversationId,
   onSend,
   onNewSession,
   onSessionClick,
@@ -51,8 +65,16 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const router = useRouter();
   // 使用 Hook 管理会话列表
-  const { sessions, deleteSession, renameSession, hasMore, isLoadingMore, loadMore } =
-    useConversations();
+  const {
+    sessions,
+    deleteSession,
+    renameSession,
+    hasMore,
+    isLoadingMore,
+    loadMore,
+    addSession,
+    refresh,
+  } = useConversations();
 
   // 获取动态模型列表
   const { models, isLoading: isModelsLoading } = useChatModels();
@@ -65,6 +87,19 @@ export default function ChatInterface({
 
   // 移动端侧边栏状态
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // 挂载状态，防止 hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  // 获取用户信息
+  const { data: user } = useUserQuery();
+
+  // 退出登录
+  const logoutMutation = useLogoutMutation();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 主模型配置
   const primaryConfig = modelConfigs[0];
@@ -115,6 +150,37 @@ export default function ChatInterface({
       );
     }
   }, [onInitInput, isModelsLoading, primaryConfig.id, handleInternalSend]);
+
+  // 自动同步会话到列表（当有新会话 ID 和消息时）
+  useEffect(() => {
+    if (conversationId && messages.length > 0) {
+      const sessionExists = sessions.some((s) => s.id === conversationId);
+
+      if (!sessionExists) {
+        const newSession: ChatSession = {
+          id: conversationId,
+          title: '新对话',
+          createdAt: new Date(),
+          lastMessageAt: new Date(),
+          messageCount: messages.length,
+        };
+        addSession(newSession);
+      }
+    }
+  }, [conversationId, messages, sessions, addSession]);
+
+  // 当消息发送完成时刷新列表（更新标题等信息）
+  useEffect(() => {
+    // 从 streaming 变为 idle，说明生成完成
+    if (status === 'idle' && conversationId && messages.length > 0) {
+      // 延迟刷新，给后端时间生成标题
+      const timer = setTimeout(() => {
+        refresh();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, conversationId, messages.length, refresh]);
 
   // 模型列表加载后的自动选择策略
   useEffect(() => {
@@ -196,13 +262,56 @@ export default function ChatInterface({
             DocFlow AI
           </span>
         </div>
-        <button
-          onClick={onNewSession}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-          title="新建会话"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onNewSession}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+            title="新建会话"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+          {mounted && user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-0 rounded-full transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                  <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
+                    <AvatarImage src={user.avatar_url || ''} alt={user.name || 'User'} />
+                    <AvatarFallback className="bg-blue-500 text-white">
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/user')}
+                >
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>个人中心</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/dashboard/settings')}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>账户设置</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  disabled={logoutMutation.isPending}
+                  onClick={() => logoutMutation.mutate()}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>退出登录</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">

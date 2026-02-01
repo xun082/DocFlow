@@ -9,8 +9,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { ChatInterface } from '../_components';
 import { useChat } from '../hooks/useChat';
-import { useConversations } from '../hooks/useConversations';
-import type { ModelConfig, ChatSession } from '../types';
+import type { ModelConfig } from '../types';
 
 export default function ChatRoomPage() {
   const params = useParams();
@@ -20,7 +19,6 @@ export default function ChatRoomPage() {
   // 判断是否是新会话
   const isNewSession = /^\d{13,}$/.test(chatId);
 
-  const { refresh, addSession, sessions } = useConversations();
   const { messages, status, conversationId, sendMessage, stopGenerating, loadConversation } =
     useChat();
 
@@ -34,47 +32,26 @@ export default function ChatRoomPage() {
   }, [isNewSession, chatId, loadConversation]);
 
   /**
-   * 处理新会话自动跳转与列表更新
+   * 处理新会话自动跳转
    */
   useEffect(() => {
     if (conversationId && messages.length > 0) {
-      // 1. 如果正式会话 ID 不同，必须等待生成结束后再更新 URL
+      // 如果正式会话 ID 不同，必须等待生成结束后再更新 URL
       // 否则 URL 变更会导致组件重新加载，从而中断 SSE 流
-      if (chatId !== conversationId) {
-        if (status === 'idle') {
-          router.replace(`/chat-ai/${conversationId}`);
-        }
-      }
-
-      // 2. 确保新会话在左侧列表中（如果还不在）
-      const sessionExists = sessions.some((s) => s.id === conversationId);
-
-      if (!sessionExists) {
-        const newSession: ChatSession = {
-          id: conversationId,
-          title: '新对话', // 初始显示为“新对话”，等待生成结束后更新标题
-          createdAt: new Date(),
-          lastMessageAt: new Date(),
-          messageCount: messages.length,
-        };
-        addSession(newSession);
+      if (chatId !== conversationId && status === 'idle') {
+        router.replace(`/chat-ai/${conversationId}`);
       }
     }
-  }, [conversationId, messages, chatId, router, sessions, addSession]);
+  }, [conversationId, messages, chatId, router, status]);
 
   /**
    * 发送处理 (调用 SSE)
    */
   const handleSend = useCallback(
     (modelId: string, value: string, config: ModelConfig) => {
-      sendMessage(value, config, {
-        onSuccess: () => {
-          // 延迟刷新列表，以便后端有足够时间生成标题
-          refresh();
-        },
-      });
+      sendMessage(value, config);
     },
-    [sendMessage, refresh],
+    [sendMessage],
   );
 
   /**
@@ -121,6 +98,7 @@ export default function ChatRoomPage() {
       activeSessionId={conversationId || chatId}
       messages={messages}
       status={status}
+      conversationId={conversationId}
       onSend={handleSend}
       onNewSession={() => router.push('/chat-ai')}
       onStopGenerating={stopGenerating}
