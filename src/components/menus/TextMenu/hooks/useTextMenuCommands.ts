@@ -123,45 +123,50 @@ export const useTextmenuCommands = (editor: Editor) => {
     const { from, to } = selection;
 
     try {
-      // 检查是否已经存在 AI 润色块
-      let hasPolishNode = false;
+      // 全局查找并删除所有已存在的 AI 润色块
+      const polishNodes: { pos: number; size: number }[] = [];
 
-      editor.state.doc.nodesBetween(
-        to,
-        Math.min(to + 50, editor.state.doc.content.size),
-        (node) => {
-          if (node.type.name === 'aiPolish') {
-            hasPolishNode = true;
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'aiPolish') {
+          polishNodes.push({ pos, size: node.nodeSize });
+        }
+      });
 
-            return false;
-          }
-        },
-      );
-
-      if (hasPolishNode) {
-        toast.error('已有润色节点，请先处理');
-
-        return false;
-      }
-
-      // 在选中内容后插入 AI 润色块，并保持原文选中状态
+      // 在选中内容后插入新的 AI 润色块，并删除旧的
       const inserted = editor
         .chain()
         .focus()
         .command(({ tr, state }) => {
           try {
-            // 创建润色节点
+            // 先删除所有已存在的润色节点（从后往前删除，避免位置偏移）
+            polishNodes.reverse().forEach(({ pos, size }) => {
+              tr.delete(pos, pos + size);
+            });
+
+            // 重新计算插入位置（因为删除了节点，位置可能发生变化）
+            let adjustedTo = to;
+
+            polishNodes.forEach(({ pos, size }) => {
+              if (pos < to) {
+                adjustedTo -= size;
+              }
+            });
+
+            // 创建新的润色节点
             const polishNode = state.schema.nodes.aiPolish.create({
               originalContent: selectedText,
               state: 'input',
               response: '',
             });
 
-            // 在选择区域后插入节点
-            tr.insert(to, polishNode);
+            // 在调整后的位置插入节点
+            tr.insert(adjustedTo, polishNode);
 
             // 保持原文的选中状态（高亮显示）
-            tr.setSelection(TextSelection.create(tr.doc, from, to));
+            const adjustedFrom =
+              from - polishNodes.filter((n) => n.pos < from).reduce((sum, n) => sum + n.size, 0);
+
+            tr.setSelection(TextSelection.create(tr.doc, adjustedFrom, adjustedTo));
 
             return true;
           } catch {
