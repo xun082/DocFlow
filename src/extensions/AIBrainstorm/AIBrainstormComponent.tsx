@@ -7,10 +7,10 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import ModelSelector from '../AI/components/ModelSelector';
 import ConcurrencySelector from '../AI/components/ConcurrencySelector';
 import SyntaxHighlight from '../AI/components/SyntaxHighlight';
 
+import ModelSelector from '@/components/business/module-select';
 import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 
 enum AIState {
@@ -172,8 +172,7 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
             });
           }
         },
-        (error) => {
-          console.error('生成失败:', error);
+        () => {
           toast.error('生成失败，请重试');
           setAiState(AIState.INPUT);
           updateAttributes({ aiState: AIState.INPUT });
@@ -181,8 +180,8 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
       );
 
       abortRef.current = cancel;
-    } catch (error) {
-      console.error('生成过程中出错:', error);
+    } catch {
+      toast.error('生成失败，请重试');
       setAiState(AIState.INPUT);
       updateAttributes({ aiState: AIState.INPUT });
     }
@@ -191,8 +190,8 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
   const handleStop = () => {
     try {
       abortRef.current?.();
-    } catch (error) {
-      console.log('中止流处理:', error);
+    } catch {
+      // 静默处理停止错误
     } finally {
       setAiState(AIState.DISPLAY);
       updateAttributes({ aiState: AIState.DISPLAY, responses });
@@ -264,6 +263,7 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
                     selectedModel={selectedModel}
                     setSelectedModel={setSelectedModel}
                     disabled={false}
+                    variant="custom"
                     buttonConfig={{
                       color: '#7C3AED',
                       bgColor: 'bg-[#7C3AED]/20',

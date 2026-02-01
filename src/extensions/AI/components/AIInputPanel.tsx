@@ -5,10 +5,10 @@ import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
 import Button from './Button';
 import Textarea from './Textarea';
-import ModelSelector from './ModelSelector';
 import KnowledgeBaseSelector from './KnowledgeBaseSelector';
 import type { ActionButtonConfig } from '../actionButtons';
 
+import ModelSelector from '@/components/business/module-select';
 import { cn } from '@/utils';
 
 type ActionButton = ActionButtonConfig;
@@ -179,6 +179,10 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
                     selectedModel={selectedModel}
                     setSelectedModel={setSelectedModel}
                     disabled={buttonConfig.disabled}
+                    variant="custom"
+                    useMotion
+                    showChevron={false}
+                    align="end"
                     buttonConfig={buttonConfig}
                   />
                 </div>

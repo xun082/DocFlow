@@ -5,10 +5,11 @@ import { Editor } from '@tiptap/core';
 import { Sparkles, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from 'sonner';
 
-import ModelSelector from './components/ModelSelector';
 import SyntaxHighlight from '../AI/components/SyntaxHighlight';
 
+import ModelSelector from '@/components/business/module-select';
 import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 
 interface AIContinueComponentProps {
@@ -98,14 +99,14 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
             });
           }
         },
-        (error: Error) => {
-          console.error('AI续写错误:', error);
+        () => {
+          toast.error('续写失败，请重试');
           setState('display');
           updateAttributes({ state: 'display' });
         },
       );
-    } catch (error) {
-      console.error('AI续写异常:', error);
+    } catch {
+      toast.error('续写失败，请重试');
       setState('display');
     }
   };
@@ -127,8 +128,8 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
   const handleStop = () => {
     try {
       abortRef.current?.();
-    } catch (error) {
-      console.log('停止续写:', error);
+    } catch {
+      // 静默处理停止错误
     } finally {
       setState('display');
       updateAttributes({ state: 'display' });
@@ -188,6 +189,7 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
                   selectedModel={selectedModel}
                   setSelectedModel={setSelectedModel}
                   disabled={false}
+                  variant="purple"
                 />
               </div>
 
@@ -243,7 +245,11 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
 
             {/* 工具栏 */}
             <div className="flex items-center justify-between gap-2 mt-2">
-              <ModelSelector selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
+              <ModelSelector
+                selectedModel={selectedModel}
+                setSelectedModel={setSelectedModel}
+                variant="purple"
+              />
 
               <div className="flex items-center gap-2">
                 <button

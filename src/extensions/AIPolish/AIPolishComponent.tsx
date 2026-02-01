@@ -7,9 +7,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 
-import ModelSelector from './components/ModelSelector';
 import SyntaxHighlight from '../AI/components/SyntaxHighlight';
 
+import ModelSelector from '@/components/business/module-select';
 import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 import { markdownToTiptapJSON } from '@/utils/markdown-to-tiptap';
 
@@ -276,6 +276,7 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
                   selectedModel={selectedModel}
                   setSelectedModel={setSelectedModel}
                   disabled={false}
+                  variant="green"
                 />
               </div>
 
@@ -360,7 +361,11 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
 
             {/* 工具栏 */}
             <div className="flex items-center justify-between gap-2 mt-2">
-              <ModelSelector selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
+              <ModelSelector
+                selectedModel={selectedModel}
+                setSelectedModel={setSelectedModel}
+                variant="green"
+              />
 
               <div className="flex items-center gap-2">
                 <button
