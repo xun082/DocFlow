@@ -19,6 +19,7 @@ import type {
   QueuedRequest,
   RequestOptions,
   RequestParams,
+  StreamResponseConfig,
 } from './types';
 import { RequestError } from './types';
 
@@ -994,6 +995,272 @@ class ClientRequest {
     });
 
     return () => activeController.abort();
+  }
+
+  /**
+   * 通用流式 POST 请求（支持 OpenAI 格式的 SSE 响应）
+   *
+   * @param url 请求路径
+   * @param params 请求参数
+   * @param onChunk 接收流式数据块的回调
+   * @param config 流式响应配置
+   * @returns 取消函数
+   */
+  async streamPost<T>(
+    url: string,
+    params: ClientParams,
+    onChunk: (chunk: T) => void,
+    config?: StreamResponseConfig<T>,
+  ): Promise<() => void> {
+    const controller = new AbortController();
+    let activeController = controller;
+    const fullUrl = this.baseURL + url;
+
+    addSentryBreadcrumb({
+      category: 'stream',
+      message: `Stream POST: ${fullUrl}`,
+      level: 'info',
+      data: { url: fullUrl },
+    });
+
+    try {
+      const req = this.buildRequest({
+        url: fullUrl,
+        method: HTTP_METHODS.POST,
+        params: params.params,
+        headers: params.headers,
+        withCredentials: params.withCredentials,
+      });
+
+      let response = await fetch(req.url, {
+        ...req.options,
+        signal: activeController.signal,
+      } as RequestInit);
+
+      // 处理 401 错误，尝试刷新 token
+      if (!response.ok) {
+        if (response.status === 401 && getCookie('refresh_token')) {
+          try {
+            if (this.isRefreshing) {
+              await this.refreshTokenPromise;
+            } else {
+              await this.handleTokenRefresh();
+            }
+
+            const retryReq = this.buildRequest({
+              url: fullUrl,
+              method: HTTP_METHODS.POST,
+              params: params.params,
+              headers: params.headers,
+              withCredentials: params.withCredentials,
+            });
+
+            activeController = new AbortController();
+            response = await fetch(retryReq.url, {
+              ...retryReq.options,
+              signal: activeController.signal,
+            } as RequestInit);
+
+            if (response.ok) {
+              addSentryBreadcrumb({
+                category: 'stream',
+                message: `Stream reconnected after refresh: ${fullUrl}`,
+                level: 'info',
+              });
+            }
+          } catch {
+            this.handleAuthFailure();
+          }
+        }
+
+        if (!response.ok) {
+          let errorMessage = HTTP_STATUS_MESSAGES[response.status] || '流式请求失败';
+          let errorData = null;
+
+          try {
+            const contentType = response.headers.get('content-type');
+
+            if (contentType?.includes('application/json')) {
+              const clonedResponse = response.clone();
+              errorData = await clonedResponse.json();
+
+              if (errorData.message) {
+                errorMessage = errorData.message;
+              }
+            }
+          } catch {
+            // 使用默认错误消息
+          }
+
+          const streamError = new RequestError(
+            errorMessage,
+            fullUrl,
+            response.status,
+            response.statusText,
+            errorData,
+          );
+
+          captureSentryException(streamError, {
+            tags: { errorType: 'StreamError', statusCode: response.status, url: fullUrl },
+            level: 'error',
+          });
+
+          throw streamError;
+        }
+      }
+
+      // 处理响应头
+      if (config?.onHeaders) {
+        config.onHeaders(response.headers);
+      }
+
+      if (!response.body) {
+        throw new RequestError('流式响应无主体', fullUrl, response.status, response.statusText);
+      }
+
+      addSentryBreadcrumb({
+        category: 'stream',
+        message: `Stream connected: ${fullUrl}`,
+        level: 'info',
+      });
+
+      // 读取流式响应
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const processStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              if (config?.onDone) {
+                config.onDone();
+              }
+
+              break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // 保留不完整的最后一行
+
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+
+              let chunk: T | null = null;
+
+              // 如果提供了自定义解析器，使用自定义解析器
+              if (config?.parseChunk) {
+                chunk = config.parseChunk(line);
+              } else {
+                // 默认使用 OpenAI 格式解析器
+                chunk = this.parseOpenAIStreamLine<T>(line);
+              }
+
+              if (chunk) {
+                onChunk(chunk);
+              }
+            }
+          }
+        } catch (err: any) {
+          // Include both DOMException and generic AbortError checks
+          if (
+            err.name === 'AbortError' ||
+            (err instanceof DOMException && err.name === 'AbortError')
+          ) {
+            return;
+          }
+
+          captureSentryException(err, {
+            tags: { errorType: 'StreamReadError', url: fullUrl },
+            level: 'error',
+          });
+
+          if (typeof params?.errorHandler === 'function') {
+            params.errorHandler(err);
+          } else if (params?.errorHandler?.onError) {
+            params.errorHandler.onError(err);
+          }
+        }
+      };
+
+      processStream();
+
+      return () => activeController.abort();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        // 中止是预期行为
+      } else {
+        addSentryBreadcrumb({
+          category: 'stream',
+          message: `Stream error: ${fullUrl}`,
+          level: 'error',
+          data: {
+            url: fullUrl,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+
+        if (!(error instanceof RequestError)) {
+          captureSentryException(error, {
+            tags: { errorType: 'StreamConnectionError', url: fullUrl },
+            level: 'error',
+          });
+        }
+
+        if (typeof params?.errorHandler === 'function') {
+          params.errorHandler(error);
+        } else if (params?.errorHandler?.onError) {
+          params.errorHandler.onError(error);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * 默认的 OpenAI 格式流式响应解析器
+   */
+  private parseOpenAIStreamLine<T>(line: string): T | null {
+    // 处理 data: 开头的行
+    if (line.startsWith('data: ')) {
+      const jsonStr = line.slice(6);
+
+      if (jsonStr.trim() === '[DONE]') {
+        return null;
+      }
+
+      try {
+        const parsed = JSON.parse(jsonStr);
+
+        return parsed as T;
+      } catch (e) {
+        // 忽略解析错误
+        captureSentryException(e, { extra: { line } });
+
+        return null;
+      }
+    } else if (
+      !line.startsWith('event:') &&
+      !line.startsWith('id:') &&
+      !line.startsWith('retry:')
+    ) {
+      // 尝试直接解析非 SSE 格式的 JSON（兼容性处理）
+      try {
+        const parsed = JSON.parse(line);
+
+        return parsed as T;
+      } catch {
+        // 忽略解析错误
+        return null;
+      }
+    }
+
+    return null;
   }
 
   /**

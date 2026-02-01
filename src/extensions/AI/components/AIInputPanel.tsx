@@ -1,11 +1,10 @@
 import React, { useCallback, useRef } from 'react';
-import { Send, Paperclip, Square } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
 import Button from './Button';
 import Textarea from './Textarea';
-import CustomDivider from './CustomDivider';
 import ModelSelector from './ModelSelector';
 import KnowledgeBaseSelector from './KnowledgeBaseSelector';
 import type { ActionButtonConfig } from '../actionButtons';
@@ -28,7 +27,6 @@ interface AIInputPanelProps {
   knowledgeEnabled: boolean;
   setKnowledgeEnabled: (enabled: boolean) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  uploadInputRef: React.RefObject<HTMLInputElement | null>;
   componentRef: React.RefObject<HTMLDivElement | null>;
   node: ProseMirrorNode;
 }
@@ -47,7 +45,6 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
   knowledgeEnabled,
   setKnowledgeEnabled,
   textareaRef,
-  uploadInputRef,
   componentRef,
   node,
 }) => {
@@ -169,84 +166,8 @@ const AIInputPanel: React.FC<AIInputPanelProps> = ({
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <input
-          ref={uploadInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          multiple={false}
-        />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-[#6B7280] hover:text-[#374151] hover:bg-gray-200/50"
-          onClick={() => uploadInputRef.current?.click()}
-          disabled={isLoading}
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
-
         <div className="flex items-center gap-1">
-          {actionButtons.slice(0, 2).map((buttonConfig, index) => {
-            const IconComponent = buttonConfig.icon;
-
-            return (
-              <button
-                key={`action-${buttonConfig.id}-${index}`}
-                onClick={() => {
-                  buttonConfig.onClick();
-                }}
-                className={cn(
-                  'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-gray-200/50',
-                  buttonConfig.isActive
-                    ? `${buttonConfig.bgColor} ${buttonConfig.hoverBgColor}`
-                    : 'text-[#6B7280] hover:text-[#374151]',
-                )}
-                style={{
-                  color: buttonConfig.isActive ? buttonConfig.color : undefined,
-                }}
-                disabled={buttonConfig.disabled}
-              >
-                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <motion.div
-                    animate={{
-                      rotate: buttonConfig.isActive ? 360 : 0,
-                      scale: buttonConfig.isActive ? 1.1 : 1,
-                    }}
-                    whileHover={{
-                      rotate: buttonConfig.isActive ? 360 : 15,
-                      scale: 1.1,
-                      transition: { type: 'spring', stiffness: 300, damping: 10 },
-                    }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                  >
-                    <IconComponent
-                      className={cn('w-4 h-4', buttonConfig.isActive ? '' : 'text-inherit')}
-                    />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {buttonConfig.isActive && (
-                    <motion.span
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: 'auto', opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-xs overflow-hidden whitespace-nowrap flex-shrink-0"
-                      style={{ color: buttonConfig.color }}
-                    >
-                      {buttonConfig.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-            );
-          })}
-
-          <CustomDivider />
-
-          {actionButtons.slice(2).map((buttonConfig, index) => {
+          {actionButtons.map((buttonConfig, index) => {
             if (buttonConfig.id === 'model') {
               return (
                 <div

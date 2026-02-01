@@ -15,10 +15,9 @@ enum AIState {
   DISPLAY = 'display', // 显示状态：显示AI响应结果
 }
 
-import { createActionButtons, type ActionButtonConfig } from './actionButtons';
+import { type ActionButtonConfig } from './actionButtons';
 import { useTextExtraction } from './hooks/useTextExtraction';
 import { useSSEStream } from './hooks/useSSEStream';
-import { useTextToImage } from './hooks/useTextToImage';
 import AIInputPanel from './components/AIInputPanel';
 import SyntaxHighlight from './components/SyntaxHighlight';
 
@@ -54,11 +53,9 @@ export const AIComponent: React.FC<AIComponentProps> = ({
   });
 
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3'); // 新增模型状态
-  const [showImage, setShowImage] = useState(false); // 图片生成状态
   const [knowledgeEnabled, setKnowledgeEnabled] = useState(false); // 知识库开关状态，默认关闭
   const [selectedKnowledgeIds, setSelectedKnowledgeIds] = useState<number[]>([]); // 选中的知识库ID列表
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const uploadInputRef = useRef<HTMLInputElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
   const responseRef = useRef<HTMLDivElement>(null); // 新增：响应内容引用
   const { buildContentString } = useTextExtraction(editor);
@@ -116,28 +113,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     editor,
     useKnowledgeBase: knowledgeEnabled, // 传递知识库开关状态
     selectedKnowledgeIds, // 传递选中的知识库ID列表
-  });
-
-  const { generateImage } = useTextToImage({
-    onSuccess: (imageUrl) => {
-      const pos = getPos();
-
-      if (pos !== undefined) {
-        editor
-          .chain()
-          .focus()
-          .deleteRange({ from: pos, to: pos + node.nodeSize })
-          .insertContentAt(pos + node.nodeSize, {
-            type: 'imageBlock',
-            attrs: { src: imageUrl },
-          })
-          .run();
-      }
-    },
-    onError: () => {
-      setAiState(AIState.INPUT);
-      updateState({ aiState: AIState.DISPLAY });
-    },
   });
 
   useEffect(() => {
@@ -234,13 +209,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     setAiState(AIState.LOADING);
 
     try {
-      // 根据模式选择生成图片或文本
-      if (showImage) {
-        await generateImage({ prompt });
-      } else {
-        const aiNodePos = getPos();
-        await handleAIGeneration(prompt, node.attrs, abortRef, aiNodePos);
-      }
+      const aiNodePos = getPos();
+      await handleAIGeneration(prompt, node.attrs, abortRef, aiNodePos);
     } catch (error) {
       console.error('AI生成过程中出错:', error);
       setAiState(AIState.INPUT);
@@ -253,26 +223,8 @@ export const AIComponent: React.FC<AIComponentProps> = ({
     updateAttributes({ prompt: newPrompt });
   };
 
-  // 图片生成处理函数
-  const handleToggleImage = () => {
-    setShowImage(!showImage);
-  };
-
   // 按钮配置数据
-  const baseButtons = createActionButtons(
-    false, // showSearch
-    false, // showThink
-    false, // showCanvas
-    showImage, // showImage
-    () => {}, // search toggle
-    () => {}, // think toggle
-    () => {}, // canvas toggle
-    handleToggleImage, // image toggle
-    aiState === AIState.LOADING,
-  );
-
-  const actionButtons = [
-    ...baseButtons,
+  const actionButtons: ActionButtonConfig[] = [
     {
       id: 'knowledge',
       label: '知识库',
@@ -491,7 +443,6 @@ export const AIComponent: React.FC<AIComponentProps> = ({
                   knowledgeEnabled={knowledgeEnabled}
                   setKnowledgeEnabled={setKnowledgeEnabled}
                   textareaRef={textareaRef}
-                  uploadInputRef={uploadInputRef}
                   componentRef={componentRef}
                   node={node}
                 />

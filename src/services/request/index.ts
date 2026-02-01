@@ -26,6 +26,7 @@ export type {
   RequestResult,
   ErrorHandler,
   RequestOptions,
+  StreamResponseConfig,
 } from './types';
 
 export { RequestError } from './types';

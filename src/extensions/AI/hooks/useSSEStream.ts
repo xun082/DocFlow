@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Editor } from '@tiptap/core';
 
+import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 import { AiApi } from '@/services/ai';
 import { storage, STORAGE_KEYS } from '@/utils';
 
@@ -15,7 +16,7 @@ interface UseSSEStreamProps {
   setAiState: (state: AIState) => void;
   updateAttributes: (attributes: Record<string, any>) => void;
   buildContentString: (prompt: string, op?: string, aiNodePos?: number) => string;
-  documentId: string;
+  documentId: string; // 保留用于问答功能（Question API）
   selectedModel: string;
   setResponse: (response: string) => void;
   editor: Editor;
@@ -28,7 +29,7 @@ export const useSSEStream = ({
   setAiState,
   updateAttributes,
   buildContentString,
-  documentId,
+  documentId, // eslint-disable-line @typescript-eslint/no-unused-vars
   selectedModel,
   setResponse,
   editor,
@@ -182,19 +183,39 @@ export const useSSEStream = ({
       resetAccumulatedResponse();
 
       if (nodeAttrs.op === 'continue') {
-        // 构建续写请求参数
-        const continueParams: any = {
-          documentId: documentId,
-          content: contentString,
-          model: selectedModel,
-        };
+        // 使用新的 AI 续写接口
+        abortRef.current = await ChatAiApi.Autocomplete(
+          {
+            content: contentString,
+            model: selectedModel,
+          },
+          (chunk: StreamChunk) => {
+            if (chunk.event === 'message' && chunk.content) {
+              // 累积接收到的内容
+              const newContent = accumulatedResponseRef.current + chunk.content;
+              accumulatedResponseRef.current = newContent;
+              setResponse(accumulatedResponseRef.current);
 
-        // 只有存在API密钥时才添加
-        if (requestData.apiKey) {
-          continueParams.apiKey = requestData.apiKey;
-        }
-
-        abortRef.current = await AiApi.ContinueWriting(continueParams, processSSEResponse);
+              const pos = editor.state.selection.from;
+              editor.commands.updateStreamingContent(pos, chunk.content);
+            } else if (chunk.event === 'done' || chunk.finish_reason === 'stop') {
+              // 流式传输完成
+              updateState({
+                response: accumulatedResponseRef.current,
+                prompt: '',
+                aiState: AIState.DISPLAY,
+              });
+              setAiState(AIState.DISPLAY);
+            }
+          },
+          (error: Error) => {
+            console.error('useSSEStream: AI续写错误:', error);
+            updateState({ aiState: AIState.INPUT });
+            updateAttributes({
+              aiState: AIState.DISPLAY,
+            });
+          },
+        );
       } else {
         // 构建问答请求参数
         const questionParams: any = {
