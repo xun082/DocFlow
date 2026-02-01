@@ -77,7 +77,7 @@ export default function ModelConfigModal({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-xl border-none shadow-2xl !z-[99999]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-xl border-none shadow-2xl">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-50 bg-white">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-50 rounded-xl text-blue-600 shadow-sm">{icon}</div>

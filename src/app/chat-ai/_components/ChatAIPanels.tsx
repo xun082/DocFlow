@@ -28,6 +28,8 @@ import {
   LogOut,
   Brain,
   Globe,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { MdPreview } from 'md-editor-rt';
 import 'md-editor-rt/lib/preview.css';
@@ -124,6 +126,10 @@ const MessageBubble = React.memo(
   }) {
     const isUser = message.role === 'user';
     const [copied, setCopied] = useState(false);
+    const [showReasoning, setShowReasoning] = useState(true); // 默认展开，不自动折叠
+
+    // 是否有推理内容
+    const hasReasoning = !isUser && message.reasoningContent && message.reasoningContent.length > 0;
 
     // 处理编辑
     const handleEdit = () => {
@@ -159,8 +165,8 @@ const MessageBubble = React.memo(
     return (
       <div className="group">
         <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
-          {/* 头像 */}
-          <div className="flex-shrink-0">
+          {/* 头像 - 移动端隐藏，桌面端显示 */}
+          <div className="hidden md:flex flex-shrink-0">
             {isUser ? (
               <Avatar className="h-8 w-8 ring-1 ring-gray-100 shadow-sm">
                 <AvatarImage src={userAvatar || ''} alt={userName || 'User'} />
@@ -176,37 +182,107 @@ const MessageBubble = React.memo(
           </div>
 
           {/* 消息内容 */}
-          <div
-            className={cn(
-              'max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
-              isUser
-                ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
-                : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
-            )}
-          >
-            {isUser ? (
-              // 用户消息直接显示
-              <div className="whitespace-pre-wrap">{message.content}</div>
-            ) : (
-              // AI 消息使用 Markdown 渲染
-              <div
-                className={cn(
-                  'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
-                  // 添加打字机光标效果：仅在 streaming 状态下的最后一个子元素后显示
-                  message.isStreaming &&
-                    'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-500 after:inline-block after:align-middle',
-                )}
-              >
-                {message.content ? (
-                  <MdPreview value={message.content} theme="light" showCodeRowNumber={false} />
-                ) : message.isStreaming ? (
-                  <span className="inline-flex items-center gap-1 text-gray-400">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    思考中...
-                  </span>
-                ) : null}
-              </div>
-            )}
+          <div className="w-full md:max-w-[75%] flex flex-col gap-2">
+            <div
+              className={cn(
+                'rounded-2xl text-sm leading-relaxed overflow-hidden',
+                isUser
+                  ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
+                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
+              )}
+            >
+              {isUser ? (
+                // 用户消息直接显示
+                <div className="px-4 py-3 whitespace-pre-wrap">{message.content}</div>
+              ) : (
+                // AI 消息：包含推理内容和主回复
+                <>
+                  {/* 推理内容（深度思考模式） */}
+                  {hasReasoning && (
+                    <div className="border-b border-gray-100">
+                      <button
+                        onClick={() => setShowReasoning(!showReasoning)}
+                        className="flex items-center gap-2 w-full text-left px-4 py-3 text-xs font-medium text-gray-600 hover:bg-gray-50/80 transition-all duration-200 group"
+                      >
+                        <Brain className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                        <span className="flex-1">
+                          {message.isStreaming && !message.content ? '正在思考...' : '深度思考'}
+                        </span>
+                        {showReasoning ? (
+                          <ChevronUp className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                        )}
+                      </button>
+
+                      <div
+                        className={cn(
+                          'grid transition-all duration-300 ease-in-out',
+                          showReasoning
+                            ? 'grid-rows-[1fr] opacity-100'
+                            : 'grid-rows-[0fr] opacity-0',
+                        )}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="px-4 pb-4 pt-2 bg-gray-50/50">
+                            <div
+                              className={cn(
+                                'prose prose-sm prose-gray max-w-none',
+                                'prose-p:my-1.5 prose-p:text-gray-600 prose-p:leading-relaxed',
+                                'prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:text-gray-600',
+                                'prose-pre:my-3 prose-pre:bg-white prose-pre:border prose-pre:border-gray-200 prose-pre:shadow-sm',
+                                'prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs',
+                                'prose-code:before:content-none prose-code:after:content-none',
+                                'prose-headings:text-gray-800 prose-headings:font-semibold prose-strong:text-gray-800',
+                                'prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline',
+                                'text-[13px] leading-relaxed',
+                                // 流式光标效果：仅在推理阶段（还没有主回复内容时）显示
+                                message.isStreaming &&
+                                  message.reasoningContent &&
+                                  !message.content &&
+                                  'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-400 after:inline-block after:align-middle',
+                              )}
+                            >
+                              <MdPreview
+                                value={message.reasoningContent || ''}
+                                theme="light"
+                                showCodeRowNumber={false}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 主回复内容 */}
+                  <div className="px-4 py-3">
+                    <div
+                      className={cn(
+                        'prose prose-sm prose-gray max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none',
+                        // 添加打字机光标效果：仅在主回复有内容且正在流式输出时显示
+                        message.isStreaming &&
+                          message.content &&
+                          'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-500 after:inline-block after:align-middle',
+                      )}
+                    >
+                      {message.content ? (
+                        <MdPreview
+                          value={message.content}
+                          theme="light"
+                          showCodeRowNumber={false}
+                        />
+                      ) : message.isStreaming && !message.reasoningContent ? (
+                        <span className="inline-flex items-center gap-1 text-gray-400">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          思考中...
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -215,7 +291,7 @@ const MessageBubble = React.memo(
           <div
             className={cn(
               'flex items-center gap-3 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity',
-              isUser ? 'justify-end pr-11' : 'pl-11',
+              isUser ? 'justify-end md:pr-11' : 'md:pl-11',
             )}
           >
             <button
@@ -266,9 +342,10 @@ const MessageBubble = React.memo(
   },
   (prevProps, nextProps) => {
     // 自定义比较函数
-    // 如果消息内容变化、流式状态变化或生成状态变化，则重新渲染
+    // 如果消息内容变化、流式状态变化、推理内容变化或生成状态变化，则重新渲染
     return (
       prevProps.message.content === nextProps.message.content &&
+      prevProps.message.reasoningContent === nextProps.message.reasoningContent &&
       prevProps.message.isStreaming === nextProps.message.isStreaming &&
       prevProps.isGenerating === nextProps.isGenerating &&
       prevProps.userAvatar === nextProps.userAvatar &&
@@ -357,7 +434,7 @@ export default function ChatAIPanels({
       )}
     >
       {/* ----- 模型标题栏 ----- */}
-      <header className="px-4 py-2 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      <header className="hidden lg:flex px-4 py-2 border-b border-gray-100 bg-white items-center justify-between sticky top-0 z-10 shadow-sm">
         <ModelConfigModal
           config={config}
           onConfigChange={onConfigChange || (() => {})}
@@ -372,47 +449,45 @@ export default function ChatAIPanels({
         </ModelConfigModal>
 
         {mounted && user && (
-          <div className="border-t border-gray-100 bg-gray-50/50">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-sm transition-all duration-200 text-left group">
-                  <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
-                    <AvatarImage src={user.avatar_url || ''} />
-                    <AvatarFallback className="bg-blue-500 text-white">
-                      {user.name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mb-2">
-                <DropdownMenuLabel>我的账户</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => router.push('/dashboard/user')}
-                >
-                  <UserIcon className="mr-2 h-4 w-4" />
-                  <span>个人中心</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => router.push('/dashboard/settings')}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>账户设置</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                  disabled={logoutMutation.isPending}
-                  onClick={() => logoutMutation.mutate()}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>退出登录</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 rounded-full transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm group-hover:ring-blue-50 transition-all">
+                  <AvatarImage src={user.avatar_url || ''} />
+                  <AvatarFallback className="bg-blue-500 text-white">
+                    {user.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => router.push('/dashboard/user')}
+              >
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>个人中心</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => router.push('/dashboard/settings')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>账户设置</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                disabled={logoutMutation.isPending}
+                onClick={() => logoutMutation.mutate()}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>退出登录</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </header>
 
@@ -479,7 +554,7 @@ export default function ChatAIPanels({
               placeholder={status === 'streaming' ? 'AI 正在回复中...' : '请输入提示词...'}
               disabled={status === 'streaming'}
               className={cn(
-                'w-full min-h-[100px] px-4 py-3 pb-14 text-sm text-gray-800 outline-none resize-none',
+                'w-full min-h-[60px] px-4 py-3 pb-14 text-sm text-gray-800 outline-none resize-none',
                 status === 'streaming' && 'opacity-60 cursor-not-allowed',
               )}
             />
