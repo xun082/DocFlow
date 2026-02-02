@@ -277,16 +277,16 @@ const TemplatesTab = () => {
                           {template.name}
                         </h4>
                         <div className="flex items-center gap-4">
-                          <Pencil
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEditDialog(template);
-                            }}
-                            className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                          />
                           {/* 不是系统模板时才显示删除和创建按钮 */}
                           {!template.isSystem ? (
                             <>
+                              <Pencil
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditDialog(template);
+                                }}
+                                className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              />
                               <Trash2
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -294,15 +294,15 @@ const TemplatesTab = () => {
                                 }}
                                 className="h-4 w-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                               />
-                              <Plus
-                                className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCreateDocument(template);
-                                }}
-                              />
                             </>
                           ) : null}
+                          <Plus
+                            className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCreateDocument(template);
+                            }}
+                          />
                         </div>
                       </div>
 
