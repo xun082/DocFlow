@@ -1,6 +1,7 @@
 import request, { ErrorHandler } from '../request';
 import {
   CreateTemplate,
+  ProjectorIntroduction,
   QueryTemplate,
   TemplateListData,
   TemplateResponse,
@@ -34,5 +35,11 @@ export const TemplateApi = {
     request.patch<TemplateResponse>(`/api/v1/template/${templateId}`, {
       errorHandler,
       params: data,
+    }),
+
+  ProjectorIntro: (errorHandler?: ErrorHandler) =>
+    request.get<ProjectorIntroduction>(`/api/v1/template/project-introduction`, {
+      errorHandler,
+      cacheTime: 0,
     }),
 };
