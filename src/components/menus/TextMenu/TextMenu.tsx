@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Editor } from '@tiptap/react';
 
@@ -19,9 +19,6 @@ import { ColorPicker } from '@/components/panels';
 // 记忆化按钮组件,避免每次编辑器状态变化时重新渲染
 const MemoButton = memo(Toolbar.Button);
 const MemoColorPicker = memo(ColorPicker);
-const MemoFontFamilyPicker = memo(FontFamilyPicker);
-const MemoFontSizePicker = memo(FontSizePicker);
-const MemoContentTypePicker = memo(ContentTypePicker);
 
 export type TextMenuProps = {
   editor: Editor;
@@ -29,9 +26,28 @@ export type TextMenuProps = {
 
 export const TextMenu = ({ editor }: TextMenuProps) => {
   const [selecting, setSelecting] = useState(false);
+
+  // 管理哪个下拉菜单是打开的，确保同时只有一个下拉菜单打开
+  const [openDropdown, setOpenDropdown] = useState<'content' | 'fontFamily' | 'fontSize' | null>(
+    null,
+  );
+
   const commands = useTextmenuCommands(editor);
   const states = useTextmenuStates(editor);
   const blockOptions = useTextmenuContentTypes(editor);
+
+  // 处理下拉菜单打开/关闭的协调逻辑
+  const handleContentDropdownOpenChange = useCallback((open: boolean) => {
+    setOpenDropdown(open ? 'content' : null);
+  }, []);
+
+  const handleFontFamilyDropdownOpenChange = useCallback((open: boolean) => {
+    setOpenDropdown(open ? 'fontFamily' : null);
+  }, []);
+
+  const handleFontSizeDropdownOpenChange = useCallback((open: boolean) => {
+    setOpenDropdown(open ? 'fontSize' : null);
+  }, []);
 
   // 监听选区变化,添加短暂延迟以避免菜单闪烁
   useEffect(() => {
@@ -54,12 +70,14 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
     return () => {
       editor.off('selectionUpdate', onSelectionChange);
     };
-  }, [editor]);
+  }, [editor, openDropdown, selecting]);
 
   return (
     <CustomBubbleMenu
       editor={editor}
-      className={selecting ? 'hidden' : ''}
+      // 暂时禁用 selecting 逻辑来测试
+      // className={selecting ? 'hidden' : ''}
+      className=""
       shouldShow={states.shouldShow}
       placement="top"
       offsetDistance={6}
@@ -69,9 +87,23 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
     >
       <Toolbar.Wrapper>
         <Toolbar.Divider />
-        <MemoContentTypePicker options={blockOptions} />
-        <MemoFontFamilyPicker onChange={commands.onSetFont} value={states.currentFont || ''} />
-        <MemoFontSizePicker onChange={commands.onSetFontSize} value={states.currentSize || ''} />
+        <ContentTypePicker
+          options={blockOptions}
+          open={openDropdown === 'content'}
+          onOpenChange={handleContentDropdownOpenChange}
+        />
+        <FontFamilyPicker
+          onChange={commands.onSetFont}
+          value={states.currentFont || ''}
+          open={openDropdown === 'fontFamily'}
+          onOpenChange={handleFontFamilyDropdownOpenChange}
+        />
+        <FontSizePicker
+          onChange={commands.onSetFontSize}
+          value={states.currentSize || ''}
+          open={openDropdown === 'fontSize'}
+          onOpenChange={handleFontSizeDropdownOpenChange}
+        />
         <Toolbar.Divider />
         <MemoButton
           tooltip="Bold"

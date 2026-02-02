@@ -17,23 +17,25 @@ const FONT_SIZES = [
 export type FontSizePickerProps = {
   onChange: (value: string) => void;
   value: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export const FontSizePicker = ({ onChange, value }: FontSizePickerProps) => {
+export const FontSizePicker = ({ onChange, value, open, onOpenChange }: FontSizePickerProps) => {
   const currentValue = FONT_SIZES.find((size) => size.value === value);
   const currentSizeLabel = currentValue?.label.split(' ')[0] || 'Medium';
 
   const selectSize = useCallback((size: string) => () => onChange(size), [onChange]);
 
   return (
-    <Dropdown.Root>
+    <Dropdown.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={!!currentValue?.value}>
           {currentSizeLabel}
           <Icon name="ChevronDown" className="w-2 h-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
-      <Dropdown.Content asChild>
+      <Dropdown.Content asChild onCloseAutoFocus={(event) => event.preventDefault()}>
         <Surface className="flex flex-col gap-1 px-2 py-4">
           {FONT_SIZES.map((size) => (
             <DropdownButton
