@@ -1,0 +1,24 @@
+/* 1. 找到默认占位符容器 */
+.lk-participant-placeholder {
+  /* 可以在这里调整背景色等 */
+  background-color: #1e1e1e; 
+}
+
+/* 2. 隐藏默认的 SVG 图标 */
+.lk-participant-placeholder svg {
+  display: none;
+}
+
+/* 3. 使用伪元素或直接在容器上添加你的自定义头像 */
+.lk-participant-placeholder::after {
+  content: "";
+  display: block;
+  width: 80px; /* 根据需要调整大小 */
+  height: 80px;
+  /* 这里替换成你的 SVG 或图片 URL */
+  background-image: url('/path/to/your/custom-avatar.svg'); 
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.5; /* 根据设计调整透明度 */
+}

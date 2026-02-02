@@ -17,6 +17,7 @@ import {
   Target,
   ChevronDown,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { TraceApi } from '@/services/trace';
 import { AnalyticsData } from '@/services/trace/types';
@@ -27,6 +28,7 @@ const quickActions = [
     description: '立即开始视频会议',
     icon: <Video className="w-8 h-8" />,
     color: 'bg-blue-600 hover:bg-blue-700',
+    href: '/rooms',
   },
   {
     name: '创建文档',
@@ -101,6 +103,8 @@ export default function DashboardPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState(1); // 默认1天
+
+  const router = useRouter();
 
   // 获取分析数据
   const fetchAnalytics = async (days: number) => {
@@ -235,6 +239,15 @@ export default function DashboardPage() {
     };
   });
 
+  /**
+   * 快捷操作路由跳转
+   */
+  const handleQuickActionClick = (href?: string) => {
+    if (href) {
+      router.push(href);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50">
       {/* 欢迎区域 */}
@@ -342,6 +355,7 @@ export default function DashboardPage() {
               <button
                 key={index}
                 className={`group ${action.color} text-white p-6 sm:p-7 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-lg hover:-translate-y-1`}
+                onClick={() => handleQuickActionClick(action.href)}
               >
                 <div className="mb-4">{action.icon}</div>
                 <h3 className="font-bold mb-2 text-base sm:text-lg">{action.name}</h3>
