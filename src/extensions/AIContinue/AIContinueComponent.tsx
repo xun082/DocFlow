@@ -1,16 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
 import { Sparkles, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { toast } from 'sonner';
 
-import SyntaxHighlight from '../AI/components/SyntaxHighlight';
-
+import { markdownComponents } from '@/components/business/ai/markdown-components';
+import { useAIContinue } from '@/hooks/ai/use-ai-stream';
 import ModelSelector from '@/components/business/module-select';
-import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 
 interface AIContinueComponentProps {
   node: ProseMirrorNode;
@@ -25,13 +23,14 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
   editor,
   getPos,
 }) => {
-  const [response, setResponse] = useState(node.attrs.response || '');
-  const [state, setState] = useState<'input' | 'loading' | 'display'>(node.attrs.state || 'input');
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3');
   const [hasContext, setHasContext] = useState(false);
-  const abortRef = useRef<(() => void) | undefined>(undefined);
-  const accumulatedResponseRef = useRef('');
-  const responseRef = useRef<HTMLDivElement>(null);
+
+  const { state, response, responseRef, generate, stop } = useAIContinue(
+    editor,
+    getPos,
+    updateAttributes,
+  );
 
   // 检查是否有前文内容
   useEffect(() => {
@@ -53,62 +52,12 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
         });
       }, 100);
     }
-  }, [response, state]);
+  }, [response, state, responseRef]);
 
   const handleStart = () => {
-    // 检查是否有前文内容
-    if (!hasContext) {
-      return;
-    }
-
-    setState('loading');
+    if (!hasContext) return;
     updateAttributes({ state: 'loading' });
-    handleContinue();
-  };
-
-  const handleContinue = async () => {
-    const aiNodePos = getPos();
-    if (aiNodePos === undefined) return;
-
-    // 获取当前节点之前的所有内容
-    const contentBefore = editor.state.doc.textBetween(0, aiNodePos, '\n\n');
-
-    try {
-      accumulatedResponseRef.current = '';
-
-      abortRef.current = await ChatAiApi.Autocomplete(
-        {
-          content: contentBefore,
-          model: selectedModel,
-        },
-        (chunk: StreamChunk) => {
-          if (chunk.event === 'message' && chunk.content) {
-            accumulatedResponseRef.current += chunk.content;
-            setResponse(accumulatedResponseRef.current);
-
-            const pos = getPos();
-
-            if (pos !== undefined) {
-              editor.commands.updateContinueContent(pos, accumulatedResponseRef.current);
-            }
-          } else if (chunk.event === 'done' || chunk.finish_reason === 'stop') {
-            setState('display');
-            updateAttributes({
-              state: 'display',
-              response: accumulatedResponseRef.current,
-            });
-          }
-        },
-        () => {
-          toast.error('续写失败，请重试');
-          setState('display');
-          updateAttributes({ state: 'display' });
-        },
-      );
-    } catch {
-      toast.error('续写失败，请重试');
-      setState('display');
-    }
+    generate(selectedModel);
   };
 
   const handleInsert = () => {
@@ -126,14 +75,8 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
   };
 
   const handleStop = () => {
-    try {
-      abortRef.current?.();
-    } catch {
-      // 静默处理停止错误
-    } finally {
-      setState('display');
-      updateAttributes({ state: 'display' });
-    }
+    stop();
+    updateAttributes({ state: 'display' });
   };
 
   const handleCancel = () => {
@@ -227,17 +170,7 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
               ref={responseRef}
               className="markdown-content bg-gradient-to-r from-blue-50/80 to-purple-50/80 border border-blue-200/50 rounded-lg p-2.5 mb-2 relative"
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code: SyntaxHighlight,
-                  pre: ({ children, className, ...props }: any) => (
-                    <pre className={`rounded ${className || ''}`} {...props}>
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {response}
               </ReactMarkdown>
               <span className="inline-block w-1.5 h-4 bg-blue-600 ml-1 animate-pulse"></span>
@@ -271,17 +204,7 @@ export const AIContinueComponent: React.FC<AIContinueComponentProps> = ({
               className="markdown-content bg-gradient-to-r from-blue-50/60 to-purple-50/60 border border-blue-200/40 rounded-lg p-2.5 mb-2 cursor-pointer hover:bg-blue-50/80 transition-colors"
               onClick={handleInsert}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code: SyntaxHighlight,
-                  pre: ({ children, className, ...props }: any) => (
-                    <pre className={`rounded ${className || ''}`} {...props}>
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {response}
               </ReactMarkdown>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Editor } from '@tiptap/core';
@@ -7,10 +7,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 
-import SyntaxHighlight from '../AI/components/SyntaxHighlight';
-
+import { markdownComponents } from '@/components/business/ai/markdown-components';
+import { useAIPolish } from '@/hooks/ai/use-ai-stream';
 import ModelSelector from '@/components/business/module-select';
-import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 import { markdownToTiptapJSON } from '@/utils/markdown-to-tiptap';
 
 interface AIPolishComponentProps {
@@ -27,13 +26,15 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
   getPos,
 }) => {
   const [originalContent, setOriginalContent] = useState(node.attrs.originalContent || '');
-  const [response, setResponse] = useState(node.attrs.response || '');
-  const [state, setState] = useState<'input' | 'loading' | 'display'>(node.attrs.state || 'input');
   const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-V3');
   const [hasContent, setHasContent] = useState(false);
-  const abortRef = useRef<(() => void) | undefined>(undefined);
-  const accumulatedResponseRef = useRef('');
-  const responseRef = useRef<HTMLDivElement>(null);
+
+  const { state, response, responseRef, generate, stop } = useAIPolish(
+    editor,
+    getPos,
+    updateAttributes,
+    originalContent,
+  );
 
   // 检查是否有可润色的内容
   useEffect(() => {
@@ -57,35 +58,24 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
         });
       }, 100);
     }
-  }, [response, state]);
+  }, [response, state, responseRef]);
 
   const handleStart = () => {
-    // 检查是否有可润色的内容
-    if (!hasContent) {
-      return;
-    }
+    if (!hasContent) return;
 
-    setState('loading');
-    updateAttributes({ state: 'loading' });
-    handlePolish();
-  };
-
-  const handlePolish = async () => {
+    // 获取要润色的内容
     const aiNodePos = getPos();
     if (aiNodePos === undefined) return;
 
-    // 优先使用节点属性中的原始内容（从 TextMenu 传入）
     let contentToPolish = originalContent || node.attrs.originalContent;
 
     // 如果没有原始内容，尝试获取选中内容或前一个节点的内容
     if (!contentToPolish) {
       const { from, to } = editor.state.selection;
 
-      // 如果有选中内容，使用选中内容
       if (from !== to) {
         contentToPolish = editor.state.doc.textBetween(from, to, '\n\n');
       } else {
-        // 否则查找前一个节点的内容
         const $pos = editor.state.doc.resolve(aiNodePos);
         const nodeBefore = $pos.nodeBefore;
 
@@ -95,52 +85,10 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
       }
     }
 
-    if (!contentToPolish) {
-      setState('display');
-      updateAttributes({ state: 'display' });
-
-      return;
-    }
-
-    setOriginalContent(contentToPolish);
-    updateAttributes({ originalContent: contentToPolish });
-
-    try {
-      accumulatedResponseRef.current = '';
-
-      abortRef.current = await ChatAiApi.Polish(
-        {
-          content: contentToPolish,
-          model: selectedModel,
-          temperature: 0.7,
-        },
-        (chunk: StreamChunk) => {
-          if (chunk.event === 'message' && chunk.content) {
-            accumulatedResponseRef.current += chunk.content;
-            setResponse(accumulatedResponseRef.current);
-
-            const pos = getPos();
-
-            if (pos !== undefined) {
-              editor.commands.updatePolishContent(pos, accumulatedResponseRef.current);
-            }
-          } else if (chunk.event === 'done' || chunk.finish_reason === 'stop') {
-            setState('display');
-            updateAttributes({
-              state: 'display',
-              response: accumulatedResponseRef.current,
-            });
-          }
-        },
-        () => {
-          toast.error('AI 润色失败，请重试');
-          setState('display');
-          updateAttributes({ state: 'display' });
-        },
-      );
-    } catch {
-      toast.error('AI 润色失败，请重试');
-      setState('display');
+    if (contentToPolish) {
+      setOriginalContent(contentToPolish);
+      updateAttributes({ state: 'loading', originalContent: contentToPolish });
+      generate(selectedModel, 0.7);
     }
   };
 
@@ -211,14 +159,8 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
   };
 
   const handleStop = () => {
-    try {
-      abortRef.current?.();
-    } catch {
-      // 停止时静默处理错误
-    } finally {
-      setState('display');
-      updateAttributes({ state: 'display' });
-    }
+    stop();
+    updateAttributes({ state: 'display' });
   };
 
   const handleCancel = () => {
@@ -322,31 +264,7 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
             >
               {response ? (
                 <>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code: ({ inline, className, children, ...props }: any) => {
-                        // 行内代码：没有 className 或者 inline 为 true
-                        if (inline || !className) {
-                          return (
-                            <code
-                              className="px-1.5 py-0.5 bg-gray-200 text-gray-800 rounded text-sm font-mono"
-                              {...props}
-                            >
-                              {children}
-                            </code>
-                          );
-                        }
-
-                        // 代码块：使用语法高亮
-                        return (
-                          <SyntaxHighlight className={className} {...props}>
-                            {children}
-                          </SyntaxHighlight>
-                        );
-                      },
-                    }}
-                  >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                     {response}
                   </ReactMarkdown>
                   <span className="inline-block w-1.5 h-4 bg-green-600 ml-1 animate-pulse"></span>
@@ -388,31 +306,7 @@ export const AIPolishComponent: React.FC<AIPolishComponentProps> = ({
               className="markdown-content bg-gradient-to-r from-green-50/60 to-emerald-50/60 border border-green-200/40 rounded-lg p-2.5 mb-2 cursor-pointer hover:bg-green-50/80 transition-colors"
               onClick={handleInsert}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code: ({ inline, className, children, ...props }: any) => {
-                    // 行内代码：没有 className 或者 inline 为 true
-                    if (inline || !className) {
-                      return (
-                        <code
-                          className="px-1.5 py-0.5 bg-gray-200 text-gray-800 rounded text-sm font-mono"
-                          {...props}
-                        >
-                          {children}
-                        </code>
-                      );
-                    }
-
-                    // 代码块：使用语法高亮
-                    return (
-                      <SyntaxHighlight className={className} {...props}>
-                        {children}
-                      </SyntaxHighlight>
-                    );
-                  },
-                }}
-              >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {response}
               </ReactMarkdown>
             </div>
