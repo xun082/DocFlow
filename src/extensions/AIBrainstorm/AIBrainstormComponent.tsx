@@ -8,8 +8,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import ConcurrencySelector from '../AI/components/ConcurrencySelector';
-import SyntaxHighlight from '../AI/components/SyntaxHighlight';
 
+import { compactMarkdownComponents } from '@/components/business/ai/markdown-components';
 import ModelSelector from '@/components/business/module-select';
 import { ChatAiApi, type StreamChunk } from '@/services/chat-ai';
 
@@ -345,77 +345,7 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
                   <div className="markdown-content text-[12px] leading-relaxed text-gray-700">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
-                      components={{
-                        code: SyntaxHighlight,
-                        pre: ({ children, className, ...props }: any) => (
-                          <pre className={`rounded text-[12px] ${className || ''}`} {...props}>
-                            {children}
-                          </pre>
-                        ),
-                        p: ({ children }) => (
-                          <p className="mb-1 last:mb-0 text-[12px] leading-relaxed">{children}</p>
-                        ),
-                        h1: ({ children }) => (
-                          <h1 className="text-[12px] font-bold mb-0.5 text-gray-900 leading-tight">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="text-[12px] font-semibold mb-0.5 text-gray-800 leading-tight">
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="text-[12px] font-medium mb-0.5 text-gray-700 leading-tight">
-                            {children}
-                          </h3>
-                        ),
-                        h4: ({ children }) => (
-                          <h4 className="text-[12px] font-normal mb-0.5 text-gray-700 leading-tight">
-                            {children}
-                          </h4>
-                        ),
-                        h5: ({ children }) => (
-                          <h5 className="text-[11px] font-normal mb-0.5 text-gray-600 leading-tight">
-                            {children}
-                          </h5>
-                        ),
-                        h6: ({ children }) => (
-                          <h6 className="text-[11px] font-normal mb-0.5 text-gray-600 leading-tight">
-                            {children}
-                          </h6>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc pl-3 mb-1 space-y-0.5 text-[12px]">
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal pl-3 mb-1 space-y-0.5 text-[12px]">
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children }) => (
-                          <li className="text-[12px] leading-relaxed">{children}</li>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-semibold text-gray-800">{children}</strong>
-                        ),
-                        em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-2 border-gray-300 pl-2 italic text-gray-600 text-[12px] my-1 bg-gray-50/50 py-0.5 rounded-r">
-                            {children}
-                          </blockquote>
-                        ),
-                        a: ({ children, href }) => (
-                          <a
-                            href={href}
-                            className="text-blue-600 hover:text-blue-700 underline text-[12px] font-medium"
-                          >
-                            {children}
-                          </a>
-                        ),
-                      }}
+                      components={compactMarkdownComponents}
                     >
                       {response.content || '✨ 生成中...'}
                     </ReactMarkdown>
@@ -514,95 +444,7 @@ export const AIBrainstormComponent: React.FC<AIBrainstormComponentProps> = ({
                   <div className="markdown-content text-[12px] leading-relaxed text-gray-700">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
-                      components={{
-                        code: SyntaxHighlight,
-                        pre: ({ children, className, ...props }: any) => (
-                          <pre className={`rounded text-[12px] ${className || ''}`} {...props}>
-                            {children}
-                          </pre>
-                        ),
-                        p: ({ children }) => (
-                          <p className="mb-1 last:mb-0 text-[12px] leading-relaxed">{children}</p>
-                        ),
-                        h1: ({ children }) => (
-                          <h1 className="text-[12px] font-bold mb-0.5 text-gray-900 leading-tight">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="text-[12px] font-semibold mb-0.5 text-gray-800 leading-tight">
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="text-[12px] font-medium mb-0.5 text-gray-700 leading-tight">
-                            {children}
-                          </h3>
-                        ),
-                        h4: ({ children }) => (
-                          <h4 className="text-[12px] font-normal mb-0.5 text-gray-700 leading-tight">
-                            {children}
-                          </h4>
-                        ),
-                        h5: ({ children }) => (
-                          <h5 className="text-[11px] font-normal mb-0.5 text-gray-600 leading-tight">
-                            {children}
-                          </h5>
-                        ),
-                        h6: ({ children }) => (
-                          <h6 className="text-[11px] font-normal mb-0.5 text-gray-600 leading-tight">
-                            {children}
-                          </h6>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc pl-3 mb-1 space-y-0.5 text-[12px]">
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal pl-3 mb-1 space-y-0.5 text-[12px]">
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children }) => (
-                          <li className="text-[12px] leading-relaxed">{children}</li>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-semibold text-gray-800">{children}</strong>
-                        ),
-                        em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-2 border-gray-300 pl-2 italic text-gray-600 text-[12px] my-1 bg-gray-50/50 py-0.5 rounded-r">
-                            {children}
-                          </blockquote>
-                        ),
-                        a: ({ children, href }) => (
-                          <a
-                            href={href}
-                            className="text-blue-600 hover:text-blue-700 underline text-[12px] font-medium"
-                          >
-                            {children}
-                          </a>
-                        ),
-                        table: ({ children }) => (
-                          <table className="border-collapse border border-gray-300 text-[12px] my-1.5 rounded overflow-hidden shadow-sm">
-                            {children}
-                          </table>
-                        ),
-                        thead: ({ children }) => <thead className="bg-gray-100">{children}</thead>,
-                        tbody: ({ children }) => <tbody>{children}</tbody>,
-                        tr: ({ children }) => (
-                          <tr className="border-b border-gray-300">{children}</tr>
-                        ),
-                        th: ({ children }) => (
-                          <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                            {children}
-                          </th>
-                        ),
-                        td: ({ children }) => (
-                          <td className="border border-gray-300 px-2 py-1">{children}</td>
-                        ),
-                      }}
+                      components={compactMarkdownComponents}
                     >
                       {response.content || '无内容'}
                     </ReactMarkdown>
