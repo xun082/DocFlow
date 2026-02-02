@@ -70,14 +70,12 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
     return () => {
       editor.off('selectionUpdate', onSelectionChange);
     };
-  }, [editor, openDropdown, selecting]);
+  }, [editor]);
 
   return (
     <CustomBubbleMenu
       editor={editor}
-      // 暂时禁用 selecting 逻辑来测试
-      // className={selecting ? 'hidden' : ''}
-      className=""
+      className={selecting ? 'hidden' : ''}
       shouldShow={states.shouldShow}
       placement="top"
       offsetDistance={6}
