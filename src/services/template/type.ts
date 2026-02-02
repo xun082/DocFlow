@@ -32,6 +32,10 @@ export interface TemplateResponse {
   isSystem?: boolean;
 }
 
+export interface ProjectorIntroduction {
+  content: string;
+}
+
 export interface QueryTemplate {
   name?: string;
   category?: TemplateCategory;
