@@ -5,16 +5,16 @@ export const GROUPS: Group[] = [
     name: 'ai',
     title: 'AI',
     commands: [
-      {
-        name: 'askAI',
-        label: 'Ask AI',
-        iconName: 'Bot',
-        description: 'Insert an AI assistant block',
-        aliases: ['ai', 'assistant', 'gpt'],
-        action: (editor) => {
-          editor.chain().focus().setAI({ prompt: '', op: 'ask', aiState: 'input' }).run();
-        },
-      },
+      // {
+      //   name: 'askAI',
+      //   label: 'Ask AI',
+      //   iconName: 'Bot',
+      //   description: 'Insert an AI assistant block',
+      //   aliases: ['ai', 'assistant', 'gpt'],
+      //   action: (editor) => {
+      //     editor.chain().focus().setAI({ prompt: '', op: 'ask', aiState: 'input' }).run();
+      //   },
+      // },
       {
         name: 'continueWriting',
         label: 'Continue Writing',
