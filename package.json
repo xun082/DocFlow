@@ -61,7 +61,9 @@
     "prettier": "^3.5.3",
     "tailwindcss": "4.1.7",
     "turbo": "^2.8.1",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs}": [

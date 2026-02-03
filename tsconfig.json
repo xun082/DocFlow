@@ -20,6 +20,12 @@
   "files": [],
   "references": [
     {
+      "path": "./packages/alert"
+    },
+    {
+      "path": "./packages/transformer"
+    },
+    {
       "path": "./apps/DocFlow"
     }
   ]

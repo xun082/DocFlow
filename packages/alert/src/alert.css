@@ -1,0 +1,52 @@
+/* Alert styles */
+.alert-wrapper {
+  position: relative;
+}
+
+/* Content area styles */
+.alert-content {
+  outline: none;
+}
+
+.alert-content:focus {
+  outline: none;
+}
+
+/* Paragraph spacing optimization */
+.alert-content p {
+  margin: 0.25rem 0;
+}
+
+.alert-content p:first-child {
+  margin-top: 0;
+}
+
+.alert-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* List styles */
+.alert-content ul,
+.alert-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+/* Code styles */
+.alert-content code {
+  font-size: 0.875em;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .alert-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Print styles */
+@media print {
+  .alert-wrapper {
+    break-inside: avoid;
+  }
+}

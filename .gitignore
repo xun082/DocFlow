@@ -12,6 +12,7 @@ node_modules/
 # Monorepo & Build tools
 .turbo/
 *.tsbuildinfo
+.rollup.cache/
 
 # Build outputs
 dist/

@@ -1,13 +1,14 @@
 # AGENTS.md
 
-## Setup & Validation (pnpm)
+## Validation (Monorepo)
 
-- Install: `pnpm install`
-- Build: `pnpm build`
-- Type check: `pnpm type-check`
-- Lint: `pnpm lint`
-- Format: `pnpm format`
-- Do not use: `pnpm dev` (project runs continuously)
+Before considering work complete, run:
+
+```bash
+pnpm type-check
+```
+
+Note: Project runs continuously; do not use `pnpm dev`.
 
 ## Conventions
 

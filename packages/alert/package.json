@@ -1,0 +1,54 @@
+{
+  "name": "@syncflow/alert",
+  "version": "0.0.1",
+  "description": "Alert extension for Tiptap editor with multiple alert types",
+  "homepage": "https://github.com/syncflow",
+  "keywords": [
+    "tiptap",
+    "alert",
+    "extension",
+    "react"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/alert.cjs",
+  "module": "dist/alert.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/alert.esm.js",
+      "require": "./dist/alert.cjs"
+    },
+    "./styles": "./src/alert.css"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "lucide-react": "^0.469.0"
+  },
+  "peerDependencies": {
+    "@tiptap/core": "^3.4.2",
+    "@tiptap/react": "^3.4.2",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@tiptap/core": "^3.4.2",
+    "@tiptap/react": "^3.4.2",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syncflow"
+  }
+}
