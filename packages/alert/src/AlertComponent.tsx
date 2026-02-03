@@ -3,7 +3,7 @@ import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import { Info, AlertTriangle, AlertCircle, CheckCircle, FileText, Lightbulb } from 'lucide-react';
 import React from 'react';
 
-import type { AlertType } from './Alert';
+import type { AlertType } from './alertBase';
 
 const alertConfig: Record<
   AlertType,
