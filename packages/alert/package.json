@@ -1,6 +1,6 @@
 {
   "name": "@syncflow/alert",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Alert extension for Tiptap editor with multiple alert types",
   "homepage": "https://github.com/syncflow",
   "keywords": [
