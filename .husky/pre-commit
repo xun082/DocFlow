@@ -4,7 +4,7 @@
 set -e
 
 echo "🔍 Running lint check..."
-pnpm lint:ci
+pnpm lint
 
 echo "🎨 Running format check..."  
 pnpm format:ci
