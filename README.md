@@ -1,201 +1,233 @@
-一个基于 [Tiptap](https://tiptap.dev/) 和 [Next.js](https://nextjs.org/) 构建的现代化协同文档编辑器，集成了丰富的编辑能力与多人实时协作功能，支持插件扩展、主题切换与持久化存储。适合团队写作、教育笔记、在线文档平台等场景。
+## 📖 简介
 
-## 🚀 功能特性
+**DocFlow** 是一款面向团队协作的块级文档编辑器。它融合了 Notion 的灵活性与飞书的协作能力，通过块级内容架构、实时协同编辑和 AI 辅助功能,帮助团队高效完成文档创作与知识管理。
 
-- 📄 富文本编辑：标题、列表、表格、代码块、数学公式、图片、拖拽等
+我们希望通过技术手段减少协作摩擦,让文档编辑更接近团队的真实工作流。无论是产品规划文档、技术方案设计,还是会议记录整理,DocFlow 都能提供流畅的创作体验。
 
-- 👥 实时协作：使用 Yjs + @hocuspocus/provider 实现高效协同
+### ✨ 核心特性
 
-- 🧩 插件丰富：基于 Tiptap Pro 多种增强功能（如表情、详情组件等）
+DocFlow 参考了 Notion 与飞书的设计理念,将内容以块为单位进行组织。每个块都是独立的编辑单元,可以灵活组合与调整,同时支持实时协作与 AI 辅助。
 
-- 🧰 完善工具链：支持 Prettier、ESLint、Husky、Vitest 等开发工具
+- 🧱 块级编辑器:支持文本、标题、列表、代码块、表格、图片、视频等 20+ 种内容类型,通过拖拽即可调整块级元素的顺序与层级关系。
 
-## 📦 技术栈
+- ⚡ 实时协作:基于 Yjs CRDT 算法实现多人同步编辑,自动处理编辑冲突。支持实时光标跟踪、成员在线状态与历史版本回溯。
 
-### 前端技术栈
+- 🤖 AI 功能:内置 AI 助手,支持头脑风暴、内容润色、文档续写与智能问答。可根据上下文生成结构化内容建议。
 
-| 技术                  | 说明                             |
-| --------------------- | -------------------------------- |
-| **Next.js**           | 构建基础框架，支持 SSR / SSG     |
-| **Tiptap**            | 富文本编辑器，基于 ProseMirror   |
-| **Yjs**               | 协同编辑核心，CRDT 数据结构      |
-| **@hocuspocus**       | Yjs 的服务端与客户端 Provider    |
-| **React 19**          | UI 框架，支持 Suspense 等新特性  |
-| **Tailwind CSS**      | 原子化 CSS，集成动画、表单样式等 |
-| **Socket.io**         | 协同通信通道                     |
-| **Prettier/ESLint**   | 代码风格统一                     |
-| **Vitest/Playwright** | 单元测试与端到端测试支持         |
+## 技术选型
 
-![20250519183256](https://raw.githubusercontent.com/xun082/md/main/blogs.images20250519183256.png)
+DocFlow 采用全栈 TypeScript 架构,前端基于 Next.js 构建,后端使用 NestJS 框架。通过统一的类型系统和现代化的工程实践,保证了代码质量与开发效率。
 
-### 后端技术栈
+### 🎨 前端架构 (Client-side)
 
-| 分类             | 技术 / 工具                                                           | 说明                                                              |
-| ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **应用框架**     | [NestJS](https://nestjs.com/)                                         | 现代化 Node.js 框架，支持模块化、依赖注入、装饰器和类型安全等特性 |
-| **HTTP 服务**    | [Fastify](https://www.fastify.io/)                                    | 高性能 Web 服务引擎，替代 Express，默认集成于 NestJS 中           |
-| **协同编辑服务** | `@hocuspocus/server`, `yjs`                                           | 提供文档协同编辑的 WebSocket 服务与 CRDT 算法实现                 |
-| **数据库 ORM**   | [Prisma](https://www.prisma.io/)                                      | 类型安全的数据库访问工具，自动生成 Schema、支持迁移与种子数据     |
-| **数据验证**     | `class-validator`, `class-transformer`                                | 请求数据验证与自动转换，配合 DTO 使用                             |
-| **用户鉴权**     | `@nestjs/passport`, `passport`, `JWT`, `GitHub`                       | 支持本地登录、JWT 认证与 GitHub OAuth 登录                        |
-| **缓存与状态**   | `ioredis`                                                             | 用于缓存数据、实现限流、协同会话管理或 Pub/Sub 消息推送           |
-| **对象存储**     | `minio`                                                               | 私有化部署的 S3 兼容存储服务，支持图片与附件上传                  |
-| **图像处理**     | `sharp`                                                               | 图像压缩、格式转换、缩略图等操作                                  |
-| **日志系统**     | `winston`, `winston-daily-rotate-file`                                | 支持多种格式、日志分级、自动归档的日志方案                        |
-| **服务监控**     | `@nestjs/terminus`, `prom-client`                                     | 提供 `/health` 健康检查和 `/metrics` Prometheus 指标暴露接口      |
-| **监控平台**     | [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/) | 采集与可视化服务运行指标（已内置 Docker 部署配置）                |
-| **接口文档**     | `@nestjs/swagger`                                                     | 基于代码注解自动生成 Swagger UI 文档                              |
-| **安全中间件**   | `@fastify/helmet`, `@fastify/rate-limit`                              | 添加 HTTP 安全头部、限制请求频率、防止暴力攻击等安全保护          |
-| **文件上传**     | `@fastify/multipart`, `@webundsoehne/nest-fastify-file-upload`        | 支持文件流式上传，集成 Fastify 与 NestJS 的多文件上传处理         |
+#### **Next.js**
 
-![20250519183049](https://raw.githubusercontent.com/xun082/md/main/blogs.images20250519183049.png)
+项目基于 Next.js App Router 架构,利用 React Server Components 优化首屏渲染性能。通过 Server Actions 实现前后端通信,确保类型安全的同时简化了数据流转。
+
+#### **Tiptap**
+
+编辑器核心采用 Tiptap 框架,基于 ProseMirror 构建。通过扩展机制实现了丰富的块级编辑能力,支持自定义节点与快捷命令,为用户提供接近 Notion 的编辑体验。
+
+#### **Yjs**
+
+协作功能基于 Yjs CRDT 算法实现,能够自动处理多人编辑时的冲突,保证数据最终一致性。配合 Awareness 模块,实现了实时光标追踪与在线状态同步。
+
+### ⚙️ 后端架构 (Server-side)
+
+#### **NestJS & Prisma**
+
+后端使用 NestJS 模块化框架,通过依赖注入实现业务逻辑解耦。Prisma ORM 提供类型安全的数据访问层,支持高效的数据库查询与迁移管理。
+
+#### **Hocuspocus**
+
+Hocuspocus 作为 Yjs 的 WebSocket 服务端,负责协调文档协作会话,处理客户端连接与数据同步。通过拦截器机制实现权限控制与数据持久化。
+
+#### **Prometheus & Grafana**
+
+集成 Prometheus 进行指标采集,通过 Grafana 可视化展示系统运行状态。监控包括 API 响应时间、数据库查询性能、WebSocket 连接数等核心指标。
+
+![20260203091658](https://raw.githubusercontent.com/xun082/md/main/blogs.images20260203091658.png)
+
+Grafana 监控面板实时展示系统各项性能指标,包括请求量、响应时间、错误率等关键数据,帮助快速定位性能瓶颈。
+
+#### **ELK Stack (Elasticsearch & Kibana)**
+
+使用 Elasticsearch 存储和检索日志数据,Kibana 提供日志分析与可视化能力。支持全文搜索、日志聚合与异常检测,便于问题排查与系统审计。
+
+![日志分析系统](https://raw.githubusercontent.com/xun082/md/main/blogs.images20260202215636.png)
+
+Kibana 日志分析界面,支持按时间、日志级别、服务模块等维度查询和过滤日志,提供结构化的问题排查路径。
+
+#### **MinIO & RabbitMQ**
+
+MinIO 提供对象存储服务,用于存储用户上传的图片、视频等文件。RabbitMQ 作为消息队列,处理异步任务如图片压缩、邮件发送等,避免阻塞主业务流程。
+
+## 功能介绍
+
+DocFlow 将 AI 能力集成到编辑器中,通过理解文档上下文来辅助内容创作。AI 不是简单的文本生成工具,而是能够理解语义、提供决策建议的智能助手。
+
+### AI 头脑风暴
+
+当你有一个初步想法但不知如何展开时,AI 头脑风暴可以帮助拓展思路。输入核心概念后,AI 会从不同角度生成 3-6 个结构化方案,每个方案都包含具体的实施思路。
+
+![AI 头脑风暴输入界面](https://raw.githubusercontent.com/xun082/md/main/blogs.images20260202220119.png)
+
+在编辑器中输入头脑风暴主题,AI 会基于输入内容理解你的需求场景。
+
+![AI 头脑风暴结果展示](https://raw.githubusercontent.com/xun082/md/main/blogs.images20260203083750.png)
+
+AI 生成的多个方案以卡片形式展示,每个方案都有清晰的标题和详细说明。你可以选择任意方案插入到文档中,或者继续优化调整。
+
+这不只是简单的内容生成,AI 会根据上下文理解你的意图。无论是产品功能设计、内容分类规划,还是业务流程优化,AI 都能提供可行的思路参考,帮助快速决策。
+
+### AI 文本润色
+
+![AI 文本润色功能](https://raw.githubusercontent.com/xun082/md/main/blogs.images00678182cd1c5f6cb138664cc55d2535.png)
+
+选中需要优化的文本段落,AI 会分析文本结构与表达方式,提供更清晰、更专业的改写建议。支持调整语气风格,如正式、简洁、友好等。
+
+### AI 续写
+
+AI 续写功能会根据前文内容自然延续写作。当前文内容较长时,系统通过 RAG (检索增强生成) 技术,从文档中检索相关段落,确保续写内容与上下文保持逻辑一致,避免偏离主题。
+
+![AI 续写功能演示](https://raw.githubusercontent.com/xun082/md/main/blogs.images2a7f0843ebff13293d011d35771faabc.png)
+
+AI 续写时会参考前文的写作风格、用词习惯和逻辑结构,生成连贯自然的后续内容。你可以继续编辑生成的文本,或者重新生成。
+
+### AI 聊天
+
+目前 AI 聊天功能作为独立页面存在,后续会集成到编辑器侧边栏,与文档内容深度关联。未来计划实现 Agent 模式,类似 Cursor 那样能够自动编辑文档内容。
+
+![7a8ba58a4ab3b592bb7fae1b45634648](https://raw.githubusercontent.com/xun082/md/main/blogs.images7a8ba58a4ab3b592bb7fae1b45634648.png)
+
+### 协同编辑
+
+![多人协同编辑](https://raw.githubusercontent.com/xun082/md/main/blogs.images20260202215332.png)
+
+多人同时编辑时,每个用户都有独立的光标颜色标识。文档修改实时同步,冲突自动合并。右侧显示当前在线成员列表与他们的编辑位置。
+
+## 未来计划
+
+DocFlow 将持续优化协作体验与 AI 能力,同时加强工程化建设,提升系统可扩展性。
+
+### 🏗️ 工程化体系深度重构
+
+- **迈向 Monorepo 架构**:计划基于 pnpm workspaces 和 Turborepo 将项目重构为 Monorepo。前后端代码分离,共享类型定义与工具函数,提升代码复用率与构建效率。
+
+- **组件库与插件生态开放**:将 Tiptap 自定义扩展(如代码沙箱、交互式图表等)提取为独立 npm 包,开放给社区使用。同时建立插件开发规范,支持第三方开发者扩展编辑器能力。
+
+### 🎙️ 多维协同体验升级
+
+- **集成 LiveKit 实时音视频**:在文档协作场景中引入实时音视频通话。团队成员可以边看文档边讨论,提升复杂决策场景下的沟通效率。
+
+![LiveKit 集成方案](https://raw.githubusercontent.com/xun082/md/main/blogs.images28a512b45c0bfc4a4ff679e9fbb1d031.jpg)
+
+- **实时群聊系统**:在文档侧边栏集成实时聊天功能,支持针对文档内容发起讨论。消息可以关联到具体的文档块,形成完整的协作反馈闭环。
+
+### 🤖 智能内核的跨越式进化
+
+- **基于 RAG 的私有知识库**:引入 RAG (Retrieval-Augmented Generation) 技术,让 AI 能够检索用户的历史文档。AI 回答问题时会参考团队沉淀的知识资产,提供更精准的决策支持。
+
+- **从 Copilot 迈向 Agent**:探索 AI Agent 在文档场景的应用。未来 AI 将能够自主执行任务,例如从会议纪要中提取待办事项,自动同步到第三方工具,实现从辅助创作到自动化办公的升级。
 
 ## 🚀 快速开始
 
-### 1. 克隆仓库
+### 环境要求
+
+- **Node.js** >= 24
+- **pnpm** >= 10.28.2
+
+### 本地开发
+
+1. **克隆仓库**
 
 ```bash
 git clone https://github.com/xun082/DocFlow.git
 cd DocFlow
 ```
 
-### 安装依赖
-
-建议使用 pnpm：
+2. **安装依赖**
 
 ```bash
 pnpm install
 ```
 
-### 启动本地开发环境
+3. **启动开发服务器**
 
 ```bash
 pnpm dev
 ```
 
-### 如何部署
+4. **打开浏览器访问**
 
-确保已安装以下环境：
-
-- Docker
-
-- 推荐：Linux/macOS 或启用 WSL 的 Windows 环境
-
-1️⃣ 构建镜像
-
-```bash
-docker build -t doc-flow .
+```
+http://localhost:3000
 ```
 
-2️⃣ 启动容器
+## 🐳 Docker 部署
+
+### 方式一:使用 Docker Compose(推荐)
 
 ```bash
-docker run -p 6001:6001 doc-flow
+# 使用预构建镜像
+docker-compose up -d
+
+# 访问应用
+http://localhost:3000
 ```
 
-启动完成之后访问地址：
+### 方式二:手动构建
+
+1. **构建镜像**
 
 ```bash
-http://localhost:6001
+docker build -t docflow:latest .
 ```
 
-## 🔧 常用脚本
-
-| 脚本命令          | 作用说明                      |
-| ----------------- | ----------------------------- |
-| `pnpm dev`        | 启动开发服务器                |
-| `pnpm build`      | 构建生产环境代码              |
-| `pnpm start`      | 启动生产环境服务（端口 6001） |
-| `pnpm lint`       | 自动修复所有 ESLint 报错      |
-| `pnpm format`     | 使用 Prettier 格式化代码      |
-| `pnpm type-check` | 运行 TypeScript 类型检查      |
-| `pnpm test`       | 启动测试（如配置）            |
-
-## 🧰 开发规范
-
-- 使用 Prettier 和 ESLint 保证代码风格统一
-
-- 配置了 Husky + lint-staged 进行 Git 提交前检查
-
-- 使用 Commitizen + cz-git 管理提交信息格式（支持语义化发布）
-
-初始化 Git 提交规范：
+2. **运行容器**
 
 ```bash
-pnpm commit
+docker run -d \
+  --name docflow \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  docflow:latest
 ```
 
-## 📌 未来规划（Roadmap）
+3. **访问应用**
 
-项目目前已具备基础协作编辑能力，未来将持续完善并拓展更多功能，进一步提升产品的实用性与专业性：
+```
+http://localhost:3000
+```
 
-### ✅ 近期目标
+### 健康检查
 
-- [ ] **完善现有功能体验**
+容器内置健康检查端点:
 
-  - 优化协同冲突解决策略
-  - 更细粒度的权限管理（只读 / 可评论 / 可编辑）
-  - 增强拖拽体验与文档结构导航（大纲视图）
+```bash
+curl http://localhost:3000/api/health
+```
 
-- [ ] **增强文档组件系统**
+## 🤝 贡献指南
 
-  - 重构基础组件体系：标题、表格、代码块等更智能、模块化
-  - 增加工具栏、快捷键提示和 Markdown 快速输入支持
+欢迎提交 Issue 和 Pull Request!
 
-- [ ] **丰富文档类型与节点支持**
+在提交代码前,请确保:
 
-  - 支持更多 **自定义 Tiptap 节点**，如：
+- 运行 `pnpm type-check` 通过类型检查
 
-    - 引用评论块（Comment Block）
-    - 自定义警告框 / 提示框（Tip/Warning）
-    - UML/流程图嵌入（如支持 Mermaid）
-    - 数据展示组件（如 TableChart、Kanban）
+- 运行 `pnpm lint` 通过代码检查
 
-### 🚀 中期目标
+- 运行 `pnpm format` 格式化代码
 
-- [ ] **引入音视频实时会议能力**
+- 遵循项目的代码规范和提交规范
 
-  - 集成 [LiveKit](https://livekit.io/) 或 [Daily](https://www.daily.co/) 实现嵌入式音视频会议
-  - 支持多人语音 / 视频通话，结合文档协同，提升远程会议效率
-  - 集成会议内共享笔记区、AI 摘要、会议录制等功能
-
-- [ ] **集成 AI 能力**
-
-  - 智能语法纠错、改写建议
-  - 语义搜索与问答（支持上下文理解）
-  - AI 总结 / 摘要生成
-
-- [ ] **多平台同步支持**
-
-  - PWA 支持，适配移动端和桌面离线编辑
-  - 跨设备自动同步与版本恢复
-
-### 🧠 长期方向
-
-- [ ] **插件生态系统建设**
-
-  - 引入用户可安装的第三方插件体系
-  - 提供插件开发文档与市场入口
-
-- [ ] **文档协作平台化**
-
-  - 支持文档团队空间、多人组织结构
-  - 文档看板与团队活动看板集成
-
-- [ ] **权限与审计系统**
-
-  - 支持操作日志记录、文档编辑历史审查
-  - 审批流、编辑建议、协同讨论区等功能
-
-## License
-
-本项目采用 MIT 开源协议发布，**但包含部分 Tiptap Pro 模板代码除外**。
-
-Tiptap Pro 模板版权归 Tiptap GmbH 所有，并根据 Tiptap Pro 授权协议进行授权。  
-详见：https://tiptap.dev/pro/license
-
-如需使用本项目中涉及 Tiptap Pro 的部分，必须拥有有效的 Tiptap Pro 订阅授权。
+详见 [CONTRIBUTING.md](https://github.com/xun082/DocFlow/blob/main/CONTRIBUTING.md)
 
 ## 📬 联系方式
 
-有更多的问题或者想参与开源，可以添加我微信 `yunmz777`
+- **问题反馈**:[GitHub Issues](https://github.com/xun082/DocFlow/issues)
+
+- **功能建议**:[GitHub Discussions](https://github.com/xun082/DocFlow/discussions)
+
+- **微信交流**:`yunmz777`
