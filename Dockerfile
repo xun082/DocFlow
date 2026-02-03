@@ -9,7 +9,8 @@ RUN npm config set registry https://registry.npmmirror.com && \
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/DocFlow/package.json ./apps/DocFlow/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
@@ -20,18 +21,21 @@ ARG GIT_COMMIT=unknown
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/ ./apps/
+COPY packages/ ./packages/ 2>/dev/null || true
 
 # 构建时环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN pnpm build && \
-    rm -rf .next/cache
+    rm -rf apps/DocFlow/.next/cache
 
 FROM base AS prod-deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/DocFlow/package.json ./apps/DocFlow/package.json
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     find node_modules -name "*.d.ts" -delete && \
     find node_modules -name "*.map" -delete && \
@@ -69,9 +73,11 @@ RUN apk add --no-cache libc6-compat && \
     adduser --system --uid 1001 nextjs
 
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/DocFlow/.next ./apps/DocFlow/.next
+COPY --from=builder --chown=nextjs:nodejs /app/apps/DocFlow/public ./apps/DocFlow/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/DocFlow/package.json ./apps/DocFlow/package.json
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 USER nextjs
 EXPOSE 3000
@@ -79,4 +85,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["node_modules/.bin/next", "start"]
+WORKDIR /app/apps/DocFlow
+CMD ["../../node_modules/.bin/next", "start"]

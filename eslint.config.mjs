@@ -11,27 +11,29 @@ import eslintNextPlugin from '@next/eslint-plugin-next';
 export default [
   {
     ignores: [
-      'node_modules/**',
-      '.next/**',
-      './eslint.config.js',
-      'dist/**',
-      'tests/unit/coverage/**',
-      'tests/unit/reports/**',
-      'tests/coverage/**',
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+      '**/storybook-static/**',
+      '**/pnpm-lock.yaml',
       '**/*.js',
-      '.turbo/**',
-      'storybook-static/**',
-      'src/services/access/api-client/**',
+      './eslint.config.mjs',
     ],
   },
   {
-    files: ['src/**/*.{js,jsx,ts,tsx}', 'scripts/**/*.{js,jsx,ts,tsx}'],
+    files: [
+      'apps/**/src/**/*.{js,jsx,ts,tsx}',
+      'apps/**/scripts/**/*.{js,jsx,ts,tsx}',
+      'packages/**/*.{js,jsx,ts,tsx}',
+    ],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
       parser: typescriptEslintParser,
       parserOptions: {
-        project: resolve('./tsconfig.json'),
+        project: ['./apps/*/tsconfig.json', './packages/*/tsconfig.json'],
       },
     },
     plugins: {
@@ -84,7 +86,7 @@ export default [
     },
   },
   {
-    files: ['tests/**/*.{js,jsx,ts,tsx}'],
+    files: ['apps/**/tests/**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
