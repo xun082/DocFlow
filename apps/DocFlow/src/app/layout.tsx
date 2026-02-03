@@ -116,7 +116,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://www.codecrack.cn" />
       </head>
       <body
-        className={`flex flex-col h-full antialiased ${inter.className}`}
+        className="flex flex-col h-full antialiased"
+        style={inter.style}
         suppressHydrationWarning
       >
         <QueryProvider>

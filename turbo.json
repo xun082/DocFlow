@@ -8,7 +8,23 @@
       "outputs": ["dist/**", "out/**", "build/**", ".next/**", "!.next/cache/**"],
       "env": ["NODE_ENV", "NEXT_PUBLIC_*"]
     },
+    "@syncflow/transformer#build": {
+      "dependsOn": ["@syncflow/alert#build"],
+      "outputs": ["dist/**"]
+    },
+    "@syncflow/alert#build": {
+      "outputs": ["dist/**"]
+    },
     "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "@syncflow/transformer#dev": {
+      "dependsOn": ["@syncflow/alert#build"],
+      "cache": false,
+      "persistent": true
+    },
+    "@syncflow/alert#dev": {
       "cache": false,
       "persistent": true
     },

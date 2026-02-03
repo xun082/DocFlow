@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@syncflow/alert": ["../../packages/alert/dist/index.d.ts"],
+      "@syncflow/alert/*": ["../../packages/alert/dist/*"],
+      "@syncflow/transformer": ["../../packages/transformer/dist/index.d.ts"],
+      "@syncflow/transformer/*": ["../../packages/transformer/dist/*"]
     }
   },
   "include": [

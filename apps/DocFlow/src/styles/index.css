@@ -19,7 +19,7 @@
 @import './partials/youtube.css';
 @import './partials/mention.css';
 @import './partials/blog.css';
-@import '../extensions/Alert/alert.css';
+@import '@syncflow/alert/styles';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -139,15 +139,15 @@
     text-decoration: line-through !important;
   }
 
-  .ProseMirror>.react-renderer {
+  .ProseMirror > .react-renderer {
     @apply my-12;
   }
 
-  .ProseMirror>.react-renderer:first-child {
+  .ProseMirror > .react-renderer:first-child {
     @apply mt-0;
   }
 
-  .ProseMirror>.react-renderer:last-child {
+  .ProseMirror > .react-renderer:last-child {
     @apply mb-0;
   }
 
@@ -352,10 +352,8 @@
     z-index: 10001 !important;
   }
 
-
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
-
     .tippy-box[data-plugin='textMenu'],
     .tippy-box[data-theme~='text-menu'] {
       max-width: calc(100vw - 16px) !important;
@@ -593,7 +591,6 @@
 }
 
 @media (max-width: 640px) {
-
   .ProseMirror td img[data-table-image='true'],
   .ProseMirror th img[data-table-image='true'] {
     max-width: 80px !important;

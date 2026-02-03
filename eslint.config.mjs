@@ -27,6 +27,7 @@ export default [
       'apps/**/src/**/*.{js,jsx,ts,tsx}',
       'apps/**/scripts/**/*.{js,jsx,ts,tsx}',
       'packages/**/*.{js,jsx,ts,tsx}',
+      'packages/**/vite.config.ts',
     ],
     languageOptions: {
       ecmaVersion: 2020,
