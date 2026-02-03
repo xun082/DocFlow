@@ -37,23 +37,30 @@ const FONT_FAMILIES = FONT_FAMILY_GROUPS.flatMap((group) => [group.options]).fla
 export type FontFamilyPickerProps = {
   onChange: (value: string) => void;
   value: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export const FontFamilyPicker = ({ onChange, value }: FontFamilyPickerProps) => {
+export const FontFamilyPicker = ({
+  onChange,
+  value,
+  open,
+  onOpenChange,
+}: FontFamilyPickerProps) => {
   const currentValue = FONT_FAMILIES.find((size) => size.value === value);
   const currentFontLabel = currentValue?.label.split(' ')[0] || 'Inter';
 
   const selectFont = useCallback((font: string) => () => onChange(font), [onChange]);
 
   return (
-    <Dropdown.Root>
+    <Dropdown.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={!!currentValue?.value}>
           {currentFontLabel}
           <Icon name="ChevronDown" className="w-2 h-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
-      <Dropdown.Content asChild>
+      <Dropdown.Content asChild onCloseAutoFocus={(event) => event.preventDefault()}>
         <Surface className="flex flex-col gap-1 px-2 py-4">
           {FONT_FAMILY_GROUPS.map((group) => (
             <div className="mt-2.5 first:mt-0 gap-0.5 flex flex-col" key={group.label}>

@@ -26,6 +26,8 @@ export type ContentPickerOptions = Array<ContentTypePickerOption | ContentTypePi
 
 export type ContentTypePickerProps = {
   options: ContentPickerOptions;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const isOption = (
@@ -35,21 +37,21 @@ const isCategory = (
   option: ContentTypePickerOption | ContentTypePickerCategory,
 ): option is ContentTypePickerCategory => option.type === 'category';
 
-export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
+export const ContentTypePicker = ({ options, open, onOpenChange }: ContentTypePickerProps) => {
   const activeItem = useMemo(
     () => options.find((option) => option.type === 'option' && option.isActive()),
     [options],
   );
 
   return (
-    <Dropdown.Root>
+    <Dropdown.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <Dropdown.Trigger asChild>
         <Toolbar.Button active={activeItem?.id !== 'paragraph' && !!activeItem?.type}>
           <Icon name={(activeItem?.type === 'option' && activeItem.icon) || 'Pilcrow'} />
           <Icon name="ChevronDown" className="w-2 h-2" />
         </Toolbar.Button>
       </Dropdown.Trigger>
-      <Dropdown.Content asChild>
+      <Dropdown.Content asChild onCloseAutoFocus={(event) => event.preventDefault()}>
         <Surface className="flex flex-col gap-1 px-2 py-4">
           {options.map((option) => {
             if (isOption(option)) {
