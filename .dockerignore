@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+.next
+out
+dist
+
+# Testing
+coverage
+.nyc_output
+.playwright
+playwright-report
+test-results
+
+# Dev tools
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment variables
+.env*.local
+.env.development
+.env.test
+
+# OS files
+.DS_Store
+*.pem
+
+# CI/CD & docs
+.github
+.husky
+.cursor
+.turbo
+README.md
+LICENSE.md
+AGENTS.md
+docs
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Lint & formatting
+.eslintcache
+.prettierignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache
