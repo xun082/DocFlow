@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
 
   outputFileTracingRoot: path.join(__dirname, '../..'),
   serverExternalPackages: ['import-in-the-middle', 'require-in-the-middle'],
+  transpilePackages: ['@syncflow/bilibili'],
 
   logging: {
     fetches: {

@@ -66,7 +66,7 @@ export { AIBrainstorm } from './AIBrainstorm';
 export { TextToImage } from './TextToImage';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
-export { Bilibili } from './Bilibili';
+export { BilibiliExtension as Bilibili } from './Bilibili/Bilibili';
 export { Chart } from './Chart';
 export { Countdown } from './Countdown';
 export { Gantt } from './Gantt';

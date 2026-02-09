@@ -1,0 +1,17 @@
+[data-bilibili-video] {
+  position: relative;
+  width: 100%;
+  height: auto;
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+[data-bilibili-video] iframe {
+  max-width: 100%;
+  border-radius: 0.5rem;
+}
+
+[data-bilibili-video].ProseMirror-selectednode iframe {
+  outline: 2px solid var(--primary, #3b82f6);
+}
