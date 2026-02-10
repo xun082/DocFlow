@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@datadog/browser-logs':
-        specifier: ^6.26.0
-        version: 6.26.0
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.8.0
@@ -114,6 +110,9 @@ importers:
       '@azure/core-sse':
         specifier: ^2.3.0
         version: 2.3.0
+      '@datadog/browser-logs':
+        specifier: ^6.26.0
+        version: 6.26.0
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
