@@ -182,12 +182,17 @@ const MessageBubble = React.memo(
           </div>
 
           {/* 消息内容 */}
-          <div className="w-full md:max-w-[75%] flex flex-col gap-2">
+          <div
+            className={cn(
+              'flex flex-col gap-2',
+              isUser ? 'max-w-[85%] md:max-w-[75%]' : 'w-full md:max-w-[75%]',
+            )}
+          >
             <div
               className={cn(
                 'rounded-2xl text-sm leading-relaxed overflow-hidden',
                 isUser
-                  ? 'bg-blue-500 text-white rounded-tr-sm shadow-md'
+                  ? 'bg-blue-500 text-white rounded-tr-sm shadow-md w-fit'
                   : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm',
               )}
             >

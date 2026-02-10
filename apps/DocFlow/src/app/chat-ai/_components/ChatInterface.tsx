@@ -142,14 +142,18 @@ export default function ChatInterface({
     [inputValues, modelConfigs, primaryConfig, onSend],
   );
 
-  // 执行外部定义的初始化输入逻辑
+  // 执行外部定义的初始化输入逻辑（只执行一次）
+  const hasInitializedInputRef = React.useRef(false);
+
   useEffect(() => {
-    if (onInitInput && !isModelsLoading) {
+    if (onInitInput && !isModelsLoading && !hasInitializedInputRef.current) {
+      hasInitializedInputRef.current = true;
       onInitInput(setInputValues, primaryConfig.id, (val) =>
         handleInternalSend(primaryConfig.id, val),
       );
     }
-  }, [onInitInput, isModelsLoading, primaryConfig.id, handleInternalSend]);
+    // 只在模型加载完成时执行一次，不依赖 handleInternalSend
+  }, [onInitInput, isModelsLoading]);
 
   // 自动同步会话到列表（当有新会话 ID 和消息时）
   useEffect(() => {
