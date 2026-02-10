@@ -28,14 +28,14 @@ export default function ChatRoomPage() {
     }
   }, [isNewSession, chatId, loadConversation]);
 
-  // 处理新会话自动跳转
+  // 处理新会话 URL 同步（不触发路由导航，避免组件重新挂载导致闪烁）
   useEffect(() => {
     if (conversationId && messages.length > 0) {
       if (chatId !== conversationId && status === 'idle') {
-        router.replace(`/chat-ai/${conversationId}`);
+        window.history.replaceState(null, '', `/chat-ai/${conversationId}`);
       }
     }
-  }, [conversationId, messages, chatId, router, status]);
+  }, [conversationId, messages.length, chatId, status]);
 
   // 发送处理
   const handleSend = (_modelId: string, value: string, config: ModelConfig) => {

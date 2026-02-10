@@ -110,24 +110,57 @@ export default function ChatInterface({
   // 是否处于对比模式
   const isCompareMode = modelConfigs.length > 1;
 
-  // 从 sessionStorage 读取保存的模型配置
-  useEffect(() => {
-    const saved = sessionStorage.getItem('chat_model_config');
+  // 标记模型配置是否已初始化
+  const [isConfigInitialized, setIsConfigInitialized] = useState(false);
 
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as ModelConfig;
-        const mergedConfig = {
-          ...DEFAULT_MODEL_CONFIG,
-          ...parsed,
-          id: 'primary-model',
-        } as ModelConfig;
-        setModelConfigs([mergedConfig]);
-      } catch {
-        // 解析失败，保持默认
+  // 模型列表加载完成后，统一处理初始化和恢复逻辑
+  useEffect(() => {
+    if (!isModelsLoading && models.length > 0) {
+      const firstModel = models[0];
+
+      // 尝试从 sessionStorage 恢复配置
+      const saved = sessionStorage.getItem('chat_model_config');
+      let savedConfig: Partial<ModelConfig> | null = null;
+
+      if (saved) {
+        try {
+          savedConfig = JSON.parse(saved) as Partial<ModelConfig>;
+        } catch {
+          // 解析失败，使用默认
+        }
       }
+
+      setModelConfigs((prev) => {
+        const current = prev[0];
+
+        // 确定最终使用的模型名称
+        let finalModelName = firstModel.value;
+
+        // 如果有保存的配置，且模型名称有效，则使用保存的
+        if (savedConfig?.modelName) {
+          const isValidSaved = models.some((m) => m.value === savedConfig.modelName);
+
+          if (isValidSaved) {
+            finalModelName = savedConfig.modelName;
+          }
+        }
+
+        // 合并配置：sessionStorage > 当前配置 > 默认配置 > 确保使用有效的模型名
+        const mergedConfig: ModelConfig = {
+          ...DEFAULT_MODEL_CONFIG,
+          ...current,
+          ...savedConfig,
+          id: 'primary-model',
+          modelName: finalModelName, // 确保使用有效的模型名
+        };
+
+        return [mergedConfig, ...prev.slice(1)];
+      });
+
+      // 标记配置已初始化
+      setIsConfigInitialized(true);
     }
-  }, []);
+  }, [isModelsLoading, models]);
 
   /** 发送处理 */
   const handleInternalSend = useCallback(
@@ -146,14 +179,19 @@ export default function ChatInterface({
   const hasInitializedInputRef = React.useRef(false);
 
   useEffect(() => {
-    if (onInitInput && !isModelsLoading && !hasInitializedInputRef.current) {
+    if (
+      onInitInput &&
+      isConfigInitialized &&
+      primaryConfig.modelName &&
+      !hasInitializedInputRef.current
+    ) {
       hasInitializedInputRef.current = true;
       onInitInput(setInputValues, primaryConfig.id, (val) =>
         handleInternalSend(primaryConfig.id, val),
       );
     }
-    // 只在模型加载完成时执行一次，不依赖 handleInternalSend
-  }, [onInitInput, isModelsLoading]);
+    // 只在模型配置完全初始化后执行一次
+  }, [onInitInput, isConfigInitialized, primaryConfig.modelName]);
 
   // 自动同步会话到列表（当有新会话 ID 和消息时）
   useEffect(() => {
@@ -185,23 +223,6 @@ export default function ChatInterface({
       return () => clearTimeout(timer);
     }
   }, [status, conversationId, messages.length, refresh]);
-
-  // 模型列表加载后的自动选择策略
-  useEffect(() => {
-    if (!isModelsLoading && models.length > 0) {
-      const firstModel = models[0];
-      setModelConfigs((prev) => {
-        const current = prev[0];
-        const isCurrentValid = models.some((m) => m.value === current.modelName);
-
-        if (!isCurrentValid) {
-          return [{ ...current, modelName: firstModel.value }, ...prev.slice(1)];
-        }
-
-        return prev;
-      });
-    }
-  }, [isModelsLoading, models]);
 
   /** 更新配置 */
   const handleConfigChange = useCallback((newConfig: ModelConfig) => {
