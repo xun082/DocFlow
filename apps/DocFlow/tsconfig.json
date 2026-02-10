@@ -3,10 +3,12 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "@syncflow/alert": ["../../packages/alert/dist/index.d.ts"],
-      "@syncflow/alert/*": ["../../packages/alert/dist/*"],
-      "@syncflow/transformer": ["../../packages/transformer/dist/index.d.ts"],
-      "@syncflow/transformer/*": ["../../packages/transformer/dist/*"]
+      "@syncflow/alert": ["../../packages/alert/src/index.ts"],
+      "@syncflow/alert/*": ["../../packages/alert/src/*"],
+      "@syncflow/transformer": ["../../packages/transformer/src/index.ts"],
+      "@syncflow/transformer/*": ["../../packages/transformer/src/*"],
+      "@syncflow/bilibili": ["../../packages/bilibili/src/index.ts"],
+      "@syncflow/bilibili/*": ["../../packages/bilibili/src/*"]
     }
   },
   "include": [
