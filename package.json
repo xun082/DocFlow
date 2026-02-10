@@ -77,5 +77,8 @@
     "commitizen": {
       "path": "node_modules/cz-git"
     }
+  },
+  "dependencies": {
+    "@datadog/browser-logs": "^6.26.0"
   }
 }

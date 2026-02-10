@@ -1,0 +1,17 @@
+.tabs {
+  position: relative;
+  display: flex;
+  align-content: space-between;
+}
+
+.tabs > .tab {
+  padding: 0.5rem;
+  border-radius: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid;
+  border-color: var(--bg5);
+}
+
+.tabs > .tab[aria-pressed='true'] {
+  border-color: var(--lk-accent-bg);
+}

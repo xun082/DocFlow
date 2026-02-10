@@ -197,7 +197,14 @@
     "y-webrtc": "^10.3.0",
     "yjs": "^13.6.27",
     "zod": "^3.25.76",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "@livekit/components-react": "2.9.16",
+    "@livekit/components-styles": "1.2.0",
+    "@livekit/krisp-noise-filter": "0.3.4",
+    "@livekit/track-processors": "^0.6.0",
+    "livekit-client": "2.16.0",
+    "livekit-server-sdk": "2.14.2",
+    "tinykeys": "^3.0.0"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "16.1.5",
