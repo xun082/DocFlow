@@ -1,7 +1,37 @@
 import React from 'react';
 import type { Components } from 'react-markdown';
+import hljs from 'highlight.js';
 
-import SyntaxHighlight from '@/extensions/AI/components/SyntaxHighlight';
+/**
+ * 语法高亮组件
+ */
+const SyntaxHighlight: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className }) => {
+  const language = className?.replace('language-', '') || 'plaintext';
+  const codeString = String(children).replace(/\n$/, '');
+
+  let highlightedCode = codeString;
+
+  try {
+    if (language && language !== 'plaintext') {
+      highlightedCode = hljs.highlight(codeString, { language }).value;
+    } else {
+      highlightedCode = hljs.highlightAuto(codeString).value;
+    }
+  } catch (error) {
+    console.warn('Syntax highlighting failed:', error);
+    highlightedCode = codeString;
+  }
+
+  return (
+    <code
+      className={`hljs language-${language}`}
+      dangerouslySetInnerHTML={{ __html: highlightedCode }}
+    />
+  );
+};
 
 /**
  * URL 安全验证：防止 XSS 攻击

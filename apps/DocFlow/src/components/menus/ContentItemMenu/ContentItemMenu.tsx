@@ -40,6 +40,12 @@ export const ContentItemMenu = ({ editor, isEditable = true }: ContentItemMenuPr
           <Toolbar.Button onClick={actions.handleAdd}>
             <Icon name="Plus" />
           </Toolbar.Button>
+          <Toolbar.Button
+            onClick={actions.handleAIContinue}
+            className="text-purple-600 hover:text-purple-700"
+          >
+            <Icon name="Wand2" />
+          </Toolbar.Button>
           <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
             <Popover.Trigger asChild>
               <Toolbar.Button>

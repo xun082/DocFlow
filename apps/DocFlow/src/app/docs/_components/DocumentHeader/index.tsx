@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText } from 'lucide-react';
+import { FileText, MessageSquare } from 'lucide-react';
 
 import { CollaborationUsers } from './components/collaboration-users';
 import { DocumentActions } from './components/document-actions';
@@ -8,6 +8,8 @@ import { GithubLink } from './components/github-link';
 import type { DocumentHeaderProps } from './types';
 
 import { useEditorStore } from '@/stores/editorStore';
+import { useChatStore } from '@/stores/chatStore';
+import { cn } from '@/utils';
 
 export default function DocumentHeader({
   provider,
@@ -20,6 +22,7 @@ export default function DocumentHeader({
 }: DocumentHeaderProps) {
   const isCollaborationMode = Boolean(provider) && Array.isArray(connectedUsers);
   const { editor } = useEditorStore();
+  const { isOpen: isChatOpen, togglePanel } = useChatStore();
 
   // 合并所有用户（当前用户 + 连接用户）
   const allUsers = [
@@ -60,6 +63,21 @@ export default function DocumentHeader({
             currentUser={currentUser}
           />
         )}
+
+        {/* 聊天开关按钮 */}
+        <button
+          onClick={togglePanel}
+          className={cn(
+            'flex items-center justify-center p-2 rounded-lg transition-all duration-200 border cursor-pointer',
+            isChatOpen
+              ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30'
+              : 'text-gray-700 border-gray-200 hover:bg-gray-100 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800',
+          )}
+          aria-label={isChatOpen ? '关闭聊天面板' : '打开聊天面板'}
+          title={isChatOpen ? '关闭聊天面板' : '打开聊天面板'}
+        >
+          <MessageSquare className="w-4 h-4" />
+        </button>
 
         {/* GitHub 链接 */}
         <GithubLink />

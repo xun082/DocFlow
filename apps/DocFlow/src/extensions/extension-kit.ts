@@ -58,10 +58,6 @@ import {
   DragHandler,
   Audio,
   FileHandler,
-  AI,
-  AIContinue,
-  AIPolish,
-  AIBrainstorm,
   TextToImage,
   Youtube,
   ClearMarksOnEnter,
@@ -425,21 +421,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
         '\\C': '\\mathbb{C}',
       },
     },
-  }),
-  AI.configure({
-    model: 'gpt-3.5-turbo',
-    maxTokens: 1000,
-    temperature: 0.7,
-    showLoading: true,
-  }),
-  AIContinue.configure({
-    model: 'deepseek-ai/DeepSeek-V3',
-  }),
-  AIPolish.configure({
-    model: 'deepseek-ai/DeepSeek-V3',
-  }),
-  AIBrainstorm.configure({
-    model: 'deepseek-ai/DeepSeek-V3',
   }),
   TextToImage,
   Youtube.configure({
