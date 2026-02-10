@@ -9,7 +9,7 @@
       "env": ["NODE_ENV", "NEXT_PUBLIC_*"]
     },
     "@syncflow/transformer#build": {
-      "dependsOn": ["@syncflow/alert#build"],
+      "dependsOn": ["@syncflow/alert#build","@syncflow/bilibili#build"],
       "outputs": ["dist/**"]
     },
     "@syncflow/alert#build": {
@@ -23,7 +23,7 @@
       "persistent": true
     },
     "@syncflow/transformer#dev": {
-      "dependsOn": ["@syncflow/alert#build"],
+      "dependsOn": ["@syncflow/alert#build","@syncflow/bilibili#build"],
       "cache": false,
       "persistent": true
     },

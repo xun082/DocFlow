@@ -19,6 +19,7 @@ export default defineConfig({
         '@tiptap/pm/model',
         '@tiptap/starter-kit',
         '@syncflow/alert',
+        '@syncflow/bilibili',
       ],
       output: {
         exports: 'named',
