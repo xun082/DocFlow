@@ -37,7 +37,7 @@ import { useStickToBottom } from 'use-stick-to-bottom';
 import { useRouter } from 'next/navigation';
 
 import type { ModelConfig, ChatMessage, ChatStatus } from '../types';
-import { MODEL_OPTIONS, QUICK_QUESTIONS } from '../constants';
+import { QUICK_QUESTIONS } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
 import ModelConfigModal from './ModelConfigModal';
 
@@ -87,9 +87,8 @@ function getModelDisplayName(
   modelValue: string,
   models: { value: string; label: string }[],
 ): string {
-  // 优先使用 API 获取的模型，否则使用静态配置
-  const options = models.length > 0 ? models : MODEL_OPTIONS;
-  const option = options.find((opt) => opt.value === modelValue);
+  // 从后端获取的模型列表中查找
+  const option = models.find((opt) => opt.value === modelValue);
 
   return option?.label || modelValue;
 }

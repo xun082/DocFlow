@@ -2,19 +2,7 @@
  * Chat AI 模块常量定义
  */
 
-import type { ModelOption, QuickQuestion, ModelConfig } from './types';
-
-/**
- * 可选择的模型列表
- */
-export const MODEL_OPTIONS: ModelOption[] = [
-  { value: 'glm-4.7-pro', label: 'GLM-4.7 (Pro)' },
-  { value: 'glm-4', label: 'GLM-4' },
-  { value: 'gpt-4o', label: 'GPT-4o' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-  { value: 'claude-3-opus', label: 'Claude 3 Opus' },
-  { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
-];
+import type { QuickQuestion, ModelConfig } from './types';
 
 /**
  * 启用思维链选项
@@ -49,9 +37,10 @@ export const DEFAULT_SYSTEM_PROMPT = '你是一个专业、礼貌、高效的 AI
 
 /**
  * 默认模型配置
+ * 注意：modelName 将在运行时从后端获取的模型列表中选择第一个
  */
 export const DEFAULT_MODEL_CONFIG: Omit<ModelConfig, 'id'> = {
-  modelName: MODEL_OPTIONS[0].value,
+  modelName: '', // 将在获取模型列表后自动设置
   maxTokens: 1024,
   temperature: 1,
   topP: 0.95,

@@ -29,7 +29,8 @@ export default defineConfig({
       entryRoot: 'src',
       outDir: 'dist',
       insertTypesEntry: true,
-      rollupTypes: true,
+      rollupTypes: false, // 禁用 rollupTypes 避免 API Extractor 路径问题
+      staticImport: true,
     }),
   ],
 });

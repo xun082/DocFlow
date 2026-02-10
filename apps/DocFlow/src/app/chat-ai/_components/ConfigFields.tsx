@@ -7,11 +7,10 @@
  * 供主模型与对比模型配置复用。网页搜索和深度思考功能已移至聊天界面底部。
  */
 
-import { useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 
 import type { ModelConfig } from '../types';
-import { MODEL_OPTIONS, DEFAULT_MODEL_CONFIG } from '../constants';
+import { DEFAULT_MODEL_CONFIG } from '../constants';
 import { useChatModels } from '../hooks/useChatModels';
 
 import { Input } from '@/components/ui/input';
@@ -99,11 +98,8 @@ export interface ConfigFieldsProps {
 }
 
 export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps) {
-  // 使用 Hook 获取模型列表
+  // 使用 Hook 获取模型列表（从后端动态获取）
   const { models, isLoading } = useChatModels();
-
-  // 优先使用 API 获取的模型，否则使用静态配置
-  const options = models.length > 0 ? models : MODEL_OPTIONS;
 
   // 解构配置项并应用默认值回退
   const {
@@ -119,28 +115,21 @@ export default function ConfigFields({ config, updateConfig }: ConfigFieldsProps
     stop = DEFAULT_MODEL_CONFIG.stop,
   } = config;
 
-  // 当模型列表加载完成后，如果当前选择的模型不在列表中，自动选择第一个模型
-  useEffect(() => {
-    if (!isLoading && options.length > 0) {
-      const isCurrentModelValid = options.some((opt) => opt.value === modelName);
-
-      if (!isCurrentModelValid) {
-        updateConfig('modelName', options[0].value);
-      }
-    }
-  }, [isLoading, options, modelName, updateConfig]);
-
   return (
     <div className="space-y-5">
       {/* 模型选择 */}
       <div className="space-y-2">
         <span className="text-sm font-medium text-gray-700">Model</span>
-        <Select value={modelName} onValueChange={(v) => updateConfig('modelName', v)}>
+        <Select
+          value={modelName}
+          onValueChange={(v) => updateConfig('modelName', v)}
+          disabled={isLoading || models.length === 0}
+        >
           <SelectTrigger className="w-full h-9">
-            <SelectValue placeholder="选择模型" />
+            <SelectValue placeholder={isLoading ? '加载模型中...' : '选择模型'} />
           </SelectTrigger>
           <SelectContent>
-            {options.map((option) => (
+            {models.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
