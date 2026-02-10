@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { Sparkles, Video, Users, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,7 +26,7 @@ const encodeConnection = (connection: LiveKitConnectionDetails): string => {
   return btoa(encodeURIComponent(JSON.stringify(connection)));
 };
 
-export default function Page() {
+function RoomsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [roomId, setRoomId] = useState('');
@@ -249,5 +249,56 @@ export default function Page() {
         </p>
       </footer>
     </div>
+  );
+}
+
+function RoomsPageFallback() {
+  return (
+    <div className={styles.pageWrapper}>
+      <main className={styles.main}>
+        <div className={styles.backgroundDecor}>
+          <div className={styles.gradientOrb1} />
+          <div className={styles.gradientOrb2} />
+        </div>
+        <div className={styles.header}>
+          <div className={styles.badge}>
+            <Sparkles className={styles.badgeIcon} />
+            <span>实时视频协作</span>
+          </div>
+          <h1 className={styles.title}>
+            <span className={styles.titleGradient}>FlowSync</span>
+            <span className={styles.titleAccent}> Video</span>
+          </h1>
+          <p className={styles.subtitle}>
+            基于 LiveKit 构建的实时视频协作平台，支持多人高清视频会议与屏幕共享
+          </p>
+        </div>
+        <div className={styles.cardContainer}>
+          <div className={styles.card}>
+            <div className={styles.primaryButton} aria-hidden>
+              <Video className={styles.buttonIcon} />
+              <span>加载中...</span>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer className={styles.footer}>
+        <p>
+          Powered by{' '}
+          <a href="https://livekit.io" target="_blank" rel="noopener noreferrer">
+            LiveKit
+          </a>{' '}
+          · Built with ❤️ by DocFlow Team
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<RoomsPageFallback />}>
+      <RoomsPageContent />
+    </Suspense>
   );
 }
