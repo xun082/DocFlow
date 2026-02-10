@@ -1,8 +1,8 @@
 import { Node } from '@tiptap/pm/model';
 import { NodeSelection } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/react';
-import { useCallback } from 'react';
 
+import { getSelectionLineRange } from '@/utils/editor';
 import { useChatStore } from '@/stores/chatStore';
 
 const useContentItemActions = (
@@ -11,7 +11,8 @@ const useContentItemActions = (
   currentNodePos: number,
 ) => {
   const { setIsOpen, addTab, setDocumentReference, setPresetMessage } = useChatStore();
-  const resetTextFormatting = useCallback(() => {
+
+  const resetTextFormatting = () => {
     const chain = editor.chain();
 
     chain.setNodeSelection(currentNodePos).unsetAllMarks();
@@ -21,9 +22,9 @@ const useContentItemActions = (
     }
 
     chain.run();
-  }, [editor, currentNodePos, currentNode?.type.name]);
+  };
 
-  const duplicateNode = useCallback(() => {
+  const duplicateNode = () => {
     editor.commands.setNodeSelection(currentNodePos);
 
     const { $anchor } = editor.state.selection;
@@ -34,24 +35,24 @@ const useContentItemActions = (
       .setMeta('hideDragHandle', true)
       .insertContentAt(currentNodePos + (currentNode?.nodeSize || 0), selectedNode.toJSON())
       .run();
-  }, [editor, currentNodePos, currentNode?.nodeSize]);
+  };
 
-  const copyNodeToClipboard = useCallback(() => {
+  const copyNodeToClipboard = () => {
     editor.chain().setMeta('hideDragHandle', true).setNodeSelection(currentNodePos).run();
 
     document.execCommand('copy');
-  }, [editor, currentNodePos]);
+  };
 
-  const deleteNode = useCallback(() => {
+  const deleteNode = () => {
     editor
       .chain()
       .setMeta('hideDragHandle', true)
       .setNodeSelection(currentNodePos)
       .deleteSelection()
       .run();
-  }, [editor, currentNodePos]);
+  };
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = () => {
     if (currentNodePos !== -1) {
       const currentNodeSize = currentNode?.nodeSize || 0;
       const insertPos = currentNodePos + currentNodeSize;
@@ -80,9 +81,9 @@ const useContentItemActions = (
         .focus(focusPos)
         .run();
     }
-  }, [currentNode, currentNodePos, editor]);
+  };
 
-  const handleAIContinue = useCallback(() => {
+  const handleAIContinue = () => {
     const { from, to } = editor.state.selection;
     const hasSelection = from !== to;
 
@@ -94,26 +95,8 @@ const useContentItemActions = (
         return;
       }
 
-      // 计算选中内容的行号
-      const doc = editor.state.doc;
-      let startLine = 1;
-      let endLine = 1;
-      let pos = 0;
+      const { startLine, endLine } = getSelectionLineRange(editor.state.doc, from, to);
 
-      doc.descendants((node) => {
-        if (pos >= to) return false;
-
-        if (node.isBlock) {
-          if (pos < from) startLine++;
-          if (pos < to) endLine++;
-        }
-
-        pos += node.nodeSize;
-
-        return true;
-      });
-
-      // 设置文档引用
       setDocumentReference({
         fileName: '当前文档',
         startLine: Math.max(1, startLine - 1),
@@ -158,7 +141,7 @@ const useContentItemActions = (
         title: 'AI 续写',
       });
     }
-  }, [editor, currentNodePos, setIsOpen, addTab, setDocumentReference, setPresetMessage]);
+  };
 
   return {
     resetTextFormatting,

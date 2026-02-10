@@ -33,6 +33,7 @@ const ChatPanel = dynamic(
 
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId, getAuthToken } from '@/utils';
+import { getSelectionLineRange } from '@/utils/editor';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
 import { FloatingToc } from '@/app/docs/_components/FloatingToc';
 import { SearchPanel } from '@/app/docs/_components/SearchPanel';
@@ -390,25 +391,8 @@ export default function DocumentPage() {
         const json = editor.getJSON();
         const jsonString = JSON.stringify(json);
 
-        // 4. 计算选中文本在编辑器中的行号（简化版本）
         const { from, to } = editor.state.selection;
-        const doc = editor.state.doc;
-        let startLine = 1;
-        let endLine = 1;
-        let pos = 0;
-
-        doc.descendants((node) => {
-          if (pos >= to) return false;
-
-          if (node.isBlock) {
-            if (pos < from) startLine++;
-            if (pos < to) endLine++;
-          }
-
-          pos += node.nodeSize;
-
-          return true;
-        });
+        const { startLine, endLine } = getSelectionLineRange(editor.state.doc, from, to);
 
         // 5. 构建文档引用元数据
         const documentName = getCurrentDocumentName() || '未命名文档';
@@ -581,7 +565,7 @@ export default function DocumentPage() {
       <div className="flex flex-1 overflow-hidden">
         <Group orientation="horizontal" className="flex-1">
           {/* 编辑器面板 */}
-          <Panel defaultSize={isChatOpen ? '65' : '100'} minSize="30">
+          <Panel defaultSize={isChatOpen ? 65 : 100} minSize={30}>
             <div className="h-full relative overflow-hidden">
               <div
                 ref={editorContainRef}
@@ -596,7 +580,7 @@ export default function DocumentPage() {
           {isChatOpen && (
             <>
               <Separator className="w-1 bg-gray-200 dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors cursor-col-resize" />
-              <Panel defaultSize="35" minSize="20" maxSize="60">
+              <Panel defaultSize={35} minSize={20} maxSize={60}>
                 <Activity mode={isChatOpen ? 'visible' : 'hidden'}>
                   <ChatPanel documentId={documentId} />
                 </Activity>
