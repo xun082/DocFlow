@@ -333,8 +333,8 @@ export const GROUPS: Group[] = [
         description: 'Insert a Bilibili video',
         aliases: ['bili'],
         action: (editor) => {
-          console.log('Bilibili');
-          editor.chain().focus().setBilibili({ src: '' }).run();
+          const event = new CustomEvent('openBilibiliDialog', { detail: { editor } });
+          window.dispatchEvent(event);
         },
       },
       {

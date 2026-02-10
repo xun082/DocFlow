@@ -1,95 +1,106 @@
-'use client';
+import { Bilibili } from '@syncflow/bilibili';
+import { Editor } from '@tiptap/react';
+import { createRoot } from 'react-dom/client';
+import React from 'react';
 
-import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer } from '@tiptap/react';
+import { BilibiliDialog } from './BilibiliDialog';
 
-import { BilibiliComponent } from './BilibiliComponent';
-
-export interface BilibiliOptions {
-  HTMLAttributes: Record<string, any>;
+if (!Bilibili) {
+  console.error('Bilibili extension import failed. Please check @syncflow/bilibili package.');
 }
+
+// 创建弹窗容器
+let dialogContainer: HTMLDivElement | null = null;
+let dialogRoot: ReturnType<typeof createRoot> | null = null;
+
+const createDialogContainer = () => {
+  if (!dialogContainer) {
+    dialogContainer = document.createElement('div');
+    dialogContainer.id = 'bilibili-dialog-container';
+    dialogContainer.style.zIndex = '9999999999';
+    dialogContainer.style.position = 'relative';
+    document.body.appendChild(dialogContainer);
+    dialogRoot = createRoot(dialogContainer);
+  }
+
+  return { dialogContainer, dialogRoot };
+};
+
+const showBilibiliDialog = (editor: Editor) => {
+  const { dialogRoot } = createDialogContainer();
+
+  const closeDialog = () => {
+    const { dialogRoot: currentRoot } = createDialogContainer();
+
+    if (currentRoot) {
+      currentRoot.render(null);
+    }
+  };
+
+  const DialogComponent = React.createElement(BilibiliDialog, {
+    editor,
+    isOpen: true,
+    onClose: closeDialog,
+  });
+
+  if (dialogRoot) {
+    dialogRoot.render(DialogComponent);
+  }
+};
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
-    bilibili: {
-      /**
-       * Add a Bilibili video player
-       */
-      setBilibili: (options: { src: string; width?: number; height?: number }) => ReturnType;
+    bilibiliDialog: {
+      openBilibiliDialog: () => ReturnType;
     };
   }
 }
 
-export const Bilibili = Node.create<BilibiliOptions>({
-  name: 'bilibili',
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
-  addAttributes() {
-    return {
-      src: {
-        default: null,
-        parseHTML: (element: HTMLElement) => element.getAttribute('src'),
-        renderHTML: (attributes: { src: string }) => ({
-          src: attributes.src,
-        }),
-      },
-      width: {
-        default: 560,
-        parseHTML: (element: HTMLElement) => element.getAttribute('width'),
-        renderHTML: (attributes: { width: number }) => ({
-          width: attributes.width,
-        }),
-      },
-      height: {
-        default: 315,
-        parseHTML: (element: HTMLElement) => element.getAttribute('height'),
-        renderHTML: (attributes: { height: number }) => ({
-          height: attributes.height,
-        }),
-      },
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'div[data-bilibili-video]',
-      },
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'div',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-bilibili-video': '' }),
-    ];
-  },
-
+export const BilibiliExtension = Bilibili.extend({
   addCommands() {
     return {
-      setBilibili:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
+      ...this.parent?.(),
+      openBilibiliDialog:
+        () =>
+        ({ editor }) => {
+          showBilibiliDialog(editor as Editor);
+
+          return true;
         },
     };
   },
 
-  addNodeView() {
-    return ReactNodeViewRenderer(BilibiliComponent);
+  onCreate() {
+    // 监听全局事件
+    const handleOpenDialog = (event: Event) => {
+      const customEvent = event as CustomEvent;
+
+      if (customEvent.detail?.editor) {
+        showBilibiliDialog(customEvent.detail.editor as Editor);
+      } else if (this.editor) {
+        showBilibiliDialog(this.editor as Editor);
+      }
+    };
+
+    window.addEventListener('openBilibiliDialog', handleOpenDialog);
+
+    // 清理函数
+    this.storage.cleanup = () => {
+      window.removeEventListener('openBilibiliDialog', handleOpenDialog);
+
+      if (dialogContainer) {
+        document.body.removeChild(dialogContainer);
+        dialogContainer = null;
+        dialogRoot = null;
+      }
+    };
   },
 
-  group: 'block',
-  draggable: true,
-  atom: true,
+  onDestroy() {
+    if (this.storage.cleanup) {
+      this.storage.cleanup();
+    }
+  },
 });
 
-export default Bilibili;
+export default BilibiliExtension;

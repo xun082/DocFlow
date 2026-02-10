@@ -6,31 +6,38 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'Transformer',
+      name: 'Bilibili',
       formats: ['es', 'cjs'],
-      fileName: (format) => `transformer.${format === 'es' ? 'esm.js' : 'cjs'}`,
+      fileName: (format) => `bilibili.${format === 'es' ? 'esm.js' : 'cjs'}`,
     },
     rollupOptions: {
       external: [
-        'yjs',
-        'y-prosemirror',
+        'react',
+        'react/jsx-runtime',
+        'react-dom/client',
         '@tiptap/core',
-        '@tiptap/pm',
-        '@tiptap/pm/model',
-        '@tiptap/starter-kit',
-        '@syncflow/alert',
-        '@syncflow/bilibili',
+        '@tiptap/react',
+        'lucide-react',
       ],
       output: {
         exports: 'named',
+        globals: {
+          react: 'React',
+          'react/jsx-runtime': 'jsxRuntime',
+          'react-dom/client': 'ReactDomClient',
+        },
+        assetFileNames: 'bilibili.css',
       },
     },
     sourcemap: true,
     outDir: 'dist',
     emptyOutDir: true,
+    cssCodeSplit: false,
   },
   plugins: [
     dts({
+      entryRoot: 'src',
+      outDir: 'dist',
       insertTypesEntry: true,
       rollupTypes: true,
     }),

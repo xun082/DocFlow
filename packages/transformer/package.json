@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@syncflow/alert": "workspace:*",
+    "@syncflow/bilibili": "workspace:*",
     "@tiptap/starter-kit": "^3.18.0"
   },
   "peerDependencies": {

@@ -1,0 +1,59 @@
+{
+  "name": "@syncflow/bilibili",
+  "version": "0.0.1",
+  "description": "Bilibili extension for Tiptap editor",
+  "homepage": "https://github.com/syncflow",
+  "keywords": [
+    "tiptap",
+    "bilibili",
+    "extension",
+    "react",
+    "embed"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/bilibili.cjs",
+  "module": "dist/bilibili.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/bilibili.esm.js",
+      "require": "./dist/bilibili.cjs"
+    },
+    "./styles": "./src/bilibili.css"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "lucide-react": "^0.469.0"
+  },
+  "peerDependencies": {
+    "@tiptap/core": "^3.0.0",
+    "@tiptap/react": "^3.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tiptap/core": "^3.0.0",
+    "@tiptap/react": "^3.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syncflow"
+  }
+}
