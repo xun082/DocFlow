@@ -1,7 +1,7 @@
 export const BILIBILI_REGEX =
-  /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:bilibili\.com|player\.bilibili\.com))(\/(?:video\/|player\.html\?bvid=|player\.html\?aid=)?)([\w-]+)(\S+)?$/;
+  /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:bilibili\.com|b23\.tv|player\.bilibili\.com))(\/(?:video\/|player\.html\?bvid=|player\.html\?aid=)?)([\w-]+)(\S+)?$/;
 export const BILIBILI_REGEX_GLOBAL =
-  /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:bilibili\.com|player\.bilibili\.com))(\/(?:video\/|player\.html\?bvid=|player\.html\?aid=)?)([\w-]+)(\S+)?$/g;
+  /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:bilibili\.com|b23\.tv|player\.bilibili\.com))(\/(?:video\/|player\.html\?bvid=|player\.html\?aid=)?)([\w-]+)(\S+)?$/g;
 
 export const isValidBilibiliUrl = (url: string) => {
   return url.match(BILIBILI_REGEX);

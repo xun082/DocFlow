@@ -10,8 +10,10 @@
 [data-bilibili-video] iframe {
   max-width: 100%;
   border-radius: 0.5rem;
+  border: 0;
+  overflow: hidden;
 }
 
 [data-bilibili-video].ProseMirror-selectednode iframe {
-  outline: 2px solid var(--primary, #3b82f6);
+  outline: 2px solid var(--primary, #081301);
 }

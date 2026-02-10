@@ -704,6 +704,9 @@ importers:
       '@syncflow/alert':
         specifier: workspace:*
         version: link:../alert
+      '@syncflow/bilibili':
+        specifier: workspace:*
+        version: link:../bilibili
       '@tiptap/core':
         specifier: ^3.4.2
         version: 3.18.0(@tiptap/pm@3.18.0)
