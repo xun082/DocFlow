@@ -13,6 +13,7 @@ import type { DocumentActionsProps, ExportAction } from '../types';
 
 import type { FileItem } from '@/types/file-system';
 import { useCommentStore } from '@/stores/commentStore';
+import { useChatStore } from '@/stores/chatStore';
 import {
   cleanElementAttributes,
   extraCss,
@@ -40,6 +41,7 @@ export function DocumentActions({
   const [blogDialogOpen, setBlogDialogOpen] = useState(false);
 
   const { isPanelOpen, togglePanel, comments } = useCommentStore();
+  const { isOpen: isChatOpen, togglePanel: toggleChatPanel } = useChatStore();
   const { handleBlogSubmit, isSubmitting } = useBlogPublish(editor, documentTitle);
 
   // 处理分享按钮点击
@@ -146,6 +148,11 @@ export function DocumentActions({
         customTrigger
       >
         <PopoverCategoryTitle>协作与分享</PopoverCategoryTitle>
+        <PopoverItem
+          label={isChatOpen ? '关闭 AI 助手' : '打开 AI 助手'}
+          icon="Sparkles"
+          onClick={toggleChatPanel}
+        />
         <PopoverItem
           label={
             <div className="flex w-full items-center justify-between">

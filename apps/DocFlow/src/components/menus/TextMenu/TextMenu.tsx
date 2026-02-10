@@ -155,9 +155,6 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
           <Icon name="MessageCircle" />
         </MemoButton>
         <Toolbar.Divider />
-        <MemoButton tooltip="AI 润色" onClick={commands.onPolish}>
-          <Icon name="Sparkles" />
-        </MemoButton>
         <EditLinkPopover onSetLink={commands.onLink} />
         <Popover.Root>
           <Popover.Trigger asChild>

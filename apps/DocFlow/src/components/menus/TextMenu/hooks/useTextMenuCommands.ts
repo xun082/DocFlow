@@ -1,6 +1,5 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
-import { TextSelection } from '@tiptap/pm/state';
 import { toast } from 'sonner';
 
 import { useCommentStore } from '@/stores/commentStore';
@@ -108,85 +107,6 @@ export const useTextmenuCommands = (editor: Editor) => {
     [editor],
   );
 
-  const onPolish = useCallback(() => {
-    const { selection } = editor.state;
-
-    // 检查是否有选中的文本
-    if (selection.empty) {
-      toast.error('请先选择要润色的文本');
-
-      return false;
-    }
-
-    // 获取选中的内容和位置
-    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, '\n\n');
-    const { from, to } = selection;
-
-    try {
-      // 全局查找并删除所有已存在的 AI 润色块
-      const polishNodes: { pos: number; size: number }[] = [];
-
-      editor.state.doc.descendants((node, pos) => {
-        if (node.type.name === 'aiPolish') {
-          polishNodes.push({ pos, size: node.nodeSize });
-        }
-      });
-
-      // 在选中内容后插入新的 AI 润色块，并删除旧的
-      const inserted = editor
-        .chain()
-        .focus()
-        .command(({ tr, state }) => {
-          try {
-            // 先删除所有已存在的润色节点（从后往前删除，避免位置偏移）
-            polishNodes.reverse().forEach(({ pos, size }) => {
-              tr.delete(pos, pos + size);
-            });
-
-            // 重新计算插入位置（因为删除了节点，位置可能发生变化）
-            let adjustedTo = to;
-
-            polishNodes.forEach(({ pos, size }) => {
-              if (pos < to) {
-                adjustedTo -= size;
-              }
-            });
-
-            // 创建新的润色节点
-            const polishNode = state.schema.nodes.aiPolish.create({
-              originalContent: selectedText,
-              state: 'input',
-              response: '',
-            });
-
-            // 在调整后的位置插入节点
-            tr.insert(adjustedTo, polishNode);
-
-            // 保持原文的选中状态（高亮显示）
-            const adjustedFrom =
-              from - polishNodes.filter((n) => n.pos < from).reduce((sum, n) => sum + n.size, 0);
-
-            tr.setSelection(TextSelection.create(tr.doc, adjustedFrom, adjustedTo));
-
-            return true;
-          } catch {
-            return false;
-          }
-        })
-        .run();
-
-      if (!inserted) {
-        toast.error('插入失败，请重试');
-      }
-
-      return inserted;
-    } catch {
-      toast.error('插入失败，请重试');
-
-      return false;
-    }
-  }, [editor]);
-
   return {
     onBold,
     onItalic,
@@ -209,6 +129,5 @@ export const useTextmenuCommands = (editor: Editor) => {
     onLink,
     onComment,
     onRemoveComment,
-    onPolish,
   };
 };

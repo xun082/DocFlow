@@ -29,7 +29,7 @@
     "last 2 Edge versions"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --turbo",
     "build:webpack": "next build --webpack",
     "build:analyze": "next experimental-analyze",
@@ -174,7 +174,6 @@
     "react-hot-toast": "^2.5.2",
     "react-markdown": "^10.1.0",
     "react-photo-view": "^1.2.7",
-    "react-resizable-panels": "^3.0.2",
     "react-use-audio-player": "^4.0.2",
     "reactflow": "^11.11.4",
     "recharts": "2.15.4",
@@ -182,6 +181,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "require-in-the-middle": "^8.0.1",
+    "react-resizable-panels": "^4.6.2",
     "snapdom": "^0.1.2",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.6",

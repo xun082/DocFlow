@@ -10,6 +10,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Eye } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { Group, Panel, Separator } from 'react-resizable-panels';
 
 // 动态导入 CommentPanel，禁用 SSR
 const CommentPanel = dynamic(
@@ -20,6 +21,16 @@ const CommentPanel = dynamic(
     loading: () => null,
   },
 );
+
+// 动态导入 ChatPanel，禁用 SSR
+const ChatPanel = dynamic(
+  () => import('@/app/docs/_components/ChatPanel').then((mod) => ({ default: mod.ChatPanel })),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
+
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { getCursorColorByUserId, getAuthToken } from '@/utils';
 import DocumentHeader from '@/app/docs/_components/DocumentHeader';
@@ -39,6 +50,7 @@ import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { storage, STORAGE_KEYS } from '@/utils/storage/local-storage';
+import { useChatStore } from '@/stores/chatStore';
 
 // 类型定义
 interface CollaborationUser {
@@ -58,6 +70,7 @@ export default function DocumentPage() {
   const forceReadOnly = searchParams?.get('readonly') === 'true';
 
   const { documentGroups } = useFileStore();
+  const { isOpen: isChatOpen } = useChatStore();
 
   // 防止水合不匹配的强制客户端渲染
   const [isMounted, setIsMounted] = useState(false);
@@ -359,7 +372,7 @@ export default function DocumentPage() {
     }
   }, [editor, isPanelOpen, closePanel]);
 
-  // Ctrl+C 复制选中文本为 JSON 格式
+  // Ctrl+C 复制选中文本为 JSON 格式，并添加文档引用元数据
   useEffect(() => {
     if (!editor) return;
 
@@ -369,15 +382,54 @@ export default function DocumentPage() {
       if (!selection || selection.isCollapsed) return;
 
       try {
-        // 2. 获取数据
+        // 2. 获取选中的文本内容
+        const selectedText = selection.toString();
+        if (!selectedText) return;
+
+        // 3. 获取编辑器 JSON 数据
         const json = editor.getJSON();
         const jsonString = JSON.stringify(json);
 
-        // 3. 关键修复：使用 e.clipboardData 而不是 navigator.clipboard
-        // 这样可以避免异步权限问题和 'clipboard is not defined' 错误
+        // 4. 计算选中文本在编辑器中的行号（简化版本）
+        const { from, to } = editor.state.selection;
+        const doc = editor.state.doc;
+        let startLine = 1;
+        let endLine = 1;
+        let pos = 0;
+
+        doc.descendants((node) => {
+          if (pos >= to) return false;
+
+          if (node.isBlock) {
+            if (pos < from) startLine++;
+            if (pos < to) endLine++;
+          }
+
+          pos += node.nodeSize;
+
+          return true;
+        });
+
+        // 5. 构建文档引用元数据
+        const documentName = getCurrentDocumentName() || '未命名文档';
+        const referenceData = {
+          type: 'docflow-reference',
+          fileName: documentName,
+          startLine: Math.max(1, startLine - 1),
+          endLine: Math.max(1, endLine - 1),
+          content: selectedText,
+          charCount: selectedText.length,
+        };
+
+        // 6. 使用 e.clipboardData 设置多种格式
         if (e.clipboardData) {
+          // 设置纯文本（保持默认复制行为）
+          e.clipboardData.setData('text/plain', selectedText);
+          // 设置 JSON 格式（原有功能）
           e.clipboardData.setData('text/json', jsonString);
-          e.preventDefault(); // 只有成功设置数据后才阻止默认行为
+          // 设置文档引用元数据（新功能）
+          e.clipboardData.setData('application/docflow-reference', JSON.stringify(referenceData));
+          e.preventDefault();
         }
       } catch (error) {
         console.error('复制失败:', error);
@@ -525,16 +577,33 @@ export default function DocumentPage() {
         doc={doc}
       />
 
-      {/* 主内容区域 */}
+      {/* 主内容区域 - 使用可调整大小的面板布局 */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 relative overflow-hidden">
-          <div
-            ref={editorContainRef}
-            className="h-full overflow-y-auto overflow-x-hidden relative w-full"
-          >
-            <EditorContent editor={editor} className="prose-container h-full pl-14" />
-          </div>
-        </div>
+        <Group orientation="horizontal" className="flex-1">
+          {/* 编辑器面板 */}
+          <Panel defaultSize={isChatOpen ? '65' : '100'} minSize="30">
+            <div className="h-full relative overflow-hidden">
+              <div
+                ref={editorContainRef}
+                className="h-full overflow-y-auto overflow-x-hidden relative w-full"
+              >
+                <EditorContent editor={editor} className="prose-container h-full pl-14" />
+              </div>
+            </div>
+          </Panel>
+
+          {/* 聊天面板分隔条 */}
+          {isChatOpen && (
+            <>
+              <Separator className="w-1 bg-gray-200 dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors cursor-col-resize" />
+              <Panel defaultSize="35" minSize="20" maxSize="60">
+                <Activity mode={isChatOpen ? 'visible' : 'hidden'}>
+                  <ChatPanel documentId={documentId} />
+                </Activity>
+              </Panel>
+            </>
+          )}
+        </Group>
       </div>
 
       {/* 右侧悬浮目录和评论面板 - 使用 Activity 优化 Selective Hydration */}
