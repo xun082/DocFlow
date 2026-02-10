@@ -1,3 +1,5 @@
+# Multi-arch: supports linux/amd64 (Ubuntu/x86) and linux/arm64 (Apple Silicon)
+# Build with: docker buildx build --platform linux/amd64,linux/arm64 -t ...
 FROM node:24-alpine AS base
 
 RUN npm config set registry https://registry.npmmirror.com && \
