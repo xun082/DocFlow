@@ -58,14 +58,12 @@ export { MarkdownPaste } from './MarkdownPaste';
 export { JsonPaste } from './JsonPaste';
 
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
-export { Audio } from './Audio';
 export { TextToImage } from './TextToImage';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
 export { BilibiliExtension as Bilibili } from './Bilibili/Bilibili';
 export { Chart } from './Chart';
 export { Countdown } from './Countdown';
-export { Gantt } from './Gantt';
 export { Comment } from './Comment';
 export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache } from './Mention';
 export type { MentionUser } from './Mention';

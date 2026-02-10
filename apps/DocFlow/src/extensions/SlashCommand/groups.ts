@@ -275,16 +275,6 @@ export const GROUPS: Group[] = [
         },
       },
       {
-        name: 'audio',
-        label: 'Audio',
-        iconName: 'Volume2',
-        description: 'Insert an audio player',
-        aliases: ['sound', 'music'],
-        action: (editor) => {
-          editor.chain().focus().setAudio({ src: '' }).run();
-        },
-      },
-      {
         name: 'youtube',
         label: 'YouTube Video',
         iconName: 'Youtube',
@@ -361,16 +351,6 @@ export const GROUPS: Group[] = [
         aliases: ['countdown'],
         action: (editor) => {
           editor.chain().focus().setCountdown({ targetDate: '' }).run();
-        },
-      },
-      {
-        name: 'gantt',
-        label: 'Gantt Chart',
-        iconName: 'CalendarRange',
-        description: 'Insert a Gantt chart for project planning',
-        aliases: ['gantt', 'timeline', 'project'],
-        action: (editor) => {
-          editor.chain().focus().setGantt().run();
         },
       },
     ],

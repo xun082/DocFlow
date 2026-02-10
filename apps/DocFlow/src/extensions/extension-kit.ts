@@ -56,7 +56,6 @@ import {
   UniqueID,
   DraggableBlock,
   DragHandler,
-  Audio,
   FileHandler,
   TextToImage,
   Youtube,
@@ -64,7 +63,6 @@ import {
   Bilibili,
   Chart,
   Countdown,
-  Gantt,
   Comment,
   Mention,
   mentionSuggestion,
@@ -389,7 +387,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   JsonPaste,
   MarkdownPaste,
   SelectOnlyCode,
-  Audio,
   // MathLive 专业数学编辑器
   MathLiveExtension,
   // 数学公式迁移扩展 - 自动将 $...$ 转换为数学节点
@@ -435,7 +432,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   Bilibili,
   Chart,
   Countdown,
-  Gantt,
   Comment.configure({
     HTMLAttributes: {
       class: 'comment',
