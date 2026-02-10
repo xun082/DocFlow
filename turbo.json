@@ -15,6 +15,9 @@
     "@syncflow/alert#build": {
       "outputs": ["dist/**"]
     },
+    "@syncflow/bilibili#build": {
+      "outputs": ["dist/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
