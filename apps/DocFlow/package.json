@@ -40,7 +40,6 @@
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {
-    "@syncflow/alert": "workspace:*",
     "@syncflow/bilibili": "workspace:*",
     "@azure/core-sse": "^2.3.0",
     "@dnd-kit/core": "^6.3.1",

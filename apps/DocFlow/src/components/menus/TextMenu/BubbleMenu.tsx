@@ -91,19 +91,26 @@ export const CustomBubbleMenu: React.FC<CustomBubbleMenuProps> = ({
     // 创建虚拟元素代表选区位置
     const virtualElement = {
       getBoundingClientRect: () => {
-        const start = view.coordsAtPos(from);
-        const end = view.coordsAtPos(to);
+        try {
+          const docSize = state.doc.content.size;
+          const clampedFrom = Math.max(0, Math.min(from, docSize));
+          const clampedTo = Math.max(0, Math.min(to, docSize));
+          const start = view.coordsAtPos(clampedFrom);
+          const end = view.coordsAtPos(clampedTo);
 
-        return {
-          top: Math.min(start.top, end.top),
-          bottom: Math.max(start.bottom, end.bottom),
-          left: Math.min(start.left, end.left),
-          right: Math.max(start.right, end.right),
-          width: Math.abs(end.right - start.left),
-          height: Math.abs(end.bottom - start.top),
-          x: Math.min(start.left, end.left),
-          y: Math.min(start.top, end.top),
-        };
+          return {
+            top: Math.min(start.top, end.top),
+            bottom: Math.max(start.bottom, end.bottom),
+            left: Math.min(start.left, end.left),
+            right: Math.max(start.right, end.right),
+            width: Math.abs(end.right - start.left),
+            height: Math.abs(end.bottom - start.top),
+            x: Math.min(start.left, end.left),
+            y: Math.min(start.top, end.top),
+          };
+        } catch {
+          return new DOMRect();
+        }
       },
     };
 
@@ -163,22 +170,29 @@ export const CustomBubbleMenu: React.FC<CustomBubbleMenuProps> = ({
     const cleanup = autoUpdate(
       {
         getBoundingClientRect: () => {
-          const { selection } = editor.state;
+          try {
+            const { selection } = editor.state;
 
-          if (selection.empty) {
+            if (selection.empty) {
+              return new DOMRect();
+            }
+
+            const { from, to } = selection;
+            const docSize = editor.state.doc.content.size;
+            const clampedFrom = Math.max(0, Math.min(from, docSize));
+            const clampedTo = Math.max(0, Math.min(to, docSize));
+            const start = editor.view.coordsAtPos(clampedFrom);
+            const end = editor.view.coordsAtPos(clampedTo);
+
+            return new DOMRect(
+              Math.min(start.left, end.left),
+              Math.min(start.top, end.top),
+              Math.abs(end.right - start.left),
+              Math.abs(end.bottom - start.top),
+            );
+          } catch {
             return new DOMRect();
           }
-
-          const { from, to } = selection;
-          const start = editor.view.coordsAtPos(from);
-          const end = editor.view.coordsAtPos(to);
-
-          return new DOMRect(
-            Math.min(start.left, end.left),
-            Math.min(start.top, end.top),
-            Math.abs(end.right - start.left),
-            Math.abs(end.bottom - start.top),
-          );
         },
       },
       menuEl,

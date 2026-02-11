@@ -6,7 +6,6 @@ import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics';
 import { Extension } from '@tiptap/core';
 
 import {
-  BlockquoteFigure,
   CharacterCount,
   CodeBlock,
   Color,
@@ -65,7 +64,6 @@ import {
   Comment,
   Mention,
   mentionSuggestion,
-  Alert,
   MathLiveExtension,
   SearchAndReplace,
 } from '.';
@@ -117,7 +115,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
     dropcursor: false,
     heading: false,
     horizontalRule: false,
-    blockquote: false,
     undoRedo: false,
     codeBlock: false,
     paragraph: false,
@@ -377,8 +374,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   SlashCommand,
   Focus,
   Figcaption,
-  BlockquoteFigure,
-  Alert,
   Dropcursor.configure({
     width: 2,
     class: 'ProseMirror-dropcursor border-black',

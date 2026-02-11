@@ -212,9 +212,6 @@ importers:
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.8.3)
-      '@syncflow/alert':
-        specifier: workspace:*
-        version: link:../../packages/alert
       '@syncflow/bilibili':
         specifier: workspace:*
         version: link:../../packages/bilibili
