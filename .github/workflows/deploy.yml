@@ -1,160 +1,95 @@
-name: Deploy to Server
+name: Auto Deploy to Server
 
 on:
-  push:
-    branches:
-      - 'release/**'
+  schedule:
+    - cron: '0 16 */2 * *' # Every 2 days at 00:00 Beijing Time (16:00 UTC)
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy:
+  check-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.2.0
-
-      - name: Get latest image version
-        id: version
-        run: |
-          # 获取最新的短 commit SHA
-          VERSION="$(git rev-parse --short=7 HEAD)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Deploying Version: $VERSION"
-
-      - name: Deploy to server via SSH
+      - name: Check for new Docker image and deploy
         uses: appleboy/ssh-action@v1.2.1
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          VERSION: ${{ steps.version.outputs.version }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
           command_timeout: 30m
-          envs: DOCKER_USERNAME,DOCKER_PASSWORD,VERSION
+          envs: DOCKER_USERNAME,DOCKER_PASSWORD
           script: |
             IMAGE="${DOCKER_USERNAME}/docflow:latest"
-
-            echo "================================"
-            echo "🚀 Starting deployment"
-            echo "📦 Version: $VERSION"
-            echo "🐳 Image: $IMAGE"
-            echo "================================"
-
-            # 配置 Docker 镜像加速器
-            echo "🔧 Configuring Docker registry mirrors..."
-            sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+            
+            # Get remote image digest
+            echo "🔍 Checking for updates..."
+            REMOTE_DIGEST=$(docker manifest inspect $IMAGE 2>/dev/null | grep -m1 '"digest"' | cut -d'"' -f4)
+            
+            if [ -z "$REMOTE_DIGEST" ]; then
+              echo "❌ Failed to fetch remote image info"
+              exit 1
+            fi
+            
+            # Get current running container digest
+            CURRENT_DIGEST=$(docker inspect docflow 2>/dev/null | grep -m1 '"Image"' | cut -d'"' -f4 | xargs docker inspect 2>/dev/null | grep -m1 '"Id"' | cut -d'"' -f4)
+            
+            # Compare digests
+            if [ "$REMOTE_DIGEST" = "$CURRENT_DIGEST" ]; then
+              echo "✅ Already running latest version"
+              exit 0
+            fi
+            
+            echo "🆕 New version available, deploying..."
+            
+            # Configure Docker mirrors (only if not configured)
+            if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json; then
+              sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
             {
               "registry-mirrors": [
                 "https://docker.m.daocloud.io",
                 "https://docker.1panel.live",
-                "https://hub.rat.dev",
-                "https://dockerproxy.com",
-                "https://hub-mirror.c.163.com"
+                "https://hub.rat.dev"
               ]
             }
             EOF
-
-            echo "✅ Registry mirrors configured"
-            cat /etc/docker/daemon.json
-
-            # 重启 Docker 服务
-            echo ""
-            echo "🔄 Restarting Docker service..."
-            sudo systemctl daemon-reload
-            sudo systemctl restart docker
-            sleep 8
-
-            # 等待 Docker 启动
-            echo "⏳ Waiting for Docker to be ready..."
-            for i in {1..30}; do
-              if docker info > /dev/null 2>&1; then
-                echo "✅ Docker is ready"
-                break
-              fi
-              echo "Waiting... ($i/30)"
-              sleep 2
-            done
-
-            # 验证镜像加速器配置
-            echo ""
-            echo "📋 Docker registry mirrors:"
-            docker info | grep -A 10 "Registry Mirrors" || echo "Mirror info not available"
-
-            # 拉取镜像
-            echo ""
-            echo "📦 Pulling image..."
-            docker pull $IMAGE
-
-            echo "✅ Image pulled successfully"
-
-            # 停止旧容器
-            echo ""
-            echo "🛑 Stopping old container..."
+              sudo systemctl daemon-reload
+              sudo systemctl restart docker
+              sleep 5
+            fi
+            
+            # Pull new image
+            docker pull $IMAGE || exit 1
+            
+            # Stop and remove old container
             docker stop docflow 2>/dev/null || true
             docker rm docflow 2>/dev/null || true
-
-            # 启动新容器
-            echo ""
-            echo "🚀 Starting new container..."
+            
+            # Start new container
             CONTAINER_ID=$(docker run -d \
               --name docflow \
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
               $IMAGE)
-
+            
             if [ -z "$CONTAINER_ID" ]; then
               echo "❌ Failed to start container"
-              docker logout 2>/dev/null
               exit 1
             fi
-
-            echo "Container ID: $CONTAINER_ID"
-
-            # 等待容器启动
-            echo "⏳ Waiting for container to start..."
+            
+            # Wait and verify
             sleep 5
-
-            # 检查容器状态
-            echo ""
-            echo "================================"
-            echo "📊 Container Status Check"
-            echo "================================"
-
             CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' docflow 2>/dev/null)
-
+            
             if [ "$CONTAINER_STATUS" = "running" ]; then
-              echo "✅ Container is running!"
-              echo ""
-              echo "📋 Container Info:"
-              docker ps --filter "name=docflow" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-              echo ""
-              echo "📋 Recent Logs:"
-              docker logs --tail 30 docflow
-              echo ""
-              echo "🎉 Deployment successful!"
+              echo "✅ Deployment successful"
+              docker logs --tail 20 docflow
             else
-              echo "❌ Container is not running (Status: $CONTAINER_STATUS)"
-              echo ""
-              echo "📋 Container Logs:"
+              echo "❌ Container failed to start"
               docker logs docflow 2>&1
-              echo ""
-              docker logout 2>/dev/null
               exit 1
             fi
-
-            docker logout 2>/dev/null
-            echo "Done!"
-
-      - name: Deployment summary
-        if: always()
-        run: |
-          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- 📦 Version: \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- 🐳 Image: [Docker Hub](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/docflow)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🌿 Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- ⏰ Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
