@@ -11,7 +11,6 @@ import {
   ImageUpload,
   Link,
   CodeBlock,
-  TextToImage,
   Bilibili,
   Chart,
   Table,
@@ -19,6 +18,7 @@ import {
   TableHeader,
   TableRow,
   Countdown,
+  TableImage,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
@@ -57,7 +57,6 @@ export function isCustomNodeSelected(editor: Editor, node: HTMLElement): boolean
     Link.name,
     Figcaption.name,
     TableOfContentsNode.name,
-    TextToImage.name,
     Bilibili.name,
     Chart.name,
     Table.name,
@@ -65,6 +64,7 @@ export function isCustomNodeSelected(editor: Editor, node: HTMLElement): boolean
     TableHeader.name,
     TableRow.name,
     Countdown.name,
+    TableImage.name,
     'inlineMath',
     'blockMath',
   ];

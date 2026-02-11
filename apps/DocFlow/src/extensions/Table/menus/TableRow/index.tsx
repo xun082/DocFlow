@@ -1,4 +1,5 @@
 import { BubbleMenu } from '@tiptap/react/menus';
+import { useEditorState } from '@tiptap/react';
 import React, { JSX } from 'react';
 
 import { isRowGripSelected } from './utils';
@@ -9,6 +10,17 @@ import { Icon } from '@/components/ui/Icon';
 import { MenuProps, ShouldShowProps } from '@/components/menus/types';
 
 export function TableRowMenu({ editor }: MenuProps): JSX.Element {
+  // 使用 useEditorState 订阅编辑器状态变化，作为 BubbleMenu shouldShow 的二次检查
+  const { isTableContext } = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      isTableContext:
+        ctx.editor.isActive('table') &&
+        !ctx.editor.isActive('imageBlock') &&
+        !ctx.editor.isActive('tableImage'),
+    }),
+  });
+
   const shouldShow = ({ view, state, from }: ShouldShowProps) => {
     if (!state || !from) {
       return false;
@@ -40,7 +52,7 @@ export function TableRowMenu({ editor }: MenuProps): JSX.Element {
       }}
       shouldShow={shouldShow}
     >
-      <Toolbar.Wrapper isVertical>
+      <Toolbar.Wrapper isVertical shouldShowContent={isTableContext}>
         <PopoverMenu.Item
           iconComponent={<Icon name="ArrowUpToLine" />}
           close={false}

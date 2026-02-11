@@ -57,7 +57,6 @@ import {
   DraggableBlock,
   DragHandler,
   FileHandler,
-  TextToImage,
   Youtube,
   ClearMarksOnEnter,
   Bilibili,
@@ -419,7 +418,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
       },
     },
   }),
-  TextToImage,
   Youtube.configure({
     controls: false,
     nocookie: true,

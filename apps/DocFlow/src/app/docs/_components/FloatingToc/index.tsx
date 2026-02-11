@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { List } from 'lucide-react';
+import { List, X } from 'lucide-react';
 
 interface TocItem {
   id: string;
@@ -18,34 +17,24 @@ interface FloatingTocProps {
 
 export function FloatingToc({ editor }: FloatingTocProps) {
   const [items, setItems] = useState<TocItem[]>([]);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
 
-  // 最终是否显示/激活：悬停 或 点击激活 任一为true即可
-  const isVisible = isHovered || isActive;
-  const [activeItem, setActiveItem] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    return () => setMounted(false);
-  }, []);
-
+  // 提取文档中的标题
   useEffect(() => {
     if (!editor) return;
 
     const updateToc = () => {
       const headings: TocItem[] = [];
-      const doc = editor.state.doc;
 
-      doc.descendants((node, pos) => {
+      editor.state.doc.descendants((node, pos) => {
         if (node.type.name === 'heading') {
-          const id = `heading-${pos}`;
           headings.push({
-            id,
+            id: `heading-${pos}`,
             level: node.attrs.level,
-            text: node.textContent || '无标题',
+            text: node.textContent,
             pos,
           });
         }
@@ -55,116 +44,134 @@ export function FloatingToc({ editor }: FloatingTocProps) {
     };
 
     updateToc();
-
-    const handleTransaction = () => {
-      updateToc();
-    };
-
-    editor.on('transaction', handleTransaction);
+    editor.on('transaction', updateToc);
 
     return () => {
-      editor.off('transaction', handleTransaction);
+      editor.off('transaction', updateToc);
     };
   }, [editor]);
 
-  // 监听滚动，自动高亮当前可见的标题
+  // 滚动时自动高亮当前可见标题（使用 rAF 节流）
   useEffect(() => {
     if (!editor || items.length === 0) return;
-
-    const updateActiveHeading = () => {
-      const editorElement = editor.view.dom.parentElement;
-      if (!editorElement) return;
-
-      const scrollTop = editorElement.scrollTop;
-      const viewportHeight = editorElement.clientHeight;
-      const viewportCenter = scrollTop + viewportHeight / 3; // 使用上1/3作为触发点
-
-      // 找到当前视口中心对应的标题
-      let currentHeading: TocItem | null = null;
-
-      for (const item of items) {
-        const node = editor.view.nodeDOM(item.pos);
-
-        if (node && node instanceof Element) {
-          const rect = node.getBoundingClientRect();
-          const editorRect = editorElement.getBoundingClientRect();
-          const elementTop = rect.top - editorRect.top + scrollTop;
-
-          if (elementTop <= viewportCenter) {
-            currentHeading = item;
-          } else {
-            break;
-          }
-        }
-      }
-
-      if (currentHeading && currentHeading.id !== activeItem) {
-        setActiveItem(currentHeading.id);
-      }
-    };
 
     const editorElement = editor.view.dom.parentElement;
     if (!editorElement) return;
 
-    editorElement.addEventListener('scroll', updateActiveHeading);
-    updateActiveHeading(); // 初始化
+    const updateActiveHeading = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const scrollTop = editorElement.scrollTop;
+        const triggerPoint = scrollTop + editorElement.clientHeight / 3;
+
+        let current: TocItem | null = null;
+
+        for (const item of items) {
+          const node = editor.view.nodeDOM(item.pos);
+
+          if (node instanceof Element) {
+            const editorRect = editorElement.getBoundingClientRect();
+            const rect = node.getBoundingClientRect();
+            const elementTop = rect.top - editorRect.top + scrollTop;
+
+            if (elementTop <= triggerPoint) {
+              current = item;
+            } else {
+              break;
+            }
+          }
+        }
+
+        if (current) {
+          setActiveId(current.id);
+        }
+      });
+    };
+
+    editorElement.addEventListener('scroll', updateActiveHeading, { passive: true });
+    updateActiveHeading();
 
     return () => {
       editorElement.removeEventListener('scroll', updateActiveHeading);
+      cancelAnimationFrame(rafRef.current);
     };
-  }, [editor, items, activeItem]);
+  }, [editor, items]);
 
-  const scrollToHeading = (pos: number, id: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // 阻止事件冒泡到父级 div
+  // 点击外部时关闭目录面板
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const scrollToHeading = (pos: number, id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     editor.commands.focus();
     editor.commands.setTextSelection(pos);
-    setActiveItem(id);
+    setActiveId(id);
 
     const node = editor.view.nodeDOM(pos);
 
-    if (node && node instanceof Element) {
+    if (node instanceof Element) {
       node.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
-  // 如果没有标题或未挂载，不渲染任何内容
-  if (!mounted || items.length === 0) {
-    return null;
-  }
+  if (items.length === 0) return null;
 
-  const content = (
+  return (
     <div
-      className="fixed right-6 top-[50%] -translate-y-1/2 z-50 flex items-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      ref={containerRef}
+      className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex items-center"
     >
-      {/* 悬浮展开的目录面板 */}
+      {/* 展开的目录面板 */}
       <div
         className={`
-          bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 
-          rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out
-          ${isVisible ? 'w-72 opacity-100' : 'w-0 opacity-0'}
+          bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm
+          border border-gray-200 dark:border-gray-700
+          rounded-xl shadow-2xl overflow-hidden
+          transition-all duration-300 ease-in-out origin-right
+          ${isOpen ? 'w-64 opacity-100 scale-x-100' : 'w-0 opacity-0 scale-x-0'}
         `}
       >
-        <div className="p-3 max-h-[60vh] overflow-y-auto">
+        <div className="p-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
+          <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              目录
+            </span>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+          </div>
           <nav className="space-y-0.5">
             {items.map((item) => {
-              const isActive = activeItem === item.id;
+              const isItemActive = activeId === item.id;
 
               return (
                 <button
                   key={item.id}
                   onClick={(e) => scrollToHeading(item.pos, item.id, e)}
                   className={`
-                    w-full text-left py-1.5 px-2 rounded-md transition-all duration-200 text-sm
+                    w-full text-left py-1.5 px-2 rounded-lg transition-all duration-150 text-[13px] leading-snug
                     ${
-                      isActive
-                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-medium'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      isItemActive
+                        ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-medium'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-gray-200'
                     }
-                    ${item.level === 1 ? 'font-semibold' : item.level === 2 ? 'font-medium' : 'font-normal'}
+                    ${item.level === 1 ? 'font-semibold text-sm' : ''}
                   `}
-                  style={{ paddingLeft: `${8 + (item.level - 1) * 12}px` }}
+                  style={{ paddingLeft: `${8 + (item.level - 1) * 14}px` }}
                 >
                   <span className="block truncate">{item.text}</span>
                 </button>
@@ -174,19 +181,22 @@ export function FloatingToc({ editor }: FloatingTocProps) {
         </div>
       </div>
 
-      {/* 右侧固定的目录按钮 */}
-      <div
-        onClick={() => setIsActive(!isActive)}
+      {/* 目录切换按钮 */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
         className={`
-          ml-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
-          rounded-lg shadow-lg p-2.5 cursor-pointer transition-all duration-200
-          ${isHovered ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
+          ml-1.5 flex items-center justify-center w-8 h-8
+          rounded-lg shadow-md border transition-all duration-200
+          ${
+            isOpen
+              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+              : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
+          }
         `}
+        title="文档目录"
       >
-        <List className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-      </div>
+        <List className="w-4 h-4" />
+      </button>
     </div>
   );
-
-  return createPortal(content, document.body);
 }

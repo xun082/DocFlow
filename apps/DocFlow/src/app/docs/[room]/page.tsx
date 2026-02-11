@@ -10,7 +10,14 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Eye } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { Group, Panel, Separator } from 'react-resizable-panels';
+import {
+  Group,
+  Panel,
+  Separator,
+  type PanelImperativeHandle,
+  type GroupImperativeHandle,
+} from 'react-resizable-panels';
+import 'md-editor-rt/lib/preview.css';
 
 // 动态导入 CommentPanel，禁用 SSR
 const CommentPanel = dynamic(
@@ -27,7 +34,12 @@ const ChatPanel = dynamic(
   () => import('@/app/docs/_components/ChatPanel').then((mod) => ({ default: mod.ChatPanel })),
   {
     ssr: false,
-    loading: () => null,
+    loading: () => (
+      <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-blue-50/30 items-center justify-center gap-2">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+        <span className="text-xs text-gray-400">加载中...</span>
+      </div>
+    ),
   },
 );
 
@@ -66,6 +78,8 @@ export default function DocumentPage() {
   const searchParams = useSearchParams();
   const documentId = params?.room as string;
   const menuContainerRef = useRef<HTMLDivElement>(null);
+  const chatPanelRef = useRef<PanelImperativeHandle>(null);
+  const groupRef = useRef<GroupImperativeHandle>(null);
 
   // 获取URL参数中的只读模式设置
   const forceReadOnly = searchParams?.get('readonly') === 'true';
@@ -285,6 +299,23 @@ export default function DocumentPage() {
 
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isSearchOpen]);
+
+  // 同步聊天面板的折叠/展开状态
+  useEffect(() => {
+    const panel = chatPanelRef.current;
+    const group = groupRef.current;
+    if (!panel || !group) return;
+
+    if (isChatOpen) {
+      panel.expand();
+      // 强制设置布局确保面板尺寸正确（setLayout 的数字参数为百分比 0-100）
+      requestAnimationFrame(() => {
+        group.setLayout({ editor: 65, chat: 35 });
+      });
+    } else {
+      panel.collapse();
+    }
+  }, [isChatOpen]);
 
   // 创建编辑器 - 只有在 IndexedDB 准备好之后才创建
   const editor = useEditor(
@@ -563,9 +594,9 @@ export default function DocumentPage() {
 
       {/* 主内容区域 - 使用可调整大小的面板布局 */}
       <div className="flex flex-1 overflow-hidden">
-        <Group orientation="horizontal" className="flex-1">
+        <Group orientation="horizontal" className="flex-1" groupRef={groupRef}>
           {/* 编辑器面板 */}
-          <Panel defaultSize={isChatOpen ? 65 : 100} minSize={30}>
+          <Panel id="editor" defaultSize="65" minSize="30">
             <div className="h-full relative overflow-hidden">
               <div
                 ref={editorContainRef}
@@ -573,33 +604,41 @@ export default function DocumentPage() {
               >
                 <EditorContent editor={editor} className="prose-container h-full pl-14" />
               </div>
+              {/* 浮动目录 - 相对于编辑器面板定位 */}
+              <FloatingToc editor={editor} />
             </div>
           </Panel>
 
-          {/* 聊天面板分隔条 */}
-          {isChatOpen && (
-            <>
-              <Separator className="w-1 bg-gray-200 dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors cursor-col-resize" />
-              <Panel defaultSize={35} minSize={20} maxSize={60}>
-                <Activity mode={isChatOpen ? 'visible' : 'hidden'}>
-                  <ChatPanel documentId={documentId} />
-                </Activity>
-              </Panel>
-            </>
-          )}
+          {/* 聊天面板 - 使用 collapsible 控制显隐，避免条件渲染导致的布局重算问题 */}
+          <Separator
+            disabled={!isChatOpen}
+            className={
+              isChatOpen
+                ? 'w-1 bg-gray-200 dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors cursor-col-resize'
+                : 'w-0 opacity-0 pointer-events-none'
+            }
+          />
+          <Panel
+            id="chat"
+            panelRef={chatPanelRef}
+            defaultSize="35"
+            minSize="20"
+            maxSize="60"
+            collapsible
+            collapsedSize="0"
+          >
+            <Activity mode={isChatOpen ? 'visible' : 'hidden'}>
+              <ChatPanel documentId={documentId} />
+            </Activity>
+          </Panel>
         </Group>
       </div>
 
-      {/* 右侧悬浮目录和评论面板 - 使用 Activity 优化 Selective Hydration */}
+      {/* 评论面板 */}
       {editor && (
-        <>
-          <Activity>
-            <FloatingToc editor={editor} />
-          </Activity>
-          <Activity>
-            <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
-          </Activity>
-        </>
+        <Activity>
+          <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
+        </Activity>
       )}
 
       {/* 搜索面板 */}

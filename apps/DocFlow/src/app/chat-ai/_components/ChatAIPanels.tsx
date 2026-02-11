@@ -16,6 +16,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Send,
   Copy,
+  ClipboardCopy,
+  Link,
   User,
   Bot,
   Square,
@@ -30,9 +32,12 @@ import {
   Globe,
   ChevronDown,
   ChevronUp,
+  Download,
+  Sparkles,
 } from 'lucide-react';
-import { MdPreview } from 'md-editor-rt';
-import 'md-editor-rt/lib/preview.css';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useStickToBottom } from 'use-stick-to-bottom';
 import { useRouter } from 'next/navigation';
 
@@ -42,6 +47,10 @@ import { useChatModels } from '../hooks/useChatModels';
 import ModelConfigModal from './ModelConfigModal';
 
 import { useUserQuery, useLogoutMutation } from '@/hooks/useUserQuery';
+import {
+  markdownComponents,
+  compactMarkdownComponents,
+} from '@/components/business/ai/markdown-components';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/utils';
 import {
@@ -52,6 +61,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+/**
+ * 将图片 URL 转为 PNG Blob 并写入剪贴板
+ */
+async function copyImageAsBlob(imageUrl: string): Promise<void> {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error('图片加载失败'));
+    img.src = imageUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) throw new Error('Canvas 不可用');
+  ctx.drawImage(img, 0, 0);
+
+  const pngBlob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('图片转换失败'));
+    }, 'image/png');
+  });
+
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+}
 
 interface ChatPanelProps {
   /** 模型配置信息 */
@@ -198,6 +239,82 @@ const MessageBubble = React.memo(
               {isUser ? (
                 // 用户消息直接显示
                 <div className="px-4 py-3 whitespace-pre-wrap">{message.content}</div>
+              ) : message.imageUrl ? (
+                // 图片消息
+                <div className="p-3">
+                  <div className="relative group/img rounded-lg overflow-hidden bg-gray-50">
+                    <img
+                      src={message.imageUrl}
+                      alt={message.content || '生成的图片'}
+                      className="w-full h-auto max-h-[400px] object-contain cursor-pointer transition-transform hover:scale-[1.02]"
+                      onClick={() => window.open(message.imageUrl, '_blank')}
+                      crossOrigin="anonymous"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                      <button
+                        onClick={async () => {
+                          if (!message.imageUrl) return;
+
+                          try {
+                            await copyImageAsBlob(message.imageUrl);
+                            toast.success('图片已复制，可粘贴到编辑器');
+                          } catch {
+                            toast.error('复制图片失败');
+                          }
+                        }}
+                        className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                        title="复制图片"
+                      >
+                        <ClipboardCopy className="w-3.5 h-3.5 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (message.imageUrl) {
+                            navigator.clipboard.writeText(message.imageUrl);
+                            toast.success('链接已复制');
+                          }
+                        }}
+                        className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                        title="复制链接"
+                      >
+                        <Link className="w-3.5 h-3.5 text-gray-600" />
+                      </button>
+                      <a
+                        href={message.imageUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                        title="下载图片"
+                      >
+                        <Download className="w-3.5 h-3.5 text-gray-600" />
+                      </a>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2.5 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                      <p className="text-xs text-white/90 line-clamp-2">{message.content}</p>
+                    </div>
+                  </div>
+                  {message.imageSize && (
+                    <div className="flex items-center gap-1.5 mt-2 px-1">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span className="text-xs text-gray-400">{message.imageSize}</span>
+                    </div>
+                  )}
+                </div>
+              ) : message.isStreaming && message.imageSize ? (
+                // 图片加载状态
+                <div className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 border-2 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
+                      <Sparkles className="w-5 h-5 text-purple-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-purple-800">AI 正在绘图...</p>
+                      <p className="text-xs text-gray-400 mt-0.5">尺寸 {message.imageSize}</p>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 // AI 消息：包含推理内容和主回复
                 <>
@@ -247,11 +364,12 @@ const MessageBubble = React.memo(
                                   'after:content-["▋"] after:ml-1 after:animate-pulse after:text-blue-400 after:inline-block after:align-middle',
                               )}
                             >
-                              <MdPreview
-                                value={message.reasoningContent || ''}
-                                theme="light"
-                                showCodeRowNumber={false}
-                              />
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={compactMarkdownComponents}
+                              >
+                                {message.reasoningContent || ''}
+                              </ReactMarkdown>
                             </div>
                           </div>
                         </div>
@@ -271,11 +389,9 @@ const MessageBubble = React.memo(
                       )}
                     >
                       {message.content ? (
-                        <MdPreview
-                          value={message.content}
-                          theme="light"
-                          showCodeRowNumber={false}
-                        />
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                          {message.content}
+                        </ReactMarkdown>
                       ) : message.isStreaming && !message.reasoningContent ? (
                         <span className="inline-flex items-center gap-1 text-gray-400">
                           <Loader2 className="h-3 w-3 animate-spin" />
