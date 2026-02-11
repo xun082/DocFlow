@@ -29,3 +29,9 @@ export * from './document-export';
 
 // Legacy export-doc (DOCX generation)
 export * from './export-doc';
+
+// Clipboard utilities
+export * from './clipboard';
+
+// URL safety utilities
+export * from './url';

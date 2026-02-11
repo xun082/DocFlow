@@ -23,41 +23,7 @@ import {
   compactMarkdownComponents,
 } from '@/components/business/ai/markdown-components';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/utils';
-
-/**
- * 将图片 URL 转为 PNG Blob 并写入剪贴板
- * 这样粘贴到富文本编辑器时会直接插入图片
- */
-async function copyImageAsBlob(imageUrl: string): Promise<void> {
-  // 通过 Image + Canvas 将任意格式转为 PNG（兼容 webp 等）
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error('图片加载失败'));
-    img.src = imageUrl;
-  });
-
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) throw new Error('Canvas 不可用');
-  ctx.drawImage(img, 0, 0);
-
-  const pngBlob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('图片转换失败'));
-    }, 'image/png');
-  });
-
-  await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
-}
+import { cn, copyImageAsBlob, copyToClipboard, isSafeUrl, safeOpenUrl } from '@/utils';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -73,12 +39,11 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
   const hasReasoning = !isUser && message.reasoningContent && message.reasoningContent.length > 0;
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
+    const success = await copyToClipboard(message.content);
+
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // 静默处理
     }
   };
 
@@ -123,7 +88,7 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
                     src={message.imageUrl}
                     alt={message.content || '生成的图片'}
                     className="w-full h-auto max-h-[320px] object-contain cursor-pointer transition-transform hover:scale-[1.02]"
-                    onClick={() => window.open(message.imageUrl, '_blank')}
+                    onClick={() => safeOpenUrl(message.imageUrl)}
                     crossOrigin="anonymous"
                   />
                   {/* 悬浮工具栏 */}
@@ -145,10 +110,15 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
                       <ClipboardCopy className="w-3.5 h-3.5 text-gray-600" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (message.imageUrl) {
-                          navigator.clipboard.writeText(message.imageUrl);
+                      onClick={async () => {
+                        if (!message.imageUrl) return;
+
+                        const success = await copyToClipboard(message.imageUrl);
+
+                        if (success) {
                           toast.success('链接已复制');
+                        } else {
+                          toast.error('复制链接失败');
                         }
                       }}
                       className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
@@ -157,7 +127,7 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
                       <Link className="w-3.5 h-3.5 text-gray-600" />
                     </button>
                     <a
-                      href={message.imageUrl}
+                      href={isSafeUrl(message.imageUrl) ? message.imageUrl : undefined}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
