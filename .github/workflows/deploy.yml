@@ -25,9 +25,33 @@ jobs:
           script: |
             IMAGE="${DOCKER_USERNAME}/docflow:latest"
             
+            # Configure Docker mirrors (only if not configured)
+            if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json; then
+              echo "⚙️ Configuring Docker mirrors..."
+              sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+            {
+              "registry-mirrors": [
+                "https://docker.m.daocloud.io",
+                "https://docker.1panel.live",
+                "https://hub.rat.dev"
+              ]
+            }
+            EOF
+              sudo systemctl daemon-reload
+              sudo systemctl restart docker
+              sleep 5
+            fi
+            
+            # Login to Docker Hub
+            echo "🔐 Logging in to Docker Hub..."
+            echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin || {
+              echo "❌ Docker login failed"
+              exit 1
+            }
+            
             # Get remote image digest
             echo "🔍 Checking for updates..."
-            REMOTE_DIGEST=$(docker manifest inspect $IMAGE 2>/dev/null | grep -m1 '"digest"' | cut -d'"' -f4)
+            REMOTE_DIGEST=$(docker manifest inspect "$IMAGE" 2>/dev/null | grep -m1 '"digest"' | cut -d'"' -f4)
             
             if [ -z "$REMOTE_DIGEST" ]; then
               echo "❌ Failed to fetch remote image info"
@@ -45,24 +69,8 @@ jobs:
             
             echo "🆕 New version available, deploying..."
             
-            # Configure Docker mirrors (only if not configured)
-            if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json; then
-              sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
-            {
-              "registry-mirrors": [
-                "https://docker.m.daocloud.io",
-                "https://docker.1panel.live",
-                "https://hub.rat.dev"
-              ]
-            }
-            EOF
-              sudo systemctl daemon-reload
-              sudo systemctl restart docker
-              sleep 5
-            fi
-            
             # Pull new image
-            docker pull $IMAGE || exit 1
+            docker pull "$IMAGE" || exit 1
             
             # Stop and remove old container
             docker stop docflow 2>/dev/null || true
@@ -74,7 +82,7 @@ jobs:
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
-              $IMAGE)
+              "$IMAGE")
             
             if [ -z "$CONTAINER_ID" ]; then
               echo "❌ Failed to start container"
