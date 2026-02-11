@@ -14,7 +14,6 @@ WORKDIR /app
 FROM base AS deps
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/DocFlow/package.json ./apps/DocFlow/package.json
-COPY packages/alert/package.json ./packages/alert/package.json
 COPY packages/bilibili/package.json ./packages/bilibili/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
@@ -33,16 +32,14 @@ COPY --from=deps /app ./
 COPY turbo.json tsconfig.base.json tsconfig.json tsconfig.build.json ./
 
 # Copy source code (overlays on top; existing node_modules from deps are preserved)
-# packages/alert and packages/bilibili are DocFlow frontend dependencies; transformer is backend-only
 COPY apps/ ./apps/
-COPY packages/alert/ ./packages/alert/
 COPY packages/bilibili/ ./packages/bilibili/
 
 # 构建时环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Build DocFlow + workspace deps @syncflow/alert, @syncflow/bilibili (transformer excluded, backend-only)
+# Build DocFlow + workspace deps @syncflow/bilibili (transformer excluded, backend-only)
 RUN pnpm turbo run build --filter=DocFlow && \
     rm -rf apps/DocFlow/.next/cache
 
@@ -51,7 +48,6 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/DocFlow/package.json ./apps/DocFlow/package.json
-COPY packages/alert/package.json ./packages/alert/package.json
 COPY packages/bilibili/package.json ./packages/bilibili/package.json
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     ( find node_modules -name "*.d.ts" -delete 2>/dev/null; \
@@ -94,8 +90,6 @@ RUN apk add --no-cache libc6-compat && \
 COPY --from=prod-deps --chown=nextjs:nodejs /app ./
 
 # Copy built workspace packages (dist for workspace:* runtime resolution)
-COPY --from=builder --chown=nextjs:nodejs /app/packages/alert/dist ./packages/alert/dist
-COPY --from=builder --chown=nextjs:nodejs /app/packages/alert/src/alert.css ./packages/alert/src/alert.css
 COPY --from=builder --chown=nextjs:nodejs /app/packages/bilibili/dist ./packages/bilibili/dist
 COPY --from=builder --chown=nextjs:nodejs /app/packages/bilibili/src/bilibili.css ./packages/bilibili/src/bilibili.css
 
