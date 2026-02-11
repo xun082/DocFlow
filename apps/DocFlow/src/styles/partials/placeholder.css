@@ -23,10 +23,6 @@
     content: 'Enter a quote';
   }
 
-  .ProseMirror blockquote + figcaption.is-empty:not(.is-editor-empty)::before {
-    content: 'Author';
-  }
-
   .ProseMirror [data-placeholder][data-suggestion]::before,
   .ProseMirror [data-placeholder][data-suggestion] *::before {
     content: none !important;

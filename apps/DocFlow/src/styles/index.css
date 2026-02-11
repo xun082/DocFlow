@@ -19,7 +19,6 @@
 @import './partials/youtube.css';
 @import './partials/mention.css';
 @import './partials/blog.css';
-@import '@syncflow/alert/styles';
 @import '@syncflow/bilibili/styles';
 
 @custom-variant dark (&:is(.dark *));

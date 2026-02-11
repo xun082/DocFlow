@@ -42,9 +42,6 @@ export { SlashCommand } from './SlashCommand';
 export { FontSize } from './FontSize';
 export { Figure } from './Figure';
 export { Figcaption } from './Figcaption';
-export { BlockquoteFigure } from './BlockquoteFigure';
-export { Quote } from './BlockquoteFigure/Quote';
-export { QuoteCaption } from './BlockquoteFigure/QuoteCaption';
 export { Link } from './Link';
 export { Image } from './Image';
 export { ImageUpload } from './ImageUpload';
@@ -66,8 +63,6 @@ export { Countdown } from './Countdown';
 export { Comment } from './Comment';
 export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache } from './Mention';
 export type { MentionUser } from './Mention';
-export { Alert } from '@syncflow/alert';
-export type { AlertType } from '@syncflow/alert';
 export { SearchAndReplace } from './SearchAndReplace';
 export type {
   SearchAndReplaceOptions,

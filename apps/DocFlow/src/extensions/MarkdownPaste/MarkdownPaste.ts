@@ -5,7 +5,7 @@ import { Fragment } from '@tiptap/pm/model';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
 import { gfm } from 'micromark-extension-gfm';
-import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
+import type { Node as ProseMirrorNode, Schema, Mark } from '@tiptap/pm/model';
 
 import { toast } from '@/hooks/use-toast';
 
@@ -35,6 +35,9 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
       new Plugin({
         key: new PluginKey('markdownPaste'),
         props: {
+          clipboardTextSerializer: (content: Slice) => {
+            return serializeSliceToMarkdown(content);
+          },
           handleDOMEvents: {
             paste: (view, event: ClipboardEvent) => {
               if (!this.options.transformPastedText) return false;
@@ -385,4 +388,224 @@ function addMark(node: ProseMirrorNode, mark: any): ProseMirrorNode {
   }
 
   return node.type.create(node.attrs, node.content, node.marks.concat([mark]));
+}
+
+// ==================== Clipboard Markdown Serializer ====================
+
+function serializeSliceToMarkdown(slice: Slice): string {
+  const parts: string[] = [];
+
+  slice.content.forEach((node) => {
+    const md = serializeBlockNode(node);
+
+    if (md !== null) parts.push(md);
+  });
+
+  return parts.join('\n\n');
+}
+
+function serializeBlockNode(node: ProseMirrorNode): string | null {
+  switch (node.type.name) {
+    case 'paragraph':
+      return serializeInline(node);
+
+    case 'heading': {
+      const level = (node.attrs.level as number) || 1;
+
+      return '#'.repeat(level) + ' ' + serializeInline(node);
+    }
+
+    case 'blockquote': {
+      const inner: string[] = [];
+
+      node.forEach((child) => {
+        const md = serializeBlockNode(child);
+
+        if (md !== null) inner.push(md);
+      });
+
+      return inner
+        .join('\n\n')
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+    }
+
+    case 'codeBlock': {
+      const lang = (node.attrs.language as string) || '';
+
+      return '```' + lang + '\n' + node.textContent + '\n```';
+    }
+
+    case 'bulletList': {
+      const items: string[] = [];
+
+      node.forEach((item) => {
+        items.push('- ' + serializeListItem(item));
+      });
+
+      return items.join('\n');
+    }
+
+    case 'orderedList': {
+      const items: string[] = [];
+      let idx = (node.attrs.start as number) || 1;
+
+      node.forEach((item) => {
+        items.push(`${idx}. ` + serializeListItem(item));
+        idx++;
+      });
+
+      return items.join('\n');
+    }
+
+    case 'taskList': {
+      const items: string[] = [];
+
+      node.forEach((item) => {
+        const checked = item.attrs.checked ? 'x' : ' ';
+
+        items.push(`- [${checked}] ` + serializeListItem(item));
+      });
+
+      return items.join('\n');
+    }
+
+    case 'horizontalRule':
+      return '---';
+
+    case 'table':
+      return serializeTable(node);
+
+    case 'imageBlock':
+      return `![${(node.attrs.alt as string) || ''}](${(node.attrs.src as string) || ''})`;
+
+    default: {
+      if (node.isTextblock) {
+        return serializeInline(node);
+      }
+
+      if (node.content.size > 0) {
+        const children: string[] = [];
+
+        node.forEach((child) => {
+          const md = serializeBlockNode(child);
+
+          if (md !== null) children.push(md);
+        });
+
+        if (children.length > 0) return children.join('\n\n');
+      }
+
+      if (node.textContent) return node.textContent;
+
+      return null;
+    }
+  }
+}
+
+function serializeListItem(item: ProseMirrorNode): string {
+  const parts: string[] = [];
+
+  item.forEach((child) => {
+    const md = serializeBlockNode(child);
+
+    if (md !== null) parts.push(md);
+  });
+
+  return parts.join('\n  ');
+}
+
+function serializeInline(node: ProseMirrorNode): string {
+  let result = '';
+
+  node.forEach((child) => {
+    if (child.isText) {
+      result += applyMarksToText(child.text || '', child.marks);
+    } else if (child.type.name === 'hardBreak') {
+      result += '  \n';
+    } else if (child.type.name === 'image' || child.type.name === 'imageBlock') {
+      result += `![${(child.attrs.alt as string) || ''}](${(child.attrs.src as string) || ''})`;
+    } else if (child.type.name === 'mention') {
+      result += `@${(child.attrs.label as string) || (child.attrs.id as string) || ''}`;
+    } else {
+      result += child.textContent;
+    }
+  });
+
+  return result;
+}
+
+function applyMarksToText(text: string, marks: readonly Mark[]): string {
+  if (!marks.length) return text;
+
+  const codeMark = marks.find((m) => m.type.name === 'code');
+
+  if (codeMark) return `\`${text}\``;
+
+  let result = text;
+
+  for (const mark of marks) {
+    switch (mark.type.name) {
+      case 'bold':
+        result = `**${result}**`;
+        break;
+
+      case 'italic':
+        result = `*${result}*`;
+        break;
+
+      case 'strike':
+        result = `~~${result}~~`;
+        break;
+
+      case 'highlight':
+        result = `==${result}==`;
+        break;
+
+      case 'link':
+        result = `[${result}](${(mark.attrs.href as string) || ''})`;
+        break;
+
+      case 'underline':
+        result = `<u>${result}</u>`;
+        break;
+    }
+  }
+
+  return result;
+}
+
+function serializeTable(node: ProseMirrorNode): string {
+  const rows: string[][] = [];
+
+  node.forEach((row) => {
+    const cells: string[] = [];
+
+    row.forEach((cell) => {
+      let text = '';
+
+      cell.forEach((para) => {
+        if (text) text += ' ';
+        text += serializeInline(para);
+      });
+
+      cells.push(text);
+    });
+
+    rows.push(cells);
+  });
+
+  if (rows.length === 0) return '';
+
+  const lines: string[] = [];
+
+  lines.push('| ' + rows[0].join(' | ') + ' |');
+  lines.push('| ' + rows[0].map(() => '---').join(' | ') + ' |');
+
+  for (let i = 1; i < rows.length; i++) {
+    lines.push('| ' + rows[i].join(' | ') + ' |');
+  }
+
+  return lines.join('\n');
 }
