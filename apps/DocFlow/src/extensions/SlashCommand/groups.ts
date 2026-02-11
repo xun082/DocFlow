@@ -2,22 +2,6 @@ import { Group } from './types';
 
 export const GROUPS: Group[] = [
   {
-    name: 'ai',
-    title: 'AI',
-    commands: [
-      {
-        name: 'textToImage',
-        label: 'Text to Image',
-        iconName: 'Image',
-        description: 'Generate image from text description',
-        aliases: ['image', 'img', 'generate', 'draw'],
-        action: (editor) => {
-          editor.chain().focus().setTextToImage().run();
-        },
-      },
-    ],
-  },
-  {
     name: 'format',
     title: 'Style',
     commands: [

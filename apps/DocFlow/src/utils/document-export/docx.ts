@@ -34,7 +34,7 @@ export async function handleExportDOCX(name: string, editor: Editor): Promise<vo
         type: 'doc',
         content: json.content.map((item: any) => {
           // Transform custom image types to standard image nodes
-          if (['textToImage', 'imageBlock'].includes(item.type)) {
+          if (item.type === 'imageBlock') {
             return {
               attrs: {
                 ...item.attrs,

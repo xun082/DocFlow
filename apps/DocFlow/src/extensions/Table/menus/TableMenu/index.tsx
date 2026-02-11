@@ -1,6 +1,7 @@
 import { BubbleMenu } from '@tiptap/react/menus';
-// import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import { useEditorState } from '@tiptap/react';
 import { EditorView } from '@tiptap/pm/view';
+import { NodeSelection } from '@tiptap/pm/state';
 import type { FC } from 'react';
 import { useCallback, ChangeEvent } from 'react';
 
@@ -18,8 +19,24 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
   const { handleUploadClick, ref } = useFileUpload();
   const { isUploading } = useImgUpload();
 
+  // 使用 useEditorState 订阅编辑器状态变化，作为 BubbleMenu shouldShow 的二次检查
+  const { isTableContext } = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      isTableContext:
+        ctx.editor.isActive('table') &&
+        !ctx.editor.isActive('imageBlock') &&
+        !ctx.editor.isActive('tableImage'),
+    }),
+  });
+
   const shouldShow = ({ state, from, view }: ShouldShowProps & { view: EditorView }) => {
     if (!state || !from) {
+      return false;
+    }
+
+    // 如果选中的是任何节点（图片、图表等），不显示表格菜单
+    if (state.selection instanceof NodeSelection) {
       return false;
     }
 
@@ -155,7 +172,7 @@ export const TableMenu: FC<MenuProps> = ({ editor }) => {
         }}
         shouldShow={shouldShow}
       >
-        <Toolbar.Wrapper isVertical>
+        <Toolbar.Wrapper isVertical shouldShowContent={isTableContext}>
           {/* 内容操作 */}
           <PopoverMenu.Item
             iconComponent={<Icon name="Image" />}

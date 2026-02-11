@@ -1,6 +1,16 @@
 'use client';
 
-import { Send, Square, Brain, Globe, ChevronDown, Lightbulb, MessageSquare } from 'lucide-react';
+import {
+  Send,
+  Square,
+  Brain,
+  Globe,
+  ChevronDown,
+  Lightbulb,
+  MessageSquare,
+  ImageIcon,
+  Sparkles,
+} from 'lucide-react';
 
 import type { ChatStatus, ModelConfig, ModelOption } from '@/app/chat-ai/types';
 import {
@@ -11,7 +21,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/utils';
 
-export type ChatMode = 'normal' | 'brainstorm';
+export type ChatMode = 'normal' | 'brainstorm' | 'image';
+
+/** 图片尺寸配置 */
+const IMAGE_SIZES = [
+  { value: '1328x1328', label: '1:1' },
+  { value: '1664x928', label: '16:9' },
+  { value: '928x1664', label: '9:16' },
+  { value: '1472x1140', label: '4:3' },
+  { value: '1140x1472', label: '3:4' },
+  { value: '1584x1056', label: '3:2' },
+  { value: '1056x1584', label: '2:3' },
+];
 
 interface ChatInputAreaProps {
   inputValue: string;
@@ -28,6 +49,10 @@ interface ChatInputAreaProps {
   /** 仅 brainstorm 模式使用 */
   brainstormCount: number;
   onBrainstormCountChange: (count: number) => void;
+  /** 仅 image 模式使用 */
+  imageSize?: string;
+  onImageSizeChange?: (size: string) => void;
+  isImageGenerating?: boolean;
   status: ChatStatus;
   isBrainstorming: boolean;
   isSendDisabled: boolean;
@@ -35,6 +60,8 @@ interface ChatInputAreaProps {
   onStop: () => void;
   onBrainstorm: () => void;
   onStopBrainstorm: () => void;
+  onImageGenerate?: () => void;
+  onStopImageGenerate?: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
@@ -51,6 +78,9 @@ export function ChatInputArea({
   models = [],
   brainstormCount,
   onBrainstormCountChange,
+  imageSize = '1328x1328',
+  onImageSizeChange,
+  isImageGenerating = false,
   status,
   isBrainstorming,
   isSendDisabled,
@@ -58,23 +88,32 @@ export function ChatInputArea({
   onStop,
   onBrainstorm,
   onStopBrainstorm,
+  onImageGenerate,
+  onStopImageGenerate,
   textareaRef,
 }: ChatInputAreaProps) {
-  const isBusy = status === 'streaming' || isBrainstorming;
+  const isBusy = status === 'streaming' || isBrainstorming || isImageGenerating;
 
   const placeholder =
-    chatMode === 'brainstorm'
-      ? isBrainstorming
-        ? 'AI 正在生成方案...'
-        : '输入主题，生成多个创意方案...'
-      : status === 'streaming'
-        ? 'AI 正在回复中...'
-        : '输入消息，Enter 发送...';
+    chatMode === 'image'
+      ? isImageGenerating
+        ? 'AI 正在生成图片...'
+        : '描述你想要生成的图片，Enter 生成...'
+      : chatMode === 'brainstorm'
+        ? isBrainstorming
+          ? 'AI 正在生成方案...'
+          : '输入主题，生成多个创意方案...'
+        : status === 'streaming'
+          ? 'AI 正在回复中...'
+          : '输入消息，Enter 发送...';
 
   const handlePrimaryAction = () => {
     if (chatMode === 'normal') {
       if (status === 'streaming') onStop();
       else onSend();
+    } else if (chatMode === 'image') {
+      if (isImageGenerating) onStopImageGenerate?.();
+      else onImageGenerate?.();
     } else {
       if (isBrainstorming) onStopBrainstorm();
       else onBrainstorm();
@@ -82,7 +121,11 @@ export function ChatInputArea({
   };
 
   const primaryDisabled =
-    chatMode === 'normal' ? isSendDisabled : !inputValue.trim() && !isBrainstorming;
+    chatMode === 'normal'
+      ? isSendDisabled
+      : chatMode === 'image'
+        ? !inputValue.trim() && !isImageGenerating
+        : !inputValue.trim() && !isBrainstorming;
 
   return (
     <div className="relative border border-gray-200 rounded-xl bg-white focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all duration-200">
@@ -112,6 +155,11 @@ export function ChatInputArea({
                   <>
                     <MessageSquare className="h-3 w-3" />
                     <span>对话</span>
+                  </>
+                ) : chatMode === 'image' ? (
+                  <>
+                    <ImageIcon className="h-3 w-3" />
+                    <span>绘图</span>
                   </>
                 ) : (
                   <>
@@ -148,6 +196,19 @@ export function ChatInputArea({
               >
                 <Lightbulb className="h-3 w-3" />
                 风暴
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  onChatModeChange('image');
+                  onClearBrainstorm();
+                }}
+                className={cn(
+                  'cursor-pointer text-xs flex items-center gap-2',
+                  chatMode === 'image' && 'bg-pink-50 text-pink-600',
+                )}
+              >
+                <ImageIcon className="h-3 w-3" />
+                绘图
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -221,6 +282,33 @@ export function ChatInputArea({
                 <span>思考</span>
               </button>
             </>
+          ) : chatMode === 'image' ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1 px-2 py-1 text-[11px] text-pink-600 bg-pink-50 border border-pink-200 rounded-lg hover:border-pink-300 transition-colors"
+                  disabled={isImageGenerating}
+                >
+                  <span>比例 {IMAGE_SIZES.find((s) => s.value === imageSize)?.label || '1:1'}</span>
+                  <ChevronDown className="h-2.5 w-2.5 shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-36">
+                {IMAGE_SIZES.map((size) => (
+                  <DropdownMenuItem
+                    key={size.value}
+                    onClick={() => onImageSizeChange?.(size.value)}
+                    className={cn(
+                      'cursor-pointer text-xs flex items-center justify-between',
+                      imageSize === size.value && 'bg-pink-50 text-pink-600',
+                    )}
+                  >
+                    <span>{size.label}</span>
+                    <span className="text-[10px] text-gray-400">{size.value}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -260,14 +348,18 @@ export function ChatInputArea({
               ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 active:scale-90'
               : !inputValue.trim()
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-100'
-                : chatMode === 'brainstorm'
-                  ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-purple-200/50 shadow-lg active:scale-95'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
+                : chatMode === 'image'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-pink-200/50 shadow-lg active:scale-95'
+                  : chatMode === 'brainstorm'
+                    ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-purple-200/50 shadow-lg active:scale-95'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200/50 shadow-lg active:scale-95',
           )}
           aria-label={isBusy ? '停止生成' : '发送'}
         >
           {isBusy ? (
             <Square className="h-3 w-3 fill-current" />
+          ) : chatMode === 'image' ? (
+            <Sparkles className="h-3 w-3" />
           ) : chatMode === 'brainstorm' ? (
             <Lightbulb className="h-3 w-3" />
           ) : (

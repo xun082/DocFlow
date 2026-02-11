@@ -1,4 +1,6 @@
 import { BubbleMenu } from '@tiptap/react/menus';
+import { useEditorState } from '@tiptap/react';
+import { NodeSelection } from '@tiptap/pm/state';
 import React, { JSX, useCallback, ChangeEvent, useMemo } from 'react';
 
 import { findTable, isCellSelection, isAtLeastTwoCellsSelected } from '../../utils';
@@ -12,6 +14,17 @@ import { useFileUpload, useImgUpload } from '@/extensions/ImageUpload/view/hooks
 export function TableCellMenu({ editor }: MenuProps): JSX.Element {
   const { handleUploadClick, ref } = useFileUpload();
   const { isUploading } = useImgUpload();
+
+  // 使用 useEditorState 订阅编辑器状态变化，作为 BubbleMenu shouldShow 的二次检查
+  const { isTableContext } = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      isTableContext:
+        ctx.editor.isActive('table') &&
+        !ctx.editor.isActive('imageBlock') &&
+        !ctx.editor.isActive('tableImage'),
+    }),
+  });
 
   // 查找最近的表格单元格节点
   const findNearestTableCell = (state: ShouldShowProps['state'], from: number) => {
@@ -81,6 +94,11 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
   };
 
   const shouldShow = ({ state, from }: ShouldShowProps) => {
+    // 如果选中的是任何节点（图片、图表等），不显示单元格菜单
+    if (state?.selection instanceof NodeSelection) {
+      return false;
+    }
+
     return isCellSelected({ state, from });
   };
 
@@ -320,7 +338,11 @@ export function TableCellMenu({ editor }: MenuProps): JSX.Element {
         }}
         shouldShow={shouldShow}
       >
-        <Toolbar.Wrapper isVertical data-bubble-menu="tableCellMenu">
+        <Toolbar.Wrapper
+          isVertical
+          shouldShowContent={isTableContext}
+          data-bubble-menu="tableCellMenu"
+        >
           {menuItems.map((item) => (
             <React.Fragment key={item.key}>{item.component}</React.Fragment>
           ))}

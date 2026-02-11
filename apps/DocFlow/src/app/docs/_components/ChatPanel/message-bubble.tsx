@@ -1,10 +1,29 @@
 import { useState } from 'react';
-import { Bot, Brain, Check, ChevronDown, ChevronUp, Copy, Loader2, User } from 'lucide-react';
-import { MdPreview } from 'md-editor-rt';
+import {
+  Bot,
+  Brain,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCopy,
+  Copy,
+  Download,
+  Link,
+  Loader2,
+  Sparkles,
+  User,
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { toast } from 'sonner';
 
 import type { ChatMessage } from '@/app/chat-ai/types';
+import {
+  markdownComponents,
+  compactMarkdownComponents,
+} from '@/components/business/ai/markdown-components';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/utils';
+import { cn, copyImageAsBlob, copyToClipboard, isSafeUrl, safeOpenUrl } from '@/utils';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -20,12 +39,11 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
   const hasReasoning = !isUser && message.reasoningContent && message.reasoningContent.length > 0;
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
+    const success = await copyToClipboard(message.content);
+
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // 静默处理
     }
   };
 
@@ -62,6 +80,90 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
           >
             {isUser ? (
               <div className="px-3.5 py-2.5 whitespace-pre-wrap text-[13px]">{message.content}</div>
+            ) : message.imageUrl ? (
+              /* 图片消息 */
+              <div className="p-2">
+                <div className="relative group/img rounded-lg overflow-hidden bg-gray-50">
+                  <img
+                    src={message.imageUrl}
+                    alt={message.content || '生成的图片'}
+                    className="w-full h-auto max-h-[320px] object-contain cursor-pointer transition-transform hover:scale-[1.02]"
+                    onClick={() => safeOpenUrl(message.imageUrl)}
+                    crossOrigin="anonymous"
+                  />
+                  {/* 悬浮工具栏 */}
+                  <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                    <button
+                      onClick={async () => {
+                        if (!message.imageUrl) return;
+
+                        try {
+                          await copyImageAsBlob(message.imageUrl);
+                          toast.success('图片已复制，可粘贴到编辑器');
+                        } catch {
+                          toast.error('复制图片失败');
+                        }
+                      }}
+                      className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                      title="复制图片"
+                    >
+                      <ClipboardCopy className="w-3.5 h-3.5 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!message.imageUrl) return;
+
+                        const success = await copyToClipboard(message.imageUrl);
+
+                        if (success) {
+                          toast.success('链接已复制');
+                        } else {
+                          toast.error('复制链接失败');
+                        }
+                      }}
+                      className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                      title="复制链接"
+                    >
+                      <Link className="w-3.5 h-3.5 text-gray-600" />
+                    </button>
+                    <a
+                      href={isSafeUrl(message.imageUrl) ? message.imageUrl : undefined}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 bg-white/90 hover:bg-white rounded-md shadow-sm transition-colors"
+                      title="下载图片"
+                    >
+                      <Download className="w-3.5 h-3.5 text-gray-600" />
+                    </a>
+                  </div>
+                  {/* 底部提示词 */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                    <p className="text-[11px] text-white/90 line-clamp-2">{message.content}</p>
+                  </div>
+                </div>
+                {/* 尺寸信息 */}
+                {message.imageSize && (
+                  <div className="flex items-center gap-1.5 mt-1.5 px-1">
+                    <Sparkles className="w-3 h-3 text-purple-400" />
+                    <span className="text-[11px] text-gray-400">{message.imageSize}</span>
+                  </div>
+                )}
+              </div>
+            ) : message.isStreaming && message.imageSize ? (
+              /* 图片加载状态 */
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 border-2 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
+                    <Sparkles className="w-4 h-4 text-purple-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-purple-800">AI 正在绘图...</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">尺寸 {message.imageSize}</p>
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 {/* 推理内容（深度思考） */}
@@ -103,11 +205,12 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
                                 'after:content-["▋"] after:ml-1 after:animate-pulse after:text-purple-400 after:inline-block',
                             )}
                           >
-                            <MdPreview
-                              value={message.reasoningContent || ''}
-                              theme="light"
-                              showCodeRowNumber={false}
-                            />
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={compactMarkdownComponents}
+                            >
+                              {message.reasoningContent || ''}
+                            </ReactMarkdown>
                           </div>
                         </div>
                       </div>
@@ -130,7 +233,9 @@ export function MessageBubble({ message, userAvatar, userName }: MessageBubblePr
                     )}
                   >
                     {message.content ? (
-                      <MdPreview value={message.content} theme="light" showCodeRowNumber={false} />
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                        {message.content}
+                      </ReactMarkdown>
                     ) : message.isStreaming && !message.reasoningContent ? (
                       <span className="inline-flex items-center gap-1.5 text-gray-400 text-xs">
                         <Loader2 className="h-3 w-3 animate-spin" />

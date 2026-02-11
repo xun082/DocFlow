@@ -92,6 +92,10 @@ export interface ChatMessage {
   createdAt: Date;
   /** 是否正在流式加载中 */
   isStreaming?: boolean;
+  /** 图片 URL（文生图模式） */
+  imageUrl?: string;
+  /** 图片尺寸（文生图模式） */
+  imageSize?: string;
 }
 
 /**

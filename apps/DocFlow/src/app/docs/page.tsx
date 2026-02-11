@@ -1,31 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdPreview } from 'md-editor-rt';
-import 'md-editor-rt/lib/preview.css';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
+import { markdownComponents } from '@/components/business/ai/markdown-components';
 import { TemplateApi } from '@/services/template';
 
 const DocsPage = () => {
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    const updateTheme = () => {
-      setTheme(root.classList.contains('dark') ? 'dark' : 'light');
-    };
-
-    updateTheme();
-
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -70,7 +55,11 @@ const DocsPage = () => {
         ) : error ? (
           <div className="text-sm text-rose-500">{error}</div>
         ) : content ? (
-          <MdPreview value={content} theme={theme} showCodeRowNumber={false} />
+          <div className="prose prose-sm prose-gray dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              {content}
+            </ReactMarkdown>
+          </div>
         ) : (
           <div className="text-sm text-slate-500 dark:text-slate-400">暂无内容</div>
         )}
