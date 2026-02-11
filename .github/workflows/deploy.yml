@@ -14,17 +14,16 @@ jobs:
         uses: appleboy/ssh-action@v1.2.1
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           port: ${{ secrets.SERVER_PORT }}
           password: ${{ secrets.SERVER_PASSWORD }}
           command_timeout: 30m
-          envs: DOCKER_USERNAME,DOCKER_PASSWORD
+          envs: DOCKER_USERNAME
           script: |
             IMAGE="${DOCKER_USERNAME}/docflow:latest"
-            
+
             # Configure Docker mirrors (only if not configured)
             if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json; then
               echo "⚙️ Configuring Docker mirrors..."
@@ -41,41 +40,31 @@ jobs:
               sudo systemctl restart docker
               sleep 5
             fi
-            
-            # Login to Docker Hub
-            echo "🔐 Logging in to Docker Hub..."
-            echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin || {
-              echo "❌ Docker login failed"
-              exit 1
-            }
-            
-            # Get remote image digest
-            echo "🔍 Checking for updates..."
-            REMOTE_DIGEST=$(docker manifest inspect "$IMAGE" 2>/dev/null | grep -m1 '"digest"' | cut -d'"' -f4)
-            
-            if [ -z "$REMOTE_DIGEST" ]; then
-              echo "❌ Failed to fetch remote image info"
-              exit 1
-            fi
-            
-            # Get current running container digest
-            CURRENT_DIGEST=$(docker inspect docflow 2>/dev/null | grep -m1 '"Image"' | cut -d'"' -f4 | xargs docker inspect 2>/dev/null | grep -m1 '"Id"' | cut -d'"' -f4)
-            
-            # Compare digests
-            if [ "$REMOTE_DIGEST" = "$CURRENT_DIGEST" ]; then
+
+            # Record current running container's image ID
+            RUNNING_IMAGE_ID=$(docker inspect docflow --format='{{.Image}}' 2>/dev/null || echo "none")
+            echo "📌 Current running image: ${RUNNING_IMAGE_ID}"
+
+            # Pull latest image (goes through mirrors, no login needed for public images)
+            echo "🔍 Pulling latest image..."
+            docker pull "$IMAGE" || exit 1
+
+            # Get the pulled image ID
+            LATEST_IMAGE_ID=$(docker inspect "$IMAGE" --format='{{.Id}}' 2>/dev/null)
+            echo "📦 Latest pulled image: ${LATEST_IMAGE_ID}"
+
+            # Compare: if running container already uses the latest image, skip
+            if [ "$RUNNING_IMAGE_ID" = "$LATEST_IMAGE_ID" ]; then
               echo "✅ Already running latest version"
               exit 0
             fi
-            
-            echo "🆕 New version available, deploying..."
-            
-            # Pull new image
-            docker pull "$IMAGE" || exit 1
-            
+
+            echo "🆕 New version detected, deploying..."
+
             # Stop and remove old container
             docker stop docflow 2>/dev/null || true
             docker rm docflow 2>/dev/null || true
-            
+
             # Start new container
             CONTAINER_ID=$(docker run -d \
               --name docflow \
@@ -83,16 +72,16 @@ jobs:
               -p 3000:3000 \
               -e NODE_ENV=production \
               "$IMAGE")
-            
+
             if [ -z "$CONTAINER_ID" ]; then
               echo "❌ Failed to start container"
               exit 1
             fi
-            
+
             # Wait and verify
             sleep 5
             CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' docflow 2>/dev/null)
-            
+
             if [ "$CONTAINER_STATUS" = "running" ]; then
               echo "✅ Deployment successful"
               docker logs --tail 20 docflow
@@ -101,3 +90,6 @@ jobs:
               docker logs docflow 2>&1
               exit 1
             fi
+
+            # Clean up old dangling images
+            docker image prune -f 2>/dev/null || true
