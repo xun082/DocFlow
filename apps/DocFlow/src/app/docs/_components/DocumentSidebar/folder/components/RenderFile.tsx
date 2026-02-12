@@ -343,6 +343,28 @@ export const RenderFile: React.FC<{
               style={{ marginLeft: `${depth * 16}px`, height: `${folderLineHeight}px` }}
             ></div>
             <div className="relative">
+              {/* 递归渲染子项 */}
+              {file.children?.map((child) => (
+                <RenderFile
+                  key={child.id}
+                  file={child}
+                  id={child.id}
+                  groupId={groupId}
+                  depth={(depth ?? 0) + 1}
+                  inputRef={inputRef}
+                  onFileSelect={onFileSelect}
+                  onToggleFolder={onToggleFolder}
+                  onContextMenu={onContextMenu}
+                  closeContextMenu={closeContextMenu}
+                  onFinishRenaming={onFinishRenaming}
+                  onKeyDown={onKeyDown}
+                  onRename={onRename}
+                  onShare={onShare}
+                  onDelete={onDelete}
+                  onDuplicate={onDuplicate}
+                  onDownload={onDownload}
+                />
+              ))}
               {/* 新建项目输入框 */}
               {isAddingNewItem && (
                 <div
