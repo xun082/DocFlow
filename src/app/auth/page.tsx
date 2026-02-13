@@ -91,7 +91,7 @@ function LoginContent() {
 
                   {/* Tab Navigation */}
                   <Tabs defaultValue="github" className="w-full">
-                    <TabsList className="flex w-full rounded-2xl bg-gray-100 p-2 mb-6 border border-black  !h-12">
+                    <TabsList className="flex justify-start overflow-x-auto w-full rounded-2xl bg-gray-100 p-2 mb-6 border border-black  !h-12">
                       <TabsTrigger
                         value="github"
                         className="flex-1 flex items-center justify-center space-x-2 py-2.5 px-2 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-lg text-gray-600 hover:text-black hover:bg-gray-200"
