@@ -51,7 +51,9 @@ export function Contact() {
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{contact.title}</h3>
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">{contact.description}</p>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed h-10">
+                  {contact.description}
+                </p>
                 <span
                   className={`block w-full px-4 py-2.5 text-center bg-gradient-to-r ${contact.gradient} text-white text-sm font-medium rounded-xl shadow-lg transition-all group-hover:opacity-90 group-hover:-translate-y-0.5 group-hover:scale-105`}
                 >

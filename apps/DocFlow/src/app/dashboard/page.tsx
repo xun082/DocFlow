@@ -212,7 +212,7 @@ export default function DashboardPage() {
       icon: <Target className="w-6 h-6" />,
       color: 'bg-red-500',
       formatter: (value: number) => {
-        return `${value}%`;
+        return `${value ?? 0}%`;
       },
     },
   ];
