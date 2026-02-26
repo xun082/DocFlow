@@ -596,7 +596,7 @@ export default function DocumentPage() {
       <div className="flex flex-1 overflow-hidden">
         <Group orientation="horizontal" className="flex-1" groupRef={groupRef}>
           {/* 编辑器面板 */}
-          <Panel id="editor" defaultSize="65" minSize="30">
+          <Panel id="editor" defaultSize={65} minSize={30}>
             <div className="h-full relative overflow-hidden">
               <div
                 ref={editorContainRef}

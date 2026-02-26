@@ -11,7 +11,6 @@ export const Link = TiptapLink.extend({
       {
         tag: 'a[href]:not([data-type="button"]):not([href *= "javascript:" i])',
         getAttrs: (element: any) => {
-          // check if link starts with javascript:
           if (element.getAttribute('href')?.toLowerCase().startsWith('javascript:')) {
             return false;
           }
@@ -60,8 +59,7 @@ export const Link = TiptapLink.extend({
             // 获取当前段落中光标之前的文本内容
             const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
 
-            // 匹配 [text](url 模式（不含结尾 )，因为用户正在输入它）
-            const match = textBefore.match(/\[([^\]]+)\]\((\S+)$/);
+            const match = textBefore.match(/\[([^\]]+)\]\(([^)]+)$/);
 
             if (!match) return false;
 
@@ -99,6 +97,19 @@ export const Link = TiptapLink.extend({
 
             if (event.key === 'Escape' && selection.empty !== true) {
               editor.commands.focus(selection.to, { scrollIntoView: false });
+            }
+
+            return false;
+          },
+
+          handleClickOn: (_view, _pos, _node, _nodePos, event) => {
+            const target = event.target as HTMLElement;
+            const anchor = target.closest('a');
+
+            if (anchor && anchor.href && (event.altKey || event.metaKey)) {
+              window.open(anchor.href, '_blank');
+
+              return false;
             }
 
             return false;

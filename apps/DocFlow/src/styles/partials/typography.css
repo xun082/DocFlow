@@ -77,7 +77,7 @@
   }
 
   .ProseMirror a.link {
-    @apply text-blue-500 font-extrabold;
+    @apply text-blue-500 font-extrabold underline;
   }
 
   .dark .ProseMirror a.link {
