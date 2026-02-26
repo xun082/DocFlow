@@ -288,6 +288,10 @@ export function ChatPanel({ className }: ChatPanelProps) {
     removeTab(tabId);
   };
 
+  const handleRenameTab = (tabId: string, newTitle: string) => {
+    updateTab(tabId, { title: newTitle });
+  };
+
   const handleOpenSession = (session: { id: string; title: string }) => {
     const existing = tabs.find((t) => t.conversationId === session.id);
 
@@ -477,6 +481,7 @@ export function ChatPanel({ className }: ChatPanelProps) {
         onNewTab={handleNewTab}
         onSwitchTab={handleSwitchTab}
         onCloseTab={handleCloseTab}
+        onRenameTab={handleRenameTab}
         onOpenSession={handleOpenSession}
         onRefreshSessions={refreshSessions}
         onClosePanel={() => setIsOpen(false)}

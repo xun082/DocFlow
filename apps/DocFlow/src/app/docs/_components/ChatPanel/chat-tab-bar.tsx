@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { X, Plus, Clock, Sparkles } from 'lucide-react';
 
 import type { ChatTab } from '@/stores/chatStore';
@@ -23,6 +24,7 @@ interface ChatTabBarProps {
   onNewTab: () => void;
   onSwitchTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
+  onRenameTab: (tabId: string, newTitle: string) => void;
   onOpenSession: (session: SessionItem) => void;
   onRefreshSessions: () => void;
   onClosePanel: () => void;
@@ -35,10 +37,45 @@ export function ChatTabBar({
   onNewTab,
   onSwitchTab,
   onCloseTab,
+  onRenameTab,
   onOpenSession,
   onRefreshSessions,
   onClosePanel,
 }: ChatTabBarProps) {
+  const [editingTabId, setEditingTabId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingTabId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingTabId]);
+
+  const handleDoubleClick = (tabId: string, title: string) => {
+    setEditingTabId(tabId);
+    setEditValue(title);
+  };
+
+  const handleRenameSubmit = () => {
+    if (editingTabId && editValue.trim()) {
+      onRenameTab(editingTabId, editValue.trim());
+    }
+
+    setEditingTabId(null);
+    setEditValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setEditingTabId(null);
+      setEditValue('');
+    }
+  };
+
   return (
     <div className="flex items-center bg-white border-b border-gray-100 min-h-[38px]">
       <div className="flex-1 flex items-center overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -46,6 +83,7 @@ export function ChatTabBar({
           <button
             key={tab.id}
             onClick={() => onSwitchTab(tab.id)}
+            onDoubleClick={() => handleDoubleClick(tab.id, tab.title)}
             className={cn(
               'group relative flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap max-w-[200px] min-w-0 transition-colors shrink-0',
               tab.id === activeTabId
@@ -54,7 +92,20 @@ export function ChatTabBar({
             )}
           >
             <Sparkles className="h-3 w-3 shrink-0 text-blue-500" />
-            <span className="truncate">{tab.title}</span>
+            {editingTabId === tab.id ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full bg-white border border-blue-500 rounded px-1 py-0.5 text-gray-800 outline-none"
+              />
+            ) : (
+              <span className="truncate">{tab.title}</span>
+            )}
             {tabs.length > 1 && (
               <span
                 role="button"
