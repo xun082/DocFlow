@@ -35,7 +35,7 @@ export interface AuthResponse {
   refresh_token?: string;
   expires_in?: number;
   refresh_expires_in?: number;
-  user?: User; // 可选，某些场景下（如从URL参数恢复token）可能没有user数据
+  user?: User;
 }
 
 // 发送验证码响应接口
