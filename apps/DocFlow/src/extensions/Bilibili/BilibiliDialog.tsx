@@ -62,7 +62,6 @@ export const BilibiliDialog: React.FC<BilibiliDialogProps> = ({ editor, isOpen, 
         })
         .run();
 
-      // 重置表单
       setUrl('');
       setWidth(560);
       setHeight(315);
