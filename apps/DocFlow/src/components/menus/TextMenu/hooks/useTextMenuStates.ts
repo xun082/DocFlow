@@ -32,16 +32,12 @@ export const useTextmenuStates = (editor: Editor) => {
   });
 
   const shouldShow = useCallback(
-    ({ view, from }: ShouldShowProps) => {
+    ({ view }: ShouldShowProps) => {
       if (!view || editor.view.dragging || isContentItemMenuOpen) {
         return false;
       }
 
-      const domAtPos = view.domAtPos(from || 0).node as HTMLElement;
-      const nodeDOM = view.nodeDOM(from || 0) as HTMLElement;
-      const node = nodeDOM || domAtPos;
-
-      if (isCustomNodeSelected(editor, node)) {
+      if (isCustomNodeSelected(editor)) {
         return false;
       }
 

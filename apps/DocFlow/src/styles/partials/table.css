@@ -64,18 +64,6 @@
   }
 
   /* 单元格右侧按钮：默认隐藏，hover 显示，位于边框上 */
-  .ProseMirror table td a.right {
-    @apply absolute top-1/2 z-[2] w-4 h-6 grid place-items-center transition-opacity duration-200;
-    right: -8px; /* 位于右边框上 */
-    transform: translateY(-50%);
-    opacity: 0; /* 默认隐藏 */
-    color: rgb(0 0 0 / 0.6);
-    background: rgb(255 255 255 / 0.9);
-    pointer-events: auto;
-    user-select: none;
-    z-index: 1000;
-    cursor: pointer;
-  }
 
   .dark .ProseMirror table td a.right {
     color: rgb(255 255 255 / 0.6);

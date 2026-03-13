@@ -44,7 +44,6 @@ import type { FileItem } from '@/types/file-system';
 import { ContentItemMenu } from '@/components/menus/ContentItemMenu';
 import { LinkMenu } from '@/components/menus';
 import { TextMenu } from '@/components/menus/TextMenu';
-import { TableRowMenu, TableColumnMenu, TableMenu, TableCellMenu } from '@/extensions/Table/menus';
 import { ImageBlockMenu } from '@/components/menus';
 import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
@@ -587,10 +586,6 @@ export default function DocumentPage() {
           <ContentItemMenu editor={editor} />
           <LinkMenu editor={editor} appendTo={menuContainerRef} />
           <TextMenu editor={editor} />
-          <TableRowMenu editor={editor} appendTo={menuContainerRef} />
-          <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
-          <TableMenu editor={editor} appendTo={menuContainerRef} />
-          <TableCellMenu editor={editor} appendTo={menuContainerRef} />
           <ImageBlockMenu editor={editor} />
         </Activity>
       )}
