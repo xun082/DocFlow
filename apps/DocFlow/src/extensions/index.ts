@@ -57,7 +57,6 @@ export { JsonPaste } from './JsonPaste';
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
-export { BilibiliExtension as Bilibili } from './Bilibili/Bilibili';
 export { Chart } from './Chart';
 export { Countdown } from './Countdown';
 export { Comment } from './Comment';
