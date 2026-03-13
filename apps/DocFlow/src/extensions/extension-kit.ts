@@ -58,7 +58,6 @@ import {
   FileHandler,
   Youtube,
   ClearMarksOnEnter,
-  Bilibili,
   Chart,
   Countdown,
   Mention,
@@ -410,7 +409,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     },
   }),
   ClearMarksOnEnter,
-  Bilibili,
   Chart,
   Countdown,
   Mention.configure({

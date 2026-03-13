@@ -211,17 +211,6 @@ export const GROUPS: Group[] = [
         },
       },
       {
-        name: 'bilibili',
-        label: 'Bilibili Video',
-        iconName: 'Tv',
-        description: 'Insert a Bilibili video',
-        aliases: ['bili'],
-        action: (editor) => {
-          const event = new CustomEvent('openBilibiliDialog', { detail: { editor } });
-          window.dispatchEvent(event);
-        },
-      },
-      {
         name: 'chart',
         label: 'Chart',
         iconName: 'ChartColumnBig',
