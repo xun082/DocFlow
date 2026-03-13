@@ -19,16 +19,6 @@ import {
 } from 'react-resizable-panels';
 import 'md-editor-rt/lib/preview.css';
 
-// 动态导入 CommentPanel，禁用 SSR
-const CommentPanel = dynamic(
-  () =>
-    import('@/app/docs/_components/CommentPanel').then((mod) => ({ default: mod.CommentPanel })),
-  {
-    ssr: false,
-    loading: () => null,
-  },
-);
-
 // 动态导入 ChatPanel，禁用 SSR
 const ChatPanel = dynamic(
   () => import('@/app/docs/_components/ChatPanel').then((mod) => ({ default: mod.ChatPanel })),
@@ -59,7 +49,6 @@ import { ImageBlockMenu } from '@/components/menus';
 import DocumentApi from '@/services/document';
 import NoPermission from '@/app/docs/_components/NoPermission';
 import { DocumentPermissionData } from '@/services/document/type';
-import { useCommentStore } from '@/stores/commentStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { storage, STORAGE_KEYS } from '@/utils/storage/local-storage';
@@ -101,7 +90,7 @@ export default function DocumentPage() {
   const [currentUser, setCurrentUser] = useState<CollaborationUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollaborationUser[]>([]);
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
-  const { openPanel, setActiveCommentId, closePanel, isPanelOpen } = useCommentStore();
+
   const { setEditor, clearEditor } = useEditorStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -323,24 +312,6 @@ export default function DocumentPage() {
       extensions: [
         ...ExtensionKit({
           provider,
-          commentCallbacks: {
-            onCommentActivated: (commentId) => {
-              // 使用 setTimeout 确保在下一个事件循环中更新状态，避免渲染期间更新
-              setTimeout(() => {
-                setActiveCommentId(commentId);
-
-                if (commentId) {
-                  openPanel();
-                }
-              }, 0);
-            },
-            onCommentClick: (commentId) => {
-              setTimeout(() => {
-                setActiveCommentId(commentId);
-                openPanel();
-              }, 0);
-            },
-          },
         }),
         ...(doc && isIndexedDBReady
           ? [Collaboration.configure({ document: doc, field: 'content' })]
@@ -374,35 +345,6 @@ export default function DocumentPage() {
     },
     [doc, provider, currentUser, isReadOnly, isIndexedDBReady, documentId, setEditor, clearEditor],
   );
-
-  // 点击编辑器内容时关闭评论面板（除非点击评论标记）
-  useEffect(() => {
-    if (!editor || !isPanelOpen) return;
-
-    const handleEditorClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const isCommentMark = target.closest('span[data-comment="true"]');
-
-      // 如果点击的不是评论标记，则关闭面板
-      if (!isCommentMark) {
-        closePanel();
-      }
-    };
-
-    const editorElement = editor.view.dom;
-
-    // 确保元素仍然存在于DOM中
-    if (editorElement && document.body.contains(editorElement)) {
-      editorElement.addEventListener('click', handleEditorClick);
-
-      return () => {
-        // 再次检查元素是否仍然存在于DOM中
-        if (editorElement && document.body.contains(editorElement)) {
-          editorElement.removeEventListener('click', handleEditorClick);
-        }
-      };
-    }
-  }, [editor, isPanelOpen, closePanel]);
 
   // Ctrl+C 复制选中文本为 JSON 格式，并添加文档引用元数据
   useEffect(() => {
@@ -633,13 +575,6 @@ export default function DocumentPage() {
           </Panel>
         </Group>
       </div>
-
-      {/* 评论面板 */}
-      {editor && (
-        <Activity>
-          <CommentPanel editor={editor} documentId={documentId} currentUserId={currentUser?.id} />
-        </Activity>
-      )}
 
       {/* 搜索面板 */}
       {editor && editor.view && (

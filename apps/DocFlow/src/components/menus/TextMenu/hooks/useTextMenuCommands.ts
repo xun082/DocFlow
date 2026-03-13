@@ -1,11 +1,7 @@
 import { Editor } from '@tiptap/react';
 import { useCallback } from 'react';
-import { toast } from 'sonner';
-
-import { useCommentStore } from '@/stores/commentStore';
 
 export const useTextmenuCommands = (editor: Editor) => {
-  const { openPanel, setIsCreatingNewComment } = useCommentStore();
   const onBold = useCallback(() => editor.chain().focus().toggleBold().run(), [editor]);
   const onItalic = useCallback(() => editor.chain().focus().toggleItalic().run(), [editor]);
   const onStrike = useCallback(() => editor.chain().focus().toggleStrike().run(), [editor]);
@@ -82,31 +78,6 @@ export const useTextmenuCommands = (editor: Editor) => {
     [editor],
   );
 
-  const onComment = useCallback(() => {
-    const { selection } = editor.state;
-
-    // 检查是否有选中的文本
-    if (selection.empty) {
-      toast.error('请先选择要评论的文本');
-
-      return false;
-    }
-
-    // 不在这里添加标记，只是打开面板准备创建评论
-    // 标记将在用户发布评论后才添加
-    setIsCreatingNewComment(true);
-    openPanel();
-
-    return true;
-  }, [editor, openPanel, setIsCreatingNewComment]);
-
-  const onRemoveComment = useCallback(
-    (commentId: string) => {
-      return editor.chain().focus().unsetComment(commentId).run();
-    },
-    [editor],
-  );
-
   return {
     onBold,
     onItalic,
@@ -127,7 +98,5 @@ export const useTextmenuCommands = (editor: Editor) => {
     onSetFont,
     onSetFontSize,
     onLink,
-    onComment,
-    onRemoveComment,
   };
 };

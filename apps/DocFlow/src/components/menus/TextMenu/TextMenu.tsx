@@ -146,14 +146,6 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
         <MemoButton tooltip="Code block" onClick={commands.onCodeBlock}>
           <Icon name="FileCode" />
         </MemoButton>
-        <MemoButton
-          tooltip="添加评论"
-          tooltipShortcut={['Mod', 'Shift', 'M']}
-          onClick={commands.onComment}
-          active={states.isComment}
-        >
-          <Icon name="MessageCircle" />
-        </MemoButton>
         <Toolbar.Divider />
         <EditLinkPopover onSetLink={commands.onLink} />
         <Popover.Root>

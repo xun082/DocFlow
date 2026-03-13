@@ -61,7 +61,6 @@ import {
   Bilibili,
   Chart,
   Countdown,
-  Comment,
   Mention,
   mentionSuggestion,
   MathLiveExtension,
@@ -77,19 +76,8 @@ export interface ExtensionKitProps {
   provider: HocuspocusProvider | null;
 }
 
-// CommentOptions 接口
-interface CommentCallbacks {
-  onCommentActivated?: (commentId: string | null) => void;
-  onCommentClick?: (commentId: string) => void;
-}
-
-// 扩展 ExtensionKitProps
-interface ExtensionKitPropsWithComment extends ExtensionKitProps {
-  commentCallbacks?: CommentCallbacks;
-}
-
 // 在ExtensionKit数组中添加
-export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWithComment) => [
+export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
   HardBreak,
   Paragraph,
@@ -425,13 +413,6 @@ export const ExtensionKit = ({ provider, commentCallbacks }: ExtensionKitPropsWi
   Bilibili,
   Chart,
   Countdown,
-  Comment.configure({
-    HTMLAttributes: {
-      class: 'comment',
-    },
-    onCommentActivated: commentCallbacks?.onCommentActivated || (() => {}),
-    onCommentClick: commentCallbacks?.onCommentClick || (() => {}),
-  }),
   Mention.configure({
     HTMLAttributes: {
       class: 'mention',
