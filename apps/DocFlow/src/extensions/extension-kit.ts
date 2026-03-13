@@ -37,7 +37,7 @@ import {
   StarterKit,
   Subscript,
   Superscript,
-  Table,
+  TableKit,
   TableOfContents,
   TableCell,
   TableHeader,
@@ -349,7 +349,11 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   Subscript,
   Superscript,
-  Table,
+  TableKit.configure({
+    table: {
+      resizable: true,
+    },
+  }),
   TableCell,
   TableHeader,
   TableRow,

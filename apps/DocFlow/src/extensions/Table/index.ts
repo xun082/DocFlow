@@ -1,4 +1,4 @@
-export { Table } from './Table';
-export { TableCell } from './Cell';
-export { TableRow } from './Row';
-export { TableHeader } from './Header';
+export { Table, TableKit } from '@tiptap/extension-table';
+export { TableCell } from '@tiptap/extension-table';
+export { TableRow } from '@tiptap/extension-table-row';
+export { TableHeader } from '@tiptap/extension-table-header';

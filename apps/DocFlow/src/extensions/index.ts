@@ -32,7 +32,7 @@ export { UniqueID } from '@tiptap/extension-unique-id';
 export { Text } from '@tiptap/extension-text';
 
 export { Selection } from './Selection';
-export { Table, TableCell, TableHeader, TableRow } from './Table';
+export { Table, TableKit, TableCell, TableHeader, TableRow } from './Table';
 export { HorizontalRule } from './HorizontalRule';
 export { Heading } from './Heading';
 export { CodeBlock } from './CodeBlock';
