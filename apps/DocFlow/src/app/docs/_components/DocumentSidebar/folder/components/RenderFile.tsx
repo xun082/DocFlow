@@ -122,20 +122,14 @@ export const RenderFile: React.FC<{
       <div style={style} {...listeners}>
         <div
           className={cn(
-            'flex items-center py-2 px-3 text-sm cursor-pointer relative group box-border',
-            'transition-all duration-300 ease-out rounded-lg mx-2 my-0.5 hover:z-[100]',
-            isSelected && [
-              'bg-blue-500/10 dark:bg-blue-400/15',
-              'text-blue-700 dark:text-blue-300',
-              'border-2 border-blue-500 dark:border-blue-400',
-              'shadow-sm shadow-blue-500/20',
-            ],
+            'flex items-center py-0.5 px-2 text-xs cursor-pointer relative group box-border',
+            'transition-all duration-300 ease-out rounded-lg mx-1 my-0.5 hover:z-[100]',
+            isSelected && ['bg-[#f0f0f0] dark:bg-[#2a2d2e]', 'text-[#333]', 'border-transparent'],
             !isSelected && [
-              'hover:bg-gradient-to-r hover:from-blue-50/80 hover:via-blue-100/60 hover:to-blue-50/80',
+              'hover:bg-[#f0f0f0] dark:hover:bg-[#2a2d2e]',
               'dark:hover:from-blue-900/20 dark:hover:via-blue-800/30 dark:hover:to-blue-900/20',
-              'hover:shadow-md hover:shadow-blue-200/40 dark:hover:shadow-blue-900/30',
-              'hover:transform hover:scale-[1.01]',
-              'text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300',
+              'dark:text-slate-300',
+              'text-[#333] dark:text-[#cccccc]',
               'border-2 border-transparent',
             ],
             isOverlay && 'border-lime-500 border-2',
@@ -154,8 +148,8 @@ export const RenderFile: React.FC<{
                   'w-5 h-5 rounded-md flex items-center justify-center group/chevron',
                   'transition-all duration-300 transform hover:scale-110',
                   isSelected
-                    ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
-                    : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
+                    ? 'hover:bg-[#e0e0e0] text-[#333]'
+                    : 'hover:bg-[#f5f5f5] dark:hover:bg-[#3a3a3a] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -180,27 +174,25 @@ export const RenderFile: React.FC<{
             {isFolder ? (
               <div
                 className={cn(
-                  'w-5 h-5 rounded-md flex items-center justify-center',
-                  'transition-all duration-300 group-hover:scale-110',
+                  'w-5 h-5 rounded flex items-center justify-center',
                   isExpanded
-                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/30'
-                    : 'bg-gradient-to-br from-yellow-400 to-amber-500 shadow-md shadow-yellow-500/30',
+                    ? 'text-[#666666] dark:text-[#999999]'
+                    : 'text-[#666666] dark:text-[#999999]',
                 )}
               >
                 <Icon
                   name={isExpanded ? 'FolderOpen' : 'Folder'}
-                  className="h-3.5 w-3.5 text-white drop-shadow-sm"
+                  className={cn('h-3.5 w-3.5', isSelected && 'text-[#333]')}
                 />
               </div>
             ) : (
               <div
                 className={cn(
-                  'w-5 h-5 rounded-md flex items-center justify-center',
-                  'bg-gradient-to-br from-blue-400 to-indigo-500',
-                  'shadow-md shadow-blue-500/30 transition-all duration-300 group-hover:scale-110',
+                  'w-5 h-5 rounded flex items-center justify-center',
+                  'text-[#666666] dark:text-[#999999]',
                 )}
               >
-                <Icon name="FileText" className="h-3.5 w-3.5 text-white drop-shadow-sm" />
+                <Icon name="FileText" className={cn('h-3.5 w-3.5', isSelected && 'text-[#333]')} />
               </div>
             )}
           </div>
@@ -232,9 +224,7 @@ export const RenderFile: React.FC<{
                       'px-0 py-0',
                       'cursor-pointer pointer-events-none',
                       'truncate',
-                      isSelected
-                        ? 'text-blue-700 dark:text-blue-300'
-                        : 'text-slate-700 dark:text-slate-300 group-hover:text-blue-700 dark:group-hover:text-blue-300',
+                      isSelected ? 'text-[#333]' : 'text-[#333] dark:text-[#cccccc]',
                     ],
               )}
               defaultValue={file.name}
@@ -270,8 +260,8 @@ export const RenderFile: React.FC<{
                   className={cn(
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
-                      ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
-                      : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
+                      ? 'hover:bg-[#e0e0e0] text-[#333]'
+                      : 'hover:bg-[#f5f5f5] dark:hover:bg-[#3a3a3a] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
                     'shadow-sm hover:shadow-md',
                   )}
                   onClick={(e) => {
@@ -286,8 +276,8 @@ export const RenderFile: React.FC<{
                   className={cn(
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
-                      ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
-                      : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
+                      ? 'hover:bg-[#e0e0e0] text-[#333]'
+                      : 'hover:bg-[#e8e8e8] dark:hover:bg-[#2a2d2e] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
                     'shadow-sm hover:shadow-md',
                   )}
                   onClick={(e) => {
@@ -313,8 +303,8 @@ export const RenderFile: React.FC<{
                 className={cn(
                   'p-1.5 rounded-lg',
                   isSelected
-                    ? 'hover:bg-blue-100/50 text-blue-600 hover:text-blue-700'
-                    : 'hover:bg-blue-100 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400',
+                    ? 'hover:bg-[#e0e0e0] text-[#333]'
+                    : 'hover:bg-[#e8e8e8] dark:hover:bg-[#2a2d2e] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
                 )}
               />
             </div>
@@ -347,20 +337,17 @@ export const RenderFile: React.FC<{
               {isAddingNewItem && (
                 <div
                   className={cn(
-                    'flex items-center py-2 px-3 text-sm mx-2 my-0.5',
-                    'bg-gradient-to-r from-green-50 via-emerald-50/80 to-green-50',
-                    'dark:from-green-900/20 dark:via-emerald-900/20 dark:to-green-900/20',
-                    'border border-green-200/60 dark:border-green-700/50 rounded-lg',
-                    'shadow-md shadow-green-200/20 dark:shadow-green-800/20',
+                    'flex items-center px-3 text-sm',
+                    'bg-[#f0f5f9] dark:bg-[#1e3a5f]',
+                    'border border-[#3b82f6] rounded-lg',
+                    'shadow-sm',
                   )}
                   style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
                 >
-                  <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-6 mr-2 flex-shrink-0 flex items-center justify-center">
                     <div
                       className={cn(
-                        'w-5 h-5 rounded-md flex items-center justify-center',
-                        'bg-gradient-to-br from-emerald-400 to-green-500',
-                        'shadow-md shadow-emerald-500/30',
+                        'w-5 h-5 rounded flex items-center justify-center text-[#666666] dark:text-[#999999]',
                       )}
                     >
                       <Icon
