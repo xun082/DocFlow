@@ -72,10 +72,9 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
         data-new-item-container
         className={cn(
           'flex items-center py-2 px-3 text-sm mx-2 my-0.5',
-          'bg-gradient-to-r from-green-50 via-emerald-50/80 to-green-50',
-          'dark:from-green-900/20 dark:via-emerald-900/20 dark:to-green-900/20',
-          'border border-green-200/60 dark:border-green-700/50 rounded-lg',
-          'shadow-md shadow-green-200/20 dark:shadow-green-800/20',
+          'bg-[#f0f0f0] dark:bg-[#2a2d2e]',
+          'border border-[#cccccc] dark:border-[#555555] rounded-lg',
+          'shadow-sm',
           'overflow-hidden',
         )}
         onClick={(e) => e.stopPropagation()}
@@ -84,13 +83,13 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
           <div
             className={cn(
               'w-5 h-5 rounded-md flex items-center justify-center',
-              'bg-gradient-to-br from-emerald-400 to-green-500',
-              'shadow-md shadow-emerald-500/30',
+              'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+              'shadow-sm',
             )}
           >
             <Icon
               name={newItemType === 'folder' ? 'Folder' : 'FileText'}
-              className="h-3.5 w-3.5 text-white drop-shadow-sm"
+              className="h-3.5 w-3.5 text-[#333]"
             />
           </div>
         </div>
@@ -100,12 +99,12 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
             type="text"
             className={cn(
               'flex-1 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm',
-              'border-2 border-green-400/70 dark:border-green-500/70',
-              'focus:border-green-500 dark:focus:border-green-400',
-              'focus:ring-2 focus:ring-green-500/30 dark:focus:ring-green-400/30',
+              'border-2 border-[#cccccc] dark:border-[#555555]',
+              'focus:border-[#333] dark:focus:border-[#cccccc]',
+              'focus:ring-2 focus:ring-[#333]/30 dark:focus:ring-[#cccccc]/30',
               'px-3 py-2 text-sm rounded-lg transition-all duration-300',
               'text-slate-900 dark:text-slate-100',
-              'shadow-lg shadow-green-200/30 dark:shadow-green-800/20',
+              'shadow-sm',
               'min-w-0',
             )}
             value={newItemName}
@@ -119,9 +118,8 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
             <button
               className={cn(
                 'p-2 rounded-xl transition-all duration-300 transform hover:scale-110',
-                'bg-gradient-to-br from-green-500 to-emerald-600',
-                'text-white shadow-lg shadow-green-500/30',
-                'hover:from-green-600 hover:to-emerald-700',
+                'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+                'text-[#333] shadow-sm',
               )}
               onClick={() => onFinishCreateNewItem()}
               title="确认"
@@ -131,9 +129,8 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
             <button
               className={cn(
                 'p-2 rounded-xl transition-all duration-300 transform hover:scale-110',
-                'bg-gradient-to-br from-red-500 to-pink-600',
-                'text-white shadow-lg shadow-red-500/30',
-                'hover:from-red-600 hover:to-pink-700',
+                'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+                'text-[#333] shadow-sm',
               )}
               onClick={onCancelCreateNewItem}
               title="取消"
@@ -222,12 +219,12 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
                         <div className="relative">
                           <div
                             className={cn(
-                              'w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg',
+                              'w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm',
                               group.type === 'shared'
-                                ? 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/30'
+                                ? 'bg-[#f0f0f0] dark:bg-[#2a2d2e]'
                                 : group.type === 'organization'
-                                  ? 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/30'
-                                  : 'bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/20 dark:to-cyan-900/30',
+                                  ? 'bg-[#f0f0f0] dark:bg-[#2a2d2e]'
+                                  : 'bg-[#f0f0f0] dark:bg-[#2a2d2e]',
                             )}
                           >
                             <Icon
@@ -235,15 +232,15 @@ const GroupedFileTree: React.FC<GroupedFileTreeProps> = (props) => {
                               className={cn(
                                 'w-8 h-8',
                                 group.type === 'shared'
-                                  ? 'text-green-500 dark:text-green-400'
+                                  ? 'text-[#333] dark:text-[#cccccc]'
                                   : group.type === 'organization'
-                                    ? 'text-purple-500 dark:text-purple-400'
-                                    : 'text-blue-500 dark:text-blue-400',
+                                    ? 'text-[#333] dark:text-[#cccccc]'
+                                    : 'text-[#333] dark:text-[#cccccc]',
                               )}
                             />
                           </div>
                           {/* 装饰性光点 */}
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-70 blur-sm"></div>
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#999999] rounded-full opacity-50"></div>
                         </div>
 
                         <div className="space-y-1">

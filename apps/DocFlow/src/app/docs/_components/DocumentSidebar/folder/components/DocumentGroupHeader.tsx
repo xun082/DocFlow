@@ -35,23 +35,10 @@ const DocumentGroupHeader: React.FC<DocumentGroupHeaderProps> = ({
     }
   };
 
-  const getGroupColor = () => {
-    switch (type) {
-      case 'personal':
-        return 'from-blue-500 to-indigo-600';
-      case 'organization':
-        return 'from-purple-500 to-pink-600';
-      case 'shared':
-        return 'from-green-500 to-emerald-600';
-      default:
-        return 'from-slate-500 to-slate-600';
-    }
-  };
-
   return (
     <div
       className={cn(
-        'flex items-center justify-between px-3 py-2.5 mx-2 my-1',
+        'flex items-center justify-between py-2.5 mx-2 my-1',
         'cursor-pointer select-none group',
         'rounded-lg transition-all duration-200',
         'hover:bg-gradient-to-r hover:from-slate-100/80 hover:to-slate-50/80',
@@ -75,11 +62,10 @@ const DocumentGroupHeader: React.FC<DocumentGroupHeaderProps> = ({
         <div
           className={cn(
             'w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0',
-            'bg-gradient-to-br shadow-sm',
-            getGroupColor(),
+            'bg-gradient-to-br shadow-sm bg-[#e0e0e0] dark:bg-[#3a3a3a]',
           )}
         >
-          <Icon name={getGroupIcon() as any} className="w-3 h-3 text-white" />
+          <Icon name={getGroupIcon() as any} className="w-3 h-3 text-[#333] dark:text-[#cccccc]" />
         </div>
 
         {/* 分组名称 */}
