@@ -75,9 +75,7 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
         <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
           <div
             className={cn(
-              'w-5 h-5 rounded-md flex items-center justify-center',
-              'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
-              'shadow-sm',
+              'w-5 h-5 rounded flex items-center justify-center text-[#333] dark:text-[#cccccc]',
             )}
           >
             <Icon

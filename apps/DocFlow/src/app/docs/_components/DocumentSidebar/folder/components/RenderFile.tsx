@@ -149,7 +149,7 @@ export const RenderFile: React.FC<{
                   'transition-all duration-300 transform hover:scale-110',
                   isSelected
                     ? 'hover:bg-[#e0e0e0] text-[#333]'
-                    : 'hover:bg-[#f5f5f5] dark:hover:bg-[#3a3a3a] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
+                    : 'hover:bg-[#e0e0e0] dark:hover:bg-[#3a3a3a] text-[#333] dark:text-[#cccccc] hover:text-[#333] dark:hover:text-[#cccccc]',
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -176,8 +176,8 @@ export const RenderFile: React.FC<{
                 className={cn(
                   'w-5 h-5 rounded flex items-center justify-center',
                   isExpanded
-                    ? 'text-[#666666] dark:text-[#999999]'
-                    : 'text-[#666666] dark:text-[#999999]',
+                    ? 'text-[#333] dark:text-[#cccccc]'
+                    : 'text-[#333] dark:text-[#cccccc]',
                 )}
               >
                 <Icon
@@ -189,7 +189,7 @@ export const RenderFile: React.FC<{
               <div
                 className={cn(
                   'w-5 h-5 rounded flex items-center justify-center',
-                  'text-[#666666] dark:text-[#999999]',
+                  'text-[#333] dark:text-[#cccccc]',
                 )}
               >
                 <Icon name="FileText" className={cn('h-3.5 w-3.5', isSelected && 'text-[#333]')} />
@@ -261,7 +261,7 @@ export const RenderFile: React.FC<{
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
                       ? 'hover:bg-[#e0e0e0] text-[#333]'
-                      : 'hover:bg-[#f5f5f5] dark:hover:bg-[#3a3a3a] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
+                      : 'hover:bg-[#e0e0e0] dark:hover:bg-[#3a3a3a] text-[#333] dark:text-[#cccccc] hover:text-[#333] dark:hover:text-[#cccccc]',
                     'shadow-sm hover:shadow-md',
                   )}
                   onClick={(e) => {
@@ -277,7 +277,7 @@ export const RenderFile: React.FC<{
                     'p-1.5 rounded-lg transition-all duration-300 transform hover:scale-110',
                     isSelected
                       ? 'hover:bg-[#e0e0e0] text-[#333]'
-                      : 'hover:bg-[#e8e8e8] dark:hover:bg-[#2a2d2e] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
+                      : 'hover:bg-[#e0e0e0] dark:hover:bg-[#2a2d2e] text-[#333] dark:text-[#cccccc] hover:text-[#333] dark:hover:text-[#cccccc]',
                     'shadow-sm hover:shadow-md',
                   )}
                   onClick={(e) => {
@@ -304,7 +304,7 @@ export const RenderFile: React.FC<{
                   'p-1.5 rounded-lg',
                   isSelected
                     ? 'hover:bg-[#e0e0e0] text-[#333]'
-                    : 'hover:bg-[#e8e8e8] dark:hover:bg-[#2a2d2e] text-[#717171] dark:text-[#858585] hover:text-[#333] dark:hover:text-[#cccccc]',
+                    : 'hover:bg-[#e0e0e0] dark:hover:bg-[#2a2d2e] text-[#333] dark:text-[#cccccc] hover:text-[#333] dark:hover:text-[#cccccc]',
                 )}
               />
             </div>
@@ -339,7 +339,7 @@ export const RenderFile: React.FC<{
                   className={cn(
                     'flex items-center px-3 text-sm',
                     'bg-[#f0f0f0] dark:bg-[#2a2d2e]',
-                    'border border-[#999999] rounded-lg',
+                    'border border-[#cccccc] dark:border-[#555555] rounded-lg',
                     'shadow-sm',
                   )}
                   style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
@@ -347,7 +347,7 @@ export const RenderFile: React.FC<{
                   <div className="w-6 mr-2 flex-shrink-0 flex items-center justify-center">
                     <div
                       className={cn(
-                        'w-5 h-5 rounded flex items-center justify-center text-[#666666] dark:text-[#999999]',
+                        'w-5 h-5 rounded flex items-center justify-center text-[#333] dark:text-[#cccccc]',
                       )}
                     >
                       <Icon

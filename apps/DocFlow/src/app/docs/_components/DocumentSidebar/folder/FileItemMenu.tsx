@@ -148,7 +148,7 @@ const FileItemMenu = ({
     >
       <button
         ref={buttonRef}
-        className="p-1 rounded-full hover:bg-[#e0e0e0] dark:hover:bg-[#444444] text-[#666666] hover:text-[#333] transition-colors opacity-0 group-hover:opacity-100"
+        className="p-1 rounded-full hover:bg-[#e0e0e0] dark:hover:bg-[#444444] text-[#333] hover:text-[#333] transition-colors opacity-0 group-hover:opacity-100"
         onClick={handleMenuClick}
         title="更多操作"
       >

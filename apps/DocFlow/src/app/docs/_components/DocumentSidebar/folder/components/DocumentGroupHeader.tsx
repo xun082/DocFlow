@@ -36,16 +36,7 @@ const DocumentGroupHeader: React.FC<DocumentGroupHeaderProps> = ({
   };
 
   const getGroupColor = () => {
-    switch (type) {
-      case 'personal':
-        return 'bg-[#e0e0e0] dark:bg-[#3a3a3a]';
-      case 'organization':
-        return 'bg-[#e0e0e0] dark:bg-[#3a3a3a]';
-      case 'shared':
-        return 'bg-[#e0e0e0] dark:bg-[#3a3a3a]';
-      default:
-        return 'bg-[#e0e0e0] dark:bg-[#3a3a3a]';
-    }
+    return 'bg-[#e0e0e0] dark:bg-[#3a3a3a]';
   };
 
   return (
