@@ -76,13 +76,13 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
           <div
             className={cn(
               'w-5 h-5 rounded-md flex items-center justify-center',
-              'bg-gradient-to-br from-emerald-400 to-green-500',
-              'shadow-md shadow-emerald-500/30',
+              'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+              'shadow-sm',
             )}
           >
             <Icon
               name={newItemType === 'folder' ? 'Folder' : 'FileText'}
-              className="h-3.5 w-3.5 text-white drop-shadow-sm"
+              className="h-3.5 w-3.5 text-[#333]"
             />
           </div>
         </div>
@@ -113,9 +113,8 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
             <button
               className={cn(
                 'p-2 rounded-xl transition-all duration-300 transform hover:scale-110',
-                'bg-gradient-to-br from-green-500 to-emerald-600',
-                'text-white shadow-lg shadow-green-500/30',
-                'hover:from-green-600 hover:to-emerald-700',
+                'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+                'text-[#333] shadow-sm',
               )}
               onClick={() => onFinishCreateNewItem()}
               title="确认"
@@ -125,9 +124,8 @@ const FileTree: React.FC<FileTreeProps> = (props) => {
             <button
               className={cn(
                 'p-2 rounded-xl transition-all duration-300 transform hover:scale-110',
-                'bg-gradient-to-br from-red-500 to-pink-600',
-                'text-white shadow-lg shadow-red-500/30',
-                'hover:from-red-600 hover:to-pink-700',
+                'bg-[#e0e0e0] dark:bg-[#3a3a3a]',
+                'text-[#333] shadow-sm',
               )}
               onClick={onCancelCreateNewItem}
               title="取消"

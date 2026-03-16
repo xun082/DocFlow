@@ -106,35 +106,35 @@ const FileItemMenu = ({
       label: '分享',
       action: () => onShare?.(file),
       show: !!onShare,
-      className: 'text-blue-600 hover:bg-blue-50',
+      className: 'text-[#333] hover:bg-[#e0e0e0] dark:hover:bg-[#444444]',
     },
     {
       icon: 'Download',
       label: '下载',
       action: () => onDownload?.(file),
       show: !!onDownload && file.type === 'file',
-      className: 'text-green-600 hover:bg-green-50',
+      className: 'text-[#333] hover:bg-[#e0e0e0] dark:hover:bg-[#444444]',
     },
     {
       icon: 'Copy',
       label: '复制',
       action: () => onDuplicate?.(file),
       show: !!onDuplicate,
-      className: 'text-gray-600 hover:bg-gray-50',
+      className: 'text-[#333] hover:bg-[#e0e0e0] dark:hover:bg-[#444444]',
     },
     {
       icon: 'Pencil',
       label: '重命名',
       action: () => onRename?.(file),
       show: !!onRename,
-      className: 'text-gray-600 hover:bg-gray-50',
+      className: 'text-[#333] hover:bg-[#e0e0e0] dark:hover:bg-[#444444]',
     },
     {
       icon: 'Trash',
       label: '删除',
       action: () => onDelete?.(file),
       show: !!onDelete,
-      className: 'text-red-600 hover:bg-red-50',
+      className: 'text-[#cc0000] hover:bg-[#ffe6e6] dark:hover:bg-[#442222]',
       divider: true,
     },
   ].filter((item) => item.show);
@@ -148,29 +148,31 @@ const FileItemMenu = ({
     >
       <button
         ref={buttonRef}
-        className="p-1 rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+        className="p-1 rounded-full hover:bg-[#e0e0e0] dark:hover:bg-[#444444] text-[#666666] hover:text-[#333] transition-colors opacity-0 group-hover:opacity-100"
         onClick={handleMenuClick}
         title="更多操作"
       >
-        <Icon name="EllipsisVertical" className="h-4 w-4" />
+        <Icon name="EllipsisVertical" className="h-3.5 w-3.5" />
       </button>
 
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-1 z-50 bg-white shadow-lg rounded-lg border border-gray-200 py-1 min-w-[140px]"
+          className="absolute right-0 top-full mt-1 z-50 bg-[#ffffff] dark:bg-[#2a2d2e] shadow-md rounded-lg border border-[#e0e0e0] dark:border-[#444444] py-1 min-w-[140px] text-xs"
         >
           {menuItems.map((item, index) => (
             <div key={item.label}>
-              {item.divider && index > 0 && <div className="border-t border-gray-200 my-1" />}
+              {item.divider && index > 0 && (
+                <div className="border-t border-[#e0e0e0] dark:border-[#444444] my-1" />
+              )}
               <button
                 className={cn(
-                  'w-full text-left px-3 py-2 text-sm flex items-center transition-colors',
+                  'w-full text-left px-3 py-1.5 text-xs flex items-center transition-colors',
                   item.className,
                 )}
                 onClick={() => handleMenuItemClick(item.action)}
               >
-                <Icon name={item.icon as any} className="h-4 w-4 mr-2" />
+                <Icon name={item.icon as any} className="h-3.5 w-3.5 mr-1.5" />
                 {item.label}
               </button>
             </div>

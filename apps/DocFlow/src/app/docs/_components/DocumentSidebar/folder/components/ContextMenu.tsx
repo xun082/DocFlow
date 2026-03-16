@@ -132,8 +132,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
               )}
               onClick={() => onCreateFile(targetFile.id)}
             >
-              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <Icon name="FilePlus" className="h-3 w-3 text-white" />
+              <div className="w-5 h-5 rounded-md bg-[#e0e0e0] dark:bg-[#3a3a3a] flex items-center justify-center">
+                <Icon name="FilePlus" className="h-3 w-3 text-[#333]" />
               </div>
               <span>新建文件</span>
             </button>
@@ -147,8 +147,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
               )}
               onClick={() => onCreateFolder(targetFile.id)}
             >
-              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
-                <Icon name="FolderPlus" className="h-3 w-3 text-white" />
+              <div className="w-5 h-5 rounded-md bg-[#e0e0e0] dark:bg-[#3a3a3a] flex items-center justify-center">
+                <Icon name="FolderPlus" className="h-3 w-3 text-[#333]" />
               </div>
               <span>新建文件夹</span>
             </button>
@@ -165,8 +165,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           )}
           onClick={() => onRename(targetFile?.id || '')}
         >
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-            <Icon name="Pencil" className="h-3 w-3 text-white" />
+          <div className="w-5 h-5 rounded-md bg-[#e0e0e0] dark:bg-[#3a3a3a] flex items-center justify-center">
+            <Icon name="Pencil" className="h-3 w-3 text-[#333]" />
           </div>
           <span>重命名</span>
         </button>

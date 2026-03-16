@@ -142,7 +142,7 @@ export const RenderFile: React.FC<{
         >
           {/* 展开/折叠图标 - 只为文件夹显示 */}
           {isFolder && (
-            <div className="mr-2 w-5 h-5 flex-shrink-0 flex items-center justify-center">
+            <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
               <button
                 className={cn(
                   'w-5 h-5 rounded-md flex items-center justify-center group/chevron',
@@ -170,7 +170,7 @@ export const RenderFile: React.FC<{
           )}
 
           {/* 文件/文件夹图标 - 更精美的设计 */}
-          <div className="w-6 h-6 mr-3 flex-shrink-0 flex items-center justify-center">
+          <div className="w-6 h-6  flex-shrink-0 flex items-center justify-center">
             {isFolder ? (
               <div
                 className={cn(
@@ -326,7 +326,7 @@ export const RenderFile: React.FC<{
             {/* 连接线 */}
             <div
               className={cn(
-                `absolute left-6   w-px`,
+                `absolute left-2   w-px`,
                 'bg-gradient-to-b from-slate-200 via-slate-300 to-transparent',
                 'dark:from-slate-600 dark:via-slate-500',
               )}
@@ -338,8 +338,8 @@ export const RenderFile: React.FC<{
                 <div
                   className={cn(
                     'flex items-center px-3 text-sm',
-                    'bg-[#f0f5f9] dark:bg-[#1e3a5f]',
-                    'border border-[#3b82f6] rounded-lg',
+                    'bg-[#f0f0f0] dark:bg-[#2a2d2e]',
+                    'border border-[#999999] rounded-lg',
                     'shadow-sm',
                   )}
                   style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
@@ -365,7 +365,7 @@ export const RenderFile: React.FC<{
                         'border-2 border-green-400/70 dark:border-green-500/70',
                         'focus:border-green-500 dark:focus:border-green-400',
                         'focus:ring-2 focus:ring-green-500/30 dark:focus:ring-green-400/30',
-                        'px-3 py-2 text-sm rounded-lg transition-all duration-300',
+                        'px-3 text-sm rounded-lg transition-all duration-300',
                         'text-slate-900 dark:text-slate-100',
                         'shadow-lg shadow-green-200/30 dark:shadow-green-800/20',
                       )}
