@@ -11,8 +11,6 @@ import {
   ImageUpload,
   Link,
   CodeBlock,
-  Chart,
-  Countdown,
   TableImage,
 } from '@/extensions';
 import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
@@ -32,8 +30,6 @@ export function isCustomNodeSelected(editor: Editor): boolean {
     Link.name,
     Figcaption.name,
     TableOfContentsNode.name,
-    Chart.name,
-    Countdown.name,
     TableImage.name,
     'inlineMath',
     'blockMath',

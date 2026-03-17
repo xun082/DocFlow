@@ -53,8 +53,6 @@ import {
   FileHandler,
   Youtube,
   ClearMarksOnEnter,
-  Chart,
-  Countdown,
   Mention,
   mentionSuggestion,
   MathLiveExtension,
@@ -378,8 +376,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     },
   }),
   ClearMarksOnEnter,
-  Chart,
-  Countdown,
   Mention.configure({
     HTMLAttributes: {
       class: 'mention',

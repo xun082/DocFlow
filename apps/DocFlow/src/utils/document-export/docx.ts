@@ -44,18 +44,6 @@ export async function handleExportDOCX(name: string, editor: Editor): Promise<vo
             };
           }
 
-          // Transform chart to image
-          if (item.type === 'chart') {
-            return {
-              ...item,
-              attrs: {
-                ...item.attrs,
-                src: item.attrs?.png,
-              },
-              type: 'image',
-            };
-          }
-
           return item;
         }),
       },
