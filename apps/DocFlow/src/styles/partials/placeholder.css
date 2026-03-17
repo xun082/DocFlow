@@ -11,10 +11,6 @@
     content: 'Type  /  to browse options';
   }
 
-  .ProseMirror.ProseMirror-focused > [data-type='columns'] > [data-type='column'] > p.is-empty.has-focus::before {
-    content: 'Type  /  to browse options';
-  }
-
   .ProseMirror > .is-editor-empty:first-child:last-child::before {
     content: 'Click here to start writing …';
   }

@@ -160,13 +160,6 @@ const BlocksTab = () => {
       category: 'data',
     },
     {
-      icon: 'LayoutDashboard',
-      label: '多列布局',
-      description: '创建多列内容布局',
-      blockType: 'columns',
-      category: 'layout',
-    },
-    {
       icon: 'Minus',
       label: '分割线',
       description: '添加水平分割线',

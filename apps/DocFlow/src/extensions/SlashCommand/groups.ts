@@ -119,7 +119,6 @@ export const GROUPS: Group[] = [
         label: 'Code Block',
         iconName: 'SquareCode',
         description: 'Code block with syntax highlighting',
-        shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
           editor.chain().focus().toggleCodeBlock().run();
         },
@@ -135,7 +134,6 @@ export const GROUPS: Group[] = [
         label: 'Table',
         iconName: 'Table',
         description: 'Insert a table',
-        shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
           editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run();
         },
@@ -161,23 +159,6 @@ export const GROUPS: Group[] = [
         },
       },
       {
-        name: 'columns',
-        label: 'Columns',
-        iconName: 'Columns2',
-        description: 'Add two column content',
-        aliases: ['cols'],
-        shouldBeHidden: (editor) => editor.isActive('columns'),
-        action: (editor) => {
-          editor
-            .chain()
-            .focus()
-            .setColumns(2)
-            .updateAttributes('columns', { rows: 2 })
-            .focus(editor.state.selection.head - 1)
-            .run();
-        },
-      },
-      {
         name: 'horizontalRule',
         label: 'Horizontal Rule',
         iconName: 'Minus',
@@ -193,7 +174,6 @@ export const GROUPS: Group[] = [
         iconName: 'Book',
         aliases: ['outline'],
         description: 'Insert a table of contents',
-        shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
           editor.chain().focus().insertTableOfContents().run();
         },
