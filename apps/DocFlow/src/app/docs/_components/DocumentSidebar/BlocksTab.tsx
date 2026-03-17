@@ -153,13 +153,6 @@ const BlocksTab = () => {
       category: 'data',
     },
     {
-      icon: 'ChartColumnBig',
-      label: '图表',
-      description: '插入各种类型的图表',
-      blockType: 'chart',
-      category: 'data',
-    },
-    {
       icon: 'Minus',
       label: '分割线',
       description: '添加水平分割线',
@@ -193,14 +186,6 @@ const BlocksTab = () => {
       label: 'AI',
       description: '插入AI组件',
       blockType: 'ai',
-      category: 'interactive',
-    },
-    // 插入倒计时组件
-    {
-      icon: 'Timer',
-      label: '倒计时',
-      description: '插入倒计时组件',
-      blockType: 'countdown',
       category: 'interactive',
     },
   ];

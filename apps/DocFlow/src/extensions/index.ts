@@ -56,8 +56,6 @@ export { JsonPaste } from './JsonPaste';
 export { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
 export { Youtube } from './Youtube';
 export { ClearMarksOnEnter } from './ClearMarksOnEnter';
-export { Chart } from './Chart';
-export { Countdown } from './Countdown';
 export { Comment } from './Comment';
 export { Mention, mentionSuggestion, createMentionSuggestion, clearMentionCache } from './Mention';
 export type { MentionUser } from './Mention';

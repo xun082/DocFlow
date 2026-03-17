@@ -246,68 +246,6 @@ class AIBlockStrategy implements BlockContentStrategy {
   }
 }
 
-// 增加图表块策略
-class ChartBlockStrategy implements BlockContentStrategy {
-  create() {
-    return {
-      type: 'chart',
-      attrs: {
-        type: 'bar',
-        colorKey: 'red',
-        data: [
-          {
-            month: 'January',
-            desktop: 186,
-            mobile: 80,
-            tablet: 45,
-          },
-          {
-            month: 'February',
-            desktop: 305,
-            mobile: 200,
-            tablet: 95,
-          },
-          {
-            month: 'March',
-            desktop: 237,
-            mobile: 120,
-            tablet: 78,
-          },
-          {
-            month: 'April',
-            desktop: 73,
-            mobile: 190,
-            tablet: 62,
-          },
-        ],
-        xAxisKey: 'month',
-        yAxisKeys: ['desktop'],
-        title: 'Sample Chart',
-      },
-    };
-  }
-}
-
-// 增加倒计时组件策略
-class CountdownBlockStrategy implements BlockContentStrategy {
-  create() {
-    // 设置结束时间为当前时间增加半小时
-    const now = new Date();
-    const targetDate = new Date(now.getTime() + 30 * 60 * 1000); // 30分钟 = 30 * 60 * 1000毫秒
-
-    return {
-      type: 'countdown',
-      attrs: {
-        targetDate: targetDate.toISOString(),
-        showDays: true,
-        showHours: true,
-        showMinutes: true,
-        showSeconds: true,
-      },
-    };
-  }
-}
-
 // 默认块策略
 class DefaultBlockStrategy implements BlockContentStrategy {
   create() {
@@ -328,8 +266,6 @@ class BlockContentStrategyFactory {
     ['audio', new AudioBlockStrategy()],
     ['divider', new HorizontalRulerBlockStrategy()],
     ['ai', new AIBlockStrategy()],
-    ['chart', new ChartBlockStrategy()],
-    ['countdown', new CountdownBlockStrategy()],
   ]);
 
   static getStrategy(blockType: string): BlockContentStrategy {
