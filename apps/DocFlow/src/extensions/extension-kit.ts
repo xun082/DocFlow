@@ -39,9 +39,6 @@ import {
   Superscript,
   TableKit,
   TableOfContents,
-  TableCell,
-  TableHeader,
-  TableRow,
   TextAlign,
   TextStyle,
   TrailingNode,
@@ -318,32 +315,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     enableEmoticons: true,
     suggestion: emojiSuggestion,
   }),
-  TextAlign.extend({
-    addKeyboardShortcuts() {
-      return {
-        Tab: () => {
-          return this.editor.commands.insertContent('  ');
-        },
-        'Shift-Tab': () => {
-          const { state } = this.editor;
-          const { from } = state.selection;
-          const $from = state.doc.resolve(from);
-          const startOfLine = $from.start($from.depth);
-          const textBeforeCursor = state.doc.textBetween(startOfLine, from);
-
-          if (textBeforeCursor.endsWith('  ')) {
-            const deleteFrom = Math.max(startOfLine, from - 2);
-
-            return this.editor.commands.deleteRange({ from: deleteFrom, to: from });
-          } else if (textBeforeCursor.endsWith(' ')) {
-            return this.editor.commands.deleteRange({ from: from - 1, to: from });
-          }
-
-          return false;
-        },
-      };
-    },
-  }).configure({
+  TextAlign.configure({
     types: ['heading', 'paragraph'],
   }),
   Subscript,
@@ -353,9 +325,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
       resizable: true,
     },
   }),
-  TableCell,
-  TableHeader,
-  TableRow,
   Typography,
   Placeholder.configure({
     includeChildren: true,
