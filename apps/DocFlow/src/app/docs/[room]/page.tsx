@@ -328,6 +328,34 @@ export default function DocumentPage() {
           class: 'min-h-full',
           spellcheck: 'false',
         },
+        handleKeyDown: (view, event) => {
+          if (event.key === 'Tab') {
+            if (event.shiftKey) {
+              const { state } = view;
+              const { from } = state.selection;
+              const $from = state.doc.resolve(from);
+              const startOfLine = $from.start($from.depth);
+              const textBeforeCursor = state.doc.textBetween(startOfLine, from);
+
+              if (textBeforeCursor.endsWith('  ')) {
+                const deleteFrom = Math.max(startOfLine, from - 2);
+                view.dispatch(state.tr.deleteRange(deleteFrom, from));
+
+                return true;
+              } else if (textBeforeCursor.endsWith(' ')) {
+                view.dispatch(state.tr.deleteRange(from - 1, from));
+
+                return true;
+              }
+            } else {
+              view.dispatch(view.state.tr.insertText('  '));
+
+              return true;
+            }
+          }
+
+          return false;
+        },
       },
       immediatelyRender: false,
       shouldRerenderOnTransaction: false,
