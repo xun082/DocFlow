@@ -48,8 +48,6 @@ import {
   Typography,
   Underline,
   emojiSuggestion,
-  Columns,
-  Column,
   TaskItem,
   TaskList,
   UniqueID,
@@ -82,12 +80,10 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Paragraph,
   Text,
   // Image,
-  Columns,
   TaskList,
   TaskItem.configure({
     nested: true,
   }),
-  Column,
   Selection,
   Heading.configure({
     levels: [1, 2, 3, 4, 5, 6],

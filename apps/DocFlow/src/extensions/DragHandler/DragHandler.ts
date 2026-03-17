@@ -288,22 +288,6 @@ class ChartBlockStrategy implements BlockContentStrategy {
   }
 }
 
-// 增加多列块策略
-class ColumnsBlockStrategy implements BlockContentStrategy {
-  create() {
-    return {
-      type: 'columns',
-      attrs: {
-        rows: 2,
-      },
-      content: [
-        { type: 'column', content: [{ type: 'paragraph' }] },
-        { type: 'column', content: [{ type: 'paragraph' }] },
-      ],
-    };
-  }
-}
-
 // 增加倒计时组件策略
 class CountdownBlockStrategy implements BlockContentStrategy {
   create() {
@@ -345,7 +329,6 @@ class BlockContentStrategyFactory {
     ['divider', new HorizontalRulerBlockStrategy()],
     ['ai', new AIBlockStrategy()],
     ['chart', new ChartBlockStrategy()],
-    ['columns', new ColumnsBlockStrategy()],
     ['countdown', new CountdownBlockStrategy()],
   ]);
 

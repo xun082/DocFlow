@@ -21,43 +21,6 @@
     @apply first:mt-0 last:mb-0;
   }
 
-  /* Columns */
-  .ProseMirror [data-type='columns'] {
-    @apply grid gap-4 mt-14 mb-12;
-    overflow: hidden;
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .ProseMirror [data-type='columns'].layout-sidebar-left {
-    grid-template-columns: 30fr 70fr;
-  }
-
-  .ProseMirror [data-type='columns'].layout-sidebar-right {
-    grid-template-columns: 70fr 30fr;
-  }
-
-  .ProseMirror [data-type='columns'].layout-two-column {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .ProseMirror [data-type='column'] {
-    @apply overflow-hidden min-w-0;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .ProseMirror [data-type='column'] > * {
-    @apply max-w-full;
-    box-sizing: border-box;
-  }
-  
-  .ProseMirror [data-type='column'] .ProseMirror {
-    overflow-x: hidden !important;
-  }
-
   /* Details Block */
   .ProseMirror [data-type='details'] {
     @apply flex gap-1 my-6 mx-auto p-2 border border-gray-300 rounded;
