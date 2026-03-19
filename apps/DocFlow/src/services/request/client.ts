@@ -99,20 +99,30 @@ class ClientRequest {
 
   /**
    * 统一处理认证失败
+   * 仅在受保护页面才跳转登录，公开页面静默清除凭证即可
    */
   private handleAuthFailure(): void {
     clearAuthData();
 
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname + window.location.search;
-      const loginUrl = new URL(ROUTES.AUTH, window.location.origin);
+    if (typeof window === 'undefined') return;
 
-      if (currentPath && currentPath !== ROUTES.AUTH) {
-        loginUrl.searchParams.set('redirect_to', encodeURIComponent(currentPath));
-      }
+    const { pathname, search } = window.location;
 
-      window.location.href = loginUrl.toString();
-    }
+    // 公开路由不触发跳转，避免首页等公开页面被意外重定向
+    const isPublicPath =
+      pathname === '/' ||
+      pathname === ROUTES.AUTH ||
+      pathname.startsWith('/auth/') ||
+      pathname.startsWith('/blog/') ||
+      pathname.startsWith('/share/');
+
+    if (isPublicPath) return;
+
+    const loginUrl = new URL(ROUTES.AUTH, window.location.origin);
+    // 让 URLSearchParams 自行编码，避免双重 encodeURIComponent 产生 %252F
+    loginUrl.searchParams.set('redirect_to', pathname + search);
+
+    window.location.href = loginUrl.toString();
   }
 
   /**
