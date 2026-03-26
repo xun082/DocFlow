@@ -1,0 +1,70 @@
+/* ── Blink keyframe for streaming cursor ─────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── AgentSuggestion Mark — AI 编辑 Diff 高亮 ───────────────────────────── */
+
+/* ── Added（新增内容）：绿色背景 ────────────────────────────────────────── */
+.ProseMirror span.agent-suggestion--added {
+  background-color: oklch(90% 0.12 145);
+  color: oklch(0.32 0.12 145);
+  border-radius: 2px;
+  padding: 0 1px;
+  transition: background-color 0.15s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ProseMirror span.agent-suggestion--added:hover {
+  background-color: oklch(84% 0.16 145);
+}
+
+/* 标题、粗体等内部 added */
+.ProseMirror h1 span.agent-suggestion--added,
+.ProseMirror h2 span.agent-suggestion--added,
+.ProseMirror h3 span.agent-suggestion--added,
+.ProseMirror strong span.agent-suggestion--added,
+.ProseMirror em span.agent-suggestion--added {
+  background-color: oklch(87% 0.14 145);
+}
+
+/* ── Deleted（被替换的原始内容）：红色删除线 ──────────────────────────── */
+.ProseMirror span.agent-suggestion--deleted {
+  background-color: oklch(94% 0.06 20);
+  color: oklch(0.42 0.16 20);
+  text-decoration: line-through;
+  text-decoration-color: oklch(0.55 0.2 20);
+  text-decoration-thickness: 1.5px;
+  border-radius: 2px;
+  padding: 0 1px;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ProseMirror span.agent-suggestion--deleted:hover {
+  opacity: 1;
+  background-color: oklch(90% 0.09 20);
+}
+
+/* 标题、粗体等内部 deleted */
+.ProseMirror h1 span.agent-suggestion--deleted,
+.ProseMirror h2 span.agent-suggestion--deleted,
+.ProseMirror h3 span.agent-suggestion--deleted,
+.ProseMirror strong span.agent-suggestion--deleted,
+.ProseMirror em span.agent-suggestion--deleted {
+  background-color: oklch(91% 0.08 20);
+}
+
+/* ── 兼容旧的无 variant 的 mark（保底绿色） ──────────────────────────── */
+.ProseMirror span.agent-suggestion:not(.agent-suggestion--added):not(.agent-suggestion--deleted) {
+  background-color: oklch(90% 0.12 145);
+  color: oklch(0.32 0.12 145);
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
