@@ -83,8 +83,7 @@ export const AgentSuggestion = Mark.create<AgentSuggestionOptions>({
             if (!node.isText) return;
 
             const mark = node.marks.find(
-              (m) =>
-                m.type.name === 'agentSuggestion' && m.attrs.suggestionId === suggestionId,
+              (m) => m.type.name === 'agentSuggestion' && m.attrs.suggestionId === suggestionId,
             );
             if (!mark) return;
 
@@ -141,8 +140,7 @@ export const AgentSuggestion = Mark.create<AgentSuggestionOptions>({
             if (!node.isText) return;
 
             const mark = node.marks.find(
-              (m) =>
-                m.type.name === 'agentSuggestion' && m.attrs.suggestionId === suggestionId,
+              (m) => m.type.name === 'agentSuggestion' && m.attrs.suggestionId === suggestionId,
             );
             if (!mark) return;
 

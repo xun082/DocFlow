@@ -96,6 +96,7 @@ export async function streamDocumentEdit(
   if (typeof window !== 'undefined' && !getCookie('auth_token')) {
     const loginUrl = `/auth?redirect_to=${encodeURIComponent(window.location.pathname + window.location.search)}`;
     window.location.href = loginUrl;
+
     return () => {};
   }
 
@@ -123,6 +124,7 @@ export async function streamDocumentEdit(
     }
 
     onError?.(err instanceof Error ? err : new Error(String(err)));
+
     return () => {};
   }
 }

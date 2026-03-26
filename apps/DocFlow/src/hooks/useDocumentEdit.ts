@@ -64,8 +64,10 @@ function injectSuggestionMark(
 
   function markConflicts(markName: string): boolean {
     if (!agentMarkType || !editor) return markName === 'code';
+
     const otherType = editor.state.schema.marks[markName];
     if (!otherType) return false;
+
     return otherType.excludes(agentMarkType) || agentMarkType.excludes(otherType);
   }
 
@@ -74,14 +76,18 @@ function injectSuggestionMark(
       const existingMarks = node.marks ?? [];
       const hasConflict = existingMarks.some((m) => {
         const name = typeof m === 'string' ? m : (m as { type: string }).type;
+
         return markConflicts(name);
       });
       if (hasConflict) return node;
+
       return { ...node, marks: [...existingMarks, suggestionMark] };
     }
+
     if (node.content && node.content.length > 0) {
       return { ...node, content: node.content.map(inject) };
     }
+
     return node;
   }
 
@@ -97,13 +103,16 @@ function applyOpToEditor(editor: Editor, op: AgentOp, suggestionId: string): boo
     case 'append_to_doc': {
       const { doc } = editor.state;
       const insertPos = doc.content.size;
+
       return editor.chain().focus().insertContentAt(insertPos, nodesWithMark).run();
     }
 
     case 'insert_after':
+
     case 'insert_before': {
       if (!op.nodeId) {
         const insertPos = editor.state.doc.content.size;
+
         return editor.chain().focus().insertContentAt(insertPos, nodesWithMark).run();
       }
 
@@ -111,12 +120,14 @@ function applyOpToEditor(editor: Editor, op: AgentOp, suggestionId: string): boo
 
       editor.state.doc.descendants((node, pos) => {
         if (anchorPos !== null) return false;
+
         if ((node.attrs as { id?: string })?.id === op.nodeId) {
           anchorPos = op.type === 'insert_after' ? pos + node.nodeSize : pos;
         }
       });
 
       const insertAt = anchorPos ?? editor.state.doc.content.size;
+
       return editor.chain().focus().insertContentAt(insertAt, nodesWithMark).run();
     }
 
@@ -128,6 +139,7 @@ function applyOpToEditor(editor: Editor, op: AgentOp, suggestionId: string): boo
 
       editor.state.doc.descendants((node, pos) => {
         if (targetFrom !== null) return false;
+
         if ((node.attrs as { id?: string })?.id === op.nodeId) {
           targetFrom = pos;
           targetTo = pos + node.nodeSize;
@@ -144,6 +156,7 @@ function applyOpToEditor(editor: Editor, op: AgentOp, suggestionId: string): boo
 
         editor.state.doc.nodesBetween(targetFrom + 1, targetTo - 1, (node, pos) => {
           if (!node.isText) return;
+
           const safe = node.marks.every(
             (m) => !m.type.excludes(agentMarkType) && !agentMarkType.excludes(m.type),
           );
@@ -244,10 +257,13 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
   const applyProposalToEditor = useCallback(
     (proposal: AgentProposal, suggestionId: string): boolean => {
       if (!editor) return false;
+
       let success = false;
+
       for (const op of proposal.ops) {
         if (applyOpToEditor(editor, op, suggestionId)) success = true;
       }
+
       return success;
     },
     [editor],
@@ -292,6 +308,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
             // ── structured results ─────────────────────────────────────────
             case 'intent': {
               flushAndCancelTimer();
+
               // Freeze this step's raw output + thinking (persist for display)
               const frozenIntentRaw = intentAccRef.current;
               const frozenIntentThinking = thinkingAccRef.current;
@@ -308,6 +325,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
 
             case 'anchor': {
               flushAndCancelTimer();
+
               const frozenAnchorRaw = anchorAccRef.current;
               const frozenAnchorThinking = thinkingAccRef.current;
               thinkingAccRef.current = '';
@@ -322,6 +340,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
 
             case 'proposal': {
               flushAndCancelTimer();
+
               const frozenProposalRaw = proposalAccRef.current;
               const frozenProposalThinking = thinkingAccRef.current;
               thinkingAccRef.current = '';
@@ -329,13 +348,11 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
               setProposalRaw(frozenProposalRaw);
               setProposalThinking(frozenProposalThinking);
               setThinkingRaw('');
+
               const proposal = event.data as AgentProposal;
               const suggestionId = `sug_${uuidv4().slice(0, 8)}`;
               const applied = applyProposalToEditor(proposal, suggestionId);
-              setPendingProposals((prev) => [
-                ...prev,
-                { ...proposal, suggestionId, applied },
-              ]);
+              setPendingProposals((prev) => [...prev, { ...proposal, suggestionId, applied }]);
               setPhase('reviewing');
               setIsStreaming(false);
               break;
@@ -368,7 +385,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
 
       cancelRef.current = cancel;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [editor, isStreaming, applyProposalToEditor, reset],
   );
 
@@ -380,6 +397,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
       setPendingProposals((prev) => {
         const next = prev.filter((p) => p.proposalId !== proposalId);
         if (next.length === 0) setPhase('idle');
+
         return next;
       });
     },
@@ -394,6 +412,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
       setPendingProposals((prev) => {
         const next = prev.filter((p) => p.proposalId !== proposalId);
         if (next.length === 0) setPhase('idle');
+
         return next;
       });
     },
@@ -402,6 +421,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
 
   const acceptAll = useCallback(() => {
     if (!editor) return;
+
     const chain = editor.chain().focus();
     for (const p of pendingProposals) chain.acceptAgentSuggestion(p.suggestionId);
     chain.run();
@@ -411,6 +431,7 @@ export function useDocumentEdit(editor: Editor | null): UseDocumentEditReturn {
 
   const rejectAll = useCallback(() => {
     if (!editor) return;
+
     const chain = editor.chain().focus();
     for (const p of pendingProposals) chain.rejectAgentSuggestion(p.suggestionId);
     chain.run();

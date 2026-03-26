@@ -58,7 +58,6 @@ import {
   MathLiveExtension,
   SearchAndReplace,
 } from '.';
-
 import { AgentSuggestion } from './AgentSuggestion';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';

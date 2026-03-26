@@ -24,6 +24,7 @@ import {
   BrainCircuit,
   Code2,
 } from 'lucide-react';
+
 import { cn } from '@/utils';
 import { useDocumentEdit, type EditPhase, type PendingProposal } from '@/hooks/useDocumentEdit';
 import { useEditorStore } from '@/stores/editorStore';
@@ -147,6 +148,7 @@ function StreamingBlock({
 
   const highlight = (raw: string): string => {
     const escaped = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
     return escaped
       .replace(/"([^"]+)"(\s*:)/g, '<span style="color:#79c0ff">"$1"</span>$2')
       .replace(/:\s*"([^"]*)"/g, ': <span style="color:#a5d6ff">"$1"</span>')
@@ -178,7 +180,6 @@ function StreamingBlock({
       <pre
         className="text-[11px] font-mono leading-relaxed px-3 py-2.5 overflow-x-auto whitespace-pre-wrap break-all max-h-72 overflow-y-auto"
         style={{ background: '#0d1117', color: '#c9d1d9' }}
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: highlight(text) + cursor }}
       />
     </div>
@@ -307,12 +308,8 @@ function StepRow({
             进行中
           </span>
         )}
-        {isDone && (
-          <span className="text-[10px] text-emerald-500 font-medium shrink-0">完成</span>
-        )}
-        {isError && (
-          <span className="text-[10px] text-red-400 font-medium shrink-0">失败</span>
-        )}
+        {isDone && <span className="text-[10px] text-emerald-500 font-medium shrink-0">完成</span>}
+        {isError && <span className="text-[10px] text-red-400 font-medium shrink-0">失败</span>}
       </div>
 
       {/* Body */}
@@ -421,10 +418,7 @@ function AnchorContent({ anchor }: { anchor: AgentAnchor }) {
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-gray-400">操作</span>
         <span
-          className={cn(
-            'text-[11px] font-semibold border rounded-md px-2 py-0.5',
-            modeStyle.color,
-          )}
+          className={cn('text-[11px] font-semibold border rounded-md px-2 py-0.5', modeStyle.color)}
         >
           {modeStyle.label}
         </span>
@@ -477,11 +471,15 @@ function getStepStatus(
 ): StepStatus {
   if (phase === 'error') {
     if (step === 'intent') return intent ? 'done' : 'error';
+
     if (step === 'anchor') {
       if (!intent) return 'pending';
+
       return anchor ? 'done' : 'error';
     }
+
     if (!anchor) return 'pending';
+
     return proposals.length > 0 ? 'done' : 'error';
   }
 
@@ -490,6 +488,7 @@ function getStepStatus(
   const si = order.indexOf(step);
   if (ci === si) return 'active';
   if (ci > si) return 'done';
+
   return 'pending';
 }
 
@@ -555,10 +554,19 @@ function HistoryRound({ entry }: { entry: HistoryEntry }) {
                 <Cpu className="w-3 h-3" /> 意图识别
               </p>
               {entry.intentThinking && (
-                <ThinkingBlock text={entry.intentThinking} isStreaming={false} defaultOpen={false} />
+                <ThinkingBlock
+                  text={entry.intentThinking}
+                  isStreaming={false}
+                  defaultOpen={false}
+                />
               )}
               {entry.intentRaw && (
-                <StreamingBlock text={entry.intentRaw} isStreaming={false} collapsible defaultOpen={false} />
+                <StreamingBlock
+                  text={entry.intentRaw}
+                  isStreaming={false}
+                  collapsible
+                  defaultOpen={false}
+                />
               )}
               {entry.intent && (
                 <div className="pt-0.5">
@@ -575,10 +583,19 @@ function HistoryRound({ entry }: { entry: HistoryEntry }) {
                 <MapPin className="w-3 h-3" /> 锚点定位
               </p>
               {entry.anchorThinking && (
-                <ThinkingBlock text={entry.anchorThinking} isStreaming={false} defaultOpen={false} />
+                <ThinkingBlock
+                  text={entry.anchorThinking}
+                  isStreaming={false}
+                  defaultOpen={false}
+                />
               )}
               {entry.anchorRaw && (
-                <StreamingBlock text={entry.anchorRaw} isStreaming={false} collapsible defaultOpen={false} />
+                <StreamingBlock
+                  text={entry.anchorRaw}
+                  isStreaming={false}
+                  collapsible
+                  defaultOpen={false}
+                />
               )}
               {entry.anchor && (
                 <div className="pt-0.5">
@@ -595,10 +612,19 @@ function HistoryRound({ entry }: { entry: HistoryEntry }) {
                 <Sparkles className="w-3 h-3" /> 生成内容
               </p>
               {entry.proposalThinking && (
-                <ThinkingBlock text={entry.proposalThinking} isStreaming={false} defaultOpen={false} />
+                <ThinkingBlock
+                  text={entry.proposalThinking}
+                  isStreaming={false}
+                  defaultOpen={false}
+                />
               )}
               {entry.proposalRaw && (
-                <StreamingBlock text={entry.proposalRaw} isStreaming={false} collapsible defaultOpen={false} />
+                <StreamingBlock
+                  text={entry.proposalRaw}
+                  isStreaming={false}
+                  collapsible
+                  defaultOpen={false}
+                />
               )}
               {entry.proposals.map((p) => (
                 <p key={p.proposalId} className="text-[11px] text-gray-500 leading-relaxed">
@@ -987,6 +1013,7 @@ export function AgentEditPanel({ documentId, className, onClose }: AgentEditPane
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing) return;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!isStreaming) handleSend();
