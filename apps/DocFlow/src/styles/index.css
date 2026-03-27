@@ -18,6 +18,7 @@
 @import './partials/frappe-gantt.css';
 @import './partials/youtube.css';
 @import './partials/mention.css';
+@import './partials/agent-suggestion.css';
 @import './partials/blog.css';
 @import '@syncflow/bilibili/styles';
 

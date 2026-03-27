@@ -58,6 +58,7 @@ import {
   MathLiveExtension,
   SearchAndReplace,
 } from '.';
+import { AgentSuggestion } from './AgentSuggestion';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
 import { SelectOnlyCode } from './CodeBlock/SelectOnlyCode';
@@ -388,6 +389,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
     disableRegex: true,
     caseSensitive: false,
   }),
+  AgentSuggestion,
 ];
 
 export default ExtensionKit;

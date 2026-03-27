@@ -33,13 +33,16 @@ import { useDocumentPermission } from '@/hooks/useDocumentPermission';
 import { useCollaboration } from '@/hooks/useCollaboration';
 import { useTemplateInsertion } from '@/hooks/useTemplateInsertion';
 
-const ChatPanel = dynamic(
-  () => import('@/app/docs/_components/ChatPanel').then((mod) => ({ default: mod.ChatPanel })),
+const AgentEditPanel = dynamic(
+  () =>
+    import('@/app/docs/_components/AgentEditPanel').then((mod) => ({
+      default: mod.AgentEditPanel,
+    })),
   {
     ssr: false,
     loading: () => (
-      <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-blue-50/30 items-center justify-center gap-2">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+      <div className="flex flex-col h-full bg-white items-center justify-center gap-2">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
         <span className="text-xs text-gray-400">加载中...</span>
       </div>
     ),
@@ -52,7 +55,7 @@ export default function DocumentPage() {
   const documentId = params?.room as string;
   const forceReadOnly = searchParams?.get('readonly') === 'true';
 
-  const { isOpen: isChatOpen } = useChatStore();
+  const { isOpen: isChatOpen, setIsOpen } = useChatStore();
   const { setEditor, clearEditor } = useEditorStore();
 
   const menuContainerRef = useRef<HTMLDivElement>(null);
@@ -290,7 +293,7 @@ export default function DocumentPage() {
 
       <div className="flex flex-1 overflow-hidden">
         <Group orientation="horizontal" className="flex-1" groupRef={groupRef}>
-          <Panel id="editor" defaultSize={65} minSize={30}>
+          <Panel id="editor" defaultSize={25} minSize={20}>
             <div className="h-full relative overflow-hidden">
               <div className="h-full overflow-y-auto overflow-x-hidden relative w-full">
                 <EditorContent editor={editor} className="prose-container h-full pl-14" />
@@ -313,12 +316,16 @@ export default function DocumentPage() {
             panelRef={chatPanelRef}
             defaultSize="35"
             minSize="20"
-            maxSize="60"
+            maxSize="30"
             collapsible
             collapsedSize="0"
           >
             <Activity mode={isChatOpen ? 'visible' : 'hidden'}>
-              <ChatPanel documentId={documentId} />
+              <AgentEditPanel
+                documentId={documentId}
+                onClose={() => setIsOpen(false)}
+                className="h-full"
+              />
             </Activity>
           </Panel>
         </Group>

@@ -1115,6 +1115,11 @@ class ClientRequest {
             level: 'error',
           });
 
+          // 401 without a usable refresh token means the session is gone — redirect to login
+          if (response.status === 401) {
+            this.handleAuthFailure();
+          }
+
           throw streamError;
         }
       }
